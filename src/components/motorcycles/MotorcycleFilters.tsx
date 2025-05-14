@@ -1,17 +1,18 @@
 
 import { useState } from "react";
 import type { MotorcycleCategory, MotorcycleFilters } from "@/types";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
-import { Filter } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+
+// Import our new filter components
+import CategoryFilter from "./filters/CategoryFilter";
+import MakeFilter from "./filters/MakeFilter";
+import RangeFilter from "./filters/RangeFilter";
+import AbsFilter from "./filters/AbsFilter";
+import ResetButton from "./filters/ResetButton";
+import MobileFilterToggle from "./filters/MobileFilterToggle";
 
 const categories: MotorcycleCategory[] = [
   "Sport",
@@ -110,8 +111,13 @@ export default function MotorcycleFilters({
     });
   };
 
+  const handleMakeSelect = (make: string) => {
+    onFilterChange({ ...filters, make });
+  };
+
   return (
     <div className="sticky top-[4.5rem] space-y-4 py-4">
+      {/* Mobile filters */}
       <div className="flex items-center justify-between md:hidden">
         <Collapsible
           open={isOpen}
@@ -120,108 +126,53 @@ export default function MotorcycleFilters({
         >
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Filters</h3>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                {isOpen ? "Hide Filters" : "Show Filters"}
-              </Button>
-            </CollapsibleTrigger>
+            <MobileFilterToggle isOpen={isOpen} />
           </div>
           
           <CollapsibleContent className="space-y-4">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <h4 className="font-medium">Make</h4>
-                <Input 
-                  placeholder="Search makes..." 
-                  value={filters.make}
-                  onChange={handleMakeChange}
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  {commonMakes.slice(0, 6).map((make) => (
-                    <Button
-                      key={make}
-                      variant={filters.make === make ? "default" : "outline"}
-                      size="sm"
-                      className="justify-start"
-                      onClick={() => onFilterChange({ ...filters, make })}
-                    >
-                      {make}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <MakeFilter 
+                make={filters.make} 
+                commonMakes={commonMakes} 
+                onMakeChange={handleMakeChange} 
+                onMakeSelect={handleMakeSelect}
+              />
 
-              <div className="space-y-2">
-                <h4 className="font-medium">Categories</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {categories.map((category) => (
-                    <div key={category} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`category-${category}`} 
-                        checked={filters.categories.includes(category)}
-                        onCheckedChange={(checked) => 
-                          handleCategoryChange(category, checked as boolean)
-                        }
-                      />
-                      <Label htmlFor={`category-${category}`}>{category}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <CategoryFilter 
+                categories={categories}
+                selectedCategories={filters.categories}
+                onChange={handleCategoryChange}
+                isMobile={true}
+              />
 
-              <div className="space-y-2">
-                <h4 className="font-medium">Engine Size</h4>
-                <div className="px-2">
-                  <Slider 
-                    defaultValue={[
-                      filters.engineSizeRange[0], 
-                      filters.engineSizeRange[1]
-                    ]} 
-                    max={2000} 
-                    step={50}
-                    onValueChange={handleEngineRangeChange}
-                  />
-                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                    <span>{filters.engineSizeRange[0]} cc</span>
-                    <span>{filters.engineSizeRange[1]} cc</span>
-                  </div>
-                </div>
-              </div>
+              <RangeFilter
+                title="Engine Size"
+                min={0}
+                max={2000}
+                step={50}
+                value={[filters.engineSizeRange[0], filters.engineSizeRange[1]]}
+                onChange={handleEngineRangeChange}
+                valueFormatter={(v) => `${v} cc`}
+              />
 
-              <div className="space-y-2">
-                <h4 className="font-medium">Difficulty Level</h4>
-                <div className="px-2">
-                  <Slider 
-                    defaultValue={[filters.difficultyLevel]} 
-                    max={5} 
-                    step={1}
-                    onValueChange={handleDifficultyChange}
-                  />
-                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                    <span>Beginner</span>
-                    <span>Expert</span>
-                  </div>
-                </div>
-              </div>
+              <RangeFilter
+                title="Difficulty Level"
+                min={1}
+                max={5}
+                step={1}
+                value={[filters.difficultyLevel]}
+                onChange={handleDifficultyChange}
+                labelStart="Beginner"
+                labelEnd="Expert"
+              />
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="abs"
-                  checked={filters.abs === true}
-                  onCheckedChange={handleAbsChange}
-                />
-                <Label htmlFor="abs">ABS Equipped</Label>
-              </div>
+              <AbsFilter
+                checked={filters.abs === true}
+                onChange={handleAbsChange}
+                id="abs"
+              />
 
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={handleReset}
-              >
-                Reset Filters
-              </Button>
+              <ResetButton onReset={handleReset} />
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -232,98 +183,47 @@ export default function MotorcycleFilters({
         <h3 className="text-lg font-semibold">Filters</h3>
         
         <div className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="font-medium">Make</h4>
-            <Input 
-              placeholder="Search makes..." 
-              value={filters.make}
-              onChange={handleMakeChange}
-            />
-            <div className="grid grid-cols-1 gap-2">
-              {commonMakes.slice(0, 6).map((make) => (
-                <Button
-                  key={make}
-                  variant={filters.make === make ? "default" : "outline"}
-                  size="sm"
-                  className="justify-start"
-                  onClick={() => onFilterChange({ ...filters, make })}
-                >
-                  {make}
-                </Button>
-              ))}
-            </div>
-          </div>
+          <MakeFilter 
+            make={filters.make} 
+            commonMakes={commonMakes} 
+            onMakeChange={handleMakeChange}
+            onMakeSelect={handleMakeSelect}
+          />
 
-          <div className="space-y-2">
-            <h4 className="font-medium">Categories</h4>
-            <div className="grid grid-cols-1 gap-2">
-              {categories.map((category) => (
-                <div key={category} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`category-desktop-${category}`} 
-                    checked={filters.categories.includes(category)}
-                    onCheckedChange={(checked) => 
-                      handleCategoryChange(category, checked as boolean)
-                    }
-                  />
-                  <Label htmlFor={`category-desktop-${category}`}>{category}</Label>
-                </div>
-              ))}
-            </div>
-          </div>
+          <CategoryFilter 
+            categories={categories}
+            selectedCategories={filters.categories}
+            onChange={handleCategoryChange}
+          />
 
-          <div className="space-y-2">
-            <h4 className="font-medium">Engine Size</h4>
-            <div className="px-2">
-              <Slider 
-                defaultValue={[
-                  filters.engineSizeRange[0], 
-                  filters.engineSizeRange[1]
-                ]} 
-                max={2000} 
-                step={50}
-                onValueChange={handleEngineRangeChange}
-              />
-              <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                <span>{filters.engineSizeRange[0]} cc</span>
-                <span>{filters.engineSizeRange[1]} cc</span>
-              </div>
-            </div>
-          </div>
+          <RangeFilter
+            title="Engine Size"
+            min={0}
+            max={2000}
+            step={50}
+            value={[filters.engineSizeRange[0], filters.engineSizeRange[1]]}
+            onChange={handleEngineRangeChange}
+            valueFormatter={(v) => `${v} cc`}
+          />
 
-          <div className="space-y-2">
-            <h4 className="font-medium">Difficulty Level</h4>
-            <div className="px-2">
-              <Slider 
-                defaultValue={[filters.difficultyLevel]} 
-                max={5} 
-                step={1}
-                onValueChange={handleDifficultyChange}
-              />
-              <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                <span>Beginner</span>
-                <span>Expert</span>
-              </div>
-            </div>
-          </div>
+          <RangeFilter
+            title="Difficulty Level"
+            min={1}
+            max={5}
+            step={1}
+            value={[filters.difficultyLevel]}
+            onChange={handleDifficultyChange}
+            labelStart="Beginner"
+            labelEnd="Expert"
+          />
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="abs-desktop"
-              checked={filters.abs === true}
-              onCheckedChange={handleAbsChange}
-            />
-            <Label htmlFor="abs-desktop">ABS Equipped</Label>
-          </div>
+          <AbsFilter
+            checked={filters.abs === true}
+            onChange={handleAbsChange}
+            id="abs-desktop"
+          />
 
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full"
-            onClick={handleReset}
-          >
-            Reset Filters
-          </Button>
+          <ResetButton onReset={handleReset} />
         </div>
       </div>
     </div>
