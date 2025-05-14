@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { MotorcycleCategory, MotorcycleFilters } from "@/types";
+import type { MotorcycleCategory, MotorcycleFilters } from "@/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
