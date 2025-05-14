@@ -1,5 +1,5 @@
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Motorcycle, MotorcycleFilters, MotorcycleCategory } from "@/types";
 import { useEngineFilter } from "./useEngineFilter";
 import { useDifficultyFilter } from "./useDifficultyFilter";
@@ -10,6 +10,8 @@ import { useMakeFilter } from "./useMakeFilter";
 import { useAbsFilter } from "./useAbsFilter";
 import { useSearchFilter } from "./useSearchFilter";
 import { useCategoryFilter } from "./useCategoryFilter";
+import { useStyleTagFilter } from "./useStyleTagFilter";
+import { countActiveFilters } from "@/lib/filter-utils";
 
 // Default filter values
 export const initialFilters: MotorcycleFilters = {
@@ -25,33 +27,53 @@ export const initialFilters: MotorcycleFilters = {
   searchTerm: ""
 };
 
-export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
-  // Use individual filter hooks
-  const { categories, handleCategoryChange } = useCategoryFilter();
-  const { make, handleMakeChange } = useMakeFilter();
-  const { yearRange, handleYearRangeChange } = useYearFilter();
-  const { engineSizeRange, handleEngineSizeRangeChange } = useEngineFilter();
-  const { difficultyLevel, handleDifficultyChange } = useDifficultyFilter();
-  const { weightRange, handleWeightRangeChange } = useWeightFilter();
-  const { seatHeightRange, handleSeatHeightRangeChange } = useSeatHeightFilter();
-  const { abs, handleAbsChange } = useAbsFilter();
-  const { searchTerm, handleSearchChange } = useSearchFilter();
+export function useMotorcycleFilters(
+  motorcycles: Motorcycle[], 
+  startingFilters: MotorcycleFilters = initialFilters
+) {
+  // Use individual filter hooks with initial values from startingFilters
+  const { categories, handleCategoryChange } = useCategoryFilter(startingFilters.categories);
+  const { make, handleMakeChange } = useMakeFilter(startingFilters.make);
+  const { yearRange, handleYearRangeChange } = useYearFilter(startingFilters.yearRange);
+  const { engineSizeRange, handleEngineSizeRangeChange } = useEngineFilter(startingFilters.engineSizeRange);
+  const { difficultyLevel, handleDifficultyChange } = useDifficultyFilter(startingFilters.difficultyLevel);
+  const { weightRange, handleWeightRangeChange } = useWeightFilter(startingFilters.weightRange);
+  const { seatHeightRange, handleSeatHeightRangeChange } = useSeatHeightFilter(startingFilters.seatHeightRange);
+  const { styleTags, handleStyleTagsChange } = useStyleTagFilter(startingFilters.styleTags);
+  const { abs, handleAbsChange } = useAbsFilter(startingFilters.abs);
+  const { 
+    searchTerm, 
+    debouncedSearchTerm, 
+    isSearching, 
+    handleSearchChange 
+  } = useSearchFilter(startingFilters.searchTerm);
+
+  // Track if any filters are active
+  const [isFiltering, setIsFiltering] = useState(countActiveFilters(startingFilters) > 0);
 
   // Combine all filter states
-  const filters = useMemo<MotorcycleFilters>(() => ({
-    categories,
-    make,
-    yearRange,
-    engineSizeRange,
-    difficultyLevel,
-    weightRange,
-    seatHeightRange,
-    styleTags: [], // Not currently implemented in individual hooks
-    abs,
-    searchTerm
-  }), [
+  const filters = useMemo<MotorcycleFilters>(() => {
+    const currentFilters = {
+      categories,
+      make,
+      yearRange,
+      engineSizeRange,
+      difficultyLevel,
+      weightRange,
+      seatHeightRange,
+      styleTags,
+      abs,
+      searchTerm
+    };
+    
+    // Update filtering state 
+    setIsFiltering(countActiveFilters(currentFilters) > 0);
+    
+    return currentFilters;
+  }, [
     categories, make, yearRange, engineSizeRange, 
-    difficultyLevel, weightRange, seatHeightRange, abs, searchTerm
+    difficultyLevel, weightRange, seatHeightRange, 
+    styleTags, abs, searchTerm
   ]);
 
   // Reset all filters
@@ -63,13 +85,14 @@ export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
     handleDifficultyChange([initialFilters.difficultyLevel]);
     handleWeightRangeChange(initialFilters.weightRange);
     handleSeatHeightRangeChange(initialFilters.seatHeightRange);
+    handleStyleTagsChange([]);
     handleAbsChange(false);
     handleSearchChange("");
   }, [
     handleCategoryChange, handleMakeChange, handleYearRangeChange,
     handleEngineSizeRangeChange, handleDifficultyChange,
     handleWeightRangeChange, handleSeatHeightRangeChange,
-    handleAbsChange, handleSearchChange
+    handleStyleTagsChange, handleAbsChange, handleSearchChange
   ]);
 
   // General filter change handler (for batch updates)
@@ -81,16 +104,17 @@ export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
     handleDifficultyChange([newFilters.difficultyLevel]);
     handleWeightRangeChange(newFilters.weightRange);
     handleSeatHeightRangeChange(newFilters.seatHeightRange);
+    handleStyleTagsChange(newFilters.styleTags);
     handleAbsChange(newFilters.abs === true);
     handleSearchChange(newFilters.searchTerm);
   }, [
     handleCategoryChange, handleMakeChange, handleYearRangeChange,
     handleEngineSizeRangeChange, handleDifficultyChange,
     handleWeightRangeChange, handleSeatHeightRangeChange,
-    handleAbsChange, handleSearchChange
+    handleStyleTagsChange, handleAbsChange, handleSearchChange
   ]);
 
-  // Apply filters to motorcycles list
+  // Apply filters to motorcycles list - using debounced search term
   const filteredMotorcycles = useMemo(() => {
     return motorcycles.filter(motorcycle => {
       // Filter by categories if any are selected
@@ -128,14 +152,20 @@ export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
         return false;
       }
 
+      // Filter by style tags if any are selected
+      if (filters.styleTags.length > 0 && 
+          !filters.styleTags.some(tag => motorcycle.style_tags.includes(tag))) {
+        return false;
+      }
+
       // Filter by ABS
       if (filters.abs !== null && motorcycle.abs !== filters.abs) {
         return false;
       }
 
-      // Filter by search term
-      if (filters.searchTerm) {
-        const searchLower = filters.searchTerm.toLowerCase();
+      // Filter by search term - using debounced value
+      if (debouncedSearchTerm) {
+        const searchLower = debouncedSearchTerm.toLowerCase();
         const matchesSearch = 
           motorcycle.make.toLowerCase().includes(searchLower) ||
           motorcycle.model.toLowerCase().includes(searchLower) ||
@@ -151,7 +181,7 @@ export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
       // If it passes all filters, include it
       return true;
     });
-  }, [motorcycles, filters]);
+  }, [motorcycles, filters, debouncedSearchTerm]);
 
   return {
     filters,
@@ -162,10 +192,13 @@ export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
     handleDifficultyChange, 
     handleWeightRangeChange,
     handleSeatHeightRangeChange,
+    handleStyleTagsChange,
     handleAbsChange,
     handleSearchChange,
     handleFilterChange,
     resetFilters,
-    filteredMotorcycles
+    filteredMotorcycles,
+    isFiltering,
+    isSearching
   };
 }

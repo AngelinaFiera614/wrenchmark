@@ -14,10 +14,12 @@ export default function WeightFilter({
   return (
     <RangeFilter
       title="Weight"
+      filterType="weight"
       min={100}
       max={400}
       step={10}
       value={weightRange}
+      defaultValue={[100, 400]}
       onChange={onChange}
       valueFormatter={(v) => `${v} kg`}
     />

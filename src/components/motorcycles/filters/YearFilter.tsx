@@ -14,10 +14,12 @@ export default function YearFilter({
   return (
     <RangeFilter
       title="Year"
+      filterType="year"
       min={1980}
       max={2025}
       step={1}
       value={yearRange}
+      defaultValue={[1980, 2023]}
       onChange={onChange}
       valueFormatter={(v) => `${v}`}
     />

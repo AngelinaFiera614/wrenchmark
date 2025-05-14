@@ -1,3 +1,5 @@
+
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motorcyclesData } from "@/data/motorcycles";
 import Header from "@/components/layout/Header";
@@ -6,31 +8,41 @@ import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
 import MotorcycleGrid from "@/components/motorcycles/MotorcycleGrid";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useMotorcycleFilters } from "@/hooks/useMotorcycleFilters";
+import { useMotorcycleFilters, initialFilters } from "@/hooks/useMotorcycleFilters";
+import { syncFiltersToUrl, parseFiltersFromUrl } from "@/lib/filter-utils";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export default function Motorcycles() {
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize filters from URL if available
+  const parsedFilters = parseFiltersFromUrl(searchParams, initialFilters);
   
   const {
     filters,
     handleFilterChange,
     handleSearchChange,
     resetFilters,
-    filteredMotorcycles
-  } = useMotorcycleFilters(motorcyclesData);
+    filteredMotorcycles,
+    isFiltering
+  } = useMotorcycleFilters(motorcyclesData, parsedFilters);
+
+  // Sync filters to URL when they change
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    syncFiltersToUrl(filters, newParams);
+    setSearchParams(newParams);
+  }, [filters, setSearchParams]);
 
   // Update search when user types and sync with URL params
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
     handleSearchChange(searchTerm);
+  };
 
-    // Update URL params
-    if (searchTerm) {
-      searchParams.set("search", searchTerm);
-    } else {
-      searchParams.delete("search");
-    }
-    setSearchParams(searchParams);
+  const clearSearch = () => {
+    handleSearchChange("");
   };
 
   return (
@@ -57,13 +69,24 @@ export default function Motorcycles() {
                   <Input
                     type="search"
                     placeholder="Search motorcycles..."
-                    className="pl-8"
+                    className="pl-8 pr-10"
                     value={filters.searchTerm}
                     onChange={handleSearch}
                   />
+                  {filters.searchTerm && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-2 h-5 w-5 p-0"
+                      onClick={clearSearch}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {filteredMotorcycles.length} {filteredMotorcycles.length === 1 ? 'result' : 'results'}
+                  {isFiltering && ' (filtered)'}
                 </div>
               </div>
             </div>

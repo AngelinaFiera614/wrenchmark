@@ -2,6 +2,8 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import FilterReset from "./FilterReset";
 
 interface AbsFilterProps {
   checked: boolean;
@@ -17,7 +19,21 @@ export default function AbsFilter({ checked, onChange, id = "abs" }: AbsFilterPr
         checked={checked}
         onCheckedChange={onChange}
       />
-      <Label htmlFor={id}>ABS Equipped</Label>
+      <Label 
+        htmlFor={id}
+        className={checked ? "font-medium" : ""}
+      >
+        ABS Equipped
+      </Label>
+      
+      {checked && (
+        <>
+          <Badge variant="outline" className="ml-auto text-xs">
+            Active
+          </Badge>
+          <FilterReset filterType="abs" />
+        </>
+      )}
     </div>
   );
 }

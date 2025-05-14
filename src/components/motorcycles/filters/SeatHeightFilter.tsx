@@ -14,10 +14,12 @@ export default function SeatHeightFilter({
   return (
     <RangeFilter
       title="Seat Height"
+      filterType="seatHeight"
       min={650}
       max={950}
       step={10}
       value={seatHeightRange}
+      defaultValue={[650, 950]}
       onChange={onChange}
       valueFormatter={(v) => `${v} mm`}
     />

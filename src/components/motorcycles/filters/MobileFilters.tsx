@@ -4,6 +4,7 @@ import {
   Collapsible,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
 import type { MotorcycleCategory, MotorcycleFilters as FiltersType } from "@/types";
 import { useFilterHandlers } from "@/hooks/useFilterHandlers";
 import CategoryFilter from "./CategoryFilter";
@@ -22,13 +23,15 @@ interface MobileFiltersProps {
   onFilterChange: (filters: FiltersType) => void;
   categories: MotorcycleCategory[];
   commonMakes: string[];
+  activeFilterCount?: number;
 }
 
 export default function MobileFilters({ 
   filters, 
   onFilterChange,
   categories,
-  commonMakes
+  commonMakes,
+  activeFilterCount = 0
 }: MobileFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -52,7 +55,14 @@ export default function MobileFilters({
         className="w-full space-y-4"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Filters</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Filters</h3>
+            {activeFilterCount > 0 && (
+              <Badge variant="secondary" className="ml-1">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </div>
           <MobileFilterToggle isOpen={isOpen} />
         </div>
         
@@ -100,7 +110,7 @@ export default function MobileFilters({
             <AbsFilter
               checked={filters.abs === true}
               onChange={handleAbsChange}
-              id="abs"
+              id="abs-mobile"
             />
 
             <FilterReset />

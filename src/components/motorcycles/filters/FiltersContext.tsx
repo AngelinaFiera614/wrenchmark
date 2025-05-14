@@ -7,6 +7,7 @@ interface FiltersContextType {
   onFilterChange: (filters: FiltersType) => void;
   categories: MotorcycleCategory[];
   commonMakes: string[];
+  isFiltering?: boolean;
 }
 
 export const FiltersContext = createContext<FiltersContextType | undefined>(undefined);
