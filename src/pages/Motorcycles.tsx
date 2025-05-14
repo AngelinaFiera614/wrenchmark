@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motorcyclesData } from "@/data/motorcycles";
 import Header from "@/components/layout/Header";
@@ -16,17 +15,15 @@ export default function Motorcycles() {
   const {
     filters,
     handleFilterChange,
+    handleSearchChange,
     resetFilters,
     filteredMotorcycles
   } = useMotorcycleFilters(motorcyclesData);
 
-  // Update search when user types
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Update search when user types and sync with URL params
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
-    handleFilterChange({
-      ...filters,
-      searchTerm
-    });
+    handleSearchChange(searchTerm);
 
     // Update URL params
     if (searchTerm) {
@@ -63,7 +60,7 @@ export default function Motorcycles() {
                     placeholder="Search motorcycles..."
                     className="pl-8"
                     value={filters.searchTerm}
-                    onChange={handleSearchChange}
+                    onChange={handleSearch}
                   />
                 </div>
                 <div className="text-sm text-muted-foreground">

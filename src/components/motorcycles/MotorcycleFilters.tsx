@@ -13,7 +13,6 @@ import RangeFilter from "./filters/RangeFilter";
 import AbsFilter from "./filters/AbsFilter";
 import ResetButton from "./filters/ResetButton";
 import MobileFilterToggle from "./filters/MobileFilterToggle";
-import { useFilterCategories } from "@/hooks/useFilterCategories";
 
 const categories: MotorcycleCategory[] = [
   "Sport",
@@ -51,16 +50,16 @@ export default function MotorcycleFilters({
 }: MotorcycleFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
   
-  // Use our custom hook for category filtering
-  const {
-    availableCategories,
-    selectedCategories,
-    handleCategoryChange
-  } = useFilterCategories({
-    initialCategories: categories,
-    onFilterChange,
-    filters
-  });
+  const handleCategoryChange = (category: MotorcycleCategory, checked: boolean) => {
+    const updatedCategories = checked 
+      ? [...filters.categories, category]
+      : filters.categories.filter(c => c !== category);
+    
+    onFilterChange({
+      ...filters,
+      categories: updatedCategories
+    });
+  };
 
   const handleMakeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFilterChange({
@@ -140,8 +139,8 @@ export default function MotorcycleFilters({
               />
 
               <CategoryFilter 
-                categories={availableCategories}
-                selectedCategories={selectedCategories}
+                categories={categories}
+                selectedCategories={filters.categories}
                 onChange={handleCategoryChange}
                 isMobile={true}
               />
@@ -192,8 +191,8 @@ export default function MotorcycleFilters({
           />
 
           <CategoryFilter 
-            categories={availableCategories}
-            selectedCategories={selectedCategories}
+            categories={categories}
+            selectedCategories={filters.categories}
             onChange={handleCategoryChange}
           />
 

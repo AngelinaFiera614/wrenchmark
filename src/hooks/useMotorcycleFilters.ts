@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useMemo } from "react";
-import { Motorcycle, MotorcycleFilters } from "@/types";
+import { Motorcycle, MotorcycleFilters, MotorcycleCategory } from "@/types";
 
 const initialFilters: MotorcycleFilters = {
   categories: [],
@@ -18,14 +18,95 @@ const initialFilters: MotorcycleFilters = {
 export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
   const [filters, setFilters] = useState<MotorcycleFilters>(initialFilters);
 
+  // Handler for category changes
+  const handleCategoryChange = useCallback((category: MotorcycleCategory, checked: boolean) => {
+    setFilters(prevFilters => {
+      const updatedCategories = checked 
+        ? [...prevFilters.categories, category]
+        : prevFilters.categories.filter(c => c !== category);
+      
+      return {
+        ...prevFilters,
+        categories: updatedCategories
+      };
+    });
+  }, []);
+
+  // Handler for make changes (both text input and quick selection)
+  const handleMakeChange = useCallback((make: string) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      make
+    }));
+  }, []);
+
+  // Handler for year range slider
+  const handleYearRangeChange = useCallback((values: number[]) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      yearRange: [values[0], values[1]] as [number, number]
+    }));
+  }, []);
+
+  // Handler for engine size range slider
+  const handleEngineSizeRangeChange = useCallback((values: number[]) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      engineSizeRange: [values[0], values[1]] as [number, number]
+    }));
+  }, []);
+
+  // Handler for difficulty slider
+  const handleDifficultyChange = useCallback((values: number[]) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      difficultyLevel: values[0]
+    }));
+  }, []);
+
+  // Handler for weight range slider
+  const handleWeightRangeChange = useCallback((values: number[]) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      weightRange: [values[0], values[1]] as [number, number]
+    }));
+  }, []);
+
+  // Handler for seat height range slider
+  const handleSeatHeightRangeChange = useCallback((values: number[]) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      seatHeightRange: [values[0], values[1]] as [number, number]
+    }));
+  }, []);
+
+  // Handler for ABS filter toggle
+  const handleAbsChange = useCallback((checked: boolean) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      abs: checked ? true : null
+    }));
+  }, []);
+
+  // Handler for search term
+  const handleSearchChange = useCallback((searchTerm: string) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      searchTerm
+    }));
+  }, []);
+
+  // General filter change handler (for batch updates)
   const handleFilterChange = useCallback((newFilters: MotorcycleFilters) => {
     setFilters(newFilters);
   }, []);
 
+  // Reset all filters
   const resetFilters = useCallback(() => {
     setFilters(initialFilters);
   }, []);
 
+  // Apply filters to motorcycles list
   const filteredMotorcycles = useMemo(() => {
     return motorcycles.filter(motorcycle => {
       // Filter by categories if any are selected
@@ -90,6 +171,15 @@ export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
 
   return {
     filters,
+    handleCategoryChange,
+    handleMakeChange,
+    handleYearRangeChange,
+    handleEngineSizeRangeChange,
+    handleDifficultyChange, 
+    handleWeightRangeChange,
+    handleSeatHeightRangeChange,
+    handleAbsChange,
+    handleSearchChange,
     handleFilterChange,
     resetFilters,
     filteredMotorcycles
