@@ -1,18 +1,19 @@
 
 import { useState } from "react";
-import type { MotorcycleCategory, MotorcycleFilters } from "@/types";
+import type { MotorcycleCategory } from "@/types";
 import {
   Collapsible,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 
-// Import our new filter components
+// Import our filter components
 import CategoryFilter from "./filters/CategoryFilter";
 import MakeFilter from "./filters/MakeFilter";
 import RangeFilter from "./filters/RangeFilter";
 import AbsFilter from "./filters/AbsFilter";
 import ResetButton from "./filters/ResetButton";
 import MobileFilterToggle from "./filters/MobileFilterToggle";
+import { useFilterCategories } from "@/hooks/useFilterCategories";
 
 const categories: MotorcycleCategory[] = [
   "Sport",
@@ -40,8 +41,8 @@ const commonMakes = [
 ];
 
 interface MotorcycleFiltersProps {
-  filters: MotorcycleFilters;
-  onFilterChange: (filters: MotorcycleFilters) => void;
+  filters: import("@/types").MotorcycleFilters;
+  onFilterChange: (filters: import("@/types").MotorcycleFilters) => void;
 }
 
 export default function MotorcycleFilters({ 
@@ -49,17 +50,17 @@ export default function MotorcycleFilters({
   onFilterChange 
 }: MotorcycleFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  const handleCategoryChange = (category: MotorcycleCategory, checked: boolean) => {
-    const updatedCategories = checked 
-      ? [...filters.categories, category]
-      : filters.categories.filter(c => c !== category);
-    
-    onFilterChange({
-      ...filters,
-      categories: updatedCategories
-    });
-  };
+  
+  // Use our custom hook for category filtering
+  const {
+    availableCategories,
+    selectedCategories,
+    handleCategoryChange
+  } = useFilterCategories({
+    initialCategories: categories,
+    onFilterChange,
+    filters
+  });
 
   const handleMakeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFilterChange({
@@ -139,8 +140,8 @@ export default function MotorcycleFilters({
               />
 
               <CategoryFilter 
-                categories={categories}
-                selectedCategories={filters.categories}
+                categories={availableCategories}
+                selectedCategories={selectedCategories}
                 onChange={handleCategoryChange}
                 isMobile={true}
               />
@@ -191,8 +192,8 @@ export default function MotorcycleFilters({
           />
 
           <CategoryFilter 
-            categories={categories}
-            selectedCategories={filters.categories}
+            categories={availableCategories}
+            selectedCategories={selectedCategories}
             onChange={handleCategoryChange}
           />
 
