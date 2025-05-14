@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import type { MotorcycleCategory } from "@/types";
+import type { MotorcycleCategory, MotorcycleFilters as FiltersType } from "@/types";
 import {
   Collapsible,
   CollapsibleContent,
@@ -9,7 +9,11 @@ import {
 // Import our filter components
 import CategoryFilter from "./filters/CategoryFilter";
 import MakeFilter from "./filters/MakeFilter";
-import RangeFilter from "./filters/RangeFilter";
+import EngineFilter from "./filters/EngineFilter";
+import DifficultyFilter from "./filters/DifficultyFilter";
+import WeightFilter from "./filters/WeightFilter";
+import SeatHeightFilter from "./filters/SeatHeightFilter";
+import YearFilter from "./filters/YearFilter";
 import AbsFilter from "./filters/AbsFilter";
 import ResetButton from "./filters/ResetButton";
 import MobileFilterToggle from "./filters/MobileFilterToggle";
@@ -40,8 +44,8 @@ const commonMakes = [
 ];
 
 interface MotorcycleFiltersProps {
-  filters: import("@/types").MotorcycleFilters;
-  onFilterChange: (filters: import("@/types").MotorcycleFilters) => void;
+  filters: FiltersType;
+  onFilterChange: (filters: FiltersType) => void;
 }
 
 export default function MotorcycleFilters({ 
@@ -68,6 +72,10 @@ export default function MotorcycleFilters({
     });
   };
 
+  const handleMakeSelect = (make: string) => {
+    onFilterChange({ ...filters, make });
+  };
+
   const handleYearRangeChange = (values: number[]) => {
     onFilterChange({
       ...filters,
@@ -86,6 +94,20 @@ export default function MotorcycleFilters({
     onFilterChange({
       ...filters,
       difficultyLevel: values[0]
+    });
+  };
+
+  const handleWeightRangeChange = (values: number[]) => {
+    onFilterChange({
+      ...filters,
+      weightRange: [values[0], values[1]] as [number, number]
+    });
+  };
+
+  const handleSeatHeightRangeChange = (values: number[]) => {
+    onFilterChange({
+      ...filters,
+      seatHeightRange: [values[0], values[1]] as [number, number]
     });
   };
 
@@ -109,10 +131,6 @@ export default function MotorcycleFilters({
       abs: null,
       searchTerm: ""
     });
-  };
-
-  const handleMakeSelect = (make: string) => {
-    onFilterChange({ ...filters, make });
   };
 
   return (
@@ -145,25 +163,29 @@ export default function MotorcycleFilters({
                 isMobile={true}
               />
 
-              <RangeFilter
-                title="Engine Size"
-                min={0}
-                max={2000}
-                step={50}
-                value={[filters.engineSizeRange[0], filters.engineSizeRange[1]]}
+              <EngineFilter
+                engineSizeRange={filters.engineSizeRange}
                 onChange={handleEngineRangeChange}
-                valueFormatter={(v) => `${v} cc`}
               />
 
-              <RangeFilter
-                title="Difficulty Level"
-                min={1}
-                max={5}
-                step={1}
-                value={[filters.difficultyLevel]}
+              <DifficultyFilter
+                difficultyLevel={filters.difficultyLevel}
                 onChange={handleDifficultyChange}
-                labelStart="Beginner"
-                labelEnd="Expert"
+              />
+
+              <WeightFilter
+                weightRange={filters.weightRange}
+                onChange={handleWeightRangeChange}
+              />
+
+              <SeatHeightFilter
+                seatHeightRange={filters.seatHeightRange}
+                onChange={handleSeatHeightRangeChange}
+              />
+
+              <YearFilter
+                yearRange={filters.yearRange}
+                onChange={handleYearRangeChange}
               />
 
               <AbsFilter
@@ -196,25 +218,29 @@ export default function MotorcycleFilters({
             onChange={handleCategoryChange}
           />
 
-          <RangeFilter
-            title="Engine Size"
-            min={0}
-            max={2000}
-            step={50}
-            value={[filters.engineSizeRange[0], filters.engineSizeRange[1]]}
+          <EngineFilter
+            engineSizeRange={filters.engineSizeRange}
             onChange={handleEngineRangeChange}
-            valueFormatter={(v) => `${v} cc`}
           />
 
-          <RangeFilter
-            title="Difficulty Level"
-            min={1}
-            max={5}
-            step={1}
-            value={[filters.difficultyLevel]}
+          <DifficultyFilter
+            difficultyLevel={filters.difficultyLevel}
             onChange={handleDifficultyChange}
-            labelStart="Beginner"
-            labelEnd="Expert"
+          />
+
+          <WeightFilter
+            weightRange={filters.weightRange}
+            onChange={handleWeightRangeChange}
+          />
+
+          <SeatHeightFilter
+            seatHeightRange={filters.seatHeightRange}
+            onChange={handleSeatHeightRangeChange}
+          />
+
+          <YearFilter
+            yearRange={filters.yearRange}
+            onChange={handleYearRangeChange}
           />
 
           <AbsFilter
