@@ -5,6 +5,7 @@ import {
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 import type { MotorcycleCategory, MotorcycleFilters as FiltersType } from "@/types";
+import { useFilterHandlers } from "@/hooks/useFilterHandlers";
 import CategoryFilter from "./CategoryFilter";
 import MakeFilter from "./MakeFilter";
 import EngineFilter from "./EngineFilter";
@@ -30,70 +31,18 @@ export default function MobileFilters({
   commonMakes
 }: MobileFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  const handleCategoryChange = (category: MotorcycleCategory, checked: boolean) => {
-    const updatedCategories = checked 
-      ? [...filters.categories, category]
-      : filters.categories.filter(c => c !== category);
-    
-    onFilterChange({
-      ...filters,
-      categories: updatedCategories
-    });
-  };
-
-  const handleMakeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFilterChange({
-      ...filters,
-      make: e.target.value
-    });
-  };
-
-  const handleMakeSelect = (make: string) => {
-    onFilterChange({ ...filters, make });
-  };
-
-  const handleYearRangeChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      yearRange: [values[0], values[1]] as [number, number]
-    });
-  };
-
-  const handleEngineRangeChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      engineSizeRange: [values[0], values[1]] as [number, number]
-    });
-  };
-
-  const handleDifficultyChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      difficultyLevel: values[0]
-    });
-  };
-
-  const handleWeightRangeChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      weightRange: [values[0], values[1]] as [number, number]
-    });
-  };
-
-  const handleSeatHeightRangeChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      seatHeightRange: [values[0], values[1]] as [number, number]
-    });
-  };
-
-  const handleAbsChange = (checked: boolean) => {
-    onFilterChange({
-      ...filters,
-      abs: checked ? true : null
-    });
-  };
+  
+  const {
+    handleCategoryChange,
+    handleMakeChange,
+    handleMakeSelect,
+    handleYearRangeChange,
+    handleEngineRangeChange,
+    handleDifficultyChange,
+    handleWeightRangeChange,
+    handleSeatHeightRangeChange,
+    handleAbsChange
+  } = useFilterHandlers(filters, onFilterChange);
 
   return (
     <div className="flex items-center justify-between md:hidden">
