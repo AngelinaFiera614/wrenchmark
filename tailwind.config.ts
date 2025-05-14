@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom Wrenchmark colors
+				'charcoal': '#0D0F10',
+				'graphite': '#16191C',
+				'accent-teal': '#00F0D1',
+				'accent-teal-hover': '#00FFDA',
+				'layer-bg': 'rgba(31,36,40,0.75)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
