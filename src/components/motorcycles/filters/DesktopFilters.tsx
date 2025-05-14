@@ -38,7 +38,7 @@ export default function DesktopFilters({
 
   return (
     <div className="hidden md:block space-y-4">
-      <h3 className="text-lg font-semibold">Filters</h3>
+      {/* Removed the duplicate "Filters" heading */}
       
       <div className="space-y-4">
         <MakeFilter 

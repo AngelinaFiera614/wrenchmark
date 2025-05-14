@@ -56,7 +56,7 @@ export default function MobileFilters({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">Filters</h3>
+            {/* Removed the duplicate "Filters" text */}
             {activeFilterCount > 0 && (
               <Badge variant="secondary" className="ml-1">
                 {activeFilterCount}

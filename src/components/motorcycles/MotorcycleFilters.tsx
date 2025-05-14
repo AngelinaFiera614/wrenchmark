@@ -57,6 +57,7 @@ export default function MotorcycleFilters({
 
   return (
     <div className="sticky top-[4.5rem] space-y-4 py-4">
+      {/* Single "Filters" heading for both mobile and desktop views */}
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg font-semibold">Filters</h2>
         {activeFilterCount > 0 && (
