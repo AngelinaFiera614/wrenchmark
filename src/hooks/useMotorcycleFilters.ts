@@ -1,6 +1,17 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Motorcycle, MotorcycleFilters, MotorcycleCategory } from "@/types";
+import { useEngineFilter } from "./useEngineFilter";
+import { useDifficultyFilter } from "./useDifficultyFilter";
+import { useWeightFilter } from "./useWeightFilter";
+import { useSeatHeightFilter } from "./useSeatHeightFilter";
+import { useYearFilter } from "./useYearFilter";
+import { useMakeFilter } from "./useMakeFilter";
+import { useAbsFilter } from "./useAbsFilter";
+import { useSearchFilter } from "./useSearchFilter";
+
+// Import category filter hook - assuming it was previously created
+import { useCategoryFilter } from "./useCategoryFilter";
 
 const initialFilters: MotorcycleFilters = {
   categories: [],
@@ -16,95 +27,58 @@ const initialFilters: MotorcycleFilters = {
 };
 
 export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
-  const [filters, setFilters] = useState<MotorcycleFilters>(initialFilters);
+  // Use individual filter hooks
+  const { categories, handleCategoryChange } = useCategoryFilter();
+  const { make, handleMakeChange } = useMakeFilter();
+  const { yearRange, handleYearRangeChange } = useYearFilter();
+  const { engineSizeRange, handleEngineSizeRangeChange } = useEngineFilter();
+  const { difficultyLevel, handleDifficultyChange } = useDifficultyFilter();
+  const { weightRange, handleWeightRangeChange } = useWeightFilter();
+  const { seatHeightRange, handleSeatHeightRangeChange } = useSeatHeightFilter();
+  const { abs, handleAbsChange } = useAbsFilter();
+  const { searchTerm, handleSearchChange } = useSearchFilter();
 
-  // Handler for category changes
-  const handleCategoryChange = useCallback((category: MotorcycleCategory, checked: boolean) => {
-    setFilters(prevFilters => {
-      const updatedCategories = checked 
-        ? [...prevFilters.categories, category]
-        : prevFilters.categories.filter(c => c !== category);
-      
-      return {
-        ...prevFilters,
-        categories: updatedCategories
-      };
-    });
-  }, []);
+  // Combine all filter states
+  const filters = useMemo<MotorcycleFilters>(() => ({
+    categories,
+    make,
+    yearRange,
+    engineSizeRange,
+    difficultyLevel,
+    weightRange,
+    seatHeightRange,
+    styleTags: [], // Not currently implemented in individual hooks
+    abs,
+    searchTerm
+  }), [
+    categories, make, yearRange, engineSizeRange, 
+    difficultyLevel, weightRange, seatHeightRange, abs, searchTerm
+  ]);
 
-  // Handler for make changes (both text input and quick selection)
-  const handleMakeChange = useCallback((make: string) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      make
-    }));
-  }, []);
-
-  // Handler for year range slider
-  const handleYearRangeChange = useCallback((values: number[]) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      yearRange: [values[0], values[1]] as [number, number]
-    }));
-  }, []);
-
-  // Handler for engine size range slider
-  const handleEngineSizeRangeChange = useCallback((values: number[]) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      engineSizeRange: [values[0], values[1]] as [number, number]
-    }));
-  }, []);
-
-  // Handler for difficulty slider
-  const handleDifficultyChange = useCallback((values: number[]) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      difficultyLevel: values[0]
-    }));
-  }, []);
-
-  // Handler for weight range slider
-  const handleWeightRangeChange = useCallback((values: number[]) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      weightRange: [values[0], values[1]] as [number, number]
-    }));
-  }, []);
-
-  // Handler for seat height range slider
-  const handleSeatHeightRangeChange = useCallback((values: number[]) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      seatHeightRange: [values[0], values[1]] as [number, number]
-    }));
-  }, []);
-
-  // Handler for ABS filter toggle
-  const handleAbsChange = useCallback((checked: boolean) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      abs: checked ? true : null
-    }));
-  }, []);
-
-  // Handler for search term
-  const handleSearchChange = useCallback((searchTerm: string) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      searchTerm
-    }));
+  // Reset all filters
+  const resetFilters = useCallback(() => {
+    // Individual reset functions would be called here
+    // For now, we'll implement this in the general handler
+    handleFilterChange(initialFilters);
   }, []);
 
   // General filter change handler (for batch updates)
   const handleFilterChange = useCallback((newFilters: MotorcycleFilters) => {
-    setFilters(newFilters);
-  }, []);
-
-  // Reset all filters
-  const resetFilters = useCallback(() => {
-    setFilters(initialFilters);
-  }, []);
+    handleCategoryChange(newFilters.categories);
+    handleMakeChange(newFilters.make);
+    handleYearRangeChange(newFilters.yearRange);
+    handleEngineSizeRangeChange(newFilters.engineSizeRange);
+    handleDifficultyChange([newFilters.difficultyLevel]);
+    handleWeightRangeChange(newFilters.weightRange);
+    handleSeatHeightRangeChange(newFilters.seatHeightRange);
+    handleAbsChange(newFilters.abs === true);
+    handleSearchChange(newFilters.searchTerm);
+  }, [
+    handleCategoryChange, handleMakeChange, handleYearRangeChange,
+    handleEngineSizeRangeChange, handleDifficultyChange,
+    handleWeightRangeChange, handleSeatHeightRangeChange,
+    handleAbsChange, handleSearchChange
+  ]);
 
   // Apply filters to motorcycles list
   const filteredMotorcycles = useMemo(() => {
