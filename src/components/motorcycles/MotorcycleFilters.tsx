@@ -1,22 +1,9 @@
 
 import { useState } from "react";
 import type { MotorcycleCategory, MotorcycleFilters as FiltersType } from "@/types";
-import {
-  Collapsible,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
-
-// Import our filter components
-import CategoryFilter from "./filters/CategoryFilter";
-import MakeFilter from "./filters/MakeFilter";
-import EngineFilter from "./filters/EngineFilter";
-import DifficultyFilter from "./filters/DifficultyFilter";
-import WeightFilter from "./filters/WeightFilter";
-import SeatHeightFilter from "./filters/SeatHeightFilter";
-import YearFilter from "./filters/YearFilter";
-import AbsFilter from "./filters/AbsFilter";
-import FilterReset from "./filters/FilterReset";
-import MobileFilterToggle from "./filters/MobileFilterToggle";
+import { FiltersContext } from "./filters/FiltersContext";
+import MobileFilters from "./filters/MobileFilters";
+import DesktopFilters from "./filters/DesktopFilters";
 
 const categories: MotorcycleCategory[] = [
   "Sport",
@@ -52,191 +39,33 @@ export default function MotorcycleFilters({
   filters, 
   onFilterChange 
 }: MotorcycleFiltersProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  const handleCategoryChange = (category: MotorcycleCategory, checked: boolean) => {
-    const updatedCategories = checked 
-      ? [...filters.categories, category]
-      : filters.categories.filter(c => c !== category);
-    
-    onFilterChange({
-      ...filters,
-      categories: updatedCategories
-    });
-  };
-
-  const handleMakeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFilterChange({
-      ...filters,
-      make: e.target.value
-    });
-  };
-
-  const handleMakeSelect = (make: string) => {
-    onFilterChange({ ...filters, make });
-  };
-
-  const handleYearRangeChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      yearRange: [values[0], values[1]] as [number, number]
-    });
-  };
-
-  const handleEngineRangeChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      engineSizeRange: [values[0], values[1]] as [number, number]
-    });
-  };
-
-  const handleDifficultyChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      difficultyLevel: values[0]
-    });
-  };
-
-  const handleWeightRangeChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      weightRange: [values[0], values[1]] as [number, number]
-    });
-  };
-
-  const handleSeatHeightRangeChange = (values: number[]) => {
-    onFilterChange({
-      ...filters,
-      seatHeightRange: [values[0], values[1]] as [number, number]
-    });
-  };
-
-  const handleAbsChange = (checked: boolean) => {
-    onFilterChange({
-      ...filters,
-      abs: checked ? true : null
-    });
+  // Create context value for filter components
+  const contextValue = {
+    filters,
+    onFilterChange,
+    categories,
+    commonMakes
   };
 
   return (
     <div className="sticky top-[4.5rem] space-y-4 py-4">
-      {/* Mobile filters */}
-      <div className="flex items-center justify-between md:hidden">
-        <Collapsible
-          open={isOpen}
-          onOpenChange={setIsOpen}
-          className="w-full space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Filters</h3>
-            <MobileFilterToggle isOpen={isOpen} />
-          </div>
-          
-          <CollapsibleContent className="space-y-4">
-            <div className="space-y-4">
-              <MakeFilter 
-                make={filters.make} 
-                commonMakes={commonMakes} 
-                onMakeChange={handleMakeChange} 
-                onMakeSelect={handleMakeSelect}
-              />
+      <FiltersContext.Provider value={contextValue}>
+        {/* Mobile filters */}
+        <MobileFilters 
+          filters={filters}
+          onFilterChange={onFilterChange}
+          categories={categories}
+          commonMakes={commonMakes}
+        />
 
-              <CategoryFilter 
-                categories={categories}
-                selectedCategories={filters.categories}
-                onChange={handleCategoryChange}
-                isMobile={true}
-              />
-
-              <EngineFilter
-                engineSizeRange={filters.engineSizeRange}
-                onChange={handleEngineRangeChange}
-              />
-
-              <DifficultyFilter
-                difficultyLevel={filters.difficultyLevel}
-                onChange={handleDifficultyChange}
-              />
-
-              <WeightFilter
-                weightRange={filters.weightRange}
-                onChange={handleWeightRangeChange}
-              />
-
-              <SeatHeightFilter
-                seatHeightRange={filters.seatHeightRange}
-                onChange={handleSeatHeightRangeChange}
-              />
-
-              <YearFilter
-                yearRange={filters.yearRange}
-                onChange={handleYearRangeChange}
-              />
-
-              <AbsFilter
-                checked={filters.abs === true}
-                onChange={handleAbsChange}
-                id="abs"
-              />
-
-              <FilterReset />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
-
-      {/* Desktop filters - always visible */}
-      <div className="hidden md:block space-y-4">
-        <h3 className="text-lg font-semibold">Filters</h3>
-        
-        <div className="space-y-4">
-          <MakeFilter 
-            make={filters.make} 
-            commonMakes={commonMakes} 
-            onMakeChange={handleMakeChange}
-            onMakeSelect={handleMakeSelect}
-          />
-
-          <CategoryFilter 
-            categories={categories}
-            selectedCategories={filters.categories}
-            onChange={handleCategoryChange}
-          />
-
-          <EngineFilter
-            engineSizeRange={filters.engineSizeRange}
-            onChange={handleEngineRangeChange}
-          />
-
-          <DifficultyFilter
-            difficultyLevel={filters.difficultyLevel}
-            onChange={handleDifficultyChange}
-          />
-
-          <WeightFilter
-            weightRange={filters.weightRange}
-            onChange={handleWeightRangeChange}
-          />
-
-          <SeatHeightFilter
-            seatHeightRange={filters.seatHeightRange}
-            onChange={handleSeatHeightRangeChange}
-          />
-
-          <YearFilter
-            yearRange={filters.yearRange}
-            onChange={handleYearRangeChange}
-          />
-
-          <AbsFilter
-            checked={filters.abs === true}
-            onChange={handleAbsChange}
-            id="abs-desktop"
-          />
-
-          <FilterReset />
-        </div>
-      </div>
+        {/* Desktop filters - always visible */}
+        <DesktopFilters
+          filters={filters}
+          onFilterChange={onFilterChange}
+          categories={categories}
+          commonMakes={commonMakes}
+        />
+      </FiltersContext.Provider>
     </div>
   );
 }
