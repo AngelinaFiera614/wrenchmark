@@ -14,9 +14,9 @@ export function FeaturesList({ motorcycle }: FeaturesListProps) {
   
   return (
     <>
-      <Card className="border border-border/30 bg-card/50 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-170">
+      <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-170 shadow-md">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <CheckCircle2 className="h-5 w-5 text-primary" />
             <span>Features</span>
           </CardTitle>
@@ -38,9 +38,9 @@ export function FeaturesList({ motorcycle }: FeaturesListProps) {
       </Card>
 
       {smart_features.length > 0 && (
-        <Card className="border border-border/30 bg-card/50 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-200">
+        <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-200 shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle>Smart Features</CardTitle>
+            <CardTitle className="text-foreground">Smart Features</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -49,7 +49,7 @@ export function FeaturesList({ motorcycle }: FeaturesListProps) {
                   <Badge 
                     key={feature} 
                     variant="outline" 
-                    className="hover:bg-primary/20 hover:border-primary transition-colors duration-300"
+                    className="bg-muted/30 text-foreground border-primary/30 hover:bg-primary/20 hover:border-primary transition-colors duration-300"
                   >
                     {feature}
                   </Badge>
