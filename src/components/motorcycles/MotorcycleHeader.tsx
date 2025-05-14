@@ -3,8 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Card } from "@/components/ui/card";
+import { MotorcycleImageCarousel } from "./MotorcycleImageCarousel";
 
 interface MotorcycleHeaderProps {
   motorcycle: Motorcycle;
@@ -21,6 +20,14 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
     image_url,
     summary
   } = motorcycle;
+
+  // Create an array of images from the single image_url
+  // In a real app, this would come from the API with multiple images
+  const images = [
+    image_url,
+    `https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&auto=format&fit=crop`,
+    `https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop`,
+  ];
 
   const difficultyColor = `difficulty-${difficulty_level}`;
 
@@ -42,15 +49,9 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <Card className="overflow-hidden border border-border/30 bg-card/50 backdrop-blur-sm">
-        <AspectRatio ratio={4/3} className="bg-muted/20">
-          <img
-            src={image_url}
-            alt={`${make} ${model}`}
-            className="object-cover w-full h-full hover:scale-105 transition-transform duration-700"
-          />
-        </AspectRatio>
-      </Card>
+      <div className="overflow-hidden border border-border/30 bg-card/50 backdrop-blur-sm rounded-lg">
+        <MotorcycleImageCarousel images={images} alt={`${make} ${model}`} />
+      </div>
       
       <div className="space-y-5">
         <div className="animate-in slide-in-from-right-5 duration-300 delay-150">
