@@ -8,7 +8,8 @@ import {
   CarouselContent,
   CarouselItem,
   CarouselNext,
-  CarouselPrevious
+  CarouselPrevious,
+  type CarouselApi
 } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +20,7 @@ interface MotorcycleImageCarouselProps {
 
 export function MotorcycleImageCarousel({ images, alt }: MotorcycleImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [api, setApi] = useState<CarouselApi>();
   
   // Handle case where no images are provided
   if (!images || images.length === 0) {
@@ -35,8 +37,9 @@ export function MotorcycleImageCarousel({ images, alt }: MotorcycleImageCarousel
     <div className="relative overflow-hidden rounded-lg">
       <Carousel
         className="w-full"
-        onSelect={(api) => {
-          if (api) setCurrentIndex(api.selectedScrollSnap())
+        setApi={setApi}
+        onSelect={() => {
+          if (api) setCurrentIndex(api.selectedScrollSnap());
         }}
       >
         <CarouselContent>
@@ -79,7 +82,12 @@ export function MotorcycleImageCarousel({ images, alt }: MotorcycleImageCarousel
                 index === currentIndex ? "bg-primary" : "bg-muted"
               )}
               aria-label={`Go to slide ${index + 1}`}
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => {
+                if (api) {
+                  api.scrollTo(index);
+                  setCurrentIndex(index);
+                }
+              }}
             />
           ))}
         </div>
