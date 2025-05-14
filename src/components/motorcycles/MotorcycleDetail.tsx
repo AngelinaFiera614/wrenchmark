@@ -1,13 +1,12 @@
-
 import { Motorcycle } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle2, 
   X, 
   Info, 
-  Engine, 
+  GaugeCircle, 
   Activity, 
-  Speed, 
+  Gauge, 
   ArrowUp, 
   ArrowDown,
   CircleArrowDown,
@@ -136,7 +135,7 @@ export default function MotorcycleDetail({ motorcycle }: MotorcycleDetailProps) 
       <Card className="border border-border/30 bg-card/50 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-100">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Engine className="h-5 w-5 text-primary" />
+            <GaugeCircle className="h-5 w-5 text-primary" />
             <span>Performance Specifications</span>
           </CardTitle>
         </CardHeader>
@@ -148,7 +147,7 @@ export default function MotorcycleDetail({ motorcycle }: MotorcycleDetailProps) 
               <SpecItem 
                 label="Engine" 
                 value={`${engine_cc} cc`} 
-                icon={<Engine className="h-4 w-4" />}
+                icon={<GaugeCircle className="h-4 w-4" />}
                 tooltip="Engine displacement in cubic centimeters, indicating the size of the engine"
               />
               <SpecItem 
@@ -166,7 +165,7 @@ export default function MotorcycleDetail({ motorcycle }: MotorcycleDetailProps) 
               <SpecItem 
                 label="Top Speed" 
                 value={`${top_speed_kph} km/h`} 
-                icon={<Speed className="h-4 w-4" />}
+                icon={<Gauge className="h-4 w-4" />}
                 tooltip="Maximum speed the motorcycle can achieve"
               />
             </div>
