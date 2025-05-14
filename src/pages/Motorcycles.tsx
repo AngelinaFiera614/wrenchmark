@@ -1,4 +1,3 @@
-
 import { useSearchParams } from "react-router-dom";
 import { motorcyclesData } from "@/data/motorcycles";
 import Header from "@/components/layout/Header";

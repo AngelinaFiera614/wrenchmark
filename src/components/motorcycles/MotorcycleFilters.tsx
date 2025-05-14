@@ -15,7 +15,7 @@ import WeightFilter from "./filters/WeightFilter";
 import SeatHeightFilter from "./filters/SeatHeightFilter";
 import YearFilter from "./filters/YearFilter";
 import AbsFilter from "./filters/AbsFilter";
-import ResetButton from "./filters/ResetButton";
+import FilterReset from "./filters/FilterReset";
 import MobileFilterToggle from "./filters/MobileFilterToggle";
 
 const categories: MotorcycleCategory[] = [
@@ -118,21 +118,6 @@ export default function MotorcycleFilters({
     });
   };
 
-  const handleReset = () => {
-    onFilterChange({
-      categories: [],
-      make: "",
-      yearRange: [1980, 2023],
-      engineSizeRange: [0, 2000],
-      difficultyLevel: 5,
-      weightRange: [100, 400],
-      seatHeightRange: [650, 950],
-      styleTags: [],
-      abs: null,
-      searchTerm: ""
-    });
-  };
-
   return (
     <div className="sticky top-[4.5rem] space-y-4 py-4">
       {/* Mobile filters */}
@@ -194,7 +179,7 @@ export default function MotorcycleFilters({
                 id="abs"
               />
 
-              <ResetButton onReset={handleReset} />
+              <FilterReset />
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -249,7 +234,7 @@ export default function MotorcycleFilters({
             id="abs-desktop"
           />
 
-          <ResetButton onReset={handleReset} />
+          <FilterReset />
         </div>
       </div>
     </div>

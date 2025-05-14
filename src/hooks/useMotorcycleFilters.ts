@@ -9,11 +9,10 @@ import { useYearFilter } from "./useYearFilter";
 import { useMakeFilter } from "./useMakeFilter";
 import { useAbsFilter } from "./useAbsFilter";
 import { useSearchFilter } from "./useSearchFilter";
-
-// Import category filter hook - assuming it was previously created
 import { useCategoryFilter } from "./useCategoryFilter";
 
-const initialFilters: MotorcycleFilters = {
+// Default filter values
+export const initialFilters: MotorcycleFilters = {
   categories: [],
   make: "",
   yearRange: [1980, 2023],
@@ -57,10 +56,21 @@ export function useMotorcycleFilters(motorcycles: Motorcycle[]) {
 
   // Reset all filters
   const resetFilters = useCallback(() => {
-    // Individual reset functions would be called here
-    // For now, we'll implement this in the general handler
-    handleFilterChange(initialFilters);
-  }, []);
+    handleCategoryChange([]);
+    handleMakeChange("");
+    handleYearRangeChange(initialFilters.yearRange);
+    handleEngineSizeRangeChange(initialFilters.engineSizeRange);
+    handleDifficultyChange([initialFilters.difficultyLevel]);
+    handleWeightRangeChange(initialFilters.weightRange);
+    handleSeatHeightRangeChange(initialFilters.seatHeightRange);
+    handleAbsChange(false);
+    handleSearchChange("");
+  }, [
+    handleCategoryChange, handleMakeChange, handleYearRangeChange,
+    handleEngineSizeRangeChange, handleDifficultyChange,
+    handleWeightRangeChange, handleSeatHeightRangeChange,
+    handleAbsChange, handleSearchChange
+  ]);
 
   // General filter change handler (for batch updates)
   const handleFilterChange = useCallback((newFilters: MotorcycleFilters) => {
