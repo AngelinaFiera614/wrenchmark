@@ -7,7 +7,7 @@ interface ComparisonSectionHeaderProps {
 export default function ComparisonSectionHeader({ title, description }: ComparisonSectionHeaderProps) {
   return (
     <div className="mb-6">
-      <h2 className="text-2xl font-bold">{title}</h2>
+      <h2 className="text-2xl font-bold text-foreground">{title}</h2>
       {description && (
         <p className="text-muted-foreground">{description}</p>
       )}

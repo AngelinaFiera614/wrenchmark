@@ -15,7 +15,7 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-100 shadow-md">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-foreground">
-          <GaugeCircle className="h-5 w-5 text-primary" />
+          <GaugeCircle className="h-5 w-5 text-accent-teal" />
           <span>Performance Specifications</span>
         </CardTitle>
       </CardHeader>

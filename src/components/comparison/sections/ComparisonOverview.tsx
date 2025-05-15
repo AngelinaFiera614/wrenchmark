@@ -37,12 +37,12 @@ export default function ComparisonOverview({ motorcycles }: ComparisonOverviewPr
           const yearCompare = yearComparisons[index];
 
           return (
-            <Card key={motorcycle.id} className="relative">
+            <Card key={motorcycle.id} className="relative bg-card/70 backdrop-blur-sm border-border/50">
               {!isMobile && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-2 z-10 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70"
+                  className="absolute right-2 top-2 z-10 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white"
                   onClick={() => removeFromComparison(motorcycle.id)}
                 >
                   <X className="h-4 w-4" />
@@ -62,8 +62,8 @@ export default function ComparisonOverview({ motorcycles }: ComparisonOverviewPr
                 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-xl font-bold flex items-baseline gap-2">
-                      <span className={getComparisonClass(makeCompare)}>
+                    <h3 className="text-xl font-bold flex items-baseline gap-2 text-foreground">
+                      <span className={`${getComparisonClass(makeCompare)} text-foreground`}>
                         {motorcycle.make}
                       </span>
                       <span>{motorcycle.model}</span>
@@ -74,20 +74,20 @@ export default function ComparisonOverview({ motorcycles }: ComparisonOverviewPr
                   </div>
                   
                   <div>
-                    <h4 className="text-sm font-medium mb-1">Category</h4>
-                    <Badge variant="outline" className="bg-secondary/50">
+                    <h4 className="text-sm font-medium mb-1 text-foreground">Category</h4>
+                    <Badge variant="outline" className="bg-secondary/50 text-foreground border-accent-teal/30">
                       {motorcycle.category}
                     </Badge>
                   </div>
                   
                   <div>
-                    <h4 className="text-sm font-medium mb-1">Style</h4>
+                    <h4 className="text-sm font-medium mb-1 text-foreground">Style</h4>
                     <div className="flex flex-wrap gap-1">
                       {motorcycle.style_tags.map(tag => (
                         <Badge 
                           key={tag} 
                           variant="secondary" 
-                          className="bg-secondary/20"
+                          className="bg-secondary/30 text-foreground border border-accent-teal/20"
                         >
                           {tag}
                         </Badge>
@@ -96,7 +96,7 @@ export default function ComparisonOverview({ motorcycles }: ComparisonOverviewPr
                   </div>
                   
                   <div>
-                    <h4 className="text-sm font-medium mb-1">Difficulty</h4>
+                    <h4 className="text-sm font-medium mb-1 text-foreground">Difficulty</h4>
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <div
@@ -106,14 +106,14 @@ export default function ComparisonOverview({ motorcycles }: ComparisonOverviewPr
                           }`}
                         />
                       ))}
-                      <span className="ml-2 text-sm">{motorcycle.difficulty_level}/5</span>
+                      <span className="ml-2 text-sm text-foreground">{motorcycle.difficulty_level}/5</span>
                     </div>
                   </div>
                   
                   {isMobile && (
                     <Button
                       variant="outline" 
-                      className="w-full text-red-500/70 border-red-500/30 hover:bg-red-500/10"
+                      className="w-full text-red-500 border-red-500/30 hover:bg-red-500/10"
                       onClick={() => removeFromComparison(motorcycle.id)}
                     >
                       <X className="h-4 w-4 mr-2" />

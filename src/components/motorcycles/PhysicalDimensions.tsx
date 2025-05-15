@@ -21,7 +21,7 @@ export function PhysicalDimensions({ motorcycle }: PhysicalDimensionsProps) {
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-150 shadow-md">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-foreground">
-          <ArrowDown className="h-5 w-5 text-primary" />
+          <ArrowDown className="h-5 w-5 text-accent-teal" />
           <span>Physical Dimensions</span>
         </CardTitle>
       </CardHeader>

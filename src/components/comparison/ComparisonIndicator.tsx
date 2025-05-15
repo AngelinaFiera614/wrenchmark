@@ -28,7 +28,7 @@ export function ComparisonIndicator() {
         "fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50",
         "flex items-center gap-2 px-4 py-3 rounded-full",
         "bg-accent-teal text-black shadow-lg",
-        "animate-in slide-in-from-bottom duration-300"
+        "animate-in slide-in-from-bottom duration-300 border border-accent-teal/30"
       )}
     >
       <Button 
@@ -41,7 +41,7 @@ export function ComparisonIndicator() {
         <span className="sr-only">Clear comparison</span>
       </Button>
       
-      <div className="flex items-center gap-2" onClick={handleCompareClick}>
+      <div className="flex items-center gap-2 cursor-pointer" onClick={handleCompareClick}>
         <GitCompareArrows className="h-5 w-5" />
         <span className="font-medium">
           Compare {motorcyclesToCompare.length} {motorcyclesToCompare.length === 1 ? 'motorcycle' : 'motorcycles'}

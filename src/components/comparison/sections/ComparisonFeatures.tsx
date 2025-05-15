@@ -31,13 +31,13 @@ export default function ComparisonFeatures({ motorcycles }: ComparisonFeaturesPr
         
         <div className="space-y-6">
           {motorcycles.map((motorcycle, index) => (
-            <div key={motorcycle.id} className="bg-card rounded-lg border p-4">
-              <h3 className="text-lg font-bold mb-4">{motorcycle.make} {motorcycle.model}</h3>
+            <div key={motorcycle.id} className="bg-card/70 rounded-lg border border-border/50 p-4 backdrop-blur-sm">
+              <h3 className="text-lg font-bold mb-4 text-foreground">{motorcycle.make} {motorcycle.model}</h3>
               
               <div className="space-y-6">
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">ABS</p>
-                  <div className={`flex items-center ${getComparisonClass(absComparisons[index])}`}>
+                  <div className={`flex items-center ${getComparisonClass(absComparisons[index])} text-foreground`}>
                     {motorcycle.abs ? (
                       <>
                         <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
@@ -60,7 +60,7 @@ export default function ComparisonFeatures({ motorcycles }: ComparisonFeaturesPr
                         <Badge 
                           key={feature} 
                           variant="secondary" 
-                          className="bg-secondary/20"
+                          className="bg-secondary/30 text-foreground border border-accent-teal/20"
                         >
                           {feature}
                         </Badge>
@@ -86,24 +86,24 @@ export default function ComparisonFeatures({ motorcycles }: ComparisonFeaturesPr
         description="Safety and smart features" 
       />
       
-      <Table className="bg-card/50">
+      <Table className="bg-card/50 border border-border/30">
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[180px]">Feature</TableHead>
+          <TableRow className="border-border/30">
+            <TableHead className="w-[180px] text-foreground">Feature</TableHead>
             {motorcycles.map((motorcycle) => (
-              <TableHead key={motorcycle.id}>
+              <TableHead key={motorcycle.id} className="text-foreground">
                 {motorcycle.make} {motorcycle.model}
               </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">ABS</TableCell>
+          <TableRow className="border-border/30">
+            <TableCell className="font-medium text-foreground">ABS</TableCell>
             {absComparisons.map((comparison, i) => (
               <TableCell 
                 key={`abs-${motorcycles[i].id}`}
-                className={getComparisonClass(comparison)}
+                className={`${getComparisonClass(comparison)} text-foreground`}
               >
                 {comparison.value ? (
                   <div className="flex items-center">
@@ -120,12 +120,12 @@ export default function ComparisonFeatures({ motorcycles }: ComparisonFeaturesPr
             ))}
           </TableRow>
           
-          <TableRow>
-            <TableCell className="font-medium">Smart Features</TableCell>
+          <TableRow className="border-border/30">
+            <TableCell className="font-medium text-foreground">Smart Features</TableCell>
             {featuresComparisons.map((comparison, i) => (
               <TableCell 
                 key={`features-${motorcycles[i].id}`}
-                className="align-top"
+                className="align-top text-foreground"
               >
                 <div className="flex flex-wrap gap-1">
                   {Array.isArray(comparison.value) && comparison.value.length > 0 ? (
@@ -133,7 +133,7 @@ export default function ComparisonFeatures({ motorcycles }: ComparisonFeaturesPr
                       <Badge 
                         key={feature} 
                         variant="secondary" 
-                        className={`bg-secondary/20 ${comparison.isUnique ? 'border border-blue-400/30' : ''}`}
+                        className={`bg-secondary/20 text-foreground ${comparison.isUnique ? 'border border-accent-teal' : 'border border-border/30'}`}
                       >
                         {feature}
                       </Badge>

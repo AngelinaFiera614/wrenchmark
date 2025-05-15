@@ -40,17 +40,29 @@ export default function ComparisonGrid({ motorcycles }: ComparisonGridProps) {
           onValueChange={handleSectionChange}
           className="w-full"
         >
-          <TabsList className="w-full md:w-auto flex">
-            <TabsTrigger value="overview" className="flex-1 md:flex-none">
+          <TabsList className="w-full md:w-auto flex bg-muted/80 border border-border/30">
+            <TabsTrigger 
+              value="overview" 
+              className="flex-1 md:flex-none text-foreground data-[state=active]:bg-accent-teal data-[state=active]:text-black"
+            >
               Overview
             </TabsTrigger>
-            <TabsTrigger value="performance" className="flex-1 md:flex-none">
+            <TabsTrigger 
+              value="performance" 
+              className="flex-1 md:flex-none text-foreground data-[state=active]:bg-accent-teal data-[state=active]:text-black"
+            >
               Performance
             </TabsTrigger>
-            <TabsTrigger value="dimensions" className="flex-1 md:flex-none">
+            <TabsTrigger 
+              value="dimensions" 
+              className="flex-1 md:flex-none text-foreground data-[state=active]:bg-accent-teal data-[state=active]:text-black"
+            >
               Dimensions
             </TabsTrigger>
-            <TabsTrigger value="features" className="flex-1 md:flex-none">
+            <TabsTrigger 
+              value="features" 
+              className="flex-1 md:flex-none text-foreground data-[state=active]:bg-accent-teal data-[state=active]:text-black"
+            >
               Features
             </TabsTrigger>
           </TabsList>

@@ -19,7 +19,7 @@ export function SpecificationItem({ label, value, icon, tooltip }: SpecItemProps
   return (
     <div className="grid grid-cols-2 gap-2 py-2 border-b border-border/50 group hover:bg-muted/20 px-2 -mx-2 rounded transition-colors">
       <div className="flex items-center gap-2">
-        {icon && <span className="text-primary">{icon}</span>}
+        {icon && <span className="text-accent-teal">{icon}</span>}
         <span className="text-muted-foreground">{label}</span>
         {tooltip && (
           <TooltipProvider>
