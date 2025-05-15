@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useComparison } from "@/context/ComparisonContext";
 import { Button } from "@/components/ui/button";
-import { CompareArrows, X } from "lucide-react";
+import { GitCompareArrows, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ComparisonIndicator() {
@@ -42,7 +42,7 @@ export function ComparisonIndicator() {
       </Button>
       
       <div className="flex items-center gap-2" onClick={handleCompareClick}>
-        <CompareArrows className="h-5 w-5" />
+        <GitCompareArrows className="h-5 w-5" />
         <span className="font-medium">
           Compare {motorcyclesToCompare.length} {motorcyclesToCompare.length === 1 ? 'motorcycle' : 'motorcycles'}
         </span>

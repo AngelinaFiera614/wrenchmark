@@ -1,6 +1,9 @@
 
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
 export type ValueComparison = {
-  value: number | string | boolean;
+  value: number | string | boolean | string[];
   isHighest?: boolean;
   isLowest?: boolean;
   isEqual?: boolean;
@@ -70,7 +73,7 @@ export function compareArrayValues(motorcycleValues: string[][]): ValueCompariso
       value: array,
       isEqual: allEqual,
       isUnique: motorcycleValues.filter(a => a.join(',') === joinedArray).length === 1,
-    };
+    } as ValueComparison; // Type assertion to make TypeScript happy
   });
 }
 

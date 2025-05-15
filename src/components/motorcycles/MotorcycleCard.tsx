@@ -1,9 +1,8 @@
-
 import { Link } from "react-router-dom";
 import { Motorcycle } from "@/types";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Info, CompareArrows } from "lucide-react";
+import { CheckCircle2, Info, GitCompareArrows } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useComparison } from "@/context/ComparisonContext";
@@ -71,7 +70,7 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
               isSelected && "bg-accent-teal text-black hover:bg-accent-teal-hover"
             )}
           >
-            <CompareArrows className="h-4 w-4 mr-1" />
+            <GitCompareArrows className="h-4 w-4 mr-1" />
             {isSelected ? "Remove" : "Compare"}
           </Button>
         </div>
