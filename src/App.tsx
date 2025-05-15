@@ -12,6 +12,8 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import { ComparisonProvider } from "./context/ComparisonContext";
 import ComparisonPage from "./pages/ComparisonPage";
+import BrandsDirectory from "./pages/BrandsDirectory";
+import BrandDetail from "./pages/BrandDetail";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,8 @@ const App = () => (
               <Route path="/motorcycles" element={<Motorcycles />} />
               <Route path="/motorcycle/:id" element={<MotorcycleDetail />} />
               <Route path="/compare" element={<ComparisonPage />} />
+              <Route path="/brands" element={<BrandsDirectory />} />
+              <Route path="/brands/:brandId" element={<BrandDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -38,6 +38,9 @@ export default function Header() {
                 <Link to="/motorcycles" className="text-foreground hover:text-primary transition-colors">
                   Motorcycles
                 </Link>
+                <Link to="/brands" className="text-foreground hover:text-primary transition-colors">
+                  Brands
+                </Link>
                 <Link to="/about" className="text-foreground hover:text-primary transition-colors">
                   About
                 </Link>
@@ -61,6 +64,9 @@ export default function Header() {
           </Link>
           <Link to="/motorcycles" className="text-foreground hover:text-primary transition-colors">
             Motorcycles
+          </Link>
+          <Link to="/brands" className="text-foreground hover:text-primary transition-colors">
+            Brands
           </Link>
           <Link to="/about" className="text-foreground hover:text-primary transition-colors">
             About

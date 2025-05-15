@@ -1,0 +1,73 @@
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Brand } from "@/data/brands";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+
+interface BrandCardProps {
+  brand: Brand;
+}
+
+export default function BrandCard({ brand }: BrandCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <Card 
+      className="overflow-hidden hover:border-accent-teal transition-all duration-300 h-full flex flex-col"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CardHeader className="pb-0">
+        <div className="mb-2 w-full">
+          <AspectRatio ratio={1 / 1} className="bg-secondary/50 rounded-md overflow-hidden">
+            <img
+              src={brand.logo}
+              alt={`${brand.name} logo`}
+              className="w-full h-full object-cover transition-transform duration-300 ease-in-out"
+              style={{
+                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+              }}
+            />
+          </AspectRatio>
+        </div>
+        <h3 className="text-2xl font-bold text-foreground">{brand.name}</h3>
+      </CardHeader>
+      
+      <CardContent className="py-4">
+        <div className="space-y-2 text-foreground">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Country:</span>
+            <span>{brand.country}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Founded:</span>
+            <span>{brand.founded}</span>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1">
+            {brand.knownFor.map((tag) => (
+              <Badge key={tag} variant="outline" className="bg-secondary text-foreground">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="pt-0 mt-auto">
+        <Link to={`/brands/${brand.id}`} className="w-full">
+          <Button 
+            variant="teal"
+            className="w-full justify-between"
+          >
+            View Details
+            <ArrowRight size={18} />
+          </Button>
+        </Link>
+      </CardFooter>
+    </Card>
+  );
+}
