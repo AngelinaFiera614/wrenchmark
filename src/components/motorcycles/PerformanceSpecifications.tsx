@@ -1,7 +1,7 @@
 
 import { Motorcycle } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GaugeCircle, Activity, Gauge, CircleArrowUp } from "lucide-react";
+import { GaugeCircle, Zap, Gauge, Timer } from "lucide-react";
 import { SpecificationItem } from "./SpecificationItem";
 
 interface PerformanceSpecificationsProps {
@@ -31,20 +31,20 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
           <SpecificationItem 
             label="Horsepower" 
             value={`${horsepower_hp} hp`} 
-            icon={<Activity className="h-4 w-4" />}
-            tooltip="Maximum power output of the engine"
+            icon={<Zap className="h-4 w-4" />}
+            tooltip="Maximum power output of the engine, measured in horsepower (hp)"
           />
           <SpecificationItem 
             label="Torque" 
             value={`${torque_nm} Nm`} 
-            icon={<CircleArrowUp className="h-4 w-4" />}
-            tooltip="Rotational force produced by the engine"
+            icon={<Timer className="h-4 w-4" />}
+            tooltip="Rotational force produced by the engine, measured in Newton meters (Nm)"
           />
           <SpecificationItem 
             label="Top Speed" 
             value={`${top_speed_kph} km/h`} 
             icon={<Gauge className="h-4 w-4" />}
-            tooltip="Maximum speed the motorcycle can achieve"
+            tooltip="Maximum speed the motorcycle can achieve in kilometers per hour"
           />
         </div>
       </CardContent>

@@ -17,7 +17,7 @@ export default function MotorcycleDetail() {
         <Header />
         <main className="flex-1 container py-8 px-4 md:px-6">
           <div className="flex flex-col items-center justify-center py-12">
-            <h1 className="text-2xl font-bold mb-4">Motorcycle Not Found</h1>
+            <h1 className="text-2xl font-bold mb-4 text-foreground">Motorcycle Not Found</h1>
             <p className="text-muted-foreground mb-6">
               The motorcycle you're looking for doesn't exist or has been removed.
             </p>
@@ -39,10 +39,10 @@ export default function MotorcycleDetail() {
       <Header />
       
       <main className="flex-1">
-        <div className="container px-4 md:px-6 py-8">
-          <div className="mb-6">
+        <div className="container px-4 md:px-6 pt-4 pb-12">
+          <div className="mb-4">
             <Link to="/motorcycles">
-              <Button variant="ghost" className="pl-0">
+              <Button variant="ghost" className="pl-0 text-foreground hover:text-accent-teal hover:bg-background/5">
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Back to Motorcycles
               </Button>
