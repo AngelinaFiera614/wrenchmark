@@ -12,6 +12,7 @@ import { useMotorcycleFilters, initialFilters } from "@/hooks/useMotorcycleFilte
 import { syncFiltersToUrl, parseFiltersFromUrl } from "@/lib/filter-utils";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator";
 
 export default function Motorcycles() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -97,6 +98,7 @@ export default function Motorcycles() {
       </main>
       
       <Footer />
+      <ComparisonIndicator />
     </div>
   );
 }

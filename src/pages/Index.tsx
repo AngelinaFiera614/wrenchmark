@@ -8,6 +8,7 @@ import Footer from "@/components/layout/Footer";
 import MotorcycleCard from "@/components/motorcycles/MotorcycleCard";
 import { Motorcycle } from "@/types";
 import { ArrowRight } from "lucide-react";
+import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator";
 
 // Group motorcycles by category for the quick links section
 const groupByCategory = (motorcycles: Motorcycle[]) => {
@@ -144,6 +145,7 @@ export default function Index() {
       </main>
       
       <Footer />
+      <ComparisonIndicator />
     </div>
   );
 }

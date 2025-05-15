@@ -1,0 +1,152 @@
+
+import { Motorcycle } from "@/types";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, X } from "lucide-react";
+import { compareBooleanValues, compareArrayValues, getComparisonClass } from "@/lib/comparison-utils";
+import ComparisonSectionHeader from "../ComparisonSectionHeader";
+import { useMobile } from "@/hooks/use-mobile";
+
+interface ComparisonFeaturesProps {
+  motorcycles: Motorcycle[];
+}
+
+export default function ComparisonFeatures({ motorcycles }: ComparisonFeaturesProps) {
+  const isMobile = useMobile();
+  
+  // Compare ABS
+  const absComparisons = compareBooleanValues(motorcycles.map(m => m.abs));
+  
+  // Compare smart features
+  const featuresComparisons = compareArrayValues(motorcycles.map(m => m.smart_features));
+  
+  // Create mobile cards for each motorcycle
+  if (isMobile) {
+    return (
+      <>
+        <ComparisonSectionHeader 
+          title="Features" 
+          description="Safety and smart features" 
+        />
+        
+        <div className="space-y-6">
+          {motorcycles.map((motorcycle, index) => (
+            <div key={motorcycle.id} className="bg-card rounded-lg border p-4">
+              <h3 className="text-lg font-bold mb-4">{motorcycle.make} {motorcycle.model}</h3>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">ABS</p>
+                  <div className={`flex items-center ${getComparisonClass(absComparisons[index])}`}>
+                    {motorcycle.abs ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                        <span>Equipped</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-4 w-4 text-red-500 mr-2" />
+                        <span>Not equipped</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Smart Features</p>
+                  <div className="flex flex-wrap gap-2">
+                    {motorcycle.smart_features.length > 0 ? (
+                      motorcycle.smart_features.map((feature) => (
+                        <Badge 
+                          key={feature} 
+                          variant="secondary" 
+                          className="bg-secondary/20"
+                        >
+                          {feature}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-muted-foreground italic">None</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+  
+  // Desktop table view
+  return (
+    <>
+      <ComparisonSectionHeader 
+        title="Features" 
+        description="Safety and smart features" 
+      />
+      
+      <Table className="bg-card/50">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[180px]">Feature</TableHead>
+            {motorcycles.map((motorcycle) => (
+              <TableHead key={motorcycle.id}>
+                {motorcycle.make} {motorcycle.model}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell className="font-medium">ABS</TableCell>
+            {absComparisons.map((comparison, i) => (
+              <TableCell 
+                key={`abs-${motorcycles[i].id}`}
+                className={getComparisonClass(comparison)}
+              >
+                {comparison.value ? (
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    <span>Equipped</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <X className="h-4 w-4 text-red-500 mr-2" />
+                    <span>Not equipped</span>
+                  </div>
+                )}
+              </TableCell>
+            ))}
+          </TableRow>
+          
+          <TableRow>
+            <TableCell className="font-medium">Smart Features</TableCell>
+            {featuresComparisons.map((comparison, i) => (
+              <TableCell 
+                key={`features-${motorcycles[i].id}`}
+                className="align-top"
+              >
+                <div className="flex flex-wrap gap-1">
+                  {Array.isArray(comparison.value) && comparison.value.length > 0 ? (
+                    comparison.value.map((feature) => (
+                      <Badge 
+                        key={feature} 
+                        variant="secondary" 
+                        className={`bg-secondary/20 ${comparison.isUnique ? 'border border-blue-400/30' : ''}`}
+                      >
+                        {feature}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground italic">None</span>
+                  )}
+                </div>
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableBody>
+      </Table>
+    </>
+  );
+}

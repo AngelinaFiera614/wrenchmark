@@ -3,8 +3,11 @@ import { Link } from "react-router-dom";
 import { Motorcycle } from "@/types";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Info } from "lucide-react";
+import { CheckCircle2, Info, CompareArrows } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { useComparison } from "@/context/ComparisonContext";
+import { cn } from "@/lib/utils";
 
 interface MotorcycleCardProps {
   motorcycle: Motorcycle;
@@ -29,10 +32,25 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
     summary
   } = motorcycle;
 
+  const { addToComparison, removeFromComparison, isInComparison } = useComparison();
+  const isSelected = isInComparison(id);
+
   const difficultyColor = `difficulty-${difficulty_level}`;
+  
+  const handleCompareToggle = (e: React.MouseEvent) => {
+    e.preventDefault();  // Prevent navigation
+    if (isSelected) {
+      removeFromComparison(id);
+    } else {
+      addToComparison(motorcycle);
+    }
+  };
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg">
+    <Card className={cn(
+      "overflow-hidden transition-all hover:shadow-lg",
+      isSelected && "ring-2 ring-accent-teal"
+    )}>
       <Link to={`/motorcycle/${id}`}>
         <div className="relative aspect-[16/9] overflow-hidden">
           <img
@@ -44,6 +62,18 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
             <h3 className="text-lg font-bold text-white">{make} {model}</h3>
             <p className="text-sm text-white/80">{year}</p>
           </div>
+          <Button 
+            onClick={handleCompareToggle}
+            variant={isSelected ? "default" : "outline"}
+            size="sm"
+            className={cn(
+              "absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 border-accent-teal",
+              isSelected && "bg-accent-teal text-black hover:bg-accent-teal-hover"
+            )}
+          >
+            <CompareArrows className="h-4 w-4 mr-1" />
+            {isSelected ? "Remove" : "Compare"}
+          </Button>
         </div>
         
         <CardContent className="grid gap-2 p-4">
