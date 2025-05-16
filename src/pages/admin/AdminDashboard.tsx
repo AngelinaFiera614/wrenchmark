@@ -1,161 +1,137 @@
 
-import { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Bike, Building, Wrench, FileText, Database } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface AdminMetric {
-  title: string;
-  value: number;
-  loading: boolean;
-}
+import { Bike, Building2, Wrench, FileText, Component, Users } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const AdminDashboard = () => {
-  const { toast } = useToast();
-  const [metrics, setMetrics] = useState<AdminMetric[]>([
-    { title: "Motorcycles", value: 0, loading: true },
-    { title: "Brands", value: 0, loading: true },
-    { title: "Repair Skills", value: 0, loading: true },
-    { title: "Manuals", value: 0, loading: true },
-  ]);
+  // Fetch counts of different content types
+  const { data: counts, isLoading } = useQuery({
+    queryKey: ["admin-dashboard-counts"],
+    queryFn: async () => {
+      const [
+        motorcyclesCount,
+        brandsCount,
+        repairSkillsCount,
+        manualsCount,
+        profilesCount,
+      ] = await Promise.all([
+        supabase.from("motorcycles").select("*", { count: "exact", head: true }),
+        supabase.from("brands").select("*", { count: "exact", head: true }),
+        supabase.from("repair_skills").select("*", { count: "exact", head: true }),
+        supabase.from("manuals").select("*", { count: "exact", head: true }),
+        supabase.from("profiles").select("*", { count: "exact", head: true }),
+      ]);
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        // Fetch motorcycle count
-        const { count: motorcycleCount, error: motorcycleError } = await supabase
-          .from('motorcycles')
-          .select('*', { count: 'exact', head: true });
-          
-        // Fetch brand count
-        const { count: brandCount, error: brandError } = await supabase
-          .from('brands')
-          .select('*', { count: 'exact', head: true });
-          
-        // Fetch repair skills count
-        const { count: repairCount, error: repairError } = await supabase
-          .from('repair_skills')
-          .select('*', { count: 'exact', head: true });
-          
-        // Fetch manuals count
-        const { count: manualCount, error: manualError } = await supabase
-          .from('manuals')
-          .select('*', { count: 'exact', head: true });
+      return {
+        motorcycles: motorcyclesCount.count || 0,
+        brands: brandsCount.count || 0,
+        repairSkills: repairSkillsCount.count || 0,
+        manuals: manualsCount.count || 0,
+        users: profilesCount.count || 0,
+      };
+    },
+  });
 
-        if (motorcycleError || brandError || repairError || manualError) {
-          throw new Error("Error fetching metrics");
-        }
-
-        setMetrics([
-          { title: "Motorcycles", value: motorcycleCount || 0, loading: false },
-          { title: "Brands", value: brandCount || 0, loading: false },
-          { title: "Repair Skills", value: repairCount || 0, loading: false },
-          { title: "Manuals", value: manualCount || 0, loading: false },
-        ]);
-      } catch (error) {
-        console.error("Failed to fetch metrics:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load admin metrics",
-        });
-      }
-    };
-
-    fetchMetrics();
-  }, [toast]);
-
-  const adminSections = [
+  const contentCards = [
     {
       title: "Motorcycles",
-      description: "Manage motorcycle listings and details",
+      icon: <Bike className="h-8 w-8 text-accent-teal" />,
+      count: counts?.motorcycles || 0,
       path: "/admin/motorcycles",
-      icon: <Bike className="h-8 w-8" />,
     },
     {
       title: "Brands",
-      description: "Manage motorcycle brands and manufacturers",
+      icon: <Building2 className="h-8 w-8 text-accent-teal" />,
+      count: counts?.brands || 0,
       path: "/admin/brands",
-      icon: <Building className="h-8 w-8" />,
     },
     {
       title: "Repair Skills",
-      description: "Create and edit motorcycle repair guides",
+      icon: <Wrench className="h-8 w-8 text-accent-teal" />,
+      count: counts?.repairSkills || 0,
       path: "/admin/repair-skills",
-      icon: <Wrench className="h-8 w-8" />,
     },
     {
       title: "Manuals",
-      description: "Upload and manage service manuals",
+      icon: <FileText className="h-8 w-8 text-accent-teal" />,
+      count: counts?.manuals || 0,
       path: "/admin/manuals",
-      icon: <FileText className="h-8 w-8" />,
+    },
+    {
+      title: "Parts Reference",
+      icon: <Component className="h-8 w-8 text-accent-teal" />,
+      count: 0,
+      path: "/admin/parts",
+      comingSoon: true,
+    },
+    {
+      title: "Users",
+      icon: <Users className="h-8 w-8 text-accent-teal" />,
+      count: counts?.users || 0,
+      path: "/admin/users",
     },
   ];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-      <p className="text-muted-foreground">
-        Welcome to the Wrenchmark admin dashboard. Manage all your motorcycle content from here.
-      </p>
-      
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-        {metrics.map((metric, index) => (
-          <Card key={index} className="bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{metric.title}</CardTitle>
-              <CardDescription>Total Count</CardDescription>
+      <div>
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="text-muted-foreground mt-2">
+          Manage content and monitor activity across the Wrenchmark platform.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {contentCards.map((card) => (
+          <Card key={card.title} className="border border-border">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-lg font-medium">{card.title}</CardTitle>
+              {card.icon}
             </CardHeader>
             <CardContent>
-              {metric.loading ? (
-                <Skeleton className="h-12 w-12" />
-              ) : (
-                <div className="text-3xl font-bold text-accent-teal">{metric.value}</div>
-              )}
+              <div className="text-2xl font-bold">
+                {isLoading ? "..." : card.count}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Total {card.title.toLowerCase()} in database
+              </p>
             </CardContent>
+            <CardFooter>
+              <Button variant="ghost" className="w-full" asChild>
+                <Link to={card.path}>
+                  {card.comingSoon ? "Coming Soon" : `Manage ${card.title}`}
+                </Link>
+              </Button>
+            </CardFooter>
           </Card>
         ))}
       </div>
-      
-      {/* Admin Section Cards */}
-      <h2 className="text-xl font-semibold mt-10">Management</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {adminSections.map((section) => (
-          <Link key={section.path} to={section.path}>
-            <Card className="overflow-hidden h-full transition-all hover:border-accent-teal">
-              <CardHeader className="pb-2">
-                <div className="text-accent-teal mb-2">{section.icon}</div>
-                <CardTitle>{section.title}</CardTitle>
-                <CardDescription>{section.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-accent-teal font-medium">
-                  Manage →
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
 
-      {/* Admin info */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <Database className="h-5 w-5 mr-2 text-accent-teal" />
-            Admin Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            The admin dashboard is restricted to approved administrators. You are currently logged in as an administrator for afiera614@gmail.com.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="border rounded-md p-6">
+        <h2 className="text-xl font-bold mb-4">Admin Quick Tips</h2>
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium text-accent-teal">Managing Content</h3>
+            <p className="text-sm text-muted-foreground">
+              Use the left sidebar to navigate between different content types. 
+              Each section provides tools to add, edit, and delete items.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-accent-teal">Best Practices</h3>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+              <li>Always add high-quality images for motorcycles and parts</li>
+              <li>Keep model names and specs consistent across the database</li>
+              <li>Use tags effectively to help users find relevant content</li>
+              <li>Ensure repair guides include clear safety instructions</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

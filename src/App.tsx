@@ -23,6 +23,8 @@ import AdminMotorcycles from "./pages/admin/AdminMotorcycles";
 import AdminBrands from "./pages/admin/AdminBrands";
 import AdminRepairSkills from "./pages/admin/AdminRepairSkills";
 import AdminManuals from "./pages/admin/AdminManuals";
+import AdminParts from "./pages/admin/AdminParts";
+import AdminUsers from "./pages/admin/AdminUsers";
 import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient({
@@ -77,6 +79,8 @@ const App = () => (
                     <Route path="brands" element={<AdminBrands />} />
                     <Route path="repair-skills" element={<AdminRepairSkills />} />
                     <Route path="manuals" element={<AdminManuals />} />
+                    <Route path="parts" element={<AdminParts />} />
+                    <Route path="users" element={<AdminUsers />} />
                   </Route>
                 </Route>
                 
