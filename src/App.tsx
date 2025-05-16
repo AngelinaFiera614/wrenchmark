@@ -25,7 +25,10 @@ import AdminRepairSkills from "./pages/admin/AdminRepairSkills";
 import AdminManuals from "./pages/admin/AdminManuals";
 import AdminParts from "./pages/admin/AdminParts";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminRidingSkills from "./pages/admin/AdminRidingSkills";
 import ProfilePage from "./pages/ProfilePage";
+import RidingSkillsPage from "./pages/RidingSkillsPage";
+import RidingSkillDetailPage from "./pages/RidingSkillDetailPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +69,10 @@ const App = () => (
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/auth" element={<Auth />} />
                 
+                {/* Riding Skills Routes */}
+                <Route path="/riding-skills" element={<RidingSkillsPage />} />
+                <Route path="/riding-skills/:id" element={<RidingSkillDetailPage />} />
+                
                 {/* Protected user profile route */}
                 <Route element={<ProtectedRoute />}>
                   <Route path="/profile" element={<ProfilePage />} />
@@ -78,6 +85,7 @@ const App = () => (
                     <Route path="motorcycles" element={<AdminMotorcycles />} />
                     <Route path="brands" element={<AdminBrands />} />
                     <Route path="repair-skills" element={<AdminRepairSkills />} />
+                    <Route path="riding-skills" element={<AdminRidingSkills />} />
                     <Route path="manuals" element={<AdminManuals />} />
                     <Route path="parts" element={<AdminParts />} />
                     <Route path="users" element={<AdminUsers />} />

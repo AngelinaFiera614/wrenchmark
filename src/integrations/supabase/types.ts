@@ -243,6 +243,48 @@ export type Database = {
           },
         ]
       }
+      riding_skills: {
+        Row: {
+          category: string
+          created_at: string
+          difficulty: number | null
+          id: string
+          image_url: string | null
+          instructions: string
+          level: string
+          practice_layout: string
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          difficulty?: number | null
+          id?: string
+          image_url?: string | null
+          instructions: string
+          level: string
+          practice_layout: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          difficulty?: number | null
+          id?: string
+          image_url?: string | null
+          instructions?: string
+          level?: string
+          practice_layout?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

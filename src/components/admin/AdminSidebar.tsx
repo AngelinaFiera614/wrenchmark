@@ -8,7 +8,8 @@ import {
   FileText, 
   Component, 
   Users, 
-  ChevronRight
+  ChevronRight,
+  Compass
 } from "lucide-react";
 
 interface AdminSidebarItemProps {
@@ -59,6 +60,11 @@ export function AdminSidebar() {
       title: "Repair Skills",
       icon: <Wrench className="h-5 w-5" />,
       href: "/admin/repair-skills",
+    },
+    {
+      title: "Riding Skills",
+      icon: <Compass className="h-5 w-5" />,
+      href: "/admin/riding-skills",
     },
     {
       title: "Manuals",
