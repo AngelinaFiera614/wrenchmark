@@ -61,9 +61,9 @@ export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<an
 };
 
 export const incrementDownloadCount = async (id: string): Promise<void> => {
-  // Fixed type error by using an object with the correct parameter name
+  // The error is here - we need to explicitly type the parameters object
   const { error } = await supabase
-    .rpc('increment_manual_downloads', { manual_id: id });
+    .rpc('increment_manual_downloads', { manual_id: id } as { manual_id: string });
   
   if (error) {
     console.error("Error incrementing download count:", error);
