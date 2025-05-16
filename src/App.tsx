@@ -5,12 +5,14 @@ import {
   Route,
   Routes,
   useLocation,
+  Outlet
 } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { ComparisonProvider } from "@/context/ComparisonContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { Layout } from "@/components/layout/Layout";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -23,17 +25,6 @@ import AdminParts from "@/pages/admin/AdminParts";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
 
-// Simple Layout component to wrap pages
-const Layout = ({ children }) => (
-  <>
-    <Header />
-    <main className="container mx-auto px-4 py-8 min-h-screen">
-      {children}
-    </main>
-    <Footer />
-  </>
-);
-
 function App() {
   return (
     <AuthProvider>
@@ -42,7 +33,9 @@ function App() {
           <ScrollToTop />
           <Routes>
             <Route path="/auth" element={<div>Auth Page</div>} />
-            <Route element={<Layout />}>
+            
+            {/* Routes wrapped with Layout */}
+            <Route element={<Layout><Outlet /></Layout>}>
               <Route index element={<div>Home Page</div>} />
               <Route path="about" element={<div>About Page</div>} />
               <Route path="contact" element={<div>Contact Page</div>} />
