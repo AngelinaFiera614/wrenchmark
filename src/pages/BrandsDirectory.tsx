@@ -67,7 +67,15 @@ export default function BrandsDirectory() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredBrands.map((brand) => (
-              <BrandCard key={brand.id} brand={brand} />
+              <BrandCard 
+                key={brand.id} 
+                brand={{
+                  ...brand,
+                  logo: brand.logo_url || brand.logo || '',
+                  knownFor: brand.known_for || brand.knownFor || [],
+                  description: brand.description || `Founded in ${brand.founded} in ${brand.country}`
+                }} 
+              />
             ))}
           </div>
         )}

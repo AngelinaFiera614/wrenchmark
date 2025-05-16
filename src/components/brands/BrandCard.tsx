@@ -1,12 +1,12 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Brand } from "@/data/brands";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Brand } from "@/data/brands";
 
 interface BrandCardProps {
   brand: Brand;
@@ -14,6 +14,11 @@ interface BrandCardProps {
 
 export default function BrandCard({ brand }: BrandCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Use optional chaining to safely access properties
+  const logo = brand.logo || brand.logo_url || '';
+  const knownFor = brand.knownFor || brand.known_for || [];
+  const brandId = brand.id;
 
   return (
     <Card 
@@ -25,7 +30,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
         <div className="mb-2 w-full">
           <AspectRatio ratio={1 / 1} className="bg-secondary/50 rounded-md overflow-hidden">
             <img
-              src={brand.logo}
+              src={logo}
               alt={`${brand.name} logo`}
               className="w-full h-full object-cover transition-transform duration-300 ease-in-out"
               style={{
@@ -48,7 +53,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
             <span>{brand.founded}</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-1">
-            {brand.knownFor.map((tag) => (
+            {knownFor.map((tag) => (
               <Badge key={tag} variant="outline" className="bg-secondary text-foreground">
                 {tag}
               </Badge>
@@ -58,7 +63,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
       </CardContent>
       
       <CardFooter className="pt-0 mt-auto">
-        <Link to={`/brands/${brand.id}`} className="w-full">
+        <Link to={`/brands/${brandId}`} className="w-full">
           <Button 
             variant="teal"
             className="w-full justify-between"

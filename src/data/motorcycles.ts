@@ -23,7 +23,8 @@ export const motorcyclesData: Motorcycle[] = [
     smart_features: ["LED lighting", "Slipper clutch"],
     image_url: "https://images.unsplash.com/photo-1558981285-6f0c94958bb6?q=80&w=1000",
     summary: "Modern naked bike with retro styling and manageable power",
-    created_at: "2023-01-15T00:00:00Z"
+    engine_size: 649,
+    horsepower: 94
   },
   {
     id: "2",
@@ -46,7 +47,8 @@ export const motorcyclesData: Motorcycle[] = [
     smart_features: ["Infotainment system", "Cruise control", "Bluetooth"],
     image_url: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?q=80&w=1000",
     summary: "Classic American touring motorcycle with modern technology",
-    created_at: "2022-05-20T00:00:00Z"
+    engine_size: 1868,
+    horsepower: 93
   },
   {
     id: "3",
@@ -69,7 +71,8 @@ export const motorcyclesData: Motorcycle[] = [
     smart_features: ["Quick shifter", "Traction control", "Wheelie control", "Launch control"],
     image_url: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1000",
     summary: "High-performance Italian superbike with track-focused design",
-    created_at: "2023-03-10T00:00:00Z"
+    engine_size: 1103,
+    horsepower: 214
   },
   {
     id: "4",
@@ -92,7 +95,8 @@ export const motorcyclesData: Motorcycle[] = [
     smart_features: ["TFT Display", "Electronic suspension", "Heated grips", "Riding modes"],
     image_url: "https://images.unsplash.com/photo-1575229020746-0e86406d1cd4?q=80&w=1000",
     summary: "Versatile adventure motorcycle for on and off-road travel",
-    created_at: "2022-09-05T00:00:00Z"
+    engine_size: 1254,
+    horsepower: 136
   },
   {
     id: "5",
@@ -115,7 +119,8 @@ export const motorcyclesData: Motorcycle[] = [
     smart_features: ["Electric start"],
     image_url: "https://images.unsplash.com/photo-1564396366574-563cfe8e5b37?q=80&w=1000",
     summary: "Classic-styled lightweight motorcycle perfect for beginners",
-    created_at: "2022-07-12T00:00:00Z"
+    engine_size: 349,
+    horsepower: 20
   },
   {
     id: "6",
@@ -138,6 +143,7 @@ export const motorcyclesData: Motorcycle[] = [
     smart_features: ["Slipper clutch", "Assist clutch"],
     image_url: "https://images.unsplash.com/photo-1615172282427-9a57ef2d142a?q=80&w=1000",
     summary: "Entry-level sport motorcycle with approachable performance",
-    created_at: "2023-02-28T00:00:00Z"
+    engine_size: 399,
+    horsepower: 49
   }
 ];

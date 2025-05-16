@@ -19,11 +19,12 @@ export interface Motorcycle {
   top_speed_kph: number;
   torque_nm: number;
   wheelbase_mm: number;
-  ground_clearance_mm: number; // Added missing property
+  ground_clearance_mm: number;
   fuel_capacity_l: number;
   smart_features: string[];
   summary: string;
   slug?: string;
+  created_at?: string;
   // Adding aliases for compatibility with existing code
   engine_cc?: number;
   horsepower_hp?: number;
