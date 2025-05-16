@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { ArrowRight, Shield, Tool, PanelTop } from "lucide-react";
+import { ArrowRight, Shield, Wrench, PanelTop } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
@@ -85,7 +85,7 @@ const Index = () => {
               </div>
               <div className="glass-morphism p-6 rounded-lg text-center space-y-4">
                 <div className="mx-auto bg-accent-teal/20 w-12 h-12 rounded-full flex items-center justify-center">
-                  <Tool className="h-6 w-6 text-accent-teal" />
+                  <Wrench className="h-6 w-6 text-accent-teal" />
                 </div>
                 <h3 className="text-xl font-semibold">DIY Repair Skills</h3>
                 <p className="text-gray-300">

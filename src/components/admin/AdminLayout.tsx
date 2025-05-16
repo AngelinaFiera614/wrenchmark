@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import {
-  MotorcycleBike,
+  Motorcycle,
   Building,
   Wrench,
   FileText,
@@ -25,7 +25,7 @@ const navItems: NavItem[] = [
   {
     title: "Motorcycles",
     href: "/admin/motorcycles",
-    icon: <MotorcycleBike className="h-5 w-5" />,
+    icon: <Motorcycle className="h-5 w-5" />,
   },
   {
     title: "Brands",
