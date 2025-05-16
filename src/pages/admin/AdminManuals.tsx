@@ -1,188 +1,209 @@
-
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { PlusIcon, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Manual } from "@/types";
-import AdminManualDialog from "@/components/admin/manuals/AdminManualDialog";
-import { supabase } from "@/integrations/supabase/client";
-import { deleteManual } from "@/services/manualService";
-
-interface MotorcycleInfo {
-  make: string;
-  model: string;
-  year: number | null;
-}
-
-interface ManualWithMotorcycle extends Manual {
-  motorcycles?: MotorcycleInfo;
-}
+import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ManualWithMotorcycle } from '@/services/manualService';
+import { getManuals, deleteManual } from '@/services/manualService';
+import { Badge } from '@/components/ui/badge';
+import { PlusCircle, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import AdminManualDialog from '@/components/admin/AdminManualDialog';
 
 const AdminManuals = () => {
   const [manuals, setManuals] = useState<ManualWithMotorcycle[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedManual, setSelectedManual] = useState<ManualWithMotorcycle | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentManual, setCurrentManual] = useState<ManualWithMotorcycle | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { toast } = useToast();
 
-  const fetchManuals = async () => {
+  const loadManuals = async () => {
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('manuals')
-        .select('*, motorcycles(make, model, year)')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      const formattedData = data?.map(item => ({
-        ...item,
-        manual_type: item.manual_type as Manual['manual_type'],
-        motorcycles: item.motorcycles as MotorcycleInfo
-      })) || [];
-      
-      setManuals(formattedData);
+      setLoading(true);
+      const data = await getManuals();
+      setManuals(data);
     } catch (error) {
-      console.error("Error fetching manuals:", error);
+      console.error('Error loading manuals:', error);
       toast({
-        title: "Error",
-        description: "Failed to load manuals",
-        variant: "destructive",
+        title: 'Failed to load manuals',
+        description: 'Please try again later',
+        variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchManuals();
+    loadManuals();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteManual(id);
-      toast({
-        title: "Success",
-        description: "Manual successfully deleted",
-      });
-      fetchManuals();
-    } catch (error) {
-      console.error("Error deleting manual:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete manual",
-        variant: "destructive",
-      });
-    }
+  const handleCreate = () => {
+    setCurrentManual(null);
+    setDialogOpen(true);
   };
 
   const handleEdit = (manual: ManualWithMotorcycle) => {
-    setSelectedManual(manual);
-    setIsDialogOpen(true);
+    setCurrentManual(manual);
+    setDialogOpen(true);
   };
 
-  const handleDialogClose = (refreshNeeded: boolean) => {
-    setIsDialogOpen(false);
-    setSelectedManual(null);
-    if (refreshNeeded) {
-      fetchManuals();
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    
+    try {
+      setDeleteLoading(true);
+      await deleteManual(deleteId);
+      setManuals(manuals.filter(manual => manual.id !== deleteId));
+      toast({
+        title: 'Manual deleted',
+        description: 'The manual has been removed',
+      });
+    } catch (error) {
+      console.error('Error deleting manual:', error);
+      toast({
+        title: 'Failed to delete manual',
+        description: 'Please try again later',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteLoading(false);
+      setDeleteId(null);
     }
   };
 
-  // Format file size
-  const formatFileSize = (size: number | null) => {
-    if (!size) return "Unknown";
-    return `${size.toFixed(2)} MB`;
+  const handleSaveSuccess = (savedManual: ManualWithMotorcycle) => {
+    setDialogOpen(false);
+    
+    if (currentManual) {
+      // Update existing manual
+      setManuals(manuals.map(manual => 
+        manual.id === savedManual.id ? savedManual : manual
+      ));
+      toast({
+        title: 'Manual updated',
+        description: 'The manual has been updated successfully'
+      });
+    } else {
+      // Add new manual
+      setManuals([...manuals, savedManual]);
+      toast({
+        title: 'Manual created',
+        description: 'The new manual has been added successfully'
+      });
+    }
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Manuals</h1>
-        <Button 
-          onClick={() => setIsDialogOpen(true)} 
-          className="bg-accent-teal hover:bg-accent-teal/90"
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Manuals</h1>
+        <Button
+          className="bg-accent-teal text-black hover:bg-accent-teal/80"
+          onClick={handleCreate}
         >
-          <PlusIcon className="w-4 h-4 mr-2" />
-          Add Manual
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add New
         </Button>
       </div>
-
-      {isLoading ? (
-        <div className="flex items-center justify-center p-12">
+      <p className="text-muted-foreground">
+        Create and manage manuals for motorcycles.
+      </p>
+      
+      {loading ? (
+        <div className="flex justify-center py-10">
           <Loader2 className="h-8 w-8 animate-spin text-accent-teal" />
         </div>
       ) : manuals.length > 0 ? (
-        <div className="bg-muted/20 rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/40 text-left">
-                <tr>
-                  <th className="p-3">Title</th>
-                  <th className="p-3">Type</th>
-                  <th className="p-3">Motorcycle</th>
-                  <th className="p-3">Year</th>
-                  <th className="p-3">Size</th>
-                  <th className="p-3">Downloads</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-muted/20">
-                {manuals.map((manual) => (
-                  <tr key={manual.id} className="hover:bg-muted/10">
-                    <td className="p-3">{manual.title}</td>
-                    <td className="p-3 capitalize">{manual.manual_type}</td>
-                    <td className="p-3">
-                      {manual.motorcycles ? 
-                        `${manual.motorcycles.make} ${manual.motorcycles.model}` : 
-                        "Unknown"}
-                    </td>
-                    <td className="p-3">{manual.year || "Any"}</td>
-                    <td className="p-3">{formatFileSize(manual.file_size_mb)}</td>
-                    <td className="p-3">{manual.downloads}</td>
-                    <td className="p-3 text-right space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-accent-teal hover:text-accent-teal/90 hover:bg-accent-teal/10"
-                        onClick={() => handleEdit(manual)}
-                      >
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-red-500 hover:text-red-500/90 hover:bg-red-500/10"
-                        onClick={() => handleDelete(manual.id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Motorcycle</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {manuals.map((manual) => (
+                <TableRow key={manual.id}>
+                  <TableCell className="font-medium">{manual.title}</TableCell>
+                  <TableCell>{manual.motorcycle_name}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{manual.manual_type}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(manual)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeleteId(manual.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : (
-        <div className="bg-muted/20 rounded-lg p-12 flex flex-col items-center justify-center">
-          <p className="text-muted-foreground mb-4">No manuals added yet</p>
-          <Button 
-            onClick={() => setIsDialogOpen(true)}
-            variant="outline"
-            className="border-accent-teal text-accent-teal hover:bg-accent-teal/10"
-          >
-            <PlusIcon className="w-4 h-4 mr-2" />
-            Add your first manual
-          </Button>
+        <div className="border rounded-md p-8 text-center">
+          <p className="text-muted-foreground">
+            No manuals have been created yet. Add your first manual using the button above.
+          </p>
         </div>
       )}
-
+      
+      {/* Create/Edit Dialog */}
       <AdminManualDialog
-        open={isDialogOpen}
-        selectedManual={selectedManual}
-        onClose={handleDialogClose}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        manual={currentManual}
+        onSaveSuccess={handleSaveSuccess}
       />
+      
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this manual. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {deleteLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
