@@ -11,7 +11,7 @@ interface MotorcycleDetailCTAProps {
 }
 
 export function MotorcycleDetailCTA({ motorcycle }: MotorcycleDetailCTAProps) {
-  const { addToComparison, itemsInComparison, isInComparison } = useComparison();
+  const { addToComparison, motorcyclesToCompare, isInComparison } = useComparison();
   const navigate = useNavigate();
   
   const handleAddToComparison = () => {
