@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Motorcycles from "./pages/Motorcycles";
 import MotorcycleDetail from "./pages/MotorcycleDetail";
@@ -17,6 +17,13 @@ import BrandDetail from "./pages/BrandDetail";
 
 const queryClient = new QueryClient();
 
+// Create a wrapper component for the redirect that can use the useLocation hook
+const MotorcycleRedirect = () => {
+  const location = useLocation();
+  const id = location.pathname.split('/').pop();
+  return <Navigate to={`/motorcycle/${id}`} replace />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ComparisonProvider>
@@ -29,11 +36,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/motorcycles" element={<Motorcycles />} />
               <Route path="/motorcycle/:id" element={<MotorcycleDetail />} />
-              {/* Fix redirect to use proper path parameter handling */}
-              <Route 
-                path="/motorcycles/:id" 
-                element={<Navigate to={location => `/motorcycle/${location.pathname.split('/').pop()}`} replace />} 
-              />
+              {/* Fixed redirect using a wrapper component */}
+              <Route path="/motorcycles/:id" element={<MotorcycleRedirect />} />
               <Route path="/compare" element={<ComparisonPage />} />
               <Route path="/brands" element={<BrandsDirectory />} />
               <Route path="/brands/:brandId" element={<BrandDetail />} />
