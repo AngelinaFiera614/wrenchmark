@@ -23,7 +23,11 @@ const transformBrand = (brand: SupabaseBrand): Brand => {
     founded: brand.founded,
     logo_url: brand.logo_url,
     known_for: brand.known_for,
-    slug: brand.slug
+    slug: brand.slug,
+    // Add compatibility aliases
+    logo: brand.logo_url,
+    knownFor: brand.known_for,
+    description: `Founded in ${brand.founded} in ${brand.country}`
   };
 };
 

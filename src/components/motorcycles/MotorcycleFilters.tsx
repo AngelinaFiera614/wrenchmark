@@ -13,10 +13,10 @@ const categories: MotorcycleCategory[] = [
   "Touring",
   "Adventure",
   "Naked",
-  "Dual-sport",
   "Standard",
   "Scooter",
-  "Off-road",
+  "Off-road", // Now valid in our MotorcycleCategory type
+  "Dual-sport", // Now valid in our MotorcycleCategory type
 ];
 
 const commonMakes = [

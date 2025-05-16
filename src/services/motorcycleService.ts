@@ -36,6 +36,9 @@ export type SupabaseMotorcycle = {
 
 // Transform Supabase motorcycle to our app's motorcycle type
 const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
+  // Extract engine size as a number from the engine text (e.g., "649cc inline-four" -> 649)
+  const engineSize = parseInt(motorcycle.engine) || 0;
+
   return {
     id: motorcycle.id,
     make: motorcycle.brand.name,
@@ -46,7 +49,7 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
     style_tags: motorcycle.tags,
     difficulty_level: motorcycle.difficulty_level,
     image_url: motorcycle.image_url,
-    engine_size: parseInt(motorcycle.engine) || 0,
+    engine_size: engineSize,
     horsepower: motorcycle.horsepower_hp,
     weight_kg: motorcycle.weight_kg,
     seat_height_mm: motorcycle.seat_height_mm,
@@ -54,10 +57,14 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
     top_speed_kph: motorcycle.top_speed_kph,
     torque_nm: motorcycle.torque_nm, 
     wheelbase_mm: motorcycle.wheelbase_mm,
+    ground_clearance_mm: 150, // Default value since it's not in Supabase yet
     fuel_capacity_l: motorcycle.fuel_capacity_l,
     smart_features: motorcycle.tags,
     summary: motorcycle.summary,
-    slug: motorcycle.slug
+    slug: motorcycle.slug,
+    // Add compatibility aliases
+    engine_cc: engineSize,
+    horsepower_hp: motorcycle.horsepower_hp
   };
 };
 
@@ -82,27 +89,32 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
 
 // Get motorcycle by ID
 export const getMotorcycleById = async (id: string): Promise<Motorcycle | null> => {
-  const { data, error } = await supabase
-    .from('motorcycles')
-    .select(`
-      *,
-      brand:brand_id (
-        id, name, country, logo_url, known_for, slug
-      )
-    `)
-    .eq('id', id)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('motorcycles')
+      .select(`
+        *,
+        brand:brand_id (
+          id, name, country, logo_url, known_for, slug
+        )
+      `)
+      .eq('id', id)
+      .single();
 
-  if (error) {
-    if (error.code === 'PGRST116') {
-      // No rows found
-      return null;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows found
+        return null;
+      }
+      console.error("Error fetching motorcycle:", error);
+      throw new Error(`Error fetching motorcycle: ${error.message}`);
     }
-    console.error("Error fetching motorcycle:", error);
-    throw new Error(`Error fetching motorcycle: ${error.message}`);
-  }
 
-  return data ? transformMotorcycle(data as SupabaseMotorcycle) : null;
+    return data ? transformMotorcycle(data as SupabaseMotorcycle) : null;
+  } catch (error) {
+    console.error("Error fetching motorcycle:", error);
+    throw error;
+  }
 };
 
 // Get motorcycle by slug

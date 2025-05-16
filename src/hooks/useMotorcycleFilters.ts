@@ -22,9 +22,9 @@ export const initialFilters: MotorcycleFilters = {
   difficultyLevel: 5,
   weightRange: [100, 400],
   seatHeightRange: [650, 950],
-  styleTags: [],
   abs: null,
-  searchTerm: ""
+  searchTerm: "",
+  styleTags: []  // Add styleTags to initialFilters
 };
 
 export function useMotorcycleFilters(
@@ -39,7 +39,7 @@ export function useMotorcycleFilters(
   const { difficultyLevel, handleDifficultyChange } = useDifficultyFilter(startingFilters.difficultyLevel);
   const { weightRange, handleWeightRangeChange } = useWeightFilter(startingFilters.weightRange);
   const { seatHeightRange, handleSeatHeightRangeChange } = useSeatHeightFilter(startingFilters.seatHeightRange);
-  const { styleTags, handleStyleTagsChange } = useStyleTagFilter(startingFilters.styleTags);
+  const { styleTags, handleStyleTagsChange } = useStyleTagFilter(startingFilters.styleTags || []);
   const { abs, handleAbsChange } = useAbsFilter(startingFilters.abs);
   const { 
     searchTerm, 
@@ -104,7 +104,7 @@ export function useMotorcycleFilters(
     handleDifficultyChange([newFilters.difficultyLevel]);
     handleWeightRangeChange(newFilters.weightRange);
     handleSeatHeightRangeChange(newFilters.seatHeightRange);
-    handleStyleTagsChange(newFilters.styleTags);
+    handleStyleTagsChange(newFilters.styleTags || []);
     handleAbsChange(newFilters.abs === true);
     handleSearchChange(newFilters.searchTerm);
   }, [
@@ -118,7 +118,7 @@ export function useMotorcycleFilters(
   const filteredMotorcycles = useMemo(() => {
     return motorcycles.filter(motorcycle => {
       // Filter by categories if any are selected
-      if (filters.categories.length > 0 && !filters.categories.includes(motorcycle.category)) {
+      if (filters.categories.length > 0 && !filters.categories.includes(motorcycle.category as MotorcycleCategory)) {
         return false;
       }
 
@@ -132,8 +132,9 @@ export function useMotorcycleFilters(
         return false;
       }
 
-      // Filter by engine size range
-      if (motorcycle.engine_cc < filters.engineSizeRange[0] || motorcycle.engine_cc > filters.engineSizeRange[1]) {
+      // Filter by engine size range - using either engine_cc or engine_size
+      const engineSize = motorcycle.engine_cc || motorcycle.engine_size;
+      if (engineSize < filters.engineSizeRange[0] || engineSize > filters.engineSizeRange[1]) {
         return false;
       }
 
@@ -153,7 +154,7 @@ export function useMotorcycleFilters(
       }
 
       // Filter by style tags if any are selected
-      if (filters.styleTags.length > 0 && 
+      if (filters.styleTags && filters.styleTags.length > 0 && 
           !filters.styleTags.some(tag => motorcycle.style_tags.includes(tag))) {
         return false;
       }
