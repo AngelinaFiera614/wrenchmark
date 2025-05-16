@@ -15,7 +15,15 @@ import ComparisonPage from "./pages/ComparisonPage";
 import BrandsDirectory from "./pages/BrandsDirectory";
 import BrandDetail from "./pages/BrandDetail";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 300000, // 5 minutes
+    },
+  },
+});
 
 // Create a wrapper component for the redirect that can use the useLocation hook
 const MotorcycleRedirect = () => {

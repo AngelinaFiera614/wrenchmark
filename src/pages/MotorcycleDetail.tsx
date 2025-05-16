@@ -26,12 +26,15 @@ export default function MotorcycleDetail() {
 
       try {
         setIsLoading(true);
+        console.log("Fetching motorcycle with ID:", id);
         const data = await getMotorcycleById(id);
         
         if (data) {
+          console.log("Motorcycle data fetched:", data);
           setMotorcycle(data);
           document.title = `${data.make} ${data.model} | Wrenchmark`;
         } else {
+          console.log("Motorcycle not found with ID:", id);
           setError(`Motorcycle with ID ${id} not found`);
           toast.error(`Motorcycle with ID ${id} not found`);
         }

@@ -33,69 +33,89 @@ const transformBrand = (brand: SupabaseBrand): Brand => {
 
 // Get all brands
 export const getAllBrands = async (): Promise<Brand[]> => {
-  const { data, error } = await supabase
-    .from('brands')
-    .select('*');
+  try {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('*');
 
-  if (error) {
-    console.error("Error fetching brands:", error);
-    throw new Error(`Error fetching brands: ${error.message}`);
+    if (error) {
+      console.error("Error fetching brands:", error);
+      throw new Error(`Error fetching brands: ${error.message}`);
+    }
+
+    return (data as SupabaseBrand[]).map(transformBrand);
+  } catch (error) {
+    console.error("Error in getAllBrands:", error);
+    return [];
   }
-
-  return (data as SupabaseBrand[]).map(transformBrand);
 };
 
 // Get brand by ID
 export const getBrandById = async (id: string): Promise<Brand | null> => {
-  const { data, error } = await supabase
-    .from('brands')
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  if (error) {
-    if (error.code === 'PGRST116') {
-      // No rows found
-      return null;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows found
+        return null;
+      }
+      console.error("Error fetching brand:", error);
+      throw new Error(`Error fetching brand: ${error.message}`);
     }
-    console.error("Error fetching brand:", error);
-    throw new Error(`Error fetching brand: ${error.message}`);
-  }
 
-  return data ? transformBrand(data as SupabaseBrand) : null;
+    return data ? transformBrand(data as SupabaseBrand) : null;
+  } catch (error) {
+    console.error("Error in getBrandById:", error);
+    return null;
+  }
 };
 
 // Get brand by slug
 export const getBrandBySlug = async (slug: string): Promise<Brand | null> => {
-  const { data, error } = await supabase
-    .from('brands')
-    .select('*')
-    .eq('slug', slug)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('*')
+      .eq('slug', slug)
+      .single();
 
-  if (error) {
-    if (error.code === 'PGRST116') {
-      // No rows found
-      return null;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows found
+        return null;
+      }
+      console.error("Error fetching brand by slug:", error);
+      throw new Error(`Error fetching brand by slug: ${error.message}`);
     }
-    console.error("Error fetching brand by slug:", error);
-    throw new Error(`Error fetching brand by slug: ${error.message}`);
-  }
 
-  return data ? transformBrand(data as SupabaseBrand) : null;
+    return data ? transformBrand(data as SupabaseBrand) : null;
+  } catch (error) {
+    console.error("Error in getBrandBySlug:", error);
+    return null;
+  }
 };
 
 // Get motorcycles by brand ID
 export const getMotorcyclesByBrandId = async (brandId: string): Promise<any[]> => {
-  const { data, error } = await supabase
-    .from('motorcycles')
-    .select('*')
-    .eq('brand_id', brandId);
+  try {
+    const { data, error } = await supabase
+      .from('motorcycles')
+      .select('*')
+      .eq('brand_id', brandId);
 
-  if (error) {
-    console.error("Error fetching motorcycles by brand:", error);
-    throw new Error(`Error fetching motorcycles by brand: ${error.message}`);
+    if (error) {
+      console.error("Error fetching motorcycles by brand:", error);
+      throw new Error(`Error fetching motorcycles by brand: ${error.message}`);
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getMotorcyclesByBrandId:", error);
+    return [];
   }
-
-  return data || [];
 };

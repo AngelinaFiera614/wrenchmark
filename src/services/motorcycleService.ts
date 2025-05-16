@@ -37,7 +37,6 @@ export type SupabaseMotorcycle = {
 // Transform Supabase motorcycle to our app's motorcycle type
 const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
   // Extract engine size as a number from the engine text
-  // Parse differently based on the format of the engine string
   let engineSize = 0;
   if (motorcycle.engine) {
     // Check for common patterns like "649cc", "1254 cc", etc.
@@ -54,7 +53,6 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
   }
 
   // Calculate ground clearance based on motorcycle category if not available
-  // This is a temporary solution until we have real data
   let groundClearance = 150; // default value
   if (motorcycle.category) {
     switch(motorcycle.category.toLowerCase()) {
@@ -79,10 +77,10 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
 
   return {
     id: motorcycle.id,
-    make: motorcycle.brand.name,
+    make: motorcycle.brand?.name || "Unknown",
     brand_id: motorcycle.brand_id,
     model: motorcycle.model_name,
-    year: motorcycle.year,
+    year: motorcycle.year || 2023,
     category: motorcycle.category || "Standard",
     style_tags: motorcycle.tags || [],
     difficulty_level: motorcycle.difficulty_level || 1,
@@ -98,7 +96,7 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
     ground_clearance_mm: groundClearance,
     fuel_capacity_l: motorcycle.fuel_capacity_l || 0,
     smart_features: motorcycle.tags || [],
-    summary: motorcycle.summary || `${motorcycle.brand.name} ${motorcycle.model_name} ${motorcycle.year}`,
+    summary: motorcycle.summary || `${motorcycle.model_name} ${motorcycle.year}`,
     slug: motorcycle.slug,
     // Add compatibility aliases
     engine_cc: engineSize,
@@ -108,26 +106,32 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
 
 // Get all motorcycles
 export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
-  const { data, error } = await supabase
-    .from('motorcycles')
-    .select(`
-      *,
-      brand:brand_id (
-        id, name, country, logo_url, known_for, slug
-      )
-    `);
+  try {
+    const { data, error } = await supabase
+      .from('motorcycles')
+      .select(`
+        *,
+        brand:brand_id (
+          id, name, country, logo_url, known_for, slug
+        )
+      `);
 
-  if (error) {
-    console.error("Error fetching motorcycles:", error);
-    throw new Error(`Error fetching motorcycles: ${error.message}`);
+    if (error) {
+      console.error("Error fetching motorcycles:", error);
+      throw new Error(`Error fetching motorcycles: ${error.message}`);
+    }
+
+    return (data as SupabaseMotorcycle[]).map(transformMotorcycle);
+  } catch (error) {
+    console.error("Error in getAllMotorcycles:", error);
+    return [];
   }
-
-  return (data as SupabaseMotorcycle[]).map(transformMotorcycle);
 };
 
 // Get motorcycle by ID
 export const getMotorcycleById = async (id: string): Promise<Motorcycle | null> => {
   try {
+    console.log("Fetching motorcycle by ID:", id);
     const { data, error } = await supabase
       .from('motorcycles')
       .select(`
@@ -142,40 +146,52 @@ export const getMotorcycleById = async (id: string): Promise<Motorcycle | null> 
     if (error) {
       if (error.code === 'PGRST116') {
         // No rows found
+        console.log("No motorcycle found with ID:", id);
         return null;
       }
       console.error("Error fetching motorcycle:", error);
       throw new Error(`Error fetching motorcycle: ${error.message}`);
     }
 
-    return data ? transformMotorcycle(data as SupabaseMotorcycle) : null;
+    if (!data) {
+      console.log("No data returned for motorcycle with ID:", id);
+      return null;
+    }
+
+    console.log("Motorcycle data fetched:", data);
+    return transformMotorcycle(data as SupabaseMotorcycle);
   } catch (error) {
-    console.error("Error fetching motorcycle:", error);
-    throw error;
+    console.error("Error in getMotorcycleById:", error);
+    return null;
   }
 };
 
 // Get motorcycle by slug
 export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | null> => {
-  const { data, error } = await supabase
-    .from('motorcycles')
-    .select(`
-      *,
-      brand:brand_id (
-        id, name, country, logo_url, known_for, slug
-      )
-    `)
-    .eq('slug', slug)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('motorcycles')
+      .select(`
+        *,
+        brand:brand_id (
+          id, name, country, logo_url, known_for, slug
+        )
+      `)
+      .eq('slug', slug)
+      .single();
 
-  if (error) {
-    if (error.code === 'PGRST116') {
-      // No rows found
-      return null;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows found
+        return null;
+      }
+      console.error("Error fetching motorcycle by slug:", error);
+      throw new Error(`Error fetching motorcycle by slug: ${error.message}`);
     }
-    console.error("Error fetching motorcycle by slug:", error);
-    throw new Error(`Error fetching motorcycle by slug: ${error.message}`);
-  }
 
-  return data ? transformMotorcycle(data as SupabaseMotorcycle) : null;
+    return data ? transformMotorcycle(data as SupabaseMotorcycle) : null;
+  } catch (error) {
+    console.error("Error in getMotorcycleBySlug:", error);
+    return null;
+  }
 };

@@ -24,20 +24,25 @@ export default function BrandDetail() {
 
       try {
         setIsLoading(true);
+        console.log("Fetching brand data for slug:", brandId);
         
-        // Fetch brand data
+        // Fetch brand data using the slug
         const brandData = await getBrandBySlug(brandId);
         if (!brandData) {
+          console.log("No brand found with slug:", brandId);
           toast.error("Brand not found");
           return;
         }
         
+        console.log("Brand data fetched:", brandData);
         setBrand(brandData);
         document.title = `${brandData.name} | Wrenchmark`;
         
         // Fetch all motorcycles and filter by this brand
         const allMotorcycles = await getAllMotorcycles();
+        console.log("All motorcycles fetched, filtering for brand ID:", brandData.id);
         const brandMotorcycles = allMotorcycles.filter(m => m.brand_id === brandData.id);
+        console.log(`Found ${brandMotorcycles.length} motorcycles for this brand`);
         setMotorcycles(brandMotorcycles);
       } catch (error) {
         console.error("Error fetching brand data:", error);
@@ -117,12 +122,12 @@ export default function BrandDetail() {
           <div className="flex-1 space-y-4">
             <div>
               <h1 className="text-3xl font-bold">{brand.name}</h1>
-              <p className="text-muted-foreground">Founded in {brand.founded} • {brand.country}</p>
+              <p className="text-muted-foreground">Founded in {brand.founded} • {brand.country || 'Unknown location'}</p>
             </div>
             
             <div className="flex flex-wrap gap-2">
-              {brand.known_for?.map((specialty) => (
-                <Badge key={specialty} variant="outline" className="bg-muted/20">
+              {brand.known_for?.map((specialty, index) => (
+                <Badge key={`${specialty}-${index}`} variant="outline" className="bg-muted/20">
                   {specialty}
                 </Badge>
               ))}
