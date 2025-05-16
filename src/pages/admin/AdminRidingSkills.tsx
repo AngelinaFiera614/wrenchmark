@@ -26,8 +26,12 @@ const AdminRidingSkills = () => {
     setEditSkill(skill);
   };
 
-  const handleDeleteClick = (skill: RidingSkill) => {
-    setSkillToDelete(skill);
+  const handleDeleteClick = (skillId: string) => {
+    // Find the skill in the list by ID and set it as the skill to delete
+    const skillToDelete = skills.find(skill => skill.id === skillId);
+    if (skillToDelete) {
+      setSkillToDelete(skillToDelete);
+    }
   };
 
   const handleDialogClose = (refreshData = false) => {
