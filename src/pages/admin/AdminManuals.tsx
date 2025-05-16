@@ -8,10 +8,20 @@ import AdminManualDialog from "@/components/admin/manuals/AdminManualDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { deleteManual } from "@/services/manualService";
 
+interface MotorcycleInfo {
+  make: string;
+  model: string;
+  year: number | null;
+}
+
+interface ManualWithMotorcycle extends Manual {
+  motorcycles?: MotorcycleInfo;
+}
+
 const AdminManuals = () => {
-  const [manuals, setManuals] = useState<Manual[]>([]);
+  const [manuals, setManuals] = useState<ManualWithMotorcycle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedManual, setSelectedManual] = useState<Manual | null>(null);
+  const [selectedManual, setSelectedManual] = useState<ManualWithMotorcycle | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -24,7 +34,14 @@ const AdminManuals = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setManuals(data || []);
+      
+      const formattedData = data?.map(item => ({
+        ...item,
+        manual_type: item.manual_type as Manual['manual_type'],
+        motorcycles: item.motorcycles as MotorcycleInfo
+      })) || [];
+      
+      setManuals(formattedData);
     } catch (error) {
       console.error("Error fetching manuals:", error);
       toast({
@@ -59,7 +76,7 @@ const AdminManuals = () => {
     }
   };
 
-  const handleEdit = (manual: Manual) => {
+  const handleEdit = (manual: ManualWithMotorcycle) => {
     setSelectedManual(manual);
     setIsDialogOpen(true);
   };
@@ -163,7 +180,7 @@ const AdminManuals = () => {
 
       <AdminManualDialog
         open={isDialogOpen}
-        manual={selectedManual}
+        selectedManual={selectedManual}
         onClose={handleDialogClose}
       />
     </div>

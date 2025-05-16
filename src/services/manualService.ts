@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Manual, ManualType, ManualUpload } from "@/types";
-import { createOrGetPlaceholderMotorcycle } from "./motorcycleService";
 import { v4 as uuidv4 } from 'uuid';
 
 export const getManualById = async (id: string): Promise<Manual | null> => {
@@ -16,7 +15,10 @@ export const getManualById = async (id: string): Promise<Manual | null> => {
     throw error;
   }
 
-  return data;
+  return data ? {
+    ...data,
+    manual_type: data.manual_type as ManualType
+  } : null;
 };
 
 export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<Manual[]> => {
@@ -31,7 +33,10 @@ export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<Ma
     throw error;
   }
 
-  return data || [];
+  return data ? data.map(item => ({
+    ...item,
+    manual_type: item.manual_type as ManualType
+  })) : [];
 };
 
 export const uploadManualFile = async (file: File, path: string): Promise<string> => {
@@ -52,10 +57,6 @@ export const uploadManualFile = async (file: File, path: string): Promise<string
 };
 
 export const createManual = async (manual: ManualUpload, file: File): Promise<Manual> => {
-  // First check if the motorcycle exists, if not create a placeholder
-  const motorcycleId = manual.motorcycle_id;
-  let finalMotorcycleId = motorcycleId;
-
   // Prepare the file path
   const fileExt = file.name.split('.').pop();
   const filePath = `${manual.manual_type}/${uuidv4()}.${fileExt}`;
@@ -68,10 +69,10 @@ export const createManual = async (manual: ManualUpload, file: File): Promise<Ma
     .from('manuals')
     .insert([{
       title: manual.title,
-      manual_type: manual.manual_type as ManualType,
+      manual_type: manual.manual_type,
       file_url: fileUrl,
       file_size_mb: manual.file_size_mb,
-      motorcycle_id: finalMotorcycleId,
+      motorcycle_id: manual.motorcycle_id,
       year: manual.year,
       downloads: 0
     }])
@@ -83,7 +84,10 @@ export const createManual = async (manual: ManualUpload, file: File): Promise<Ma
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    manual_type: data.manual_type as ManualType
+  };
 };
 
 export const incrementDownloadCount = async (manualId: string): Promise<void> => {
