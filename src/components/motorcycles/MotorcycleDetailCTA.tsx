@@ -3,7 +3,7 @@ import { Motorcycle } from "@/types";
 import { Button } from "@/components/ui/button";
 import { BookmarkPlus, Share2, Scale } from "lucide-react";
 import { toast } from "sonner";
-import { useComparisonContext } from "@/context/ComparisonContext";
+import { useComparison } from "@/context/ComparisonContext";
 import { useNavigate } from "react-router-dom";
 
 interface MotorcycleDetailCTAProps {
@@ -11,7 +11,7 @@ interface MotorcycleDetailCTAProps {
 }
 
 export function MotorcycleDetailCTA({ motorcycle }: MotorcycleDetailCTAProps) {
-  const { addToComparison, itemsInComparison, isInComparison } = useComparisonContext();
+  const { addToComparison, itemsInComparison, isInComparison } = useComparison();
   const navigate = useNavigate();
   
   const handleAddToComparison = () => {

@@ -1,7 +1,7 @@
 
 import { Motorcycle } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Weight, RulerMeasure, ArrowUpDown, Droplet } from "lucide-react";
+import { Weight, Ruler, ArrowUpDown, Droplet } from "lucide-react";
 import { SpecificationItem } from "./SpecificationItem";
 
 interface PhysicalDimensionsProps {
@@ -21,7 +21,7 @@ export function PhysicalDimensions({ motorcycle }: PhysicalDimensionsProps) {
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-150 shadow-md">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-foreground">
-          <RulerMeasure className="h-5 w-5 text-accent-teal" />
+          <Ruler className="h-5 w-5 text-accent-teal" />
           <span>Physical Dimensions</span>
         </CardTitle>
       </CardHeader>
@@ -43,7 +43,7 @@ export function PhysicalDimensions({ motorcycle }: PhysicalDimensionsProps) {
           <SpecificationItem 
             label="Wheelbase" 
             value={`${wheelbase_mm} mm`} 
-            icon={<RulerMeasure className="h-4 w-4" />}
+            icon={<Ruler className="h-4 w-4" />}
             tooltip="Distance between the centers of the front and rear wheels, affects stability"
           />
           <SpecificationItem 
