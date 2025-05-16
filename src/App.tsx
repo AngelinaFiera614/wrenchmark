@@ -1,105 +1,91 @@
+import React, { useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/context/AuthContext";
+import { ComparisonProvider } from "@/context/ComparisonContext";
+import { Layout } from "@/components/layout/Layout";
+import AuthPage from "@/pages/AuthPage";
+import HomePage from "@/pages/HomePage";
+import AboutPage from "@/pages/AboutPage";
+import ContactPage from "@/pages/ContactPage";
+import MotorcyclesPage from "@/pages/MotorcyclesPage";
+import MotorcycleDetailPage from "@/pages/MotorcycleDetailPage";
+import BrandsPage from "@/pages/BrandsPage";
+import BrandDetailPage from "@/pages/BrandDetailPage";
+import ComparePage from "@/pages/ComparePage";
+import ProfilePage from "@/pages/ProfilePage";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AdminLayout from "@/components/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminMotorcycles from "@/pages/admin/AdminMotorcycles";
+import AdminBrands from "@/pages/admin/AdminBrands";
+import AdminRepairSkills from "@/pages/admin/AdminRepairSkills";
+import AdminManuals from "@/pages/admin/AdminManuals";
+import AdminParts from "@/pages/admin/AdminParts";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Index from "./pages/Index";
-import Motorcycles from "./pages/Motorcycles";
-import MotorcycleDetail from "./pages/MotorcycleDetail";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
-import { ComparisonProvider } from "./context/ComparisonContext";
-import ComparisonPage from "./pages/ComparisonPage";
-import BrandsDirectory from "./pages/BrandsDirectory";
-import BrandDetail from "./pages/BrandDetail";
-import { AuthProvider } from "./context/AuthContext";
-import Auth from "./pages/Auth";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import AdminLayout from "./components/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminMotorcycles from "./pages/admin/AdminMotorcycles";
-import AdminBrands from "./pages/admin/AdminBrands";
-import AdminRepairSkills from "./pages/admin/AdminRepairSkills";
-import AdminManuals from "./pages/admin/AdminManuals";
-import AdminParts from "./pages/admin/AdminParts";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminRidingSkills from "./pages/admin/AdminRidingSkills";
-import ProfilePage from "./pages/ProfilePage";
-import RidingSkillsPage from "./pages/RidingSkillsPage";
-import RidingSkillDetailPage from "./pages/RidingSkillDetailPage";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 300000, // 5 minutes
-    },
-  },
-});
-
-// Create a wrapper component for the redirect that can use the useLocation hook
-const MotorcycleRedirect = () => {
-  const location = useLocation();
-  const id = location.pathname.split('/').pop();
-  return <Navigate to={`/motorcycle/${id}`} replace />;
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+function App() {
+  return (
     <AuthProvider>
       <ComparisonProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <div className="dark min-h-screen bg-background">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/motorcycles" element={<Motorcycles />} />
-                <Route path="/motorcycle/:id" element={<MotorcycleDetail />} />
-                {/* Fixed redirect using a wrapper component */}
-                <Route path="/motorcycles/:id" element={<MotorcycleRedirect />} />
-                <Route path="/compare" element={<ComparisonPage />} />
-                <Route path="/brands" element={<BrandsDirectory />} />
-                <Route path="/brands/:brandId" element={<BrandDetail />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/auth" element={<Auth />} />
-                
-                {/* Riding Skills Routes */}
-                <Route path="/riding-skills" element={<RidingSkillsPage />} />
-                <Route path="/riding-skills/:id" element={<RidingSkillDetailPage />} />
-                
-                {/* Protected user profile route */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/profile" element={<ProfilePage />} />
-                </Route>
-                
-                {/* Admin Routes - Protected and require admin */}
-                <Route element={<ProtectedRoute requireAdmin={true} />}>
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="motorcycles" element={<AdminMotorcycles />} />
-                    <Route path="brands" element={<AdminBrands />} />
-                    <Route path="repair-skills" element={<AdminRepairSkills />} />
-                    <Route path="riding-skills" element={<AdminRidingSkills />} />
-                    <Route path="manuals" element={<AdminManuals />} />
-                    <Route path="parts" element={<AdminParts />} />
-                    <Route path="users" element={<AdminUsers />} />
-                  </Route>
-                </Route>
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
+        <Router>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/" element={<Layout />}>
+              <Route index element={<HomePage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="contact" element={<ContactPage />} />
+              <Route path="motorcycles" element={<MotorcyclesPage />} />
+              <Route
+                path="motorcycles/:motorcycleId"
+                element={<MotorcycleDetailPage />}
+              />
+              <Route path="brands" element={<BrandsPage />} />
+              <Route path="brands/:brandId" element={<BrandDetailPage />} />
+              <Route path="compare" element={<ComparePage />} />
+            </Route>
+
+            {/* Protected Routes - Requires Authentication */}
+            <Route path="profile" element={<ProtectedRoute />}>
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
+
+            {/* Admin Routes - Protected with isAdmin = true */}
+            <Route path="admin" element={<ProtectedRoute requireAdmin />}>
+              <Route element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="motorcycles" element={<AdminMotorcycles />} />
+                <Route path="brands" element={<AdminBrands />} />
+                <Route path="repair-skills" element={<AdminRepairSkills />} />
+                <Route path="riding-skills" element={<AdminRidingSkills />} />
+                <Route path="manuals" element={<AdminManuals />} />
+                <Route path="parts" element={<AdminParts />} />
+                <Route path="users" element={<AdminUsers />} />
+              </Route>
+            </Route>
+          </Routes>
+        </Router>
+        <Toaster />
       </ComparisonProvider>
     </AuthProvider>
-  </QueryClientProvider>
-);
+  );
+}
+
+// Helper component to scroll to top on route change
+function ScrollToTop() {
+  const location = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  return null;
+}
 
 export default App;

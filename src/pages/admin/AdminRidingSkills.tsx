@@ -1,111 +1,89 @@
 
-import React, { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import { RidingSkill } from '@/types/riding-skills';
-import AdminRidingSkillDialog from '@/components/admin/riding-skills/AdminRidingSkillDialog';
+import React, { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { AdminRidingSkillsHeader } from '@/components/admin/riding-skills/AdminRidingSkillsHeader';
 import { AdminRidingSkillsTable } from '@/components/admin/riding-skills/AdminRidingSkillsTable';
 import { AdminRidingSkillsEmpty } from '@/components/admin/riding-skills/AdminRidingSkillsEmpty';
+import { AdminSkillsProvider } from '@/components/admin/riding-skills/AdminSkillsContext';
 import { DeleteRidingSkillDialog } from '@/components/admin/riding-skills/DeleteRidingSkillDialog';
-import { AdminSkillsProvider, useAdminSkills } from '@/components/admin/riding-skills/AdminSkillsContext';
-
-const AdminRidingSkillsContent: React.FC = () => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [currentSkill, setCurrentSkill] = useState<RidingSkill | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  
-  const { 
-    skills, 
-    loading, 
-    deleteLoading, 
-    loadSkills, 
-    handleDelete,
-    handleCreateSuccess,
-    handleUpdateSuccess
-  } = useAdminSkills();
-
-  useEffect(() => {
-    loadSkills();
-  }, [loadSkills]);
-
-  const handleCreate = () => {
-    setCurrentSkill(null);
-    setDialogOpen(true);
-  };
-
-  const handleEdit = (skill: RidingSkill) => {
-    setCurrentSkill(skill);
-    setDialogOpen(true);
-  };
-
-  const handleDeleteClick = (id: string) => {
-    setDeleteId(id);
-  };
-
-  const confirmDelete = async () => {
-    if (deleteId) {
-      await handleDelete(deleteId);
-      setDeleteId(null);
-    }
-  };
-
-  const handleSaveSuccess = (savedSkill: RidingSkill) => {
-    setDialogOpen(false);
-    
-    if (currentSkill) {
-      // Update existing skill
-      handleUpdateSuccess(savedSkill);
-    } else {
-      // Add new skill
-      handleCreateSuccess(savedSkill);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-10">
-        <Loader2 className="h-8 w-8 animate-spin text-accent-teal" />
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <AdminRidingSkillsHeader onCreateNew={handleCreate} />
-      
-      {skills.length > 0 ? (
-        <AdminRidingSkillsTable 
-          skills={skills} 
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
-        />
-      ) : (
-        <AdminRidingSkillsEmpty />
-      )}
-      
-      {/* Create/Edit Dialog */}
-      <AdminRidingSkillDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        skill={currentSkill}
-        onSaveSuccess={handleSaveSuccess}
-      />
-      
-      {/* Delete Confirmation */}
-      <DeleteRidingSkillDialog
-        open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-        onConfirm={confirmDelete}
-        loading={deleteLoading}
-      />
-    </>
-  );
-};
+import { AdminRidingSkillDialog } from '@/components/admin/riding-skills/AdminRidingSkillDialog';
+import { useRidingSkills } from '@/hooks/useRidingSkills';
+import { Loader2 } from 'lucide-react';
 
 const AdminRidingSkills = () => {
+  const { toast } = useToast();
+  const { skills, isLoading, refetch } = useRidingSkills();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editSkill, setEditSkill] = useState(null);
+  const [skillToDelete, setSkillToDelete] = useState(null);
+
+  const handleAddSkill = () => {
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleEditSkill = (skill) => {
+    setEditSkill(skill);
+  };
+
+  const handleDeleteClick = (skill) => {
+    setSkillToDelete(skill);
+  };
+
+  const handleDialogClose = (refreshData = false) => {
+    setIsCreateDialogOpen(false);
+    setEditSkill(null);
+    if (refreshData) {
+      refetch();
+      toast({
+        title: 'Success',
+        description: 'Riding skill was updated successfully',
+      });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    setSkillToDelete(null);
+    toast({
+      title: 'Success',
+      description: 'Riding skill was deleted successfully',
+    });
+    await refetch();
+  };
+
   return (
     <AdminSkillsProvider>
-      <AdminRidingSkillsContent />
+      <div className="space-y-6">
+        <AdminRidingSkillsHeader onAddSkill={handleAddSkill} />
+        
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-accent-teal" />
+          </div>
+        ) : skills?.length > 0 ? (
+          <AdminRidingSkillsTable 
+            skills={skills} 
+            onEdit={handleEditSkill} 
+            onDelete={handleDeleteClick} 
+          />
+        ) : (
+          <AdminRidingSkillsEmpty onAddSkill={handleAddSkill} />
+        )}
+
+        {/* Create/Edit Dialog */}
+        <AdminRidingSkillDialog
+          open={isCreateDialogOpen || editSkill !== null}
+          skill={editSkill}
+          onClose={handleDialogClose}
+        />
+        
+        {/* Delete Dialog */}
+        <DeleteRidingSkillDialog
+          open={skillToDelete !== null}
+          onOpenChange={(open) => !open && setSkillToDelete(null)}
+          onConfirm={handleDeleteConfirm}
+          isLoading={false}
+        />
+      </div>
     </AdminSkillsProvider>
   );
 };

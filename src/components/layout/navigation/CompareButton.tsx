@@ -15,7 +15,7 @@ const CompareButton = () => {
 
   return (
     <Link to="/compare">
-      <Button variant="outline" size="sm">
+      <Button variant="teal" size="sm" className="text-black">
         Compare ({compareCount})
       </Button>
     </Link>
