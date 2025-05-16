@@ -19,7 +19,11 @@ const AdminManualDialog: React.FC<AdminManualDialogProps> = ({
   manual, 
   onSaveSuccess 
 }) => {
-  const { handleSubmit, isSubmitting } = useManualSubmit({ onOpenChange, onSaveSuccess });
+  const { handleSubmit, isSubmitting } = useManualSubmit({ 
+    onOpenChange, 
+    onSaveSuccess,
+    manualId: manual?.id 
+  });
   
   // Extract motorcycle details if editing an existing manual
   const defaultValues = manual 
