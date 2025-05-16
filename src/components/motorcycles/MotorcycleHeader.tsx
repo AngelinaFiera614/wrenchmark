@@ -1,9 +1,11 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Motorcycle } from "@/types";
 import { MotorcycleImageCarousel } from "./MotorcycleImageCarousel";
+import { useComparison } from "@/context/ComparisonContext";
+import { useNavigate } from "react-router-dom";
 
 interface MotorcycleHeaderProps {
   motorcycle: Motorcycle;
@@ -20,6 +22,9 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
     image_url,
     summary
   } = motorcycle;
+  
+  const { addToComparison, isInComparison } = useComparison();
+  const navigate = useNavigate();
 
   // Create an array of images from the single image_url
   // In a real app, this would come from the API with multiple images
@@ -32,18 +37,26 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
   const difficultyColor = `difficulty-${difficulty_level}`;
 
   const handleSaveBike = () => {
-    toast({
-      title: "Feature coming soon",
-      description: "Saving bikes will be available in a future update.",
-      duration: 3000,
+    toast.success("Motorcycle saved", {
+      description: `${make} ${model} has been saved to your collection`
     });
   };
 
   const handleCompare = () => {
-    toast({
-      title: "Feature coming soon",
-      description: "Compare feature will be available in a future update.",
-      duration: 3000,
+    if (isInComparison(motorcycle.id)) {
+      toast.info("Already in comparison", {
+        description: `${make} ${model} is already in your comparison list`
+      });
+      return;
+    }
+    
+    addToComparison(motorcycle);
+    toast.success("Added to comparison", {
+      description: `${make} ${model} added to your comparison list`,
+      action: {
+        label: "View Comparison",
+        onClick: () => navigate("/compare")
+      }
     });
   };
 
