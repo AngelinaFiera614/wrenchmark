@@ -1,4 +1,3 @@
-
 import { Motorcycle } from "@/types";
 import { MotorcycleHeader } from "./MotorcycleHeader";
 import { PerformanceSpecifications } from "./PerformanceSpecifications";
@@ -15,15 +14,20 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import ManualsList from "./ManualsList";
 
 interface MotorcycleDetailProps {
   motorcycle: Motorcycle;
 }
 
-export default function MotorcycleDetail({ motorcycle }: MotorcycleDetailProps) {
+const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
   const isMobile = useIsMobile();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-  
+  const [activeTab, setActiveTab] = useState("specifications");
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   useEffect(() => {
     // Debug log to confirm component mounted with motorcycle data
     console.log("MotorcycleDetail component mounted with motorcycle:", motorcycle.id, motorcycle.make, motorcycle.model);
@@ -101,20 +105,65 @@ export default function MotorcycleDetail({ motorcycle }: MotorcycleDetailProps) 
       {/* Sticky CTA Row */}
       <MotorcycleDetailCTA motorcycle={motorcycle} />
       
-      {/* Specifications Sections */}
-      <PerformanceSpecifications motorcycle={motorcycle} />
-      
-      {/* Physical Dimensions Section */}
-      <PhysicalDimensions motorcycle={motorcycle} />
-      
-      {/* Safety Notes Section */}
-      <SafetyNotesSection motorcycle={motorcycle} />
-      
-      {/* Features and Smart Features Sections */}
-      <FeaturesList motorcycle={motorcycle} />
-      
-      {/* Maintenance Section */}
-      <MaintenanceLogs />
+      <div>
+        <div className="border-b border-border/40 mb-6">
+          <div className="flex flex-wrap -mb-px text-sm font-medium">
+            <button 
+              onClick={() => handleTabChange("specifications")}
+              className={`mr-4 py-3 border-b-2 ${activeTab === 'specifications' 
+                ? 'border-accent-teal text-accent-teal' 
+                : 'border-transparent hover:border-border/70 text-muted-foreground hover:text-foreground'}`}
+            >
+              Specifications
+            </button>
+            <button 
+              onClick={() => handleTabChange("features")}
+              className={`mr-4 py-3 border-b-2 ${activeTab === 'features' 
+                ? 'border-accent-teal text-accent-teal' 
+                : 'border-transparent hover:border-border/70 text-muted-foreground hover:text-foreground'}`}
+            >
+              Features
+            </button>
+            <button 
+              onClick={() => handleTabChange("safety")}
+              className={`mr-4 py-3 border-b-2 ${activeTab === 'safety' 
+                ? 'border-accent-teal text-accent-teal' 
+                : 'border-transparent hover:border-border/70 text-muted-foreground hover:text-foreground'}`}
+            >
+              Safety
+            </button>
+            <button 
+              onClick={() => handleTabChange("manuals")}
+              className={`mr-4 py-3 border-b-2 ${activeTab === 'manuals' 
+                ? 'border-accent-teal text-accent-teal' 
+                : 'border-transparent hover:border-border/70 text-muted-foreground hover:text-foreground'}`}
+            >
+              Manuals
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'specifications' && (
+          <PerformanceSpecifications motorcycle={motorcycle} />
+        )}
+
+        {activeTab === 'features' && (
+          <FeaturesList motorcycle={motorcycle} />
+        )}
+
+        {activeTab === 'safety' && (
+          <SafetyNotesSection motorcycle={motorcycle} />
+        )}
+
+        {activeTab === 'manuals' && (
+          <div className="animate-fadeIn">
+            <h2 className="text-2xl font-semibold mb-4">Manuals & Documentation</h2>
+            <ManualsList motorcycleId={motorcycle.id} />
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default MotorcycleDetail;

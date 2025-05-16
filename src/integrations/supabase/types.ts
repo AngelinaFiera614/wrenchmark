@@ -48,6 +48,7 @@ export type Database = {
       manuals: {
         Row: {
           created_at: string
+          downloads: number
           file_size_mb: number | null
           file_url: string | null
           id: string
@@ -55,9 +56,11 @@ export type Database = {
           motorcycle_id: string
           title: string
           updated_at: string
+          year: number | null
         }
         Insert: {
           created_at?: string
+          downloads?: number
           file_size_mb?: number | null
           file_url?: string | null
           id?: string
@@ -65,9 +68,11 @@ export type Database = {
           motorcycle_id: string
           title: string
           updated_at?: string
+          year?: number | null
         }
         Update: {
           created_at?: string
+          downloads?: number
           file_size_mb?: number | null
           file_url?: string | null
           id?: string
@@ -75,6 +80,7 @@ export type Database = {
           motorcycle_id?: string
           title?: string
           updated_at?: string
+          year?: number | null
         }
         Relationships: [
           {
@@ -98,6 +104,7 @@ export type Database = {
           horsepower_hp: number | null
           id: string
           image_url: string | null
+          is_placeholder: boolean
           model_name: string
           seat_height_mm: number | null
           slug: string
@@ -121,6 +128,7 @@ export type Database = {
           horsepower_hp?: number | null
           id?: string
           image_url?: string | null
+          is_placeholder?: boolean
           model_name: string
           seat_height_mm?: number | null
           slug: string
@@ -144,6 +152,7 @@ export type Database = {
           horsepower_hp?: number | null
           id?: string
           image_url?: string | null
+          is_placeholder?: boolean
           model_name?: string
           seat_height_mm?: number | null
           slug?: string

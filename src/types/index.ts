@@ -1,4 +1,3 @@
-
 export type MotorcycleCategory = "Sport" | "Cruiser" | "Touring" | "Adventure" | "Naked" | "Dual-sport" | "Standard" | "Scooter" | "Off-road";
 
 export interface Motorcycle {
@@ -68,4 +67,19 @@ export interface MotorcycleFilterUpdates {
   seatHeightRange?: [number, number];
   abs?: boolean | null;
   styleTags?: string[];
+}
+
+export type ManualType = "owner" | "service" | "wiring";
+
+export interface Manual {
+  id: string;
+  title: string;
+  manual_type: ManualType;
+  file_url: string;
+  file_size_mb: number | null;
+  motorcycle_id: string;
+  year: number | null;
+  downloads: number;
+  created_at?: string;
+  updated_at?: string;
 }
