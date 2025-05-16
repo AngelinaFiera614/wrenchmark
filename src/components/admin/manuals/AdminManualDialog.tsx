@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Manual, ManualType } from '@/types';
-import { uploadManual } from '@/services/manuals';
-import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services/motorcycleService';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { ManualWithMotorcycle } from '@/services/manuals';
 
-// Updated props interface to match what's being passed in AdminManuals.tsx
+import React, { useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ManualWithMotorcycle } from '@/services/manuals';
+import ManualForm from './ManualForm';
+import { useManualSubmit } from '@/hooks/useManualSubmit';
+import { ManualFormValues } from './ManualFormSchema';
+
 interface AdminManualDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,244 +13,57 @@ interface AdminManualDialogProps {
   onSaveSuccess: (savedManual: ManualWithMotorcycle) => void;
 }
 
-const manualTypes: { value: ManualType; label: string }[] = [
-  { value: 'owner', label: 'Owner Manual' },
-  { value: 'service', label: 'Service Manual' },
-  { value: 'wiring', label: 'Wiring Diagram' },
-];
-
-const formSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  manual_type: z.enum(['owner', 'service', 'wiring']),
-  make: z.string().min(2, 'Make must be at least 2 characters'),
-  model: z.string().min(1, 'Model must be at least 1 character'),
-  year: z.number().int().min(1900).max(new Date().getFullYear() + 2),
-  file: z
-    .instanceof(File)
-    .refine((file) => file.size > 0, 'Please upload a file')
-    .refine(
-      (file) => ['application/pdf'].includes(file.type),
-      'Only PDF files are supported'
-    ),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
 const AdminManualDialog: React.FC<AdminManualDialogProps> = ({ 
   open, 
   onOpenChange, 
   manual, 
   onSaveSuccess 
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+  const { handleSubmit, isSubmitting } = useManualSubmit({ onOpenChange, onSaveSuccess });
   
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: '',
-      manual_type: 'owner',
-      make: '',
-      model: '',
-      year: new Date().getFullYear(),
-      file: undefined,
-    },
-  });
-
+  // Extract motorcycle details if editing an existing manual
+  const defaultValues = manual 
+    ? (() => {
+        const [make, ...modelParts] = manual.motorcycle_name?.split(' ') || [];
+        // Extract year from the end of the model name
+        const yearString = modelParts[modelParts.length - 1];
+        const year = !isNaN(Number(yearString)) ? Number(yearString) : new Date().getFullYear();
+        // Join the remaining parts as the model name
+        const model = modelParts.slice(0, -1).join(' ');
+        
+        return {
+          title: manual.title,
+          manual_type: manual.manual_type,
+          make,
+          model,
+          year,
+        };
+      })()
+    : {};
+  
+  // Close form when dialog is closed
   useEffect(() => {
     if (!open) {
-      form.reset();
+      // Form will be reset by the ManualForm component when it unmounts
     }
-  }, [open, form]);
+  }, [open]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      form.setValue('file', file);
-    }
-  };
-
-  const onSubmit = async (values: FormValues) => {
-    try {
-      setIsSubmitting(true);
-
-      // Check if motorcycle exists or create a placeholder
-      let motorcycle = await findMotorcycleByDetails(values.make, values.model, values.year);
-
-      if (!motorcycle) {
-        // Create a placeholder motorcycle
-        motorcycle = await createPlaceholderMotorcycle({
-          make: values.make,
-          model: values.model,
-          year: values.year,
-        });
-        
-        toast.success(`Created placeholder motorcycle for ${values.make} ${values.model} ${values.year}`);
-      }
-
-      // Calculate file size in MB
-      const fileSizeMB = parseFloat((values.file.size / (1024 * 1024)).toFixed(2));
-
-      // Upload the manual
-      await uploadManual(values.file, {
-        title: values.title,
-        manual_type: values.manual_type,
-        motorcycle_id: motorcycle.id,
-        year: values.year,
-        file_size_mb: fileSizeMB,
-      });
-
-      toast.success('Manual uploaded successfully');
-      onOpenChange(false);
-      onSaveSuccess({
-        title: values.title,
-        manual_type: values.manual_type,
-        motorcycle_id: motorcycle.id,
-        year: values.year,
-        file_size_mb: fileSizeMB,
-        motorcycle_name: `${values.make} ${values.model} ${values.year}`
-      });
-
-      // Navigate to the motorcycle detail page
-      setTimeout(() => {
-        navigate(`/motorcycles/${motorcycle!.id}`);
-      }, 500);
-    } catch (error) {
-      console.error('Error uploading manual:', error);
-      toast.error('Failed to upload manual');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleFormSubmit = async (values: ManualFormValues) => {
+    await handleSubmit(values);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Manual</DialogTitle>
+          <DialogTitle>{manual ? 'Edit Manual' : 'Upload Manual'}</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Owner's Manual - Model Name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="manual_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Manual Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select manual type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {manualTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="make"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Make</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Honda" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Model</FormLabel>
-                    <FormControl>
-                      <Input placeholder="CB500F" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="year"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Year</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="2023" 
-                      {...field}
-                      onChange={e => field.onChange(Number(e.target.value))} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="file"
-              render={() => (
-                <FormItem>
-                  <FormLabel>PDF File</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="file" 
-                      accept="application/pdf" 
-                      onChange={handleFileChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Upload Manual
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <ManualForm
+          defaultValues={defaultValues}
+          onSubmit={handleFormSubmit}
+          onCancel={() => onOpenChange(false)}
+          isSubmitting={isSubmitting}
+        />
       </DialogContent>
     </Dialog>
   );
