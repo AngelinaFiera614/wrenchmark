@@ -90,3 +90,13 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Glass morphism utility class */
+.glass-morphism {
+  @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-lg;
+}
+
+/* Text gradient utility */
+.text-gradient {
+  @apply bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent;
+}

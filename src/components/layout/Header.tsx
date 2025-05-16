@@ -9,6 +9,7 @@ import DesktopNav from "./navigation/DesktopNav";
 import MobileNav from "./navigation/MobileNav";
 import UserMenu from "./navigation/UserMenu";
 import CompareButton from "./navigation/CompareButton";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -39,6 +40,7 @@ const Header = () => {
         </div>
 
         <div className="flex items-center space-x-4">
+          <ThemeToggle />
           <CompareButton />
           <UserMenu handleSignOut={handleSignOut} />
 
