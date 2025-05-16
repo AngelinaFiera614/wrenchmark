@@ -6,26 +6,27 @@ import { AdminRidingSkillsTable } from '@/components/admin/riding-skills/AdminRi
 import { AdminRidingSkillsEmpty } from '@/components/admin/riding-skills/AdminRidingSkillsEmpty';
 import { AdminSkillsProvider } from '@/components/admin/riding-skills/AdminSkillsContext';
 import { DeleteRidingSkillDialog } from '@/components/admin/riding-skills/DeleteRidingSkillDialog';
-import { AdminRidingSkillDialog } from '@/components/admin/riding-skills/AdminRidingSkillDialog';
+import AdminRidingSkillDialog from '@/components/admin/riding-skills/AdminRidingSkillDialog';
 import { useRidingSkills } from '@/hooks/useRidingSkills';
 import { Loader2 } from 'lucide-react';
+import { RidingSkill } from '@/types/riding-skills';
 
 const AdminRidingSkills = () => {
   const { toast } = useToast();
   const { skills, isLoading, refetch } = useRidingSkills();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editSkill, setEditSkill] = useState(null);
-  const [skillToDelete, setSkillToDelete] = useState(null);
+  const [editSkill, setEditSkill] = useState<RidingSkill | null>(null);
+  const [skillToDelete, setSkillToDelete] = useState<RidingSkill | null>(null);
 
   const handleAddSkill = () => {
     setIsCreateDialogOpen(true);
   };
 
-  const handleEditSkill = (skill) => {
+  const handleEditSkill = (skill: RidingSkill) => {
     setEditSkill(skill);
   };
 
-  const handleDeleteClick = (skill) => {
+  const handleDeleteClick = (skill: RidingSkill) => {
     setSkillToDelete(skill);
   };
 
@@ -53,7 +54,7 @@ const AdminRidingSkills = () => {
   return (
     <AdminSkillsProvider>
       <div className="space-y-6">
-        <AdminRidingSkillsHeader onAddSkill={handleAddSkill} />
+        <AdminRidingSkillsHeader onCreateNew={handleAddSkill} />
         
         {isLoading ? (
           <div className="flex justify-center py-10">
@@ -66,14 +67,15 @@ const AdminRidingSkills = () => {
             onDelete={handleDeleteClick} 
           />
         ) : (
-          <AdminRidingSkillsEmpty onAddSkill={handleAddSkill} />
+          <AdminRidingSkillsEmpty onCreateNew={handleAddSkill} />
         )}
 
         {/* Create/Edit Dialog */}
         <AdminRidingSkillDialog
           open={isCreateDialogOpen || editSkill !== null}
           skill={editSkill}
-          onClose={handleDialogClose}
+          onOpenChange={(open) => !open && handleDialogClose()}
+          onSaveSuccess={() => handleDialogClose(true)}
         />
         
         {/* Delete Dialog */}
@@ -81,7 +83,7 @@ const AdminRidingSkills = () => {
           open={skillToDelete !== null}
           onOpenChange={(open) => !open && setSkillToDelete(null)}
           onConfirm={handleDeleteConfirm}
-          isLoading={false}
+          loading={false}
         />
       </div>
     </AdminSkillsProvider>

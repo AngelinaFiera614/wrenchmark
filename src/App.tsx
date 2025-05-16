@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
@@ -8,17 +9,9 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { ComparisonProvider } from "@/context/ComparisonContext";
-import { Layout } from "@/components/layout/Layout";
-import AuthPage from "@/pages/AuthPage";
-import HomePage from "@/pages/HomePage";
-import AboutPage from "@/pages/AboutPage";
-import ContactPage from "@/pages/ContactPage";
-import MotorcyclesPage from "@/pages/MotorcyclesPage";
-import MotorcycleDetailPage from "@/pages/MotorcycleDetailPage";
-import BrandsPage from "@/pages/BrandsPage";
-import BrandDetailPage from "@/pages/BrandDetailPage";
-import ComparePage from "@/pages/ComparePage";
-import ProfilePage from "@/pages/ProfilePage";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -30,6 +23,17 @@ import AdminParts from "@/pages/admin/AdminParts";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
 
+// Simple Layout component to wrap pages
+const Layout = ({ children }) => (
+  <>
+    <Header />
+    <main className="container mx-auto px-4 py-8 min-h-screen">
+      {children}
+    </main>
+    <Footer />
+  </>
+);
+
 function App() {
   return (
     <AuthProvider>
@@ -37,24 +41,25 @@ function App() {
         <Router>
           <ScrollToTop />
           <Routes>
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/" element={<Layout />}>
-              <Route index element={<HomePage />} />
-              <Route path="about" element={<AboutPage />} />
-              <Route path="contact" element={<ContactPage />} />
-              <Route path="motorcycles" element={<MotorcyclesPage />} />
+            <Route path="/auth" element={<div>Auth Page</div>} />
+            <Route element={<Layout />}>
+              <Route index element={<div>Home Page</div>} />
+              <Route path="about" element={<div>About Page</div>} />
+              <Route path="contact" element={<div>Contact Page</div>} />
+              <Route path="motorcycles" element={<div>Motorcycles Page</div>} />
               <Route
                 path="motorcycles/:motorcycleId"
-                element={<MotorcycleDetailPage />}
+                element={<div>Motorcycle Detail Page</div>}
               />
-              <Route path="brands" element={<BrandsPage />} />
-              <Route path="brands/:brandId" element={<BrandDetailPage />} />
-              <Route path="compare" element={<ComparePage />} />
+              <Route path="brands" element={<div>Brands Page</div>} />
+              <Route path="brands/:brandId" element={<div>Brand Detail Page</div>} />
+              <Route path="compare" element={<div>Compare Page</div>} />
+              <Route path="*" element={<NotFound />} />
             </Route>
 
             {/* Protected Routes - Requires Authentication */}
             <Route path="profile" element={<ProtectedRoute />}>
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile" element={<div>Profile Page</div>} />
             </Route>
 
             {/* Admin Routes - Protected with isAdmin = true */}
