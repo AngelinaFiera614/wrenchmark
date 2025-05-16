@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from "@/context/AuthContext";
-import { Loader2 } from "lucide-react";
+import { Loader } from "lucide-react";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -28,8 +28,8 @@ type AuthFormValues = z.infer<typeof authSchema>;
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
-  const { signIn, signUp, session } = useAuth();
+  const location = useLocation();
+  const { signIn, signUp, session, isLoading } = useAuth();
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -39,9 +39,20 @@ const Auth = () => {
     },
   });
 
-  // Redirect if already logged in
+  // If we're still loading auth state, show a loading spinner
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <Loader className="h-8 w-8 animate-spin text-accent-teal" />
+      </div>
+    );
+  }
+  
+  // Only redirect when session is fully loaded and exists
   if (session) {
-    return <Navigate to="/" replace />;
+    // Get the intended destination or default to home
+    const from = location.state?.from?.pathname || "/";
+    return <Navigate to={from} replace />;
   }
 
   const onSubmit = async (values: AuthFormValues) => {
@@ -49,7 +60,7 @@ const Auth = () => {
     try {
       if (isLogin) {
         await signIn(values.email, values.password);
-        navigate("/");
+        // No navigation here - let the session state change handle it
       } else {
         await signUp(values.email, values.password);
         // Stay on page to let user see the success message
@@ -111,7 +122,7 @@ const Auth = () => {
               <Button type="submit" className="w-full bg-accent-teal text-black hover:bg-accent-teal/80" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
                     {isLogin ? "Signing In..." : "Signing Up..."}
                   </>
                 ) : (

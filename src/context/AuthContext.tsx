@@ -30,36 +30,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authChangeComplete, setAuthChangeComplete] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set up auth state listener FIRST to prevent missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
+        console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-
-        // Defer profile fetching to prevent deadlock with setTimeout
+        
+        // Handle profile fetching with proper loading states
         if (currentSession?.user) {
+          // Use setTimeout to prevent deadlock
           setTimeout(() => {
             fetchProfile(currentSession.user.id);
           }, 0);
         } else {
           setProfile(null);
+          // Only set loading to false if this is not the initial load
+          if (authChangeComplete) {
+            setIsLoading(false);
+          }
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
 
-      if (currentSession?.user) {
-        fetchProfile(currentSession.user.id);
-      } else {
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
         setIsLoading(false);
       }
-    });
+
+      // Mark initial auth check as complete
+      setAuthChangeComplete(true);
+    };
+
+    initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -85,16 +103,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      // Auth state listener will handle session update
     } catch (error: any) {
+      setIsLoading(false);
       toast.error(error.message || "Failed to sign in");
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
@@ -102,15 +124,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
+    setIsLoading(true);
     try {
       await supabase.auth.signOut();
       toast.success("You have been signed out");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign out");
+    } finally {
+      setIsLoading(false);
     }
   };
 
