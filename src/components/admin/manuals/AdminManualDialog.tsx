@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -9,12 +8,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Manual, ManualType } from '@/types';
-import { uploadManual } from '@/services/manualService';
+import { uploadManual } from '@/services/manuals';
 import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services/motorcycleService';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { ManualWithMotorcycle } from '@/services/manualService';
+import { ManualWithMotorcycle } from '@/services/manuals';
 
 // Updated props interface to match what's being passed in AdminManuals.tsx
 interface AdminManualDialogProps {

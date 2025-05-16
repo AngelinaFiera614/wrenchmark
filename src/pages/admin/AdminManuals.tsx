@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ManualWithMotorcycle } from '@/services/manualService';
-import { getManuals, deleteManual } from '@/services/manualService';
+import { ManualWithMotorcycle } from '@/services/manuals';
+import { getManuals, deleteManual } from '@/services/manuals';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Edit, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
