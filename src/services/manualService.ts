@@ -45,6 +45,31 @@ export const getManuals = async (): Promise<ManualWithMotorcycle[]> => {
   });
 };
 
+export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<any[]> => {
+  const { data, error } = await supabase
+    .from('manuals')
+    .select('*')
+    .eq('motorcycle_id', motorcycleId)
+    .order('title');
+
+  if (error) {
+    console.error("Error fetching manuals for motorcycle:", error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const incrementDownloadCount = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .rpc('increment_manual_downloads', { manual_id: id });
+  
+  if (error) {
+    console.error("Error incrementing download count:", error);
+    throw error;
+  }
+};
+
 export const getManualById = async (id: string): Promise<ManualWithMotorcycle | null> => {
   const { data, error } = await supabase
     .from('manuals')
@@ -141,4 +166,31 @@ export const uploadManualFile = async (file: File, path: string): Promise<string
 
   // Return the path to the uploaded file
   return data.path;
+};
+
+// Add this function to match what's expected in AdminManualDialog
+export const uploadManual = async (file: File, manualInfo: any): Promise<void> => {
+  try {
+    // Generate a unique file path
+    const timestamp = Date.now();
+    const filePath = `${timestamp}_${file.name.replace(/\s+/g, '_')}`;
+    
+    // Upload the file to storage
+    const path = await uploadManualFile(file, filePath);
+    
+    // Get the public URL for the file
+    const { data: fileData } = await supabase
+      .storage
+      .from('manuals')
+      .getPublicUrl(path);
+    
+    // Create the manual record with the file URL
+    await createManual({
+      ...manualInfo,
+      file_url: fileData.publicUrl
+    });
+  } catch (error) {
+    console.error("Error in uploadManual:", error);
+    throw error;
+  }
 };

@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import AdminManualDialog from '@/components/admin/AdminManualDialog';
+import AdminManualDialog from '@/components/admin/manuals/AdminManualDialog';
 
 const AdminManuals = () => {
   const [manuals, setManuals] = useState<ManualWithMotorcycle[]>([]);

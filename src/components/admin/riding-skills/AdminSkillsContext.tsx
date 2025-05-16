@@ -39,7 +39,7 @@ export const AdminSkillsProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [toast]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string): Promise<void> => {
     try {
       setDeleteLoading(true);
       await deleteRidingSkill(id);
@@ -48,7 +48,7 @@ export const AdminSkillsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         title: 'Skill deleted',
         description: 'The riding skill has been removed',
       });
-      return true;
+      // Removed the return true statement to match the expected void return type
     } catch (error) {
       console.error('Error deleting skill:', error);
       toast({
@@ -56,7 +56,7 @@ export const AdminSkillsProvider: React.FC<{ children: React.ReactNode }> = ({ c
         description: 'Please try again later',
         variant: 'destructive',
       });
-      return false;
+      // Removed the return false statement to match the expected void return type
     } finally {
       setDeleteLoading(false);
     }
