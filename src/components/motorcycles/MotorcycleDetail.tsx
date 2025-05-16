@@ -7,7 +7,7 @@ import { FeaturesList } from "./FeaturesList";
 import { MaintenanceLogs } from "./MaintenanceLogs";
 import { SafetyNotesSection } from "./SafetyNotesSection";
 import { MotorcycleDetailCTA } from "./MotorcycleDetailCTA";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Accordion,
@@ -24,7 +24,12 @@ export default function MotorcycleDetail({ motorcycle }: MotorcycleDetailProps) 
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   
-  // For desktop view, we'll use regular cards
+  useEffect(() => {
+    // Debug log to confirm component mounted with motorcycle data
+    console.log("MotorcycleDetail component mounted with motorcycle:", motorcycle);
+    console.log("Is mobile view:", isMobile);
+  }, [motorcycle, isMobile]);
+  
   // For mobile view, we'll use accordion for better space utilization
   if (isMobile) {
     return (

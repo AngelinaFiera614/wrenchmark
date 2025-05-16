@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Motorcycles from "./pages/Motorcycles";
 import MotorcycleDetail from "./pages/MotorcycleDetail";
@@ -29,6 +29,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/motorcycles" element={<Motorcycles />} />
               <Route path="/motorcycle/:id" element={<MotorcycleDetail />} />
+              {/* Add a redirect for pluralized form in case that's being used */}
+              <Route path="/motorcycles/:id" element={<Navigate to="/motorcycle/:id" replace />} />
               <Route path="/compare" element={<ComparisonPage />} />
               <Route path="/brands" element={<BrandsDirectory />} />
               <Route path="/brands/:brandId" element={<BrandDetail />} />

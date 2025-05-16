@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 import { Motorcycle } from "@/types";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 type ComparisonContextType = {
   motorcyclesToCompare: Motorcycle[];
@@ -15,21 +15,17 @@ const ComparisonContext = createContext<ComparisonContextType | undefined>(undef
 
 export const ComparisonProvider = ({ children }: { children: ReactNode }) => {
   const [motorcyclesToCompare, setMotorcyclesToCompare] = useState<Motorcycle[]>([]);
-  const { toast } = useToast();
 
   const addToComparison = (motorcycle: Motorcycle) => {
     if (motorcyclesToCompare.length >= 3) {
-      toast({
-        title: "Comparison limit reached",
-        description: "You can compare up to 3 motorcycles at once. Remove one to add another.",
-        variant: "destructive"
+      toast.error("Comparison limit reached", {
+        description: "You can compare up to 3 motorcycles at once. Remove one to add another."
       });
       return;
     }
     
     setMotorcyclesToCompare((prev) => [...prev, motorcycle]);
-    toast({
-      title: "Added to comparison",
+    toast.success("Added to comparison", {
       description: `${motorcycle.make} ${motorcycle.model} added to comparison`
     });
   };

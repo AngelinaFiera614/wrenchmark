@@ -12,9 +12,13 @@ export default function MotorcycleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const motorcycle = motorcyclesData.find(m => m.id === id);
-
-  // Redirect to motorcycles page if motorcycle isn't found
+  
   useEffect(() => {
+    // Debug log to check what ID we're looking for and if we found a match
+    console.log("Looking for motorcycle with ID:", id);
+    console.log("Found motorcycle:", motorcycle);
+    console.log("All motorcycles:", motorcyclesData);
+    
     if (!motorcycle && id) {
       console.error(`Motorcycle with ID ${id} not found`);
     }
