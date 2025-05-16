@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,11 +6,13 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ArrowRight, Shield, Wrench, PanelTop } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+
 const Index = () => {
   const {
     isAdmin
   } = useAuth();
   const [motorcycle, setMotorcycle] = useState<string | null>(null);
+  
   useEffect(() => {
     // Simulate fetching a motorcycle from local storage or an API
     const storedMotorcycle = localStorage.getItem("selectedMotorcycle");
@@ -17,16 +20,25 @@ const Index = () => {
       setMotorcycle(storedMotorcycle);
     }
   }, []);
+  
   const handleMotorcycleSelect = (motorcycleName: string) => {
     setMotorcycle(motorcycleName);
     localStorage.setItem("selectedMotorcycle", motorcycleName);
   };
+  
   return <>
       <Header />
       <main className="flex-grow">
-        {/* Hero section */}
+        {/* Hero section with road image background */}
         <section className="relative py-20 md:py-32 overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/placeholder.svg')] bg-cover bg-center opacity-20"></div>
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-30"
+            style={{ 
+              backgroundImage: "url('https://images.unsplash.com/photo-1557147540-da939ebbd573?q=80&w=1920&auto=format&fit=crop')", 
+              backgroundPosition: "center 40%" 
+            }}
+          ></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-transparent"></div>
           <div className="container relative z-10 px-4 py-12">
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gradient">
@@ -131,4 +143,5 @@ const Index = () => {
       <Footer />
     </>;
 };
+
 export default Index;
