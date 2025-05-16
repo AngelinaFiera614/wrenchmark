@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 import { getRidingSkills } from "@/services/ridingSkillsService";
 import RidingSkillCard from "@/components/riding-skills/RidingSkillCard";
 import RidingSkillFilter from "@/components/riding-skills/RidingSkillFilter";
-import { RidingSkill, RidingSkillLevel } from "@/types/riding-skills";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { RidingSkill, RidingSkillLevel } from "@/types/riding-skills";
 
 const RidingSkillsPage = () => {
   const [skills, setSkills] = useState<RidingSkill[]>([]);

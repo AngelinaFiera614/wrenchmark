@@ -1,3 +1,4 @@
+
 export type MotorcycleCategory = "Sport" | "Cruiser" | "Touring" | "Adventure" | "Naked" | "Dual-sport" | "Standard" | "Scooter" | "Off-road";
 
 export interface Motorcycle {
@@ -24,6 +25,7 @@ export interface Motorcycle {
   summary: string;
   slug?: string;
   created_at?: string;
+  is_placeholder?: boolean;
   // Adding aliases for compatibility with existing code
   engine_cc?: number;
   horsepower_hp?: number;
@@ -82,4 +84,18 @@ export interface Manual {
   downloads: number;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface ManualUpload {
+  title: string;
+  manual_type: ManualType;
+  motorcycle_id: string;
+  year: number | null;
+  file_size_mb: number | null;
+}
+
+export interface MotorcyclePlaceholder {
+  make: string;
+  model: string;
+  year: number;
 }

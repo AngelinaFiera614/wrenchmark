@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Motorcycle } from "@/types";
+import { Brand, Motorcycle, MotorcyclePlaceholder } from "@/types";
 
 export type SupabaseMotorcycle = {
   id: string;
@@ -195,104 +195,209 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
   }
 };
 
+/**
+ * Find a motorcycle by make, model, and year
+ */
+export const findMotorcycleByDetails = async (
+  make: string,
+  model: string,
+  year: number
+): Promise<Motorcycle | null> => {
+  try {
+    // First get the brand ID for the make
+    const { data: brandData, error: brandError } = await supabase
+      .from("brands")
+      .select("id")
+      .ilike("name", make)
+      .single();
+
+    if (brandError) {
+      if (brandError.code === "PGRST116") {
+        // No brand found with that name, will handle this later
+        return null;
+      }
+      throw brandError;
+    }
+
+    const brandId = brandData.id;
+
+    // Now search for the motorcycle with matching brand_id, model, and year
+    const { data: motorcycleData, error: motorcycleError } = await supabase
+      .from("motorcycles")
+      .select(`
+        id, 
+        brand_id,
+        model_name,
+        year, 
+        category,
+        image_url,
+        summary,
+        difficulty_level,
+        horsepower_hp,
+        weight_kg,
+        seat_height_mm,
+        has_abs,
+        engine,
+        brands:brand_id (
+          name,
+          country
+        )
+      `)
+      .eq("brand_id", brandId)
+      .ilike("model_name", model)
+      .eq("year", year)
+      .single();
+
+    if (motorcycleError) {
+      if (motorcycleError.code === "PGRST116") {
+        // No motorcycle found
+        return null;
+      }
+      throw motorcycleError;
+    }
+
+    // Convert the database structure to the Motorcycle interface
+    return {
+      id: motorcycleData.id,
+      make: motorcycleData.brands.name,
+      model: motorcycleData.model_name,
+      brand_id: motorcycleData.brand_id,
+      year: motorcycleData.year,
+      category: motorcycleData.category || "Unknown",
+      image_url: motorcycleData.image_url || "/placeholder.svg",
+      style_tags: [],
+      difficulty_level: motorcycleData.difficulty_level || 3,
+      engine_size: 0, // Default value
+      horsepower: motorcycleData.horsepower_hp || 0,
+      weight_kg: motorcycleData.weight_kg || 0,
+      seat_height_mm: motorcycleData.seat_height_mm || 0,
+      abs: !!motorcycleData.has_abs,
+      top_speed_kph: 0, // Default value
+      torque_nm: 0, // Default value
+      wheelbase_mm: 0, // Default value
+      ground_clearance_mm: 0, // Default value
+      fuel_capacity_l: 0, // Default value
+      smart_features: [],
+      summary: motorcycleData.summary || `${motorcycleData.year} ${motorcycleData.brands.name} ${motorcycleData.model_name}`
+    };
+  } catch (error) {
+    console.error("Error finding motorcycle by details:", error);
+    return null; // Return null instead of throwing, as this is often a valid case
+  }
+};
+
+/**
+ * Create a placeholder motorcycle
+ */
 export const createPlaceholderMotorcycle = async (
-  data: { make: string; model: string; year: number; brand_id?: string }
+  placeholderData: MotorcyclePlaceholder
 ): Promise<Motorcycle> => {
-  // Check if brand exists or create a new one if brand_id is not provided
-  let brandId = data.brand_id;
-  
-  if (!brandId) {
-    // Try to find the brand by name
-    const { data: existingBrands } = await supabase
-      .from('brands')
-      .select('id')
-      .eq('name', data.make)
-      .limit(1);
+  try {
+    // 1. Check if the brand exists or create it
+    let brandId: string;
     
-    if (existingBrands && existingBrands.length > 0) {
-      brandId = existingBrands[0].id;
-    } else {
-      // Create a new brand
-      const slug = data.make.toLowerCase().replace(/\s+/g, '-');
+    // Try to find existing brand
+    const { data: existingBrand, error: brandError } = await supabase
+      .from("brands")
+      .select("id")
+      .ilike("name", placeholderData.make)
+      .single();
       
-      const { data: newBrand, error: brandError } = await supabase
-        .from('brands')
-        .insert({
-          name: data.make,
-          slug: slug,
-          known_for: []
-        })
-        .select()
-        .single();
-      
-      if (brandError) {
-        console.error("Error creating brand:", brandError);
+    if (brandError) {
+      if (brandError.code === "PGRST116") {
+        // Brand doesn't exist, create it
+        const { data: newBrand, error: newBrandError } = await supabase
+          .from("brands")
+          .insert({
+            name: placeholderData.make,
+            country: "Unknown",
+            slug: placeholderData.make.toLowerCase().replace(/\s+/g, '-'),
+            known_for: []
+          })
+          .select("id")
+          .single();
+          
+        if (newBrandError) throw newBrandError;
+        brandId = newBrand.id;
+      } else {
         throw brandError;
       }
-      
-      brandId = newBrand.id;
+    } else {
+      brandId = existingBrand.id;
     }
-  }
-  
-  // Create a placeholder motorcycle
-  const slug = `${data.make}-${data.model}-${data.year}`.toLowerCase().replace(/\s+/g, '-');
-  
-  const { data: newMotorcycle, error } = await supabase
-    .from('motorcycles')
-    .insert({
-      model_name: data.model,
-      year: data.year,
-      brand_id: brandId,
-      summary: "Details coming soon",
-      is_placeholder: true,
-      slug: slug,
-      image_url: "/placeholder.svg",
-      category: "Standard",
-    })
-    .select('*, brands(*)')
-    .single();
-  
-  if (error) {
+    
+    // 2. Create the placeholder motorcycle
+    const motorcycleSlug = `${placeholderData.make}-${placeholderData.model}-${placeholderData.year}`
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+      
+    const { data: newMotorcycle, error: motorcycleError } = await supabase
+      .from("motorcycles")
+      .insert({
+        brand_id: brandId,
+        model_name: placeholderData.model,
+        year: placeholderData.year,
+        category: "Unknown",
+        slug: motorcycleSlug,
+        summary: `${placeholderData.year} ${placeholderData.make} ${placeholderData.model}`,
+        image_url: "/placeholder.svg",
+        is_placeholder: true,
+        difficulty_level: 3,
+        has_abs: false,
+        weight_kg: 0,
+        horsepower_hp: 0,
+        seat_height_mm: 0
+      })
+      .select(`
+        id, 
+        brand_id,
+        model_name,
+        year, 
+        category,
+        image_url,
+        summary,
+        difficulty_level,
+        horsepower_hp,
+        weight_kg,
+        seat_height_mm,
+        has_abs,
+        brands:brand_id (
+          name,
+          country
+        )
+      `)
+      .single();
+      
+    if (motorcycleError) throw motorcycleError;
+    
+    // 3. Return the new motorcycle in the expected format
+    return {
+      id: newMotorcycle.id,
+      make: placeholderData.make,
+      model: newMotorcycle.model_name,
+      brand_id: newMotorcycle.brand_id,
+      year: newMotorcycle.year,
+      category: newMotorcycle.category || "Unknown",
+      image_url: newMotorcycle.image_url || "/placeholder.svg",
+      style_tags: [],
+      difficulty_level: newMotorcycle.difficulty_level || 3,
+      engine_size: 0,
+      horsepower: newMotorcycle.horsepower_hp || 0,
+      weight_kg: newMotorcycle.weight_kg || 0,
+      seat_height_mm: newMotorcycle.seat_height_mm || 0,
+      abs: !!newMotorcycle.has_abs,
+      top_speed_kph: 0,
+      torque_nm: 0,
+      wheelbase_mm: 0,
+      ground_clearance_mm: 0,
+      fuel_capacity_l: 0,
+      smart_features: [],
+      summary: newMotorcycle.summary || `${newMotorcycle.year} ${placeholderData.make} ${newMotorcycle.model_name}`,
+      is_placeholder: true
+    };
+  } catch (error) {
     console.error("Error creating placeholder motorcycle:", error);
     throw error;
   }
-  
-  return newMotorcycle;
-};
-
-export const findMotorcycleByDetails = async (
-  make: string, 
-  model: string, 
-  year: number
-): Promise<Motorcycle | null> => {
-  // First try to find by exact match
-  const { data: exactMatches, error } = await supabase
-    .from('motorcycles')
-    .select('*, brands(*)')
-    .eq('model_name', model)
-    .eq('year', year)
-    .eq('brands.name', make);
-  
-  if (error) {
-    console.error("Error searching for motorcycle:", error);
-    throw error;
-  }
-  
-  if (exactMatches && exactMatches.length > 0) {
-    return exactMatches[0];
-  }
-  
-  // Try more flexible search if no exact match
-  const { data: flexibleMatches } = await supabase
-    .from('motorcycles')
-    .select('*, brands(*)')
-    .ilike('model_name', `%${model}%`)
-    .eq('year', year)
-    .eq('brands.name', make);
-  
-  if (flexibleMatches && flexibleMatches.length > 0) {
-    return flexibleMatches[0];
-  }
-  
-  return null;
 };

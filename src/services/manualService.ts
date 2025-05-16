@@ -1,159 +1,187 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Manual, ManualType } from "@/types";
-import { toast } from "sonner";
+import { Manual, ManualType, ManualUpload } from "@/types";
 
+/**
+ * Get all manuals for a specific motorcycle
+ */
 export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<Manual[]> => {
-  const { data, error } = await supabase
-    .from("manuals")
-    .select("*")
-    .eq("motorcycle_id", motorcycleId)
-    .order("title");
+  try {
+    const { data, error } = await supabase
+      .from("manuals")
+      .select("*")
+      .eq("motorcycle_id", motorcycleId)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching manuals:", error);
+    if (error) throw error;
+    
+    // Type assertion to ensure compatibility with ManualType
+    return data.map(manual => ({
+      ...manual,
+      manual_type: manual.manual_type as ManualType
+    }));
+  } catch (error) {
+    console.error("Error getting manuals:", error);
     throw error;
   }
-
-  return data || [];
 };
 
+/**
+ * Get all manuals with optional filters (for admin)
+ */
 export const getAllManuals = async (): Promise<Manual[]> => {
-  const { data, error } = await supabase
-    .from("manuals")
-    .select("*, motorcycles(make, model_name, year)")
-    .order("title");
+  try {
+    const { data, error } = await supabase
+      .from("manuals")
+      .select("*, motorcycles:motorcycle_id(*)")
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching all manuals:", error);
+    if (error) throw error;
+    
+    // Type assertion to ensure compatibility with ManualType
+    return data.map(manual => ({
+      ...manual,
+      manual_type: manual.manual_type as ManualType,
+      // We don't include motorcycles here as it's not part of Manual type
+    }));
+  } catch (error) {
+    console.error("Error getting all manuals:", error);
     throw error;
   }
-
-  return data || [];
 };
 
-export const getManualById = async (id: string): Promise<Manual | null> => {
-  const { data, error } = await supabase
-    .from("manuals")
-    .select("*")
-    .eq("id", id)
-    .single();
+/**
+ * Get a single manual by id
+ */
+export const getManualById = async (manualId: string): Promise<Manual> => {
+  try {
+    const { data, error } = await supabase
+      .from("manuals")
+      .select("*")
+      .eq("id", manualId)
+      .single();
 
-  if (error) {
-    if (error.code === "PGRST116") {
-      return null; // No manual found
-    }
-    console.error("Error fetching manual:", error);
+    if (error) throw error;
+    
+    return {
+      ...data,
+      manual_type: data.manual_type as ManualType
+    };
+  } catch (error) {
+    console.error("Error getting manual:", error);
     throw error;
   }
-
-  return data;
 };
 
-export const incrementDownloadCount = async (manualId: string): Promise<void> => {
-  const { error } = await supabase
-    .from("manuals")
-    .update({ downloads: supabase.rpc('increment', { inc_amount: 1, row_id: manualId }) })
-    .eq("id", manualId);
+/**
+ * Increment the download count for a manual
+ */
+export const incrementDownloadCount = async (manualId: string): Promise<number> => {
+  try {
+    // Use the PostgreSQL function to increment the download count
+    const { data, error } = await supabase
+      .rpc('increment', { row_id: manualId, inc_amount: 1 });
 
-  if (error) {
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
     console.error("Error incrementing download count:", error);
-    // Don't throw an error since this is not critical functionality
+    throw error;
   }
 };
 
+/**
+ * Upload a manual file to storage and create a database entry
+ */
 export const uploadManual = async (
   file: File,
-  metadata: {
-    title: string;
-    manual_type: ManualType;
-    motorcycle_id: string;
-    year?: number;
-    file_size_mb?: number;
-  }
+  manualData: ManualUpload
 ): Promise<Manual> => {
-  // 1. Upload file to storage
-  const fileExt = file.name.split('.').pop();
-  const filePath = `${metadata.motorcycle_id}/${Date.now()}.${fileExt}`;
-  
-  const { error: uploadError, data: fileData } = await supabase.storage
-    .from("manuals")
-    .upload(filePath, file);
+  try {
+    // 1. Upload the file to Supabase Storage
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `manuals/${fileName}`;
+    
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('manuals')
+      .upload(filePath, file, {
+        contentType: file.type,
+        cacheControl: '3600'
+      });
 
-  if (uploadError) {
-    console.error("Error uploading manual file:", uploadError);
-    throw uploadError;
+    if (uploadError) throw uploadError;
+
+    // 2. Get the public URL for the uploaded file
+    const { data: urlData } = supabase
+      .storage
+      .from('manuals')
+      .getPublicUrl(filePath);
+
+    const file_url = urlData.publicUrl;
+
+    // 3. Create the manual record in the database
+    const { data: manualRecord, error: dbError } = await supabase
+      .from('manuals')
+      .insert({
+        title: manualData.title,
+        manual_type: manualData.manual_type,
+        motorcycle_id: manualData.motorcycle_id,
+        file_url,
+        file_size_mb: manualData.file_size_mb,
+        year: manualData.year,
+        downloads: 0
+      })
+      .select()
+      .single();
+
+    if (dbError) throw dbError;
+
+    return {
+      ...manualRecord,
+      manual_type: manualRecord.manual_type as ManualType
+    };
+  } catch (error) {
+    console.error("Error uploading manual:", error);
+    throw error;
   }
-
-  // 2. Get the public URL for the file
-  const { data: publicUrlData } = supabase.storage
-    .from("manuals")
-    .getPublicUrl(filePath);
-
-  const file_url = publicUrlData.publicUrl;
-
-  // 3. Calculate file size in MB if not provided
-  const file_size_mb = metadata.file_size_mb || parseFloat((file.size / (1024 * 1024)).toFixed(2));
-
-  // 4. Insert manual record in database
-  const { data, error: dbError } = await supabase
-    .from("manuals")
-    .insert({
-      title: metadata.title,
-      manual_type: metadata.manual_type,
-      motorcycle_id: metadata.motorcycle_id,
-      file_url,
-      file_size_mb,
-      year: metadata.year || null,
-      downloads: 0
-    })
-    .select()
-    .single();
-
-  if (dbError) {
-    // Clean up the uploaded file if database insert fails
-    await supabase.storage.from("manuals").remove([filePath]);
-    console.error("Error creating manual record:", dbError);
-    throw dbError;
-  }
-
-  return data;
 };
 
-export const deleteManual = async (manual: Manual): Promise<void> => {
+/**
+ * Delete a manual (including its file in storage)
+ */
+export const deleteManual = async (manualId: string): Promise<void> => {
   try {
-    // Extract the file path from the URL
-    const storageUrl = supabase.storage.from("manuals").getPublicUrl("").data.publicUrl;
-    let filePath = manual.file_url.replace(storageUrl, "");
+    // 1. Get the manual to find the file_url
+    const manual = await getManualById(manualId);
     
-    // Remove the leading slash if present
-    if (filePath.startsWith("/")) {
-      filePath = filePath.substring(1);
-    }
-    
-    // Delete the file from storage
-    const { error: storageError } = await supabase.storage
-      .from("manuals")
-      .remove([filePath]);
-      
-    if (storageError) {
-      console.error("Error deleting file from storage:", storageError);
-      // Continue to delete the database record even if storage delete fails
-    }
-    
-    // Delete the manual record
+    // 2. Delete the database record
     const { error: dbError } = await supabase
-      .from("manuals")
+      .from('manuals')
       .delete()
-      .eq("id", manual.id);
-      
-    if (dbError) {
-      console.error("Error deleting manual record:", dbError);
-      throw dbError;
-    }
+      .eq('id', manualId);
     
+    if (dbError) throw dbError;
+
+    // 3. Extract the path from the URL and delete from storage
+    if (manual.file_url) {
+      const path = manual.file_url.split('/').pop();
+      if (path) {
+        const { error: storageError } = await supabase
+          .storage
+          .from('manuals')
+          .remove([`manuals/${path}`]);
+          
+        if (storageError) {
+          console.warn("Could not delete file from storage:", storageError);
+          // Continue anyway since the database record is deleted
+        }
+      }
+    }
   } catch (error) {
-    console.error("Error in manual deletion process:", error);
+    console.error("Error deleting manual:", error);
     throw error;
   }
 };
