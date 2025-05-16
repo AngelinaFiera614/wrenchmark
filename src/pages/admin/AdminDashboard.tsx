@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Motorcycle, Building, Wrench, FileText } from "lucide-react";
+import { Bike, Building, Wrench, FileText } from "lucide-react";
 
 const AdminDashboard = () => {
   const adminSections = [
@@ -9,7 +9,7 @@ const AdminDashboard = () => {
       title: "Motorcycles",
       description: "Manage motorcycle listings and details",
       path: "/admin/motorcycles",
-      icon: <Motorcycle className="h-8 w-8" />,
+      icon: <Bike className="h-8 w-8" />,
     },
     {
       title: "Brands",

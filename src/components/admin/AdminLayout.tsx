@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import {
-  Motorcycle,
+  Bike,
   Building,
   Wrench,
   FileText,
@@ -25,7 +24,7 @@ const navItems: NavItem[] = [
   {
     title: "Motorcycles",
     href: "/admin/motorcycles",
-    icon: <Motorcycle className="h-5 w-5" />,
+    icon: <Bike className="h-5 w-5" />,
   },
   {
     title: "Brands",
