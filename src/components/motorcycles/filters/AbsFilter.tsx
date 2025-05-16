@@ -21,7 +21,7 @@ export default function AbsFilter({ checked, onChange, id = "abs" }: AbsFilterPr
       />
       <Label 
         htmlFor={id}
-        className={checked ? "font-medium" : ""}
+        className={checked ? "font-medium text-white" : "text-white/80"}
       >
         ABS Equipped
       </Label>

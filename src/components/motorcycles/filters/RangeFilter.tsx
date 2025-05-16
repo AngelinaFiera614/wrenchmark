@@ -58,15 +58,15 @@ export default function RangeFilter({
           data-active={isActive}
         />
         <div className="flex justify-between mt-2 text-xs">
-          <span className={isActive ? "font-medium text-primary" : "text-muted-foreground"}>
+          <span className={isActive ? "font-medium text-white" : "text-white/80"}>
             {labelStart || valueFormatter(value[0])}
           </span>
-          <span className={isActive ? "font-medium text-primary" : "text-muted-foreground"}>
+          <span className={isActive ? "font-medium text-white" : "text-white/80"}>
             {labelEnd || (value.length > 1 ? valueFormatter(value[1]) : '')}
           </span>
         </div>
         {isActive && (
-          <div className="text-xs text-center mt-1 text-primary">
+          <div className="text-xs text-center mt-1 text-accent-teal">
             Filter active
           </div>
         )}

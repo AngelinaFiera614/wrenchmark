@@ -11,7 +11,7 @@ export default function FilterSection({ title, children, action }: FilterSection
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium">{title}</h4>
+        <h4 className="font-medium text-foreground">{title}</h4>
         {action}
       </div>
       {children}

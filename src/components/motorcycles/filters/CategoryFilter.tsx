@@ -46,7 +46,7 @@ export default function CategoryFilter({
               />
               <Label 
                 htmlFor={`${idPrefix}${category}`}
-                className={isChecked ? "font-medium" : ""}
+                className={isChecked ? "font-medium text-white" : "text-white/80"}
               >
                 {category}
               </Label>

@@ -34,6 +34,7 @@ export default function MakeFilter({
           placeholder="Search makes..." 
           value={make}
           onChange={onMakeChange}
+          className="text-foreground"
         />
         {make && (
           <Badge 

@@ -21,7 +21,7 @@
     --secondary-foreground: 0 0% 98%;
  
     --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted-foreground: 240 5% 84.9%;
  
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
@@ -78,6 +78,23 @@
   
   .difficulty-5 {
     @apply bg-red-500;
+  }
+
+  /* Filter text utilities */
+  .filter-label {
+    @apply text-white/90 hover:text-white;
+  }
+  
+  .filter-label-active {
+    @apply text-white font-medium;
+  }
+  
+  .filter-value {
+    @apply text-white/80;
+  }
+  
+  .filter-value-active {
+    @apply text-accent-teal;
   }
 
   /* Animation utilities */
