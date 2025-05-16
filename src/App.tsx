@@ -14,6 +14,15 @@ import { ComparisonProvider } from "./context/ComparisonContext";
 import ComparisonPage from "./pages/ComparisonPage";
 import BrandsDirectory from "./pages/BrandsDirectory";
 import BrandDetail from "./pages/BrandDetail";
+import { AuthProvider } from "./context/AuthContext";
+import Auth from "./pages/Auth";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminMotorcycles from "./pages/admin/AdminMotorcycles";
+import AdminBrands from "./pages/admin/AdminBrands";
+import AdminRepairSkills from "./pages/admin/AdminRepairSkills";
+import AdminManuals from "./pages/admin/AdminManuals";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,29 +43,44 @@ const MotorcycleRedirect = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ComparisonProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="dark min-h-screen bg-background">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/motorcycles" element={<Motorcycles />} />
-              <Route path="/motorcycle/:id" element={<MotorcycleDetail />} />
-              {/* Fixed redirect using a wrapper component */}
-              <Route path="/motorcycles/:id" element={<MotorcycleRedirect />} />
-              <Route path="/compare" element={<ComparisonPage />} />
-              <Route path="/brands" element={<BrandsDirectory />} />
-              <Route path="/brands/:brandId" element={<BrandDetail />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ComparisonProvider>
+    <AuthProvider>
+      <ComparisonProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="dark min-h-screen bg-background">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/motorcycles" element={<Motorcycles />} />
+                <Route path="/motorcycle/:id" element={<MotorcycleDetail />} />
+                {/* Fixed redirect using a wrapper component */}
+                <Route path="/motorcycles/:id" element={<MotorcycleRedirect />} />
+                <Route path="/compare" element={<ComparisonPage />} />
+                <Route path="/brands" element={<BrandsDirectory />} />
+                <Route path="/brands/:brandId" element={<BrandDetail />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/auth" element={<Auth />} />
+                
+                {/* Admin Routes - Protected and require admin */}
+                <Route element={<ProtectedRoute requireAdmin={true} />}>
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="motorcycles" element={<AdminMotorcycles />} />
+                    <Route path="brands" element={<AdminBrands />} />
+                    <Route path="repair-skills" element={<AdminRepairSkills />} />
+                    <Route path="manuals" element={<AdminManuals />} />
+                  </Route>
+                </Route>
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ComparisonProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

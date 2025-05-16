@@ -1,151 +1,152 @@
-
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motorcyclesData } from "@/data/motorcycles";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import MotorcycleCard from "@/components/motorcycles/MotorcycleCard";
-import { Motorcycle } from "@/types";
-import { ArrowRight } from "lucide-react";
-import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator";
+import { ArrowRight, Shield, Tool, PanelTop } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
-// Group motorcycles by category for the quick links section
-const groupByCategory = (motorcycles: Motorcycle[]) => {
-  const grouped = motorcycles.reduce((acc, motorcycle) => {
-    if (!acc[motorcycle.category]) {
-      acc[motorcycle.category] = [];
+const Index = () => {
+  const { isAdmin } = useAuth();
+  const [motorcycle, setMotorcycle] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Simulate fetching a motorcycle from local storage or an API
+    const storedMotorcycle = localStorage.getItem("selectedMotorcycle");
+    if (storedMotorcycle) {
+      setMotorcycle(storedMotorcycle);
     }
-    acc[motorcycle.category].push(motorcycle);
-    return acc;
-  }, {} as Record<string, Motorcycle[]>);
+  }, []);
 
-  return Object.entries(grouped);
-};
+  const handleMotorcycleSelect = (motorcycleName: string) => {
+    setMotorcycle(motorcycleName);
+    localStorage.setItem("selectedMotorcycle", motorcycleName);
+  };
 
-const categories = groupByCategory(motorcyclesData);
-const featuredMotorcycles = motorcyclesData.slice(0, 3);
-
-export default function Index() {
   return (
-    <div className="min-h-screen flex flex-col dark">
+    <>
       <Header />
-      
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-12 md:py-24 lg:py-32 bg-charcoal neo-blur">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-mono font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl text-gradient">
-                  WRENCHMARK
-                </h1>
-                <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl">
-                  Your definitive motorcycle reference database. Browse, compare, and learn about motorcycles from around the world.
+      <main className="flex-grow">
+        {/* Hero section */}
+        <section className="relative py-20 md:py-32 overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/placeholder.svg')] bg-cover bg-center opacity-20"></div>
+          <div className="container relative z-10 px-4 py-12">
+            <div className="max-w-3xl mx-auto text-center space-y-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gradient">
+                Ride Farther. Build Smarter.
+              </h1>
+              <p className="text-lg md:text-xl text-gray-300">
+                Your reference guide to motorcycles, repair skills, and riding technique
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center mt-8">
+                <Link to="/motorcycles">
+                  <Button variant="teal" size="lg">
+                    Browse Motorcycles
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/brands">
+                  <Button variant="outline" size="lg">
+                    Explore Brands
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Admin dashboard link if user is admin */}
+              {isAdmin && (
+                <div className="mt-6 flex justify-center">
+                  <Link to="/admin">
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                      <PanelTop className="h-4 w-4" />
+                      Admin Dashboard
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Features section */}
+        <section className="py-16 bg-black/30">
+          <div className="container px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 text-accent-teal">
+              Everything you need to know
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="glass-morphism p-6 rounded-lg text-center space-y-4">
+                <div className="mx-auto bg-accent-teal/20 w-12 h-12 rounded-full flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-accent-teal" />
+                </div>
+                <h3 className="text-xl font-semibold">Motorcycle Specifications</h3>
+                <p className="text-gray-300">
+                  Comprehensive database of motorcycle specs, dimensions, and features.
                 </p>
               </div>
-              <div className="space-x-4">
-                <Link to="/motorcycles">
-                  <Button className="bg-accent-teal text-black hover:bg-accent-teal-hover">
-                    Browse Motorcycles
-                  </Button>
-                </Link>
-                <Link to="/about">
-                  <Button variant="outline">
-                    Learn More
-                  </Button>
-                </Link>
+              <div className="glass-morphism p-6 rounded-lg text-center space-y-4">
+                <div className="mx-auto bg-accent-teal/20 w-12 h-12 rounded-full flex items-center justify-center">
+                  <Tool className="h-6 w-6 text-accent-teal" />
+                </div>
+                <h3 className="text-xl font-semibold">DIY Repair Skills</h3>
+                <p className="text-gray-300">
+                  Step-by-step guides for common motorcycle maintenance and repairs.
+                </p>
+              </div>
+              <div className="glass-morphism p-6 rounded-lg text-center space-y-4">
+                <div className="mx-auto bg-accent-teal/20 w-12 h-12 rounded-full flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-6 w-6 text-accent-teal"
+                  >
+                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 2a8 8 0 1 1-8 8 8 8 0 0 1 8-8z" />
+                    <path d="M12 6v6l4 2" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold">Compare Models</h3>
+                <p className="text-gray-300">
+                  Side-by-side comparison of motorcycles to find your perfect match.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Featured Motorcycles */}
-        <section className="py-12 md:py-16 bg-background">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-between gap-4 md:flex-row mb-8">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Featured Motorcycles</h2>
-                <p className="text-muted-foreground">Check out these popular rides</p>
-              </div>
-              <Link to="/motorcycles" className="flex items-center text-accent-teal">
-                View all <ArrowRight className="ml-1 h-4 w-4" />
+        {/* Call to action section */}
+        <section className="py-24 bg-black/60">
+          <div className="container px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-accent-teal mb-8">
+              Ready to dive in?
+            </h2>
+            <p className="text-lg text-gray-300 mb-12">
+              Explore our motorcycle database, learn new repair skills, and
+              compare your favorite models.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/motorcycles">
+                <Button variant="teal" size="lg">
+                  View All Motorcycles
+                </Button>
               </Link>
-            </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredMotorcycles.map((motorcycle) => (
-                <MotorcycleCard key={motorcycle.id} motorcycle={motorcycle} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Quick Category Links */}
-        <section className="py-12 md:py-16 bg-graphite">
-          <div className="container px-4 md:px-6">
-            <h2 className="text-2xl font-bold tracking-tight mb-8">Browse by Category</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-              {categories.map(([category, motorcycles]) => (
-                <Card key={category} className="hover:bg-muted/20 transition-colors">
-                  <CardContent className="p-6">
-                    <Link to={`/motorcycles?category=${category}`}>
-                      <h3 className="text-lg font-semibold mb-1">{category}</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {motorcycles.length} {motorcycles.length === 1 ? 'motorcycle' : 'motorcycles'}
-                      </p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-accent-teal text-sm font-medium">Browse {category}</span>
-                        <ArrowRight className="h-4 w-4 text-accent-teal" />
-                      </div>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Future Features Teaser */}
-        <section className="py-12 md:py-16 bg-background">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <h2 className="text-2xl font-bold tracking-tight">Coming Soon</h2>
-              <p className="text-muted-foreground max-w-[700px]">
-                We're working on exciting new features including user accounts, saved motorcycles, and maintenance logs.
-              </p>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mt-8 max-w-4xl">
-                <Card className="glass-morphism">
-                  <CardContent className="p-6 text-center">
-                    <h3 className="font-medium mb-2">User Accounts</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Create an account to save your favorite bikes and track maintenance.
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="glass-morphism">
-                  <CardContent className="p-6 text-center">
-                    <h3 className="font-medium mb-2">Saved Motorcycles</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Build a collection of your dream bikes or bikes you own.
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="glass-morphism">
-                  <CardContent className="p-6 text-center">
-                    <h3 className="font-medium mb-2">Maintenance Logs</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Keep track of services, repairs, and modifications.
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+              <Link to="/brands">
+                <Button variant="outline" size="lg">
+                  Discover Brands
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
       </main>
-      
       <Footer />
-      <ComparisonIndicator />
-    </div>
+    </>
   );
-}
+};
+
+export default Index;
