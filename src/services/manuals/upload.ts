@@ -1,7 +1,7 @@
 
 // Functions for handling file uploads
 import { supabase } from "@/integrations/supabase/client";
-import { ManualInfo } from "./types";
+import { ManualInfo, ManualWithMotorcycle } from "./types";
 import { createManual } from "./update";
 
 /**
@@ -25,7 +25,7 @@ export const uploadManualFile = async (file: File, path: string): Promise<string
 /**
  * Complete process to upload a manual file and create the database record
  */
-export const uploadManual = async (file: File, manualInfo: any): Promise<void> => {
+export const uploadManual = async (file: File, manualInfo: ManualInfo): Promise<ManualWithMotorcycle> => {
   try {
     // Generate a unique file path
     const timestamp = Date.now();
@@ -41,10 +41,15 @@ export const uploadManual = async (file: File, manualInfo: any): Promise<void> =
       .getPublicUrl(path);
     
     // Create the manual record with the file URL
-    await createManual({
+    const updatedManualInfo = {
       ...manualInfo,
       file_url: fileData.publicUrl
-    });
+    };
+    
+    // Create the manual record or use existing ID
+    const manual = await createManual(updatedManualInfo);
+    
+    return manual;
   } catch (error) {
     console.error("Error in uploadManual:", error);
     throw error;

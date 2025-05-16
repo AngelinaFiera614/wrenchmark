@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services/motorcycleService';
 import { uploadManual, updateManual } from '@/services/manuals';
-import { ManualWithMotorcycle } from '@/services/manuals';
+import { ManualWithMotorcycle, ManualInfo } from '@/services/manuals';
 import { ManualFormValues } from '@/components/admin/manuals/ManualFormSchema';
 
 interface UseManualSubmitProps {
@@ -45,7 +45,7 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
       
       if (manualId) {
         // Update existing manual
-        const updateData = {
+        const updateData: ManualInfo = {
           title: values.title,
           manual_type: values.manual_type,
           motorcycle_id: motorcycle.id,
@@ -62,10 +62,18 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
         // If a new file was uploaded, update the file
         if (values.file instanceof File && values.file.size > 0) {
           // We need to upload the new file
-          await uploadManual(values.file, {
+          const uploadResult = await uploadManual(values.file, {
             id: manualId, // Use existing ID for update
             ...updateData
           });
+          
+          // If the upload returns data, use it to update savedManual
+          if (uploadResult) {
+            savedManual = {
+              ...savedManual,
+              file_url: uploadResult.file_url
+            };
+          }
         }
         
         toast.success('Manual updated successfully');
@@ -75,15 +83,23 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
           throw new Error('File is required for new manuals');
         }
         
-        // Upload the new manual
-        savedManual = await uploadManual(values.file, {
+        // Prepare manual data
+        const manualData: ManualInfo = {
           title: values.title,
           manual_type: values.manual_type,
           motorcycle_id: motorcycle.id,
           year: values.year,
           file_size_mb: fileSizeMB,
-        });
+        };
         
+        // Upload the new manual
+        const uploadResult = await uploadManual(values.file, manualData);
+        
+        if (!uploadResult) {
+          throw new Error('Failed to upload manual file');
+        }
+        
+        savedManual = uploadResult;
         toast.success('Manual uploaded successfully');
       }
 
