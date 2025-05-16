@@ -14,10 +14,14 @@ import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { ManualWithMotorcycle } from '@/services/manualService';
 
+// Updated props interface to match what's being passed in AdminManuals.tsx
 interface AdminManualDialogProps {
   open: boolean;
-  onClose: (refreshData?: boolean) => void;
+  onOpenChange: (open: boolean) => void;
+  manual: ManualWithMotorcycle | null;
+  onSaveSuccess: (savedManual: ManualWithMotorcycle) => void;
 }
 
 const manualTypes: { value: ManualType; label: string }[] = [
@@ -43,7 +47,12 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const AdminManualDialog: React.FC<AdminManualDialogProps> = ({ open, onClose }) => {
+const AdminManualDialog: React.FC<AdminManualDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  manual, 
+  onSaveSuccess 
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   
@@ -103,7 +112,15 @@ const AdminManualDialog: React.FC<AdminManualDialogProps> = ({ open, onClose }) 
       });
 
       toast.success('Manual uploaded successfully');
-      onClose(true);
+      onOpenChange(false);
+      onSaveSuccess({
+        title: values.title,
+        manual_type: values.manual_type,
+        motorcycle_id: motorcycle.id,
+        year: values.year,
+        file_size_mb: fileSizeMB,
+        motorcycle_name: `${values.make} ${values.model} ${values.year}`
+      });
 
       // Navigate to the motorcycle detail page
       setTimeout(() => {
@@ -118,7 +135,7 @@ const AdminManualDialog: React.FC<AdminManualDialogProps> = ({ open, onClose }) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => onClose()}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Upload Manual</DialogTitle>
@@ -235,7 +252,7 @@ const AdminManualDialog: React.FC<AdminManualDialogProps> = ({ open, onClose }) 
             />
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" type="button" onClick={() => onClose()}>
+              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>

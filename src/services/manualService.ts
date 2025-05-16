@@ -61,6 +61,7 @@ export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<an
 };
 
 export const incrementDownloadCount = async (id: string): Promise<void> => {
+  // Fixed type error by using an object with the correct parameter name
   const { error } = await supabase
     .rpc('increment_manual_downloads', { manual_id: id });
   
