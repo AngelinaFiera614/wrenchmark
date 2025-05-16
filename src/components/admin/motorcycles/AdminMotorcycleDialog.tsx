@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +33,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader } from "lucide-react";
 
 // Form schema
 const motorcycleSchema = z.object({
@@ -639,7 +639,7 @@ const AdminMotorcycleDialog: React.FC<AdminMotorcycleDialogProps> = ({
               <Button type="submit" disabled={loading}>
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
                   </>
                 ) : motorcycle ? "Update" : "Create"}
