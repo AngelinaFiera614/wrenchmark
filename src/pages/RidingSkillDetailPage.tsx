@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getRidingSkillById } from "@/services/ridingSkillsService";
 import { RidingSkill } from "@/types/riding-skills";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -1,153 +1,170 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, FileText, Loader2, File, Trash2, Eye } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { getAllManuals, deleteManual } from '@/services/manualService';
-import { Manual } from '@/types';
-import AdminManualDialog from '@/components/admin/manuals/AdminManualDialog';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-
-const manualTypeColors = {
-  owner: 'bg-blue-500/20 text-blue-300 border-0',
-  service: 'bg-amber-500/20 text-amber-300 border-0',
-  wiring: 'bg-green-500/20 text-green-300 border-0'
-};
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { PlusIcon, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Manual } from "@/types";
+import AdminManualDialog from "@/components/admin/manuals/AdminManualDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { deleteManual } from "@/services/manualService";
 
 const AdminManuals = () => {
+  const [manuals, setManuals] = useState<Manual[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedManual, setSelectedManual] = useState<Manual | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const { data: manuals, isLoading, refetch } = useQuery({
-    queryKey: ['admin-manuals'],
-    queryFn: getAllManuals
-  });
+  const fetchManuals = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('manuals')
+        .select('*, motorcycles(make, model, year)')
+        .order('created_at', { ascending: false });
 
-  const handleOpenDialog = () => {
+      if (error) throw error;
+      setManuals(data || []);
+    } catch (error) {
+      console.error("Error fetching manuals:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load manuals",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchManuals();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteManual(id);
+      toast({
+        title: "Success",
+        description: "Manual successfully deleted",
+      });
+      fetchManuals();
+    } catch (error) {
+      console.error("Error deleting manual:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete manual",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (manual: Manual) => {
+    setSelectedManual(manual);
     setIsDialogOpen(true);
   };
 
-  const handleCloseDialog = (refreshData = false) => {
+  const handleDialogClose = (refreshNeeded: boolean) => {
     setIsDialogOpen(false);
-    if (refreshData) {
-      refetch();
+    setSelectedManual(null);
+    if (refreshNeeded) {
+      fetchManuals();
     }
   };
 
-  const handleDeleteManual = async (manual: Manual) => {
-    if (confirm(`Are you sure you want to delete "${manual.title}"? This will also remove the file.`)) {
-      try {
-        setIsDeleting(manual.id);
-        await deleteManual(manual);
-        toast.success('Manual deleted successfully');
-        refetch();
-      } catch (error) {
-        console.error('Error deleting manual:', error);
-        toast.error('Failed to delete manual');
-      } finally {
-        setIsDeleting(null);
-      }
-    }
-  };
-
-  const handleViewMotorcycle = (motorcycleId: string) => {
-    navigate(`/motorcycles/${motorcycleId}`);
+  // Format file size
+  const formatFileSize = (size: number | null) => {
+    if (!size) return "Unknown";
+    return `${size.toFixed(2)} MB`;
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Manuals</h1>
-        <Button className="bg-accent-teal text-black hover:bg-accent-teal/80" onClick={handleOpenDialog}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New
+    <div className="container mx-auto py-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Manuals</h1>
+        <Button 
+          onClick={() => setIsDialogOpen(true)} 
+          className="bg-accent-teal hover:bg-accent-teal/90"
+        >
+          <PlusIcon className="w-4 h-4 mr-2" />
+          Add Manual
         </Button>
       </div>
-      <p className="text-muted-foreground">
-        Upload and manage motorcycle manuals. Add service manuals, owner's guides, and wiring diagrams.
-      </p>
-      
+
       {isLoading ? (
-        <div className="flex justify-center py-10">
+        <div className="flex items-center justify-center p-12">
           <Loader2 className="h-8 w-8 animate-spin text-accent-teal" />
         </div>
-      ) : manuals && manuals.length > 0 ? (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Year</TableHead>
-                <TableHead>Motorcycle</TableHead>
-                <TableHead>Downloads</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {manuals.map((manual) => (
-                <TableRow key={manual.id}>
-                  <TableCell className="font-medium flex items-center">
-                    <File className="mr-2 h-4 w-4 text-muted-foreground" />
-                    {manual.title}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={manualTypeColors[manual.manual_type as keyof typeof manualTypeColors]}>
-                      {manual.manual_type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{manual.year || '-'}</TableCell>
-                  <TableCell>
-                    <span className="cursor-pointer hover:text-accent-teal transition-colors" onClick={() => handleViewMotorcycle(manual.motorcycle_id)}>
-                      {(manual as any).motorcycles?.make} {(manual as any).motorcycles?.model_name}
-                    </span>
-                  </TableCell>
-                  <TableCell>{manual.downloads}</TableCell>
-                  <TableCell>{manual.file_size_mb} MB</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => window.open(manual.file_url, '_blank')}>
-                        <Eye className="h-4 w-4" />
+      ) : manuals.length > 0 ? (
+        <div className="bg-muted/20 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/40 text-left">
+                <tr>
+                  <th className="p-3">Title</th>
+                  <th className="p-3">Type</th>
+                  <th className="p-3">Motorcycle</th>
+                  <th className="p-3">Year</th>
+                  <th className="p-3">Size</th>
+                  <th className="p-3">Downloads</th>
+                  <th className="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-muted/20">
+                {manuals.map((manual) => (
+                  <tr key={manual.id} className="hover:bg-muted/10">
+                    <td className="p-3">{manual.title}</td>
+                    <td className="p-3 capitalize">{manual.manual_type}</td>
+                    <td className="p-3">
+                      {manual.motorcycles ? 
+                        `${manual.motorcycles.make} ${manual.motorcycles.model}` : 
+                        "Unknown"}
+                    </td>
+                    <td className="p-3">{manual.year || "Any"}</td>
+                    <td className="p-3">{formatFileSize(manual.file_size_mb)}</td>
+                    <td className="p-3">{manual.downloads}</td>
+                    <td className="p-3 text-right space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-accent-teal hover:text-accent-teal/90 hover:bg-accent-teal/10"
+                        onClick={() => handleEdit(manual)}
+                      >
+                        Edit
                       </Button>
                       <Button 
                         variant="ghost" 
-                        size="icon" 
-                        className="text-destructive hover:text-destructive" 
-                        onClick={() => handleDeleteManual(manual)}
-                        disabled={isDeleting === manual.id}
+                        size="sm"
+                        className="text-red-500 hover:text-red-500/90 hover:bg-red-500/10"
+                        onClick={() => handleDelete(manual.id)}
                       >
-                        {isDeleting === manual.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
+                        Delete
                       </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
-        <div className="border rounded-md p-8 text-center">
-          <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-30 mb-3" />
-          <p className="text-muted-foreground mb-4">No manuals found. Add your first manual to get started.</p>
-          <Button onClick={handleOpenDialog}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Manual
+        <div className="bg-muted/20 rounded-lg p-12 flex flex-col items-center justify-center">
+          <p className="text-muted-foreground mb-4">No manuals added yet</p>
+          <Button 
+            onClick={() => setIsDialogOpen(true)}
+            variant="outline"
+            className="border-accent-teal text-accent-teal hover:bg-accent-teal/10"
+          >
+            <PlusIcon className="w-4 h-4 mr-2" />
+            Add your first manual
           </Button>
         </div>
       )}
-      
+
       <AdminManualDialog
         open={isDialogOpen}
-        onClose={handleCloseDialog}
+        manual={selectedManual}
+        onClose={handleDialogClose}
       />
     </div>
   );
