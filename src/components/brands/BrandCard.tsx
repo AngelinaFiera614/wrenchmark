@@ -15,9 +15,9 @@ interface BrandCardProps {
 export default function BrandCard({ brand }: BrandCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Use optional chaining to safely access properties
-  const logo = brand.logo || brand.logo_url || '';
-  const knownFor = brand.knownFor || brand.known_for || [];
+  // Directly use the properties from the Brand interface without optional chaining
+  const logo = brand.logo;
+  const knownFor = brand.knownFor;
   const brandId = brand.id;
 
   return (
