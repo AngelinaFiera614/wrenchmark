@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, Navigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +29,7 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const location = useLocation();
-  const { signIn, signUp, session, isLoading } = useAuth();
+  const { signIn, signUp, session, user, isLoading } = useAuth();
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -49,7 +49,8 @@ const Auth = () => {
   }
   
   // Only redirect when session is fully loaded and exists
-  if (session) {
+  if (session && user) {
+    console.log("Auth: Redirecting authenticated user");
     // Get the intended destination or default to home
     const from = location.state?.from?.pathname || "/";
     return <Navigate to={from} replace />;

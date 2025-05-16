@@ -35,8 +35,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authChangeComplete, setAuthChangeComplete] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   useEffect(() => {
+    console.log("Setting up auth state listener");
     // Set up auth state listener FIRST to prevent missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
@@ -46,10 +48,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Handle profile fetching with proper loading states
         if (currentSession?.user) {
-          // Use setTimeout to prevent deadlock
-          setTimeout(() => {
-            fetchProfile(currentSession.user.id);
-          }, 0);
+          // Use setTimeout to prevent deadlock and set a flag to avoid double fetching
+          if (!isProfileLoading) {
+            setIsProfileLoading(true);
+            setTimeout(() => {
+              console.log("Fetching profile for user:", currentSession.user.id);
+              fetchProfile(currentSession.user.id);
+            }, 0);
+          }
         } else {
           setProfile(null);
           // Only set loading to false if this is not the initial load
@@ -63,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // THEN check for existing session
     const initializeAuth = async () => {
       try {
+        console.log("Initializing auth");
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
@@ -83,11 +90,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Unsubscribing from auth state changes");
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile data for user:", userId);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -98,19 +109,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
+      console.log("Profile data received:", data ? "Yes" : "No");
       setProfile(data as Profile | null);
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
+      setIsProfileLoading(false);
       setIsLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log("Signing in user:", email);
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      console.log("Sign in successful");
       // Auth state listener will handle session update
     } catch (error: any) {
       setIsLoading(false);

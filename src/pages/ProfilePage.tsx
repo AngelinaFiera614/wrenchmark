@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,7 +28,6 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 const ProfilePage = () => {
   const { user, profile, updateProfile, isLoading: authLoading } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
-  const navigate = useNavigate();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -39,6 +38,7 @@ const ProfilePage = () => {
     },
   });
 
+  // Loading state
   if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -47,9 +47,9 @@ const ProfilePage = () => {
     );
   }
 
+  // Not authenticated, redirect to auth
   if (!user) {
-    navigate("/auth");
-    return null;
+    return <Navigate to="/auth" replace />;
   }
 
   const onSubmit = async (values: ProfileFormValues) => {
