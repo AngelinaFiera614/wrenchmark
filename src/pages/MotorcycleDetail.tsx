@@ -1,34 +1,65 @@
 
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { motorcyclesData } from "@/data/motorcycles";
+import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MotorcycleDetailComponent from "@/components/motorcycles/MotorcycleDetail";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-import { useEffect } from "react";
 import { toast } from "sonner";
+import { getMotorcycleById } from "@/services/motorcycleService";
+import { Motorcycle } from "@/types";
 
 export default function MotorcycleDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const motorcycle = motorcyclesData.find(m => m.id === id);
+  const [motorcycle, setMotorcycle] = useState<Motorcycle | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    console.log("MotorcycleDetail page rendered with:", {
-      currentRoute: window.location.pathname,
-      id,
-      motorcycleFound: !!motorcycle,
-      allIds: motorcyclesData.map(m => m.id)
-    });
-    
-    if (!motorcycle && id) {
-      console.error(`Motorcycle with ID ${id} not found`);
-      toast.error(`Motorcycle with ID ${id} not found`);
-    }
-  }, [motorcycle, id]);
+    const fetchMotorcycle = async () => {
+      if (!id) {
+        setError("No motorcycle ID provided");
+        setIsLoading(false);
+        return;
+      }
 
-  if (!motorcycle) {
+      try {
+        setIsLoading(true);
+        const data = await getMotorcycleById(id);
+        
+        if (data) {
+          setMotorcycle(data);
+          document.title = `${data.make} ${data.model} | Wrenchmark`;
+        } else {
+          setError(`Motorcycle with ID ${id} not found`);
+          toast.error(`Motorcycle with ID ${id} not found`);
+        }
+      } catch (err) {
+        console.error("Error fetching motorcycle:", err);
+        setError("Failed to load motorcycle data");
+        toast.error("Failed to load motorcycle data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchMotorcycle();
+  }, [id]);
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col dark text-foreground bg-background">
+        <Header />
+        <main className="flex-1 container py-8 px-4 md:px-6 flex items-center justify-center">
+          <div className="h-12 w-12 border-4 border-t-accent-teal border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !motorcycle) {
     return (
       <div className="min-h-screen flex flex-col dark text-foreground bg-background">
         <Header />
@@ -36,7 +67,7 @@ export default function MotorcycleDetail() {
           <div className="flex flex-col items-center justify-center py-12">
             <h1 className="text-2xl font-bold mb-4 text-foreground">Motorcycle Not Found</h1>
             <p className="text-muted-foreground mb-6">
-              The motorcycle you're looking for doesn't exist or has been removed.
+              {error || "The motorcycle you're looking for doesn't exist or has been removed."}
             </p>
             <Link to="/motorcycles">
               <Button variant="default">

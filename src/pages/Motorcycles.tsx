@@ -1,7 +1,6 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motorcyclesData } from "@/data/motorcycles";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
@@ -13,9 +12,32 @@ import { syncFiltersToUrl, parseFiltersFromUrl } from "@/lib/filter-utils";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator";
+import { getAllMotorcycles } from "@/services/motorcycleService";
+import { Motorcycle } from "@/types";
+import { toast } from "sonner";
 
 export default function Motorcycles() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
+  const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
+  
+  // Fetch motorcycles from Supabase
+  useEffect(() => {
+    const fetchMotorcycles = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getAllMotorcycles();
+        setMotorcycles(data);
+      } catch (error) {
+        console.error("Failed to fetch motorcycles:", error);
+        toast.error("Failed to load motorcycles data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMotorcycles();
+  }, []);
   
   // Initialize filters from URL if available
   const parsedFilters = parseFiltersFromUrl(searchParams, initialFilters);
@@ -27,7 +49,7 @@ export default function Motorcycles() {
     resetFilters,
     filteredMotorcycles,
     isFiltering
-  } = useMotorcycleFilters(motorcyclesData, parsedFilters);
+  } = useMotorcycleFilters(motorcycles, parsedFilters);
 
   // Sync filters to URL when they change
   useEffect(() => {
@@ -92,7 +114,13 @@ export default function Motorcycles() {
               </div>
             </div>
 
-            <MotorcycleGrid motorcycles={filteredMotorcycles} />
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="h-10 w-10 border-4 border-t-accent-teal border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <MotorcycleGrid motorcycles={filteredMotorcycles} />
+            )}
           </div>
         </div>
       </main>

@@ -1,20 +1,42 @@
 
-import { useState } from "react";
-import { brands } from "@/data/brands";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import BrandCard from "@/components/brands/BrandCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { getAllBrands } from "@/services/brandService";
+import { Brand } from "@/types";
+import { toast } from "sonner";
 
 export default function BrandsDirectory() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch brands from Supabase
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getAllBrands();
+        setBrands(data);
+      } catch (error) {
+        console.error("Failed to fetch brands:", error);
+        toast.error("Failed to load brands data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
   
   // Filter brands based on search term
   const filteredBrands = brands.filter((brand) =>
     brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     brand.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    brand.knownFor.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    brand.known_for.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
   return (
@@ -38,13 +60,19 @@ export default function BrandsDirectory() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredBrands.map((brand) => (
-            <BrandCard key={brand.id} brand={brand} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="h-10 w-10 border-4 border-t-accent-teal border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredBrands.map((brand) => (
+              <BrandCard key={brand.id} brand={brand} />
+            ))}
+          </div>
+        )}
         
-        {filteredBrands.length === 0 && (
+        {!isLoading && filteredBrands.length === 0 && (
           <div className="text-center py-12">
             <p className="text-lg text-muted-foreground">No brands found matching your search criteria.</p>
           </div>

@@ -9,7 +9,207 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      brands: {
+        Row: {
+          country: string | null
+          created_at: string
+          founded: number | null
+          id: string
+          known_for: string[] | null
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          founded?: number | null
+          id?: string
+          known_for?: string[] | null
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          founded?: number | null
+          id?: string
+          known_for?: string[] | null
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      manuals: {
+        Row: {
+          created_at: string
+          file_size_mb: number | null
+          file_url: string | null
+          id: string
+          manual_type: string | null
+          motorcycle_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          file_size_mb?: number | null
+          file_url?: string | null
+          id?: string
+          manual_type?: string | null
+          motorcycle_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          file_size_mb?: number | null
+          file_url?: string | null
+          id?: string
+          manual_type?: string | null
+          motorcycle_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manuals_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      motorcycles: {
+        Row: {
+          brand_id: string
+          category: string | null
+          created_at: string
+          difficulty_level: number | null
+          engine: string | null
+          fuel_capacity_l: number | null
+          has_abs: boolean | null
+          horsepower_hp: number | null
+          id: string
+          image_url: string | null
+          model_name: string
+          seat_height_mm: number | null
+          slug: string
+          summary: string | null
+          tags: string[] | null
+          top_speed_kph: number | null
+          torque_nm: number | null
+          updated_at: string
+          weight_kg: number | null
+          wheelbase_mm: number | null
+          year: number | null
+        }
+        Insert: {
+          brand_id: string
+          category?: string | null
+          created_at?: string
+          difficulty_level?: number | null
+          engine?: string | null
+          fuel_capacity_l?: number | null
+          has_abs?: boolean | null
+          horsepower_hp?: number | null
+          id?: string
+          image_url?: string | null
+          model_name: string
+          seat_height_mm?: number | null
+          slug: string
+          summary?: string | null
+          tags?: string[] | null
+          top_speed_kph?: number | null
+          torque_nm?: number | null
+          updated_at?: string
+          weight_kg?: number | null
+          wheelbase_mm?: number | null
+          year?: number | null
+        }
+        Update: {
+          brand_id?: string
+          category?: string | null
+          created_at?: string
+          difficulty_level?: number | null
+          engine?: string | null
+          fuel_capacity_l?: number | null
+          has_abs?: boolean | null
+          horsepower_hp?: number | null
+          id?: string
+          image_url?: string | null
+          model_name?: string
+          seat_height_mm?: number | null
+          slug?: string
+          summary?: string | null
+          tags?: string[] | null
+          top_speed_kph?: number | null
+          torque_nm?: number | null
+          updated_at?: string
+          weight_kg?: number | null
+          wheelbase_mm?: number | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "motorcycles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repair_skills: {
+        Row: {
+          created_at: string
+          difficulty: number | null
+          id: string
+          motorcycle_id: string | null
+          safety_notes: string | null
+          steps: Json | null
+          title: string
+          tools: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: number | null
+          id?: string
+          motorcycle_id?: string | null
+          safety_notes?: string | null
+          steps?: Json | null
+          title: string
+          tools?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: number | null
+          id?: string
+          motorcycle_id?: string | null
+          safety_notes?: string | null
+          steps?: Json | null
+          title?: string
+          tools?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_skills_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
