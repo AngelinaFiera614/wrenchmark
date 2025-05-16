@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -11,7 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCompareCount } from "@/context/ComparisonContext";
+import { useComparison } from "@/context/ComparisonContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,12 +18,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import AuthNav from "./AuthNav";
+import { AuthNav } from "./AuthNav";
 import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const compareCount = useCompareCount();
+  const { motorcyclesToCompare } = useComparison();
+  const compareCount = motorcyclesToCompare.length;
   const location = useLocation();
   const { user, profile, isAdmin, signOut } = useAuth();
 
