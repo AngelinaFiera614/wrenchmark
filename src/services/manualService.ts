@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ManualInfo {
@@ -61,13 +60,8 @@ export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<an
 };
 
 export const incrementDownloadCount = async (id: string): Promise<void> => {
-  // Define the type for the RPC function parameters
-  type IncrementDownloadParams = {
-    manual_id: string;
-  };
-
   const { error } = await supabase
-    .rpc<null, IncrementDownloadParams>('increment_manual_downloads', { 
+    .rpc('increment_manual_downloads', { 
       manual_id: id 
     });
   
@@ -159,7 +153,6 @@ export const deleteManual = async (id: string): Promise<void> => {
   }
 };
 
-// Changed function name from uploadManual to uploadManualFile
 export const uploadManualFile = async (file: File, path: string): Promise<string> => {
   const { data, error } = await supabase
     .storage
@@ -175,7 +168,6 @@ export const uploadManualFile = async (file: File, path: string): Promise<string
   return data.path;
 };
 
-// Add this function to match what's expected in AdminManualDialog
 export const uploadManual = async (file: File, manualInfo: any): Promise<void> => {
   try {
     // Generate a unique file path
