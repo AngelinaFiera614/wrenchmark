@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -52,25 +53,25 @@ const Header = () => {
           <nav className="hidden md:flex space-x-6">
             <Link
               to="/motorcycles"
-              className="text-sm font-medium transition-colors hover:text-accent-teal"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent-teal"
             >
               Motorcycles
             </Link>
             <Link
               to="/brands"
-              className="text-sm font-medium transition-colors hover:text-accent-teal"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent-teal"
             >
               Brands
             </Link>
             <Link
               to="/about"
-              className="text-sm font-medium transition-colors hover:text-accent-teal"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent-teal"
             >
               About
             </Link>
             <Link
               to="/contact"
-              className="text-sm font-medium transition-colors hover:text-accent-teal"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent-teal"
             >
               Contact
             </Link>
@@ -147,28 +148,28 @@ const Header = () => {
           <nav className="flex flex-col p-6 space-y-6">
             <Link
               to="/motorcycles"
-              className="text-lg font-medium transition-colors hover:text-accent-teal"
+              className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
               onClick={closeMenu}
             >
               Motorcycles
             </Link>
             <Link
               to="/brands"
-              className="text-lg font-medium transition-colors hover:text-accent-teal"
+              className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
               onClick={closeMenu}
             >
               Brands
             </Link>
             <Link
               to="/about"
-              className="text-lg font-medium transition-colors hover:text-accent-teal"
+              className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
               onClick={closeMenu}
             >
               About
             </Link>
             <Link
               to="/contact"
-              className="text-lg font-medium transition-colors hover:text-accent-teal"
+              className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
               onClick={closeMenu}
             >
               Contact
