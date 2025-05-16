@@ -29,8 +29,11 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/motorcycles" element={<Motorcycles />} />
               <Route path="/motorcycle/:id" element={<MotorcycleDetail />} />
-              {/* Add a redirect for pluralized form in case that's being used */}
-              <Route path="/motorcycles/:id" element={<Navigate to="/motorcycle/:id" replace />} />
+              {/* Fix redirect to use proper path parameter handling */}
+              <Route 
+                path="/motorcycles/:id" 
+                element={<Navigate to={location => `/motorcycle/${location.pathname.split('/').pop()}`} replace />} 
+              />
               <Route path="/compare" element={<ComparisonPage />} />
               <Route path="/brands" element={<BrandsDirectory />} />
               <Route path="/brands/:brandId" element={<BrandDetail />} />

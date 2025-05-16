@@ -7,6 +7,7 @@ import MotorcycleDetailComponent from "@/components/motorcycles/MotorcycleDetail
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function MotorcycleDetail() {
   const { id } = useParams<{ id: string }>();
@@ -14,19 +15,22 @@ export default function MotorcycleDetail() {
   const motorcycle = motorcyclesData.find(m => m.id === id);
   
   useEffect(() => {
-    // Debug log to check what ID we're looking for and if we found a match
-    console.log("Looking for motorcycle with ID:", id);
-    console.log("Found motorcycle:", motorcycle);
-    console.log("All motorcycles:", motorcyclesData);
+    console.log("MotorcycleDetail page rendered with:", {
+      currentRoute: window.location.pathname,
+      id,
+      motorcycleFound: !!motorcycle,
+      allIds: motorcyclesData.map(m => m.id)
+    });
     
     if (!motorcycle && id) {
       console.error(`Motorcycle with ID ${id} not found`);
+      toast.error(`Motorcycle with ID ${id} not found`);
     }
   }, [motorcycle, id]);
 
   if (!motorcycle) {
     return (
-      <div className="min-h-screen flex flex-col dark">
+      <div className="min-h-screen flex flex-col dark text-foreground bg-background">
         <Header />
         <main className="flex-1 container py-8 px-4 md:px-6">
           <div className="flex flex-col items-center justify-center py-12">
@@ -35,7 +39,7 @@ export default function MotorcycleDetail() {
               The motorcycle you're looking for doesn't exist or has been removed.
             </p>
             <Link to="/motorcycles">
-              <Button>
+              <Button variant="default">
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Back to Motorcycles
               </Button>
@@ -48,11 +52,11 @@ export default function MotorcycleDetail() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col dark">
+    <div className="min-h-screen flex flex-col dark bg-background text-foreground">
       <Header />
       
       <main className="flex-1">
-        <div className="container px-4 md:px-6 pt-4 pb-12">
+        <div className="container mx-auto px-4 md:px-6 pt-4 pb-12">
           <div className="mb-4">
             <Link to="/motorcycles">
               <Button variant="ghost" className="pl-0 text-foreground hover:text-accent-teal hover:bg-background/5">

@@ -26,14 +26,15 @@ export default function MotorcycleDetail({ motorcycle }: MotorcycleDetailProps) 
   
   useEffect(() => {
     // Debug log to confirm component mounted with motorcycle data
-    console.log("MotorcycleDetail component mounted with motorcycle:", motorcycle);
+    console.log("MotorcycleDetail component mounted with motorcycle:", motorcycle.id, motorcycle.make, motorcycle.model);
     console.log("Is mobile view:", isMobile);
+    document.title = `${motorcycle.make} ${motorcycle.model} | Wrenchmark`;
   }, [motorcycle, isMobile]);
   
   // For mobile view, we'll use accordion for better space utilization
   if (isMobile) {
     return (
-      <div className="space-y-5 animate-in fade-in-0 duration-500">
+      <div className="space-y-5 animate-in fade-in-0 duration-500 text-foreground">
         {/* Header Section with Image and Overview */}
         <MotorcycleHeader motorcycle={motorcycle} />
         
@@ -93,7 +94,7 @@ export default function MotorcycleDetail({ motorcycle }: MotorcycleDetailProps) 
   
   // Desktop view with regular cards
   return (
-    <div className="space-y-8 animate-in fade-in-0 duration-500">
+    <div className="space-y-8 animate-in fade-in-0 duration-500 text-foreground">
       {/* Header Section with Image and Overview */}
       <MotorcycleHeader motorcycle={motorcycle} />
       
