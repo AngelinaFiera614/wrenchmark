@@ -7,7 +7,7 @@ export interface RidingSkill {
   id: string;
   title: string;
   level: RidingSkillLevel;
-  category: string;
+  category: RidingSkillCategory | string;
   instructions: string;
   practice_layout: string;
   difficulty?: number;

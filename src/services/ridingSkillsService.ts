@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { RidingSkill } from "@/types/riding-skills";
+import { RidingSkill, RidingSkillLevel } from "@/types/riding-skills";
 
 export const getRidingSkills = async (): Promise<RidingSkill[]> => {
   const { data, error } = await supabase
@@ -13,7 +13,10 @@ export const getRidingSkills = async (): Promise<RidingSkill[]> => {
     throw error;
   }
 
-  return data || [];
+  return (data || []).map(item => ({
+    ...item,
+    level: item.level as RidingSkillLevel,
+  }));
 };
 
 export const getRidingSkillById = async (id: string): Promise<RidingSkill | null> => {
@@ -31,7 +34,10 @@ export const getRidingSkillById = async (id: string): Promise<RidingSkill | null
     throw error;
   }
 
-  return data;
+  return data ? {
+    ...data,
+    level: data.level as RidingSkillLevel,
+  } : null;
 };
 
 export const createRidingSkill = async (skill: Omit<RidingSkill, 'id' | 'created_at' | 'updated_at'>): Promise<RidingSkill> => {
@@ -46,7 +52,10 @@ export const createRidingSkill = async (skill: Omit<RidingSkill, 'id' | 'created
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    level: data.level as RidingSkillLevel,
+  };
 };
 
 export const updateRidingSkill = async (id: string, updates: Partial<RidingSkill>): Promise<RidingSkill> => {
@@ -62,7 +71,10 @@ export const updateRidingSkill = async (id: string, updates: Partial<RidingSkill
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    level: data.level as RidingSkillLevel,
+  };
 };
 
 export const deleteRidingSkill = async (id: string): Promise<void> => {
