@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ManualInfo {
@@ -61,13 +60,8 @@ export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<an
 };
 
 export const incrementDownloadCount = async (id: string): Promise<void> => {
-  // Define the correct parameter type for the RPC function
-  interface IncrementDownloadParams {
-    manual_id: string;
-  }
-
   const { error } = await supabase
-    .rpc<void, IncrementDownloadParams>('increment_manual_downloads', { 
+    .rpc('increment_manual_downloads', { 
       manual_id: id 
     });
   
