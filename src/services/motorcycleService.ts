@@ -36,8 +36,46 @@ export type SupabaseMotorcycle = {
 
 // Transform Supabase motorcycle to our app's motorcycle type
 const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
-  // Extract engine size as a number from the engine text (e.g., "649cc inline-four" -> 649)
-  const engineSize = parseInt(motorcycle.engine) || 0;
+  // Extract engine size as a number from the engine text
+  // Parse differently based on the format of the engine string
+  let engineSize = 0;
+  if (motorcycle.engine) {
+    // Check for common patterns like "649cc", "1254 cc", etc.
+    const engineMatch = motorcycle.engine.match(/(\d+)\s*cc/i);
+    if (engineMatch && engineMatch[1]) {
+      engineSize = parseInt(engineMatch[1], 10);
+    } else {
+      // If no cc pattern, just try to extract the first number
+      const numberMatch = motorcycle.engine.match(/(\d+)/);
+      if (numberMatch && numberMatch[1]) {
+        engineSize = parseInt(numberMatch[1], 10);
+      }
+    }
+  }
+
+  // Calculate ground clearance based on motorcycle category if not available
+  // This is a temporary solution until we have real data
+  let groundClearance = 150; // default value
+  if (motorcycle.category) {
+    switch(motorcycle.category.toLowerCase()) {
+      case 'adventure':
+      case 'dual-sport':
+      case 'off-road':
+        groundClearance = 220;
+        break;
+      case 'cruiser':
+        groundClearance = 135;
+        break;
+      case 'sport':
+        groundClearance = 130;
+        break;
+      case 'touring':
+        groundClearance = 140;
+        break;
+      default:
+        groundClearance = 150;
+    }
+  }
 
   return {
     id: motorcycle.id,
@@ -45,26 +83,26 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
     brand_id: motorcycle.brand_id,
     model: motorcycle.model_name,
     year: motorcycle.year,
-    category: motorcycle.category,
-    style_tags: motorcycle.tags,
-    difficulty_level: motorcycle.difficulty_level,
-    image_url: motorcycle.image_url,
+    category: motorcycle.category || "Standard",
+    style_tags: motorcycle.tags || [],
+    difficulty_level: motorcycle.difficulty_level || 1,
+    image_url: motorcycle.image_url || "https://images.unsplash.com/photo-1558981285-6f0c94958bb6?q=80&w=1000",
     engine_size: engineSize,
-    horsepower: motorcycle.horsepower_hp,
-    weight_kg: motorcycle.weight_kg,
-    seat_height_mm: motorcycle.seat_height_mm,
-    abs: motorcycle.has_abs,
-    top_speed_kph: motorcycle.top_speed_kph,
-    torque_nm: motorcycle.torque_nm, 
-    wheelbase_mm: motorcycle.wheelbase_mm,
-    ground_clearance_mm: 150, // Default value since it's not in Supabase yet
-    fuel_capacity_l: motorcycle.fuel_capacity_l,
-    smart_features: motorcycle.tags,
-    summary: motorcycle.summary,
+    horsepower: motorcycle.horsepower_hp || 0,
+    weight_kg: motorcycle.weight_kg || 0,
+    seat_height_mm: motorcycle.seat_height_mm || 800,
+    abs: motorcycle.has_abs || false,
+    top_speed_kph: motorcycle.top_speed_kph || 0,
+    torque_nm: motorcycle.torque_nm || 0, 
+    wheelbase_mm: motorcycle.wheelbase_mm || 0,
+    ground_clearance_mm: groundClearance,
+    fuel_capacity_l: motorcycle.fuel_capacity_l || 0,
+    smart_features: motorcycle.tags || [],
+    summary: motorcycle.summary || `${motorcycle.brand.name} ${motorcycle.model_name} ${motorcycle.year}`,
     slug: motorcycle.slug,
     // Add compatibility aliases
     engine_cc: engineSize,
-    horsepower_hp: motorcycle.horsepower_hp
+    horsepower_hp: motorcycle.horsepower_hp || 0
   };
 };
 

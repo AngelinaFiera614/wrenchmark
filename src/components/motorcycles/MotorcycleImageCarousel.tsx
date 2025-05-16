@@ -33,6 +33,29 @@ export function MotorcycleImageCarousel({ images, alt }: MotorcycleImageCarousel
     );
   }
 
+  // Filter out any non-motorcycle images or broken URLs
+  const validImages = images.filter(image => 
+    image && 
+    !image.includes("placeholder") && 
+    image.includes("motorcycle") || 
+    image.includes("bike") ||
+    image.includes("honda") ||
+    image.includes("yamaha") ||
+    image.includes("ducati") ||
+    image.includes("kawasaki")
+  );
+
+  // If no valid images remain, show a placeholder
+  if (validImages.length === 0) {
+    return (
+      <AspectRatio ratio={4/3} className="bg-muted/20 rounded-lg">
+        <div className="flex items-center justify-center w-full h-full">
+          <p className="text-muted-foreground">No motorcycle images available</p>
+        </div>
+      </AspectRatio>
+    );
+  }
+
   return (
     <div className="relative overflow-hidden rounded-lg">
       <Carousel
@@ -43,7 +66,7 @@ export function MotorcycleImageCarousel({ images, alt }: MotorcycleImageCarousel
         }}
       >
         <CarouselContent>
-          {images.map((image, index) => (
+          {validImages.map((image, index) => (
             <CarouselItem key={index}>
               <AspectRatio ratio={4/3} className="bg-muted/20">
                 <img
@@ -58,11 +81,11 @@ export function MotorcycleImageCarousel({ images, alt }: MotorcycleImageCarousel
         
         <div className="absolute top-0 left-0 right-0 px-4 pt-4 flex justify-end">
           <span className="bg-black/50 text-white px-2 py-1 rounded-md text-sm">
-            {currentIndex + 1} / {images.length}
+            {currentIndex + 1} / {validImages.length}
           </span>
         </div>
         
-        {images.length > 1 && (
+        {validImages.length > 1 && (
           <>
             <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2" />
             <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2" />
@@ -70,9 +93,9 @@ export function MotorcycleImageCarousel({ images, alt }: MotorcycleImageCarousel
         )}
       </Carousel>
       
-      {images.length > 1 && (
+      {validImages.length > 1 && (
         <div className="flex justify-center gap-2 mt-2">
-          {images.map((_, index) => (
+          {validImages.map((_, index) => (
             <Button
               key={index}
               variant="ghost"

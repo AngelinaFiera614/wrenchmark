@@ -1,8 +1,9 @@
+
 import { Link } from "react-router-dom";
 import { Motorcycle } from "@/types";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Info, GitCompareArrows } from "lucide-react";
+import { CheckCircle2, Info, GitCompareArrows, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useComparison } from "@/context/ComparisonContext";
@@ -45,6 +46,13 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
     }
   };
 
+  // Helper functions to handle potentially missing data
+  const formatEngineSize = () => engine_cc && engine_cc > 0 ? `${engine_cc} cc` : "N/A";
+  const formatHorsepower = () => horsepower_hp && horsepower_hp > 0 ? `${horsepower_hp} hp` : "N/A";
+  const formatSpeed = () => top_speed_kph && top_speed_kph > 0 ? `${top_speed_kph} km/h` : "N/A";
+  const formatSeatHeight = () => seat_height_mm && seat_height_mm > 0 ? `${seat_height_mm} mm` : "N/A";
+  const formatWeight = () => weight_kg && weight_kg > 0 ? `${weight_kg} kg` : "N/A";
+
   return (
     <Card className={cn(
       "overflow-hidden transition-all hover:shadow-lg",
@@ -52,11 +60,32 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
     )}>
       <Link to={`/motorcycle/${id}`}>
         <div className="relative aspect-[16/9] overflow-hidden">
-          <img
-            src={image_url}
-            alt={`${make} ${model}`}
-            className="object-cover w-full h-full transition-transform hover:scale-105"
-          />
+          {image_url ? (
+            <img
+              src={image_url}
+              alt={`${make} ${model}`}
+              className="object-cover w-full h-full transition-transform hover:scale-105"
+              onError={(e) => {
+                // Handle image loading errors by replacing with a category-specific placeholder
+                const target = e.target as HTMLImageElement;
+                let fallbackUrl = "https://images.unsplash.com/photo-1601517491080-28095259a0da";
+                
+                if (category === "Sport") {
+                  fallbackUrl = "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87";
+                } else if (category === "Adventure") {
+                  fallbackUrl = "https://images.unsplash.com/photo-1575229020746-0e86406d1cd4";
+                } else if (category === "Cruiser") {
+                  fallbackUrl = "https://images.unsplash.com/photo-1609630875171-b1321377ee65";
+                }
+                
+                target.src = `${fallbackUrl}?w=800&auto=format&fit=crop`;
+              }}
+            />
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <AlertCircle className="h-12 w-12 text-muted-foreground" />
+            </div>
+          )}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
             <h3 className="text-lg font-bold text-white">{make} {model}</h3>
             <p className="text-sm text-white/80">{year}</p>
@@ -78,16 +107,24 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
         <CardContent className="grid gap-2 p-4">
           <div className="flex flex-wrap gap-1">
             <Badge variant="outline" className="bg-secondary/50">
-              {category}
+              {category || "Standard"}
             </Badge>
-            {style_tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="secondary" className="bg-secondary/20">
-                {tag}
-              </Badge>
-            ))}
-            {style_tags.length > 2 && (
+            {style_tags && style_tags.length > 0 ? (
+              <>
+                {style_tags.slice(0, 2).map((tag) => (
+                  <Badge key={tag} variant="secondary" className="bg-secondary/20">
+                    {tag}
+                  </Badge>
+                ))}
+                {style_tags.length > 2 && (
+                  <Badge variant="secondary" className="bg-secondary/20">
+                    +{style_tags.length - 2}
+                  </Badge>
+                )}
+              </>
+            ) : (
               <Badge variant="secondary" className="bg-secondary/20">
-                +{style_tags.length - 2}
+                General
               </Badge>
             )}
           </div>
@@ -95,23 +132,23 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
           <div className="grid grid-cols-3 gap-2 text-sm my-2">
             <div className="flex flex-col">
               <span className="text-muted-foreground text-xs">Engine</span>
-              <span className="font-mono">{engine_cc} cc</span>
+              <span className="font-mono">{formatEngineSize()}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-xs">Power</span>
-              <span className="font-mono">{horsepower_hp} hp</span>
+              <span className="font-mono">{formatHorsepower()}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-xs">Top Speed</span>
-              <span className="font-mono">{top_speed_kph} km/h</span>
+              <span className="font-mono">{formatSpeed()}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-xs">Seat Height</span>
-              <span className="font-mono">{seat_height_mm} mm</span>
+              <span className="font-mono">{formatSeatHeight()}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-xs">Weight</span>
-              <span className="font-mono">{weight_kg} kg</span>
+              <span className="font-mono">{formatWeight()}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-muted-foreground text-xs">ABS</span>
@@ -123,7 +160,7 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground line-clamp-2">{summary}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{summary || `${make} ${model} ${year}`}</p>
         </CardContent>
 
         <CardFooter className="flex items-center justify-between p-4 pt-0">

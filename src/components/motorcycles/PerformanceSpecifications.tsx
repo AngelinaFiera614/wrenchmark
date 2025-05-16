@@ -11,6 +11,27 @@ interface PerformanceSpecificationsProps {
 export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificationsProps) {
   const { engine_cc, horsepower_hp, torque_nm, top_speed_kph } = motorcycle;
   
+  // Format values to handle zero or undefined values gracefully
+  const formatEngineSize = () => {
+    if (!engine_cc || engine_cc <= 0) return "N/A";
+    return `${engine_cc} cc`;
+  };
+  
+  const formatHorsepower = () => {
+    if (!horsepower_hp || horsepower_hp <= 0) return "N/A";
+    return `${horsepower_hp} hp`;
+  };
+  
+  const formatTorque = () => {
+    if (!torque_nm || torque_nm <= 0) return "N/A";
+    return `${torque_nm} Nm`;
+  };
+  
+  const formatSpeed = () => {
+    if (!top_speed_kph || top_speed_kph <= 0) return "N/A";
+    return `${top_speed_kph} km/h`;
+  };
+  
   return (
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-100 shadow-md">
       <CardHeader className="pb-2">
@@ -24,25 +45,25 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
         <div className="space-y-4">
           <SpecificationItem 
             label="Engine" 
-            value={`${engine_cc} cc`} 
+            value={formatEngineSize()} 
             icon={<GaugeCircle className="h-4 w-4" />}
             tooltip="Engine displacement in cubic centimeters, indicating the size of the engine"
           />
           <SpecificationItem 
             label="Horsepower" 
-            value={`${horsepower_hp} hp`} 
+            value={formatHorsepower()} 
             icon={<Zap className="h-4 w-4" />}
             tooltip="Maximum power output of the engine, measured in horsepower (hp)"
           />
           <SpecificationItem 
             label="Torque" 
-            value={`${torque_nm} Nm`} 
+            value={formatTorque()} 
             icon={<Timer className="h-4 w-4" />}
             tooltip="Rotational force produced by the engine, measured in Newton meters (Nm)"
           />
           <SpecificationItem 
             label="Top Speed" 
-            value={`${top_speed_kph} km/h`} 
+            value={formatSpeed()} 
             icon={<Gauge className="h-4 w-4" />}
             tooltip="Maximum speed the motorcycle can achieve in kilometers per hour"
           />

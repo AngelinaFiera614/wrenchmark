@@ -26,13 +26,38 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
   const { addToComparison, isInComparison } = useComparison();
   const navigate = useNavigate();
 
-  // Create an array of images from the single image_url
-  // In a real app, this would come from the API with multiple images
-  const images = [
-    image_url,
-    `https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&auto=format&fit=crop`,
-    `https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&auto=format&fit=crop`,
-  ];
+  // Get motorcycle-specific images based on make and model
+  // Instead of hardcoded placeholders, we use model-specific URLs when available
+  const getMotorcycleImages = () => {
+    const images = [];
+    
+    // Always add the primary image if available
+    if (image_url) {
+      images.push(image_url);
+    }
+    
+    // Add additional motorcycle-related images based on make/model
+    // In a real app, these would come from a proper gallery in the database
+    const makeModelSlug = `${make}-${model}`.toLowerCase().replace(/\s+/g, '-');
+    
+    // Example of conditional image URLs based on motorcycle brand/model
+    if (make.toLowerCase() === 'honda') {
+      images.push(`https://images.unsplash.com/photo-1558981285-6f0c94958bb6?w=800&auto=format&fit=crop`);
+    } else if (make.toLowerCase() === 'ducati') {
+      images.push(`https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop`);
+    } else if (make.toLowerCase() === 'bmw') {
+      images.push(`https://images.unsplash.com/photo-1575229020746-0e86406d1cd4?w=800&auto=format&fit=crop`);
+    } else if (make.toLowerCase() === 'kawasaki') {
+      images.push(`https://images.unsplash.com/photo-1615172282427-9a57ef2d142a?w=800&auto=format&fit=crop`);
+    }
+    
+    // If we still don't have enough images, use motorcycle-related images
+    if (images.length < 2) {
+      images.push(`https://images.unsplash.com/photo-1601517491080-28095259a0da?w=800&auto=format&fit=crop`);
+    }
+    
+    return images;
+  };
 
   const difficultyColor = `difficulty-${difficulty_level}`;
 
@@ -63,7 +88,7 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="overflow-hidden border border-border/30 bg-card/50 backdrop-blur-sm rounded-lg">
-        <MotorcycleImageCarousel images={images} alt={`${make} ${model}`} />
+        <MotorcycleImageCarousel images={getMotorcycleImages()} alt={`${make} ${model}`} />
       </div>
       
       <div className="space-y-5">
