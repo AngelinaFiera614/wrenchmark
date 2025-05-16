@@ -10,6 +10,9 @@ type Profile = {
   is_admin: boolean;
   created_at: string;
   updated_at: string;
+  full_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
 };
 
 type AuthContextType = {
@@ -21,6 +24,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateProfile: (profileData: Partial<Profile>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -141,6 +145,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (profileData: Partial<Profile>) => {
+    if (!user) {
+      toast.error("You must be logged in to update your profile");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .update(profileData)
+        .eq("id", user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setProfile(data as Profile);
+      toast.success("Profile updated successfully");
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     session,
     user,
@@ -150,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -23,6 +23,7 @@ import AdminMotorcycles from "./pages/admin/AdminMotorcycles";
 import AdminBrands from "./pages/admin/AdminBrands";
 import AdminRepairSkills from "./pages/admin/AdminRepairSkills";
 import AdminManuals from "./pages/admin/AdminManuals";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +63,11 @@ const App = () => (
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/auth" element={<Auth />} />
+                
+                {/* Protected user profile route */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/profile" element={<ProfilePage />} />
+                </Route>
                 
                 {/* Admin Routes - Protected and require admin */}
                 <Route element={<ProtectedRoute requireAdmin={true} />}>

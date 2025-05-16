@@ -4,12 +4,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { ArrowRight, Shield, Wrench, PanelTop } from "lucide-react";
+import { ArrowRight, Shield, Wrench, PanelTop, LogIn, UserPlus } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
   const {
-    isAdmin
+    isAdmin,
+    user
   } = useAuth();
   const [motorcycle, setMotorcycle] = useState<string | null>(null);
   
@@ -60,6 +61,27 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
+
+              {/* Authentication links section */}
+              {!user && (
+                <div className="mt-8 flex flex-col items-center">
+                  <div className="flex flex-wrap gap-4 justify-center">
+                    <Link to="/auth">
+                      <Button variant="ghost" size="lg" className="flex items-center gap-2 border border-accent-teal/50 hover:bg-accent-teal/10">
+                        <LogIn className="h-5 w-5" />
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/auth">
+                      <Button variant="ghost" size="lg" className="flex items-center gap-2 border border-accent-teal/50 hover:bg-accent-teal/10">
+                        <UserPlus className="h-5 w-5" />
+                        Create Account
+                      </Button>
+                    </Link>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-2">Join Wrenchmark to track your bikes and save preferences</p>
+                </div>
+              )}
 
               {/* Admin dashboard link if user is admin */}
               {isAdmin && <div className="mt-6 flex justify-center">
@@ -137,6 +159,27 @@ const Index = () => {
                 </Button>
               </Link>
             </div>
+            
+            {/* User account section */}
+            {user ? (
+              <div className="mt-12 border-t border-gray-800 pt-8">
+                <h3 className="text-xl font-medium mb-4">Welcome back, {user.email?.split('@')[0]}</h3>
+                <Link to="/profile">
+                  <Button variant="outline" size="sm">
+                    View My Profile
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-12 border-t border-gray-800 pt-8">
+                <h3 className="text-xl font-medium mb-4">Ready to join Wrenchmark?</h3>
+                <Link to="/auth">
+                  <Button variant="outline" size="sm">
+                    Create Free Account
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </section>
       </main>
