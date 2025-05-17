@@ -22,6 +22,7 @@ import AdminManuals from "@/pages/admin/AdminManuals";
 import AdminParts from "@/pages/admin/AdminParts";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
+import AdminGlossary from "@/pages/admin/AdminGlossary";
 
 // Import actual page components
 import Index from "@/pages/Index";
@@ -35,6 +36,8 @@ import ComparisonPage from "@/pages/ComparisonPage";
 import ProfilePage from "@/pages/ProfilePage";
 import RidingSkillDetailPage from "@/pages/RidingSkillDetailPage";
 import Auth from "@/pages/Auth";
+import GlossaryPage from "@/pages/GlossaryPage";
+import GlossaryTermPage from "@/pages/GlossaryTermPage";
 
 function App() {
   return (
@@ -59,6 +62,8 @@ function App() {
               <Route path="brands/:brandId" element={<BrandDetail />} />
               <Route path="compare" element={<ComparisonPage />} />
               <Route path="riding-skills/:id" element={<RidingSkillDetailPage />} />
+              <Route path="glossary" element={<GlossaryPage />} />
+              <Route path="glossary/:slug" element={<GlossaryTermPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
 
@@ -75,6 +80,7 @@ function App() {
                 <Route path="brands" element={<AdminBrands />} />
                 <Route path="repair-skills" element={<AdminRepairSkills />} />
                 <Route path="riding-skills" element={<AdminRidingSkills />} />
+                <Route path="glossary" element={<AdminGlossary />} />
                 <Route path="manuals" element={<AdminManuals />} />
                 <Route path="parts" element={<AdminParts />} />
                 <Route path="users" element={<AdminUsers />} />

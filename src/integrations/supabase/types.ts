@@ -72,6 +72,45 @@ export type Database = {
         }
         Relationships: []
       }
+      glossary_terms: {
+        Row: {
+          category: string[] | null
+          created_at: string
+          definition: string
+          id: string
+          image_url: string | null
+          related_terms: string[] | null
+          slug: string
+          term: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          category?: string[] | null
+          created_at?: string
+          definition: string
+          id?: string
+          image_url?: string | null
+          related_terms?: string[] | null
+          slug: string
+          term: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          category?: string[] | null
+          created_at?: string
+          definition?: string
+          id?: string
+          image_url?: string | null
+          related_terms?: string[] | null
+          slug?: string
+          term?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       manuals: {
         Row: {
           created_at: string
@@ -326,6 +365,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_slug: {
+        Args: { input_text: string }
+        Returns: string
+      }
       increment_manual_downloads: {
         Args: { manual_id: string }
         Returns: undefined

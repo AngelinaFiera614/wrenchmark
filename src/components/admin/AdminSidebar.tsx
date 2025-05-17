@@ -9,7 +9,8 @@ import {
   Component, 
   Users, 
   ChevronRight,
-  Compass
+  Compass,
+  BookOpen
 } from "lucide-react";
 
 interface AdminSidebarItemProps {
@@ -65,6 +66,11 @@ export function AdminSidebar() {
       title: "Riding Skills",
       icon: <Compass className="h-5 w-5" />,
       href: "/admin/riding-skills",
+    },
+    {
+      title: "Glossary",
+      icon: <BookOpen className="h-5 w-5" />,
+      href: "/admin/glossary",
     },
     {
       title: "Manuals",
