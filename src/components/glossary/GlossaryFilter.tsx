@@ -1,77 +1,78 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface GlossaryFilterProps {
-  search: string;
-  onSearchChange: (search: string) => void;
   categories: string[];
   selectedCategories: string[];
-  onCategoryToggle: (category: string) => void;
-  onClearFilters: () => void;
+  setSelectedCategories: (categories: string[]) => void;
+  search: string;
+  setSearch: (search: string) => void;
 }
 
-const GlossaryFilter: React.FC<GlossaryFilterProps> = ({
-  search,
-  onSearchChange,
+export function GlossaryFilter({
   categories,
   selectedCategories,
-  onCategoryToggle,
-  onClearFilters,
-}) => {
-  const hasActiveFilters = search || selectedCategories.length > 0;
+  setSelectedCategories,
+  search,
+  setSearch
+}: GlossaryFilterProps) {
+  const toggleCategory = (category: string) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter(c => c !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setSearch('');
+  };
 
   return (
-    <div className="space-y-4 mb-6">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search glossary terms..."
-          className="pl-10"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
-      </div>
+    <div className="space-y-4">
+      <Input
+        placeholder="Search terms..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full"
+      />
       
-      <ScrollArea className="w-full whitespace-nowrap pb-1 pt-1" orientation="horizontal">
-        <div className="flex gap-2">
-          {categories.map((category) => {
-            const isSelected = selectedCategories.includes(category);
-            return (
+      <div className="flex flex-col space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">Categories</h3>
+          {(selectedCategories.length > 0 || search) && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearFilters}
+              className="h-8 px-2 text-xs"
+            >
+              Clear filters <X className="ml-1 h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        
+        <ScrollArea className="max-h-[180px]">
+          <div className="flex flex-wrap gap-2 pb-2">
+            {categories.map((category) => (
               <Badge
                 key={category}
-                variant={isSelected ? "default" : "outline"}
-                className={`cursor-pointer hover:bg-accent-teal/20 ${
-                  isSelected ? "bg-accent-teal text-black" : "bg-background border-accent-teal/30 text-accent-teal"
-                }`}
-                onClick={() => onCategoryToggle(category)}
+                variant={selectedCategories.includes(category) ? "default" : "outline"}
+                className="cursor-pointer hover:bg-accent-teal/20"
+                onClick={() => toggleCategory(category)}
               >
                 {category}
               </Badge>
-            );
-          })}
-        </div>
-      </ScrollArea>
-      
-      {hasActiveFilters && (
-        <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClearFilters}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4 mr-1" />
-            Clear filters
-          </Button>
-        </div>
-      )}
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
-};
-
-export default GlossaryFilter;
+}

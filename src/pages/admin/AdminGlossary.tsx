@@ -8,12 +8,12 @@ import { AdminGlossaryList } from '@/components/admin/glossary/AdminGlossaryList
 import { AdminGlossaryEmptyState } from '@/components/admin/glossary/AdminGlossaryEmptyState';
 import AdminGlossaryDialog from '@/components/admin/glossary/AdminGlossaryDialog';
 import { GlossaryDeleteDialog } from '@/components/admin/glossary/GlossaryDeleteDialog';
-import { BrandsMobileViewToggle } from '@/components/admin/brands/BrandsMobileViewToggle';
+import BrandsMobileViewToggle from '@/components/admin/brands/BrandsMobileViewToggle';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/context/AuthContext';
 
 const AdminGlossary: React.FC = () => {
-  const [isTableView, setIsTableView] = useState(true);
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [currentTerm, setCurrentTerm] = useState<GlossaryTerm | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -85,12 +85,12 @@ const AdminGlossary: React.FC = () => {
         <>
           <div className="flex justify-end">
             <BrandsMobileViewToggle
-              isTableView={isTableView}
-              setIsTableView={setIsTableView}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
             />
           </div>
       
-          {isTableView ? (
+          {viewMode === "table" ? (
             <AdminGlossaryTable
               terms={terms}
               onEdit={handleEditTerm}

@@ -1,173 +1,137 @@
 
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { glossarySchema } from './GlossaryFormSchema';
+import { GlossaryTerm, GlossaryFormValues } from '@/types/glossary';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader } from "lucide-react";
-import { GlossaryTerm, GlossaryFormValues } from "@/types/glossary";
-import { glossarySchema } from "./GlossaryFormSchema";
-import { supabase } from "@/integrations/supabase/client";
-import ImageUpload from "@/components/admin/shared/ImageUpload";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { MultiSelect } from './MultiSelect';
+import { ImageUpload } from '@/components/admin/shared/ImageUpload';
+import { Separator } from '@/components/ui/separator';
 
 interface GlossaryFormProps {
   term: GlossaryTerm | null;
-  loading: boolean;
   onSubmit: (values: GlossaryFormValues) => void;
-  onCancel: () => void;
-  availableTerms?: GlossaryTerm[];
+  isSubmitting: boolean;
+  availableTerms: GlossaryTerm[];
 }
 
-const PREDEFINED_CATEGORIES = [
-  "Parts",
-  "Mechanics",
-  "Slang",
-  "Gear",
-  "Maintenance",
-  "Riding",
-  "Safety",
-  "Technical",
-  "Performance",
-  "History"
-];
-
-const GlossaryForm: React.FC<GlossaryFormProps> = ({
+export function GlossaryForm({
   term,
-  loading,
   onSubmit,
-  onCancel,
-  availableTerms = []
-}) => {
-  const [newCategory, setNewCategory] = useState("");
-  const [availableSlugs, setAvailableSlugs] = useState<string[]>([]);
-  
+  isSubmitting,
+  availableTerms,
+}: GlossaryFormProps) {
+  const [categoryInput, setCategoryInput] = useState<string>('');
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [relatedTermOptions, setRelatedTermOptions] = useState<{ value: string; label: string }[]>([]);
+
   const form = useForm<GlossaryFormValues>({
     resolver: zodResolver(glossarySchema),
     defaultValues: {
-      term: term?.term || "",
-      slug: term?.slug || "",
-      definition: term?.definition || "",
+      term: term?.term || '',
+      slug: term?.slug || '',
+      definition: term?.definition || '',
       category: term?.category || [],
       related_terms: term?.related_terms || [],
-      image_url: term?.image_url || "",
-      video_url: term?.video_url || "",
+      image_url: term?.image_url || null,
+      video_url: term?.video_url || null,
     },
   });
 
-  // Effect to extract all available slugs from the available terms
+  // Extract all unique categories from available terms
   useEffect(() => {
     if (availableTerms && availableTerms.length > 0) {
-      // Filter out the current term's slug
-      const slugs = availableTerms
-        .filter(t => !term || t.id !== term.id)
-        .map(t => t.slug);
-      setAvailableSlugs(slugs);
+      const categories = Array.from(
+        new Set(availableTerms.flatMap(term => term.category || []))
+      ).sort();
+      setAvailableCategories(categories);
+    }
+  }, [availableTerms]);
+
+  // Generate slug from term
+  useEffect(() => {
+    const termValue = form.watch('term');
+    if (termValue && !term) {
+      const slugValue = termValue
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-');
+      form.setValue('slug', slugValue);
+    }
+  }, [form.watch('term'), form, term]);
+
+  // Transform terms to options for the related terms multi-select
+  useEffect(() => {
+    if (availableTerms && availableTerms.length > 0) {
+      const options = availableTerms
+        .filter(t => !term || t.id !== term.id) // Filter out the current term
+        .map(t => ({
+          value: t.slug,
+          label: t.term
+        }));
+      setRelatedTermOptions(options);
     }
   }, [availableTerms, term]);
-  
-  // Auto-generate slug from term
-  const watchedTerm = form.watch("term");
-  useEffect(() => {
-    const generateSlug = async () => {
-      if (watchedTerm && (!term || !form.formState.dirtyFields.slug)) {
-        try {
-          const { data, error } = await supabase
-            .rpc('generate_slug', { input_text: watchedTerm });
-            
-          if (!error && data) {
-            form.setValue("slug", data);
-          }
-        } catch (error) {
-          console.error("Error generating slug:", error);
-        }
-      }
-    };
-    
-    generateSlug();
-  }, [watchedTerm, term, form]);
 
-  const addCustomCategory = () => {
-    if (!newCategory.trim()) return;
-    
-    const currentCategories = form.getValues("category") || [];
-    if (!currentCategories.includes(newCategory.trim())) {
-      form.setValue("category", [...currentCategories, newCategory.trim()]);
+  // Handle adding a custom category
+  const handleAddCategory = () => {
+    if (categoryInput && !form.getValues().category.includes(categoryInput)) {
+      const currentCategories = form.getValues().category;
+      form.setValue('category', [...currentCategories, categoryInput]);
+      setCategoryInput('');
     }
-    setNewCategory("");
-  };
-  
-  const removeCategory = (categoryToRemove: string) => {
-    const currentCategories = form.getValues("category") || [];
-    form.setValue(
-      "category",
-      currentCategories.filter(cat => cat !== categoryToRemove)
-    );
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Term */}
-          <FormField
-            control={form.control}
-            name="term"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Term</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter the term" {...field} />
-                </FormControl>
-                <FormDescription>
-                  The name of the motorcycle term or concept
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Slug */}
-          <FormField
-            control={form.control}
-            name="slug"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Slug</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="term-slug" 
-                    {...field} 
-                  />
-                </FormControl>
-                <FormDescription>
-                  URL-friendly identifier (auto-generated)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        {/* Definition */}
+        <FormField
+          control={form.control}
+          name="term"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Term</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter the glossary term"
+                  {...field}
+                  className="bg-background"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="slug"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Slug</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter URL slug"
+                  {...field}
+                  className="bg-background"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="definition"
@@ -176,192 +140,78 @@ const GlossaryForm: React.FC<GlossaryFormProps> = ({
               <FormLabel>Definition</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Describe the term in detail..."
-                  className="min-h-[200px]"
+                  placeholder="Enter the definition"
+                  className="min-h-[120px] bg-background"
                   {...field}
                 />
               </FormControl>
-              <FormDescription>
-                Provide a comprehensive explanation of the term
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        {/* Categories */}
+
         <FormField
           control={form.control}
           name="category"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Categories</FormLabel>
-              
-              <div className="space-y-4">
-                {/* Predefined Categories */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                  {PREDEFINED_CATEGORIES.map((category) => (
-                    <FormField
-                      key={category}
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => {
-                        const isSelected = field.value?.includes(category) || false;
-                        return (
-                          <FormItem
-                            key={category}
-                            className="flex items-center space-x-2 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={isSelected}
-                                onCheckedChange={(checked) => {
-                                  const currentValue = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...currentValue, category]);
-                                  } else {
-                                    field.onChange(
-                                      currentValue.filter((val) => val !== category)
-                                    );
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal cursor-pointer">
-                              {category}
-                            </FormLabel>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
-                
-                {/* Custom Category Input */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add custom category"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addCustomCategory();
-                      }
-                    }}
-                    className="flex-1"
-                  />
-                  <Button 
-                    type="button" 
-                    onClick={addCustomCategory}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    Add
-                  </Button>
-                </div>
-                
-                {/* Selected Categories Display */}
-                <div className="flex flex-wrap gap-1">
-                  {form.getValues("category")?.map((cat) => (
-                    <Badge 
-                      key={cat} 
-                      variant="secondary" 
-                      className="flex gap-1 items-center group hover:bg-destructive/20 transition-colors"
-                    >
-                      {cat}
-                      <button
-                        type="button"
-                        onClick={() => removeCategory(cat)}
-                        className="ml-1 rounded-full hover:bg-accent-teal/20 p-1 transition-colors"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M18 6 6 18" />
-                          <path d="m6 6 12 12" />
-                        </svg>
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="Add a category"
+                  value={categoryInput}
+                  onChange={(e) => setCategoryInput(e.target.value)}
+                  className="flex-1 bg-background"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddCategory}
+                >
+                  Add
+                </Button>
               </div>
-              
-              <FormDescription>
-                Select or add categories to help organize terms
-              </FormDescription>
+              <FormControl>
+                <MultiSelect
+                  selected={field.value}
+                  options={availableCategories}
+                  onChange={field.onChange}
+                  placeholder="Select categories"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        {/* Related Terms */}
+
         <FormField
           control={form.control}
           name="related_terms"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Related Terms</FormLabel>
-              <div className="space-y-4">
-                {/* Multi-select for related terms */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {availableSlugs.map((slug) => {
-                    const relatedTerm = availableTerms.find(t => t.slug === slug);
-                    const isSelected = field.value?.includes(slug) || false;
-                    
-                    return (
-                      <FormItem
-                        key={slug}
-                        className="flex items-center space-x-2 space-y-0"
-                      >
-                        <FormControl>
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={(checked) => {
-                              const currentValue = field.value || [];
-                              if (checked) {
-                                field.onChange([...currentValue, slug]);
-                              } else {
-                                field.onChange(
-                                  currentValue.filter((val) => val !== slug)
-                                );
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormLabel className="text-sm font-normal cursor-pointer">
-                          {relatedTerm?.term || slug}
-                        </FormLabel>
-                      </FormItem>
-                    );
-                  })}
-                </div>
-                
-                {availableSlugs.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No other terms available to link
-                  </p>
-                )}
-              </div>
-              <FormDescription>
-                Link to other related glossary terms
-              </FormDescription>
+              <FormControl>
+                <MultiSelect
+                  selected={field.value}
+                  options={relatedTermOptions.map(opt => opt.value)}
+                  optionLabels={relatedTermOptions.reduce((acc, opt) => ({
+                    ...acc,
+                    [opt.value]: opt.label
+                  }), {})}
+                  onChange={field.onChange}
+                  placeholder="Select related terms"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        {/* Media Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Image Upload */}
+
+        <Separator />
+
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium">Media</h3>
+
           <FormField
             control={form.control}
             name="image_url"
@@ -370,23 +220,18 @@ const GlossaryForm: React.FC<GlossaryFormProps> = ({
                 <FormLabel>Image</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    value={field.value || ""}
+                    value={field.value || ''}
                     onChange={field.onChange}
                     bucketName="glossary-images"
-                    folderPath=""
-                    maxSizeMB={2}
-                    aspectRatio={16 / 9}
+                    folderPath="/"
+                    maxSizeMB={5}
                   />
                 </FormControl>
-                <FormDescription>
-                  Upload an image to illustrate the term (optional)
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
-          {/* Video URL */}
+
           <FormField
             control={form.control}
             name="video_url"
@@ -395,46 +240,24 @@ const GlossaryForm: React.FC<GlossaryFormProps> = ({
                 <FormLabel>Video URL</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="https://youtube.com/watch?v=..."
+                    placeholder="Enter a YouTube or Vimeo URL"
                     {...field}
-                    value={field.value || ""}
+                    value={field.value || ''}
+                    className="bg-background"
                   />
                 </FormControl>
-                <FormDescription>
-                  Link to a YouTube or other video demonstration (optional)
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        
-        {/* Form Actions */}
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : term ? (
-              "Update Term"
-            ) : (
-              "Add Term"
-            )}
+
+        <div className="flex justify-end space-x-2">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : term ? 'Update Term' : 'Create Term'}
           </Button>
         </div>
       </form>
     </Form>
   );
-};
-
-export default GlossaryForm;
+}
