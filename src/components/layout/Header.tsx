@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import DesktopNav from "./navigation/DesktopNav";
@@ -11,7 +11,8 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
+  const location = useLocation();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -40,6 +41,15 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           <ThemeToggle />
           <CompareButton />
+          
+          {isAdmin && location.pathname.startsWith("/admin") && (
+            <div className="hidden md:flex">
+              <span className="bg-accent-teal/20 text-accent-teal text-xs px-2 py-0.5 rounded-full">
+                Admin Mode
+              </span>
+            </div>
+          )}
+          
           <UserMenu handleSignOut={handleSignOut} />
 
           <button

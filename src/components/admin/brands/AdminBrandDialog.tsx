@@ -26,13 +26,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Brand } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import ImageUpload from "../shared/ImageUpload";
 
 // Form schema
 const brandSchema = z.object({
   name: z.string().min(1, "Brand name is required"),
   country: z.string().optional(),
   founded: z.coerce.number().int().min(1800, "Invalid year").max(2100, "Invalid year").optional(),
-  logo_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  logo_url: z.string().optional().nullable(),
   known_for: z.array(z.string()).optional(),
   slug: z.string().min(1, "Slug is required"),
 });
@@ -61,7 +62,7 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
       name: "",
       country: "",
       founded: undefined,
-      logo_url: "",
+      logo_url: null,
       known_for: [],
       slug: "",
     },
@@ -74,7 +75,7 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
         name: brand.name,
         country: brand.country || "",
         founded: brand.founded,
-        logo_url: brand.logo_url || "",
+        logo_url: brand.logo_url || null,
         known_for: brand.known_for || [],
         slug: brand.slug || brand.name.toLowerCase().replace(/\s+/g, "-"),
       });
@@ -83,7 +84,7 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
         name: "",
         country: "",
         founded: undefined,
-        logo_url: "",
+        logo_url: null,
         known_for: [],
         slug: "",
       });
@@ -243,9 +244,21 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
               name="logo_url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Logo URL</FormLabel>
+                  <FormLabel>Brand Logo</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/logo.png" {...field} />
+                    <div className="flex flex-col items-center">
+                      <ImageUpload
+                        bucketName="brand-logos"
+                        value={field.value || null}
+                        onChange={field.onChange}
+                        maxSizeMB={5}
+                        previewHeight={120}
+                        previewWidth={120}
+                      />
+                      <FormDescription className="mt-2 text-center">
+                        Upload a logo image for the brand (PNG or JPG, max 5MB)
+                      </FormDescription>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -264,6 +277,12 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
                         placeholder="e.g. Sport Bikes" 
                         value={knownForInput}
                         onChange={(e) => setKnownForInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddKnownFor();
+                          }
+                        }}
                       />
                       <Button 
                         type="button" 
@@ -284,7 +303,8 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
                           <button
                             type="button"
                             onClick={() => handleRemoveKnownFor(index)}
-                            className="text-secondary-foreground/70 hover:text-secondary-foreground"
+                            className="text-secondary-foreground/70 hover:text-secondary-foreground focus:outline-none"
+                            aria-label={`Remove ${item}`}
                           >
                             ✕
                           </button>
@@ -336,7 +356,7 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} variant="teal">
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
