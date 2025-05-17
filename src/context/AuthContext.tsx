@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST to prevent missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log("Auth state changed:", event);
+        console.log("Auth state changed:", event, currentSession?.user?.email);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -71,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         console.log("Initializing auth");
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Got session:", currentSession?.user?.email || "No session");
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
@@ -110,7 +111,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       console.log("Profile data received:", data ? "Yes" : "No");
-      setProfile(data as Profile | null);
+      if (data) {
+        console.log("Admin status:", data.is_admin);
+        setProfile(data as Profile | null);
+      } else {
+        console.log("No profile found, user may not be in profiles table");
+        setProfile(null);
+      }
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
