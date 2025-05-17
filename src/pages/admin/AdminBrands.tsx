@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Brand } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import AdminBrandDialog from "@/components/admin/brands/AdminBrandDialog";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Import our refactored components
 import BrandsHeader from "@/components/admin/brands/BrandsHeader";
@@ -88,52 +89,54 @@ const AdminBrands = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <BrandsHeader 
-        handleAddBrand={handleAddBrand}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-      />
-      
-      {isLoading ? (
-        <BrandsLoading />
-      ) : brands && brands.length > 0 ? (
-        <div className="space-y-4">
-          <BrandsMobileViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+    <TooltipProvider>
+      <div className="space-y-6">
+        <BrandsHeader 
+          handleAddBrand={handleAddBrand}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+        />
+        
+        {isLoading ? (
+          <BrandsLoading />
+        ) : brands && brands.length > 0 ? (
+          <div className="space-y-4">
+            <BrandsMobileViewToggle viewMode={viewMode} setViewMode={setViewMode} />
 
-          {viewMode === "table" ? (
-            <BrandsTable 
-              brands={brands}
-              handleEditBrand={handleEditBrand}
-              handleDeleteClick={handleDeleteClick}
-            />
-          ) : (
-            <BrandsCardView 
-              brands={brands}
-              handleEditBrand={handleEditBrand}
-              handleDeleteClick={handleDeleteClick}
-            />
-          )}
-        </div>
-      ) : (
-        <BrandsEmptyState handleAddBrand={handleAddBrand} />
-      )}
+            {viewMode === "table" ? (
+              <BrandsTable 
+                brands={brands}
+                handleEditBrand={handleEditBrand}
+                handleDeleteClick={handleDeleteClick}
+              />
+            ) : (
+              <BrandsCardView 
+                brands={brands}
+                handleEditBrand={handleEditBrand}
+                handleDeleteClick={handleDeleteClick}
+              />
+            )}
+          </div>
+        ) : (
+          <BrandsEmptyState handleAddBrand={handleAddBrand} />
+        )}
 
-      {/* Create/Edit Dialog */}
-      <AdminBrandDialog
-        open={isCreateDialogOpen || editBrand !== null}
-        brand={editBrand}
-        onClose={handleDialogClose}
-      />
+        {/* Create/Edit Dialog */}
+        <AdminBrandDialog
+          open={isCreateDialogOpen || editBrand !== null}
+          brand={editBrand}
+          onClose={handleDialogClose}
+        />
 
-      {/* Delete Confirmation Dialog */}
-      <BrandDeleteDialog
-        isOpen={isDeleteConfirmOpen}
-        setIsOpen={setIsDeleteConfirmOpen}
-        brandToDelete={brandToDelete}
-        onConfirmDelete={handleDeleteConfirm}
-      />
-    </div>
+        {/* Delete Confirmation Dialog */}
+        <BrandDeleteDialog
+          isOpen={isDeleteConfirmOpen}
+          setIsOpen={setIsDeleteConfirmOpen}
+          brandToDelete={brandToDelete}
+          onConfirmDelete={handleDeleteConfirm}
+        />
+      </div>
+    </TooltipProvider>
   );
 };
 
