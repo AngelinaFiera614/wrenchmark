@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, AlertCircle } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Brand } from "@/data/brands";
 
@@ -14,11 +14,29 @@ interface BrandCardProps {
 
 export default function BrandCard({ brand }: BrandCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   // Directly use the properties from the Brand interface without optional chaining
   const logo = brand.logo;
   const knownFor = brand.knownFor;
   const brandId = brand.id;
+
+  // Get fallback image based on brand name or country
+  const getFallbackImage = () => {
+    const brandNameLower = brand.name.toLowerCase();
+    
+    if (brandNameLower.includes('honda')) {
+      return "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop";
+    } else if (brandNameLower.includes('yamaha')) {
+      return "https://images.unsplash.com/photo-1580310614729-ccd69652491d?w=800&auto=format&fit=crop";
+    } else if (brandNameLower.includes('ducati')) {
+      return "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop";
+    } else if (brandNameLower.includes('kawasaki')) {
+      return "https://images.unsplash.com/photo-1539826233524-c9eb499d1d31?w=800&auto=format&fit=crop";
+    } else {
+      return "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=800&auto=format&fit=crop";
+    }
+  };
 
   return (
     <Card 
@@ -29,14 +47,31 @@ export default function BrandCard({ brand }: BrandCardProps) {
       <CardHeader className="pb-0">
         <div className="mb-2 w-full">
           <AspectRatio ratio={1 / 1} className="bg-secondary/50 rounded-md overflow-hidden">
-            <img
-              src={logo}
-              alt={`${brand.name} logo`}
-              className="w-full h-full object-cover transition-transform duration-300 ease-in-out"
-              style={{
-                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-              }}
-            />
+            {(logo && !imageError) ? (
+              <img
+                src={logo}
+                alt={`${brand.name} logo`}
+                className="w-full h-full object-cover transition-transform duration-300 ease-in-out"
+                style={{
+                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                }}
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="relative w-full h-full">
+                <img
+                  src={getFallbackImage()}
+                  alt={`${brand.name}`}
+                  className="w-full h-full object-cover transition-transform duration-300 ease-in-out"
+                  style={{
+                    transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <p className="text-2xl font-bold text-white">{brand.name}</p>
+                </div>
+              </div>
+            )}
           </AspectRatio>
         </div>
         <h3 className="text-2xl font-bold text-foreground">{brand.name}</h3>

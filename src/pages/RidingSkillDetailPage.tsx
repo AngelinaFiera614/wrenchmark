@@ -5,8 +5,6 @@ import { getRidingSkillById } from "@/services/ridingSkillsService";
 import { RidingSkill } from "@/types/riding-skills";
 import { Helmet } from "react-helmet-async";
 import { useToast } from "@/hooks/use-toast";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import SkillHeader from "@/components/riding-skills/SkillHeader";
 import SkillMedia from "@/components/riding-skills/SkillMedia";
 import SkillContentSection from "@/components/riding-skills/SkillContentSection";
@@ -68,8 +66,6 @@ const RidingSkillDetailPage = () => {
         <title>{`${skill.title} | Riding Skills | Wrenchmark`}</title>
         <meta name="description" content={`Learn ${skill.title} - ${skill.category} riding skill for ${skill.level} riders`} />
       </Helmet>
-
-      <Header />
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto animate-fadeIn">
@@ -95,8 +91,6 @@ const RidingSkillDetailPage = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </>
   );
 };
