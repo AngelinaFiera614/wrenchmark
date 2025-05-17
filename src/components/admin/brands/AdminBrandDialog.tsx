@@ -32,7 +32,7 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
     try {
       console.log("Submitting brand data:", values);
       
-      // Prepare data for database
+      // Clean data before sending to database
       const brandData = {
         name: values.name,
         country: values.country || null,
@@ -40,7 +40,6 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
         logo_url: values.logo_url || null,
         known_for: values.known_for || [],
         slug: values.slug,
-        // Fields that were reportedly not saving
         description: values.description || null,
         founded_city: values.founded_city || null,
         headquarters: values.headquarters || null,
@@ -48,9 +47,11 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
         brand_type: values.brand_type || "mass",
         is_electric: values.is_electric || false,
         website_url: values.website_url || null,
-        categories: values.categories || [],
+        categories: Array.isArray(values.categories) ? values.categories : [],
         notes: values.notes || null,
       };
+
+      console.log("Cleaned brand data for database:", brandData);
 
       let response;
       
@@ -63,8 +64,11 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
           .eq('id', brand.id);
           
         if (response.error) {
+          console.error("Supabase update error:", response.error);
           throw response.error;
         }
+        
+        console.log("Brand updated successfully:", response);
         
         toast({
           title: "Brand updated",
@@ -78,17 +82,20 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
           .insert([brandData]);
           
         if (response.error) {
+          console.error("Supabase insert error:", response.error);
           throw response.error;
         }
+        
+        console.log("Brand created successfully:", response);
         
         toast({
           title: "Brand added",
           description: `${values.name} has been added successfully.`,
         });
       }
-
-      console.log("Database operation completed successfully:", response);
-      onClose(true); // Close and refresh data
+      
+      // Close dialog and refresh data
+      onClose(true); 
       
     } catch (error: any) {
       console.error("Error saving brand:", error);

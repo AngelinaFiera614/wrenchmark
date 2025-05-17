@@ -60,12 +60,17 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
   React.useEffect(() => {
     if (brand) {
       console.log("Initializing form with brand data:", brand);
+      
+      // Ensure categories is an array
+      const categories = Array.isArray(brand.categories) ? brand.categories : [];
+      console.log("Setting categories:", categories);
+      
       form.reset({
         name: brand.name || "",
         country: brand.country || "",
         founded: brand.founded || undefined,
         logo_url: brand.logo_url || null,
-        known_for: brand.known_for || [],
+        known_for: Array.isArray(brand.known_for) ? brand.known_for : [],
         slug: brand.slug || "",
         description: brand.description || "",
         founded_city: brand.founded_city || "",
@@ -74,7 +79,7 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
         brand_type: brand.brand_type || "mass",
         is_electric: brand.is_electric || false,
         website_url: brand.website_url || "",
-        categories: brand.categories || [],
+        categories: categories,
         notes: brand.notes || "",
       });
     } else {

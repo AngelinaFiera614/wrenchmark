@@ -30,7 +30,7 @@ const BrandFoundedCityField = ({ form }: BrandFoundedCityFieldProps) => {
               {...field} 
               value={field.value || ""}
               onChange={(e) => {
-                const value = e.target.value;
+                const value = e.target.value.trim();
                 field.onChange(value === "" ? null : value);
               }}
             />

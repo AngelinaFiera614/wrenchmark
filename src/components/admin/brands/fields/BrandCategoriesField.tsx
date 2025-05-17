@@ -24,7 +24,7 @@ const BrandCategoriesField = ({ form }: BrandCategoriesFieldProps) => {
   // Ensure categories is always an array
   React.useEffect(() => {
     const currentCategories = form.getValues().categories;
-    if (!currentCategories) {
+    if (!currentCategories || !Array.isArray(currentCategories)) {
       form.setValue("categories", []);
     }
   }, [form]);
@@ -32,10 +32,15 @@ const BrandCategoriesField = ({ form }: BrandCategoriesFieldProps) => {
   const handleAddCategory = () => {
     const trimmedValue = value.trim();
     if (trimmedValue) {
-      const currentCategories = form.getValues().categories || [];
+      const currentCategories = Array.isArray(form.getValues().categories) 
+        ? form.getValues().categories 
+        : [];
+      
       // Check if category already exists to avoid duplicates
       if (!currentCategories.includes(trimmedValue)) {
-        form.setValue("categories", [...currentCategories, trimmedValue]);
+        const updatedCategories = [...currentCategories, trimmedValue];
+        console.log("Setting categories to:", updatedCategories);
+        form.setValue("categories", updatedCategories);
       }
       setValue("");
     }
@@ -49,11 +54,16 @@ const BrandCategoriesField = ({ form }: BrandCategoriesFieldProps) => {
   };
 
   const handleRemoveCategory = (categoryToRemove: string) => {
-    const currentCategories = form.getValues().categories || [];
-    form.setValue(
-      "categories",
-      currentCategories.filter(category => category !== categoryToRemove)
+    const currentCategories = Array.isArray(form.getValues().categories) 
+      ? form.getValues().categories 
+      : [];
+      
+    const updatedCategories = currentCategories.filter(
+      category => category !== categoryToRemove
     );
+    
+    console.log("Removing category, new categories:", updatedCategories);
+    form.setValue("categories", updatedCategories);
   };
 
   return (
@@ -65,7 +75,7 @@ const BrandCategoriesField = ({ form }: BrandCategoriesFieldProps) => {
           <FormLabel>Categories</FormLabel>
           <div className="grid gap-2">
             <div className="flex flex-wrap gap-1">
-              {(field.value || []).map((category) => (
+              {(Array.isArray(field.value) ? field.value : []).map((category) => (
                 <Badge
                   key={category}
                   variant="secondary"
