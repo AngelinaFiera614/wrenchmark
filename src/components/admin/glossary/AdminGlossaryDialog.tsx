@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -202,7 +201,7 @@ const AdminGlossaryDialog: React.FC<AdminGlossaryDialogProps> = ({
 
         <GlossaryForm 
           term={term} 
-          loading={loading} 
+          isSubmitting={loading} 
           onSubmit={handleSubmit} 
           onCancel={() => onClose()}
           availableTerms={availableTerms}

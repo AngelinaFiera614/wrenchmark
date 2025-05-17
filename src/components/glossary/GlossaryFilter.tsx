@@ -9,37 +9,26 @@ import { X } from 'lucide-react';
 interface GlossaryFilterProps {
   categories: string[];
   selectedCategories: string[];
-  setSelectedCategories: (categories: string[]) => void;
+  onCategoryToggle: (category: string) => void;
   search: string;
-  setSearch: (search: string) => void;
+  onSearchChange: (search: string) => void;
+  onClearFilters: () => void;
 }
 
 export function GlossaryFilter({
   categories,
   selectedCategories,
-  setSelectedCategories,
+  onCategoryToggle,
   search,
-  setSearch
+  onSearchChange,
+  onClearFilters
 }: GlossaryFilterProps) {
-  const toggleCategory = (category: string) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter(c => c !== category));
-    } else {
-      setSelectedCategories([...selectedCategories, category]);
-    }
-  };
-
-  const clearFilters = () => {
-    setSelectedCategories([]);
-    setSearch('');
-  };
-
   return (
     <div className="space-y-4">
       <Input
         placeholder="Search terms..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => onSearchChange(e.target.value)}
         className="w-full"
       />
       
@@ -50,7 +39,7 @@ export function GlossaryFilter({
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={clearFilters}
+              onClick={onClearFilters}
               className="h-8 px-2 text-xs"
             >
               Clear filters <X className="ml-1 h-3 w-3" />
@@ -65,7 +54,7 @@ export function GlossaryFilter({
                 key={category}
                 variant={selectedCategories.includes(category) ? "default" : "outline"}
                 className="cursor-pointer hover:bg-accent-teal/20"
-                onClick={() => toggleCategory(category)}
+                onClick={() => onCategoryToggle(category)}
               >
                 {category}
               </Badge>
