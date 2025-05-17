@@ -129,8 +129,9 @@ export async function filterGlossaryTermsByCategory(categories: string[]): Promi
  * Generate a slug from a term using the database function
  */
 export async function generateSlugFromTerm(term: string): Promise<string> {
+  // Fix: The RPC function expects an unnamed parameter, not a named parameter
   const { data, error } = await supabase
-    .rpc('generate_slug', { input_text: term });
+    .rpc('generate_slug', { "": term });
 
   if (error) {
     console.error("Error generating slug:", error);
