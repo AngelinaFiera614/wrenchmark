@@ -36,10 +36,8 @@ export const useSubmissionHandler = ({
     const timeout = setTimeout(() => {
       console.error("Glossary term save operation timed out after 10 seconds");
       setLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Save operation timed out",
-        description: "The operation took too long. Please try again and check your connection.",
+      toast("Save operation timed out. The operation took too long. Please try again and check your connection.", {
+        description: "The operation took too long. Please try again and check your connection."
       });
     }, 10000); // 10 second timeout
     
@@ -123,28 +121,20 @@ export const useSubmissionHandler = ({
       
       // Provide more specific error messages based on error type
       if (error.message && error.message.includes("slug")) {
-        toast({
-          variant: "destructive",
-          title: "Duplicate slug",
-          description: error.message,
+        toast("Duplicate slug", {
+          description: error.message
         });
       } else if (error.code === "PGRST301") {
-        toast({
-          variant: "destructive",
-          title: "Permission denied",
-          description: "You don't have permission to perform this action. Please verify you're logged in as an admin.",
+        toast("Permission denied", {
+          description: "You don't have permission to perform this action. Please verify you're logged in as an admin."
         });
       } else if (error.message && error.message.includes("JWT")) {
-        toast({
-          variant: "destructive",
-          title: "Authentication error",
-          description: "Your session may have expired. Please refresh the page and log in again.",
+        toast("Authentication error", {
+          description: "Your session may have expired. Please refresh the page and log in again."
         });
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error saving term",
-          description: error.message || "Failed to save term. Please try again.",
+        toast("Error saving term", {
+          description: error.message || "Failed to save term. Please try again."
         });
       }
     } finally {
