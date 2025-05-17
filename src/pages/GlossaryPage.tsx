@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
-import GlossaryFilter from '@/components/glossary/GlossaryFilter';
+import { GlossaryFilter } from '@/components/glossary/GlossaryFilter';
 import GlossaryGrid from '@/components/glossary/GlossaryGrid';
 import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';

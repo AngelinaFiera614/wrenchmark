@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { GlossaryTerm } from "@/types/glossary";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import GlossaryForm from "./GlossaryForm";
+import { GlossaryForm } from "./GlossaryForm";
 import { GlossaryFormValues } from "@/types/glossary";
 
 interface AdminGlossaryDialogProps {

@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MultiSelect } from './MultiSelect';
-import { ImageUpload } from '@/components/admin/shared/ImageUpload';
+import ImageUpload from '@/components/admin/shared/ImageUpload';
 import { Separator } from '@/components/ui/separator';
 
 interface GlossaryFormProps {
