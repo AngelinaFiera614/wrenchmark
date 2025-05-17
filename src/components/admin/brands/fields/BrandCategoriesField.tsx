@@ -20,18 +20,25 @@ interface BrandCategoriesFieldProps {
 
 const BrandCategoriesField = ({ form }: BrandCategoriesFieldProps) => {
   const [value, setValue] = React.useState("");
+  
+  // Ensure categories is always an array
+  React.useEffect(() => {
+    const currentCategories = form.getValues().categories;
+    if (!currentCategories) {
+      form.setValue("categories", []);
+    }
+  }, [form]);
 
   const handleAddCategory = () => {
     const trimmedValue = value.trim();
-    if (trimmedValue && form.getValues().categories) {
+    if (trimmedValue) {
+      const currentCategories = form.getValues().categories || [];
       // Check if category already exists to avoid duplicates
-      if (!form.getValues().categories?.includes(trimmedValue)) {
-        form.setValue("categories", [...form.getValues().categories || [], trimmedValue]);
+      if (!currentCategories.includes(trimmedValue)) {
+        form.setValue("categories", [...currentCategories, trimmedValue]);
       }
-    } else if (trimmedValue) {
-      form.setValue("categories", [trimmedValue]);
+      setValue("");
     }
-    setValue("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -42,11 +49,10 @@ const BrandCategoriesField = ({ form }: BrandCategoriesFieldProps) => {
   };
 
   const handleRemoveCategory = (categoryToRemove: string) => {
+    const currentCategories = form.getValues().categories || [];
     form.setValue(
       "categories",
-      (form.getValues().categories || []).filter(
-        (category) => category !== categoryToRemove
-      )
+      currentCategories.filter(category => category !== categoryToRemove)
     );
   };
 

@@ -38,34 +38,35 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
   const form = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
     defaultValues: {
-      name: brand?.name || "",
-      country: brand?.country || "",
-      founded: brand?.founded,
-      logo_url: brand?.logo_url || null,
-      known_for: brand?.known_for || [],
-      slug: brand?.slug || "",
-      description: brand?.description || "",
-      founded_city: brand?.founded_city || "",
-      headquarters: brand?.headquarters || "",
-      status: brand?.status || "active",
-      brand_type: brand?.brand_type || "mass",
-      is_electric: brand?.is_electric || false,
-      website_url: brand?.website_url || "",
-      categories: brand?.categories || [],
-      notes: brand?.notes || "",
+      name: "",
+      country: "",
+      founded: undefined,
+      logo_url: null,
+      known_for: [],
+      slug: "",
+      description: "",
+      founded_city: "",
+      headquarters: "",
+      status: "active",
+      brand_type: "mass",
+      is_electric: false,
+      website_url: "",
+      categories: [],
+      notes: "",
     },
   });
 
   // Update form when brand changes
   React.useEffect(() => {
     if (brand) {
+      console.log("Initializing form with brand data:", brand);
       form.reset({
-        name: brand.name,
+        name: brand.name || "",
         country: brand.country || "",
-        founded: brand.founded,
+        founded: brand.founded || undefined,
         logo_url: brand.logo_url || null,
         known_for: brand.known_for || [],
-        slug: brand.slug || brand.name.toLowerCase().replace(/\s+/g, "-"),
+        slug: brand.slug || "",
         description: brand.description || "",
         founded_city: brand.founded_city || "",
         headquarters: brand.headquarters || "",
@@ -97,9 +98,14 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
     }
   }, [brand, form]);
 
+  const handleFormSubmit = async (data: BrandFormValues) => {
+    console.log("Form data before submission:", data);
+    await onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Basic Information */}
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-accent-teal">Basic Information</h3>

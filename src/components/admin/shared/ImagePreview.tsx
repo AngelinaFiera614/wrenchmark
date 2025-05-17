@@ -17,10 +17,16 @@ const ImagePreview = ({
   previewWidth = 150 
 }: ImagePreviewProps) => {
   const [loadError, setLoadError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleImageError = () => {
     setLoadError(true);
+    setIsLoading(false);
     console.error(`Failed to load image from URL: ${imageUrl}`);
+  };
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
   };
 
   return (
@@ -29,6 +35,12 @@ const ImagePreview = ({
         className="relative rounded overflow-hidden bg-black border border-border"
         style={{ height: previewHeight, width: previewWidth }}
       >
+        {isLoading && !loadError && (
+          <div className="h-full w-full flex items-center justify-center bg-gray-900 text-gray-400">
+            <span className="animate-pulse">Loading...</span>
+          </div>
+        )}
+        
         {loadError ? (
           <div className="h-full w-full flex flex-col items-center justify-center bg-gray-900 text-gray-400 p-2">
             <AlertTriangle className="h-8 w-8 mb-1" />
@@ -41,6 +53,8 @@ const ImagePreview = ({
             alt="Preview" 
             className="h-full w-full object-contain"
             onError={handleImageError}
+            onLoad={handleImageLoad}
+            style={{ display: isLoading ? 'none' : 'block' }}
           />
         )}
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">

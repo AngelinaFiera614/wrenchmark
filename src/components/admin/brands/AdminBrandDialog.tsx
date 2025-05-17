@@ -30,6 +30,9 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
   const handleSubmit = async (values: BrandFormValues) => {
     setLoading(true);
     try {
+      console.log("Submitting brand data:", values);
+      
+      // Prepare data for database
       const brandData = {
         name: values.name,
         country: values.country || null,
@@ -37,7 +40,7 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
         logo_url: values.logo_url || null,
         known_for: values.known_for || [],
         slug: values.slug,
-        // New fields
+        // Fields that were reportedly not saving
         description: values.description || null,
         founded_city: values.founded_city || null,
         headquarters: values.headquarters || null,
@@ -49,49 +52,50 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
         notes: values.notes || null,
       };
 
-      let error;
+      let response;
       
       if (brand) {
         // Update existing brand
-        const { error: updateError } = await supabase
+        console.log("Updating existing brand with ID:", brand.id);
+        response = await supabase
           .from('brands')
           .update(brandData)
           .eq('id', brand.id);
           
-        error = updateError;
-        
-        if (!error) {
-          toast({
-            title: "Brand updated",
-            description: `${values.name} has been updated successfully.`,
-          });
+        if (response.error) {
+          throw response.error;
         }
+        
+        toast({
+          title: "Brand updated",
+          description: `${values.name} has been updated successfully.`,
+        });
       } else {
         // Create new brand
-        const { error: insertError } = await supabase
+        console.log("Creating new brand");
+        response = await supabase
           .from('brands')
           .insert([brandData]);
           
-        error = insertError;
-        
-        if (!error) {
-          toast({
-            title: "Brand added",
-            description: `${values.name} has been added successfully.`,
-          });
+        if (response.error) {
+          throw response.error;
         }
+        
+        toast({
+          title: "Brand added",
+          description: `${values.name} has been added successfully.`,
+        });
       }
 
-      if (error) throw error;
-      
+      console.log("Database operation completed successfully:", response);
       onClose(true); // Close and refresh data
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving brand:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to save brand. Please try again.",
+        title: "Error saving brand",
+        description: error.message || "Failed to save brand. Please try again.",
       });
     } finally {
       setLoading(false);

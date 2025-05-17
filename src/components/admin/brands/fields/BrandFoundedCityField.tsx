@@ -29,6 +29,10 @@ const BrandFoundedCityField = ({ form }: BrandFoundedCityFieldProps) => {
               placeholder="e.g., Tokyo, Milan, Milwaukee" 
               {...field} 
               value={field.value || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                field.onChange(value === "" ? null : value);
+              }}
             />
           </FormControl>
           <FormDescription>
