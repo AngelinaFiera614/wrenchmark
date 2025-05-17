@@ -1,8 +1,6 @@
 
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { getBrandBySlug } from "@/services/brandService";
 import { getAllMotorcycles } from "@/services/motorcycleService";
 import { Brand, Motorcycle } from "@/types";
@@ -57,44 +55,34 @@ export default function BrandDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col dark bg-background text-foreground">
-        <Header />
-        <main className="flex-1 container py-12 px-4 md:px-6 flex items-center justify-center">
-          <div className="h-12 w-12 border-4 border-t-accent-teal border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-        </main>
-        <Footer />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="h-12 w-12 border-4 border-t-accent-teal border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!brand) {
     return (
-      <div className="min-h-screen flex flex-col dark bg-background text-foreground">
-        <Header />
-        <main className="flex-1 container py-12 px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center py-12">
-            <h1 className="text-2xl font-bold mb-4">Brand Not Found</h1>
-            <p className="text-muted-foreground mb-6">
-              The brand you're looking for doesn't exist or has been removed.
-            </p>
-            <Link to="/brands">
-              <Button variant="default">
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Back to Brands Directory
-              </Button>
-            </Link>
-          </div>
-        </main>
-        <Footer />
+      <div className="flex-1 container py-12 px-4 md:px-6">
+        <div className="flex flex-col items-center justify-center py-12">
+          <h1 className="text-2xl font-bold mb-4">Brand Not Found</h1>
+          <p className="text-muted-foreground mb-6">
+            The brand you're looking for doesn't exist or has been removed.
+          </p>
+          <Link to="/brands">
+            <Button variant="default">
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Brands Directory
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col dark bg-background text-foreground">
-      <Header />
-      
-      <main className="flex-1 container px-4 md:px-6 py-8">
+    <div className="flex-1">
+      <div className="container px-4 md:px-6 py-8">
         <div className="mb-4">
           <Link to="/brands">
             <Button variant="ghost" className="pl-0 text-foreground hover:text-accent-teal hover:bg-background/5">
@@ -155,9 +143,7 @@ export default function BrandDetail() {
             </div>
           )}
         </div>
-      </main>
-      
-      <Footer />
+      </div>
     </div>
   );
 }

@@ -10,7 +10,7 @@ type LayoutProps = {
 export const Layout: React.FC<LayoutProps> = ({ children }) => (
   <div className="flex flex-col min-h-screen bg-background">
     <Header />
-    <main className="container mx-auto px-4 py-8 flex-grow">
+    <main className="flex-grow">
       {children}
     </main>
     <Footer />

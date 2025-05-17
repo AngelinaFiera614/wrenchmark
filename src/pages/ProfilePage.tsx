@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Loader, Upload } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +105,6 @@ const ProfilePage = () => {
 
   return (
     <>
-      <Header />
       <main className="container max-w-4xl py-10 px-4">
         <h1 className="text-3xl font-bold text-accent-teal mb-8">My Profile</h1>
         
@@ -262,9 +260,8 @@ const ProfilePage = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
-};
+}
 
 export default ProfilePage;
