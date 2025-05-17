@@ -14,6 +14,7 @@ import { BrandFormValues } from "./BrandFormSchema";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import LogoBrowserDialog from "./LogoBrowserDialog";
+import { toast } from "@/hooks/use-toast";
 
 interface BrandLogoFieldProps {
   form: UseFormReturn<BrandFormValues>;
@@ -23,7 +24,15 @@ const BrandLogoField = ({ form }: BrandLogoFieldProps) => {
   const [isLogoBrowserOpen, setIsLogoBrowserOpen] = useState(false);
 
   const handleSelectLogo = (url: string) => {
-    form.setValue('logo_url', url);
+    if (url) {
+      console.log("Setting logo URL in form:", url);
+      form.setValue('logo_url', url);
+      form.trigger('logo_url');
+      toast({
+        title: "Logo selected",
+        description: "Logo has been selected successfully",
+      });
+    }
   };
 
   return (
@@ -38,7 +47,10 @@ const BrandLogoField = ({ form }: BrandLogoFieldProps) => {
               <ImageUpload
                 bucketName="brand-logos"
                 value={field.value || null}
-                onChange={field.onChange}
+                onChange={(url) => {
+                  field.onChange(url);
+                  console.log("Logo URL changed to:", url);
+                }}
                 maxSizeMB={5}
                 previewHeight={120}
                 previewWidth={120}

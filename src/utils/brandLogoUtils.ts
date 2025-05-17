@@ -1,5 +1,6 @@
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
 
 type LogoSourceType = "custom" | "auto-generated" | "fallback";
 
@@ -15,6 +16,7 @@ export const getBrandLogoUrl = (logoUrl: string | null | undefined, slug: string
 } => {
   // If we have a direct logo URL, use it
   if (logoUrl) {
+    console.log("Using custom logo URL:", logoUrl);
     return { 
       url: logoUrl, 
       sourceType: "custom" 
@@ -23,13 +25,21 @@ export const getBrandLogoUrl = (logoUrl: string | null | undefined, slug: string
   
   // If we have a slug but no logo_url, construct from storage bucket
   if (slug) {
+    // Try first with the specified name pattern
+    const generatedUrl = supabase.storage
+      .from('brand-logos')
+      .getPublicUrl(`${slug}-logo.png`).data.publicUrl;
+    
+    console.log("Generated auto logo URL from slug:", generatedUrl);
+    
     return {
-      url: `https://njjstrqrwjygwyujdrzk.supabase.co/storage/v1/object/public/brand-logos/${slug}-logo.png`,
+      url: generatedUrl,
       sourceType: "auto-generated"
     };
   }
   
   // Fallback if both are missing
+  console.log("Using fallback logo");
   return {
     url: '/placeholder.svg', 
     sourceType: "fallback"

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +21,8 @@ export const useStorageList = (bucketName: string) => {
     setError(null);
     
     try {
+      console.log(`Fetching files from bucket: ${bucketName}`);
+      
       // Get list of files in the bucket
       const { data: fileList, error: listError } = await supabase
         .storage
@@ -29,22 +30,28 @@ export const useStorageList = (bucketName: string) => {
         .list();
         
       if (listError) {
+        console.error('Error listing files:', listError);
         throw listError;
       }
 
       if (!fileList?.length) {
+        console.log(`No files found in bucket: ${bucketName}`);
         setFiles([]);
         return;
       }
 
+      console.log(`Found ${fileList.length} files in bucket: ${bucketName}`, fileList);
+
       // Only include files (not folders) and exclude .gitkeep if it exists
-      const filteredFiles = fileList
+      const filteredFiles = await Promise.all(fileList
         .filter(item => !item.id.endsWith('/') && item.name !== '.gitkeep')
-        .map(item => {
+        .map(async item => {
           // Fixed: Properly destructure the returned object to get publicUrl
           const { data } = supabase.storage
             .from(bucketName)
             .getPublicUrl(item.name);
+
+          console.log(`Generated URL for ${item.name}:`, data.publicUrl);
             
           return {
             name: item.name,
@@ -53,9 +60,10 @@ export const useStorageList = (bucketName: string) => {
             size: item.metadata?.size || 0,
             createdAt: item.created_at || '',
           };
-        });
+        }));
 
       setFiles(filteredFiles);
+      console.log('Final files array:', filteredFiles);
     } catch (err) {
       console.error('Error fetching storage files:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch files');

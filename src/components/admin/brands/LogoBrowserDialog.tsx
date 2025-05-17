@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { AlertCircle, Loader2, AlertTriangle } from "lucide-react";
 import { useStorageList, StorageFile } from '@/hooks/useStorageList';
 import { cn } from '@/lib/utils';
 
@@ -24,12 +24,15 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
   onSelectLogo,
 }) => {
   const { files, isLoading, error, fetchFiles } = useStorageList('brand-logos');
-  const [selectedLogo, setSelectedLogo] = React.useState<string | null>(null);
+  const [selectedLogo, setSelectedLogo] = useState<string | null>(null);
+  const [loadErrors, setLoadErrors] = useState<Record<string, boolean>>({});
 
   // Fetch files when the dialog opens
   useEffect(() => {
     if (isOpen) {
       fetchFiles();
+      setSelectedLogo(null);
+      setLoadErrors({});
     }
   }, [isOpen, fetchFiles]);
 
@@ -38,6 +41,11 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
       onSelectLogo(selectedLogo);
       onClose();
     }
+  };
+
+  const handleImageError = (name: string) => {
+    console.error(`Failed to load image: ${name}`);
+    setLoadErrors(prev => ({ ...prev, [name]: true }));
   };
 
   return (
@@ -72,6 +80,7 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
 
           {!isLoading && !error && files.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
+              <AlertCircle className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
               <p>No logo files found in the brand-logos bucket.</p>
               <p className="text-sm mt-1">Upload some logos first to see them here.</p>
             </div>
@@ -86,17 +95,25 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
                     "border rounded-md p-2 cursor-pointer hover:border-accent-teal transition-colors",
                     selectedLogo === file.url && "border-2 border-accent-teal ring-2 ring-accent-teal/20"
                   )}
-                  onClick={() => setSelectedLogo(file.url)}
+                  onClick={() => {
+                    setSelectedLogo(file.url);
+                    console.log("Selected logo URL:", file.url);
+                  }}
                 >
-                  <div className="aspect-square bg-black flex items-center justify-center p-2">
-                    <img
-                      src={file.url}
-                      alt={file.name}
-                      className="max-h-full max-w-full object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/placeholder.svg';
-                      }}
-                    />
+                  <div className="aspect-square bg-black flex items-center justify-center p-2 relative">
+                    {loadErrors[file.name] ? (
+                      <div className="flex flex-col items-center justify-center text-red-500">
+                        <AlertTriangle className="h-8 w-8 mb-1" />
+                        <span className="text-xs text-center">Failed to load</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={file.url}
+                        alt={file.name}
+                        className="max-h-full max-w-full object-contain"
+                        onError={() => handleImageError(file.name)}
+                      />
+                    )}
                   </div>
                   <p className="text-xs text-center mt-2 truncate" title={file.name}>
                     {file.name}
