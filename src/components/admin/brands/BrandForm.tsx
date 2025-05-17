@@ -4,21 +4,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { Brand } from "@/types";
 import { brandSchema, BrandFormValues } from "./BrandFormSchema";
-import BrandLogoField from "./BrandLogoField";
-import BrandKnownForField from "./BrandKnownForField";
-import BrandSlugField from "./BrandSlugField";
+import {
+  BrandNameField,
+  BrandCountryField,
+  BrandFoundedField,
+  BrandLogoField,
+  BrandKnownForField,
+  BrandSlugField
+} from "./fields";
 
 interface BrandFormProps {
   brand: Brand | null;
@@ -67,52 +64,11 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Brand Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Kawasaki" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="country"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country of Origin</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Japan" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="founded"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Founded Year</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="e.g. 1896" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
+        <BrandNameField form={form} />
+        <BrandCountryField form={form} />
+        <BrandFoundedField form={form} />
         <BrandLogoField form={form} />
-        
         <BrandKnownForField form={form} />
-        
         <BrandSlugField form={form} />
           
         <DialogFooter>
