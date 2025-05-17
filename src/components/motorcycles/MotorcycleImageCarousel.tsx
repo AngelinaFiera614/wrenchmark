@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, AlertCircle, ImageIcon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { 
