@@ -1,10 +1,8 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { AuthNav } from "./AuthNav";
 import DesktopNav from "./navigation/DesktopNav";
 import MobileNav from "./navigation/MobileNav";
 import UserMenu from "./navigation/UserMenu";
@@ -64,10 +62,6 @@ const Header = () => {
           <MobileNav closeMenu={closeMenu} handleSignOut={handleSignOut} />
         </div>
       )}
-
-      <div className="md:hidden border-t border-border">
-        <AuthNav />
-      </div>
     </header>
   );
 };
