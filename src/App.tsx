@@ -10,8 +10,6 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { ComparisonProvider } from "@/context/ComparisonContext";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { Layout } from "@/components/layout/Layout";
 import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -25,6 +23,19 @@ import AdminParts from "@/pages/admin/AdminParts";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
 
+// Import actual page components
+import Index from "@/pages/Index";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Motorcycles from "@/pages/Motorcycles";
+import MotorcycleDetail from "@/pages/MotorcycleDetail";
+import BrandsDirectory from "@/pages/BrandsDirectory";
+import BrandDetail from "@/pages/BrandDetail";
+import ComparisonPage from "@/pages/ComparisonPage";
+import ProfilePage from "@/pages/ProfilePage";
+import RidingSkillDetailPage from "@/pages/RidingSkillDetailPage";
+import Auth from "@/pages/Auth";
+
 function App() {
   return (
     <AuthProvider>
@@ -32,27 +43,28 @@ function App() {
         <Router>
           <ScrollToTop />
           <Routes>
-            <Route path="/auth" element={<div>Auth Page</div>} />
+            <Route path="/auth" element={<Auth />} />
             
             {/* Routes wrapped with Layout */}
             <Route element={<Layout><Outlet /></Layout>}>
-              <Route index element={<div>Home Page</div>} />
-              <Route path="about" element={<div>About Page</div>} />
-              <Route path="contact" element={<div>Contact Page</div>} />
-              <Route path="motorcycles" element={<div>Motorcycles Page</div>} />
+              <Route index element={<Index />} />
+              <Route path="about" element={<About />} />
+              <Route path="contact" element={<Contact />} />
+              <Route path="motorcycles" element={<Motorcycles />} />
               <Route
                 path="motorcycles/:motorcycleId"
-                element={<div>Motorcycle Detail Page</div>}
+                element={<MotorcycleDetail />}
               />
-              <Route path="brands" element={<div>Brands Page</div>} />
-              <Route path="brands/:brandId" element={<div>Brand Detail Page</div>} />
-              <Route path="compare" element={<div>Compare Page</div>} />
+              <Route path="brands" element={<BrandsDirectory />} />
+              <Route path="brands/:brandId" element={<BrandDetail />} />
+              <Route path="compare" element={<ComparisonPage />} />
+              <Route path="riding-skills/:id" element={<RidingSkillDetailPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
 
             {/* Protected Routes - Requires Authentication */}
             <Route path="profile" element={<ProtectedRoute />}>
-              <Route path="/profile" element={<div>Profile Page</div>} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Route>
 
             {/* Admin Routes - Protected with isAdmin = true */}
