@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
@@ -40,14 +41,15 @@ export const useStorageList = (bucketName: string) => {
       const filteredFiles = fileList
         .filter(item => !item.id.endsWith('/') && item.name !== '.gitkeep')
         .map(item => {
-          const { publicUrl } = supabase.storage
+          // Fixed: Properly destructure the returned object to get publicUrl
+          const { data } = supabase.storage
             .from(bucketName)
             .getPublicUrl(item.name);
             
           return {
             name: item.name,
             id: item.id,
-            url: publicUrl,
+            url: data.publicUrl,
             size: item.metadata?.size || 0,
             createdAt: item.created_at || '',
           };
