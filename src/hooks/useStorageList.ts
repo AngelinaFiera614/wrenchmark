@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
@@ -23,11 +24,34 @@ export const useStorageList = (bucketName: string) => {
     try {
       console.log(`Fetching files from bucket: ${bucketName}`);
       
+      // Check if bucket exists
+      const { data: buckets, error: bucketError } = await supabase
+        .storage
+        .listBuckets();
+        
+      if (bucketError) {
+        console.error('Error checking buckets:', bucketError);
+        throw bucketError;
+      }
+      
+      const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+      
+      if (!bucketExists) {
+        console.error(`Bucket "${bucketName}" does not exist`);
+        setFiles([]);
+        setError(`Bucket "${bucketName}" does not exist`);
+        return;
+      }
+      
       // Get list of files in the bucket
       const { data: fileList, error: listError } = await supabase
         .storage
         .from(bucketName)
-        .list();
+        .list('', {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: 'name', order: 'asc' }
+        });
         
       if (listError) {
         console.error('Error listing files:', listError);
@@ -46,7 +70,7 @@ export const useStorageList = (bucketName: string) => {
       const filteredFiles = await Promise.all(fileList
         .filter(item => !item.id.endsWith('/') && item.name !== '.gitkeep')
         .map(async item => {
-          // Fixed: Properly destructure the returned object to get publicUrl
+          // Generate public URL
           const { data } = supabase.storage
             .from(bucketName)
             .getPublicUrl(item.name);

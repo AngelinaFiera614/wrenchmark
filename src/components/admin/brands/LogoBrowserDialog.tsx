@@ -26,6 +26,7 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
   const { files, isLoading, error, fetchFiles } = useStorageList('brand-logos');
   const [selectedLogo, setSelectedLogo] = useState<string | null>(null);
   const [loadErrors, setLoadErrors] = useState<Record<string, boolean>>({});
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Fetch files when the dialog opens
   useEffect(() => {
@@ -33,11 +34,13 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
       fetchFiles();
       setSelectedLogo(null);
       setLoadErrors({});
+      setSearchTerm('');
     }
   }, [isOpen, fetchFiles]);
 
   const handleSelectLogo = () => {
     if (selectedLogo) {
+      console.log("Selecting logo with URL:", selectedLogo);
       onSelectLogo(selectedLogo);
       onClose();
     }
@@ -48,12 +51,27 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
     setLoadErrors(prev => ({ ...prev, [name]: true }));
   };
 
+  // Filter files based on search term
+  const filteredFiles = searchTerm.trim() === '' 
+    ? files 
+    : files.filter(file => file.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Brand Logos</DialogTitle>
         </DialogHeader>
+
+        <div className="relative mb-4">
+          <input
+            type="search"
+            placeholder="Search logos..."
+            className="w-full px-4 py-2 border rounded-md bg-background focus:border-accent-teal focus:ring-1 focus:ring-accent-teal"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
         <div className="py-4">
           {isLoading && (
@@ -78,17 +96,23 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
             </div>
           )}
 
-          {!isLoading && !error && files.length === 0 && (
+          {!isLoading && !error && filteredFiles.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <AlertCircle className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-              <p>No logo files found in the brand-logos bucket.</p>
-              <p className="text-sm mt-1">Upload some logos first to see them here.</p>
+              {searchTerm.trim() !== '' ? (
+                <p>No logos found matching "{searchTerm}".</p>
+              ) : (
+                <>
+                  <p>No logo files found in the brand-logos bucket.</p>
+                  <p className="text-sm mt-1">Upload some logos first to see them here.</p>
+                </>
+              )}
             </div>
           )}
 
-          {!isLoading && !error && files.length > 0 && (
+          {!isLoading && !error && filteredFiles.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {files.map((file) => (
+              {filteredFiles.map((file) => (
                 <div
                   key={file.id}
                   className={cn(
@@ -124,14 +148,19 @@ const LogoBrowserDialog: React.FC<LogoBrowserDialogProps> = ({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="gap-2 flex-col sm:flex-row">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="sm:w-auto w-full"
+          >
             Cancel
           </Button>
           <Button 
             variant="teal" 
             onClick={handleSelectLogo} 
             disabled={!selectedLogo || isLoading}
+            className="sm:w-auto w-full"
           >
             Select Logo
           </Button>
