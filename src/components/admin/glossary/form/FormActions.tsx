@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Save, X } from 'lucide-react';
 
 interface FormActionsProps {
   isSubmitting: boolean;
@@ -16,9 +17,11 @@ export function FormActions({ isSubmitting, onCancel, isEditing }: FormActionsPr
         variant="outline" 
         onClick={onCancel}
       >
+        <X className="mr-2 h-4 w-4" />
         Cancel
       </Button>
       <Button type="submit" disabled={isSubmitting}>
+        <Save className="mr-2 h-4 w-4" />
         {isSubmitting ? 'Saving...' : isEditing ? 'Update Term' : 'Create Term'}
       </Button>
     </div>

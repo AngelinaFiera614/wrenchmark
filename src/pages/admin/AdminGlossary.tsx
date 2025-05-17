@@ -6,16 +6,16 @@ import { AdminGlossaryHeader } from '@/components/admin/glossary/AdminGlossaryHe
 import { AdminGlossaryTable } from '@/components/admin/glossary/AdminGlossaryTable';
 import { AdminGlossaryList } from '@/components/admin/glossary/AdminGlossaryList';
 import { AdminGlossaryEmptyState } from '@/components/admin/glossary/AdminGlossaryEmptyState';
-import AdminGlossaryDialog from '@/components/admin/glossary/AdminGlossaryDialog';
 import { GlossaryDeleteDialog } from '@/components/admin/glossary/GlossaryDeleteDialog';
 import BrandsMobileViewToggle from '@/components/admin/brands/BrandsMobileViewToggle';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/context/AuthContext';
+import { InlineGlossaryForm } from '@/components/admin/glossary/InlineGlossaryForm';
 
 const AdminGlossary: React.FC = () => {
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [currentTerm, setCurrentTerm] = useState<GlossaryTerm | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const { isAdmin } = useAuth();
@@ -29,12 +29,12 @@ const AdminGlossary: React.FC = () => {
 
   const handleAddTerm = () => {
     setCurrentTerm(null);
-    setIsDialogOpen(true);
+    setIsFormOpen(true);
   };
 
   const handleEditTerm = (term: GlossaryTerm) => {
     setCurrentTerm(term);
-    setIsDialogOpen(true);
+    setIsFormOpen(true);
   };
 
   const handleDeleteTerm = (term: GlossaryTerm) => {
@@ -57,8 +57,8 @@ const AdminGlossary: React.FC = () => {
     }
   };
 
-  const handleCloseDialog = (refresh?: boolean) => {
-    setIsDialogOpen(false);
+  const handleCloseForm = (refresh?: boolean) => {
+    setIsFormOpen(false);
   };
 
   if (!isAdmin) {
@@ -74,44 +74,47 @@ const AdminGlossary: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <AdminGlossaryHeader 
-        onAddTerm={handleAddTerm}
-        termCount={terms.length} 
-      />
-      
-      {!isLoading && terms.length === 0 ? (
-        <AdminGlossaryEmptyState onAddTerm={handleAddTerm} />
-      ) : (
+      {!isFormOpen ? (
         <>
-          <div className="flex justify-end">
-            <BrandsMobileViewToggle
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-            />
-          </div>
-      
-          {viewMode === "table" ? (
-            <AdminGlossaryTable
-              terms={terms}
-              onEdit={handleEditTerm}
-              onDelete={handleDeleteTerm}
-            />
+          <AdminGlossaryHeader 
+            onAddTerm={handleAddTerm}
+            termCount={terms.length} 
+          />
+          
+          {!isLoading && terms.length === 0 ? (
+            <AdminGlossaryEmptyState onAddTerm={handleAddTerm} />
           ) : (
-            <AdminGlossaryList
-              terms={terms}
-              onEdit={handleEditTerm}
-              onDelete={handleDeleteTerm}
-            />
+            <>
+              <div className="flex justify-end">
+                <BrandsMobileViewToggle
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                />
+              </div>
+          
+              {viewMode === "table" ? (
+                <AdminGlossaryTable
+                  terms={terms}
+                  onEdit={handleEditTerm}
+                  onDelete={handleDeleteTerm}
+                />
+              ) : (
+                <AdminGlossaryList
+                  terms={terms}
+                  onEdit={handleEditTerm}
+                  onDelete={handleDeleteTerm}
+                />
+              )}
+            </>
           )}
         </>
+      ) : (
+        <InlineGlossaryForm
+          term={currentTerm}
+          onClose={handleCloseForm}
+          availableTerms={allTerms}
+        />
       )}
-      
-      <AdminGlossaryDialog
-        open={isDialogOpen}
-        term={currentTerm}
-        onClose={handleCloseDialog}
-        availableTerms={allTerms}
-      />
       
       <GlossaryDeleteDialog
         term={currentTerm}

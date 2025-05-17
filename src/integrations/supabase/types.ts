@@ -366,6 +366,10 @@ export type Database = {
     }
     Functions: {
       generate_slug: {
+        Args: { "": string }
+        Returns: string
+      }
+      generate_slug_fixed: {
         Args: { input_text: string }
         Returns: string
       }
