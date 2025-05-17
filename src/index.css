@@ -70,6 +70,18 @@
   :root {
     --accent-teal: 172 100% 41%;
   }
+
+  /* Dark mode specific styles for our custom app */
+  .dark {
+    --app-background: 240 10% 3.9%; /* #090C0E */
+    --app-teal: 172 100% 41%; /* #00D2B4 */
+    --app-teal-hover: 172 100% 36%; /* #00B89D */
+  }
+
+  /* Add a dark background for body in dark mode */
+  .dark body {
+    background-color: #090C0E;
+  }
 }
  
 @layer base {
@@ -100,3 +112,13 @@
 .text-gradient {
   @apply bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent;
 }
+
+/* Wrenchmark specific dark mode styles */
+.dark .wrenchmark-header {
+  @apply border-zinc-800;
+}
+
+.dark .wrenchmark-link {
+  @apply hover:text-accent-teal;
+}
+
