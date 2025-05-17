@@ -24,6 +24,7 @@ interface GlossaryFormProps {
   onSubmit: (values: GlossaryFormValues) => void;
   isSubmitting: boolean;
   availableTerms: GlossaryTerm[];
+  onCancel: () => void;
 }
 
 export function GlossaryForm({
@@ -31,6 +32,7 @@ export function GlossaryForm({
   onSubmit,
   isSubmitting,
   availableTerms,
+  onCancel,
 }: GlossaryFormProps) {
   const [categoryInput, setCategoryInput] = useState<string>('');
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -253,6 +255,13 @@ export function GlossaryForm({
         </div>
 
         <div className="flex justify-end space-x-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : term ? 'Update Term' : 'Create Term'}
           </Button>
