@@ -1,4 +1,3 @@
-
 export type MotorcycleCategory = "Sport" | "Cruiser" | "Touring" | "Adventure" | "Naked" | "Dual-sport" | "Standard" | "Scooter" | "Off-road";
 
 export interface Motorcycle {
@@ -39,10 +38,21 @@ export interface Brand {
   logo_url: string;
   known_for: string[];
   slug?: string;
+  
+  // New fields
+  description?: string;
+  founded_city?: string;
+  headquarters?: string;
+  status?: "active" | "defunct" | "revived";
+  brand_type?: "mass" | "boutique" | "revived" | "oem";
+  is_electric?: boolean;
+  website_url?: string;
+  categories?: string[];
+  notes?: string;
+  
   // Adding aliases for components that expect these properties
   logo?: string;
   knownFor?: string[];
-  description?: string;
 }
 
 export interface MotorcycleFilters {

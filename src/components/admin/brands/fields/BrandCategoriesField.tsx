@@ -1,0 +1,107 @@
+
+import React from "react";
+import { UseFormReturn } from "react-hook-form";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { X } from "lucide-react";
+import { BrandFormValues } from "../BrandFormSchema";
+
+interface BrandCategoriesFieldProps {
+  form: UseFormReturn<BrandFormValues>;
+}
+
+const BrandCategoriesField = ({ form }: BrandCategoriesFieldProps) => {
+  const [value, setValue] = React.useState("");
+
+  const handleAddCategory = () => {
+    const trimmedValue = value.trim();
+    if (trimmedValue && form.getValues().categories) {
+      // Check if category already exists to avoid duplicates
+      if (!form.getValues().categories?.includes(trimmedValue)) {
+        form.setValue("categories", [...form.getValues().categories || [], trimmedValue]);
+      }
+    } else if (trimmedValue) {
+      form.setValue("categories", [trimmedValue]);
+    }
+    setValue("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddCategory();
+    }
+  };
+
+  const handleRemoveCategory = (categoryToRemove: string) => {
+    form.setValue(
+      "categories",
+      (form.getValues().categories || []).filter(
+        (category) => category !== categoryToRemove
+      )
+    );
+  };
+
+  return (
+    <FormField
+      control={form.control}
+      name="categories"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Categories</FormLabel>
+          <div className="grid gap-2">
+            <div className="flex flex-wrap gap-1">
+              {(field.value || []).map((category) => (
+                <Badge
+                  key={category}
+                  variant="secondary"
+                  className="flex items-center gap-1"
+                >
+                  {category}
+                  <button
+                    type="button"
+                    className="rounded-full outline-none hover:bg-muted-foreground/10"
+                    onClick={() => handleRemoveCategory(category)}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <FormControl>
+                <Input
+                  placeholder="Add category..."
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+              </FormControl>
+              <button
+                type="button"
+                className="rounded bg-secondary px-4 py-2 text-secondary-foreground hover:bg-secondary/80"
+                onClick={handleAddCategory}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+          <FormDescription>
+            Extended categorization tags for internal use (e.g., "Scooter", "Touring")
+          </FormDescription>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+};
+
+export default BrandCategoriesField;

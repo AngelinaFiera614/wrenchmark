@@ -37,6 +37,16 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
         logo_url: values.logo_url || null,
         known_for: values.known_for || [],
         slug: values.slug,
+        // New fields
+        description: values.description || null,
+        founded_city: values.founded_city || null,
+        headquarters: values.headquarters || null,
+        status: values.status || "active",
+        brand_type: values.brand_type || "mass",
+        is_electric: values.is_electric || false,
+        website_url: values.website_url || null,
+        categories: values.categories || [],
+        notes: values.notes || null,
       };
 
       let error;
@@ -90,7 +100,7 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {brand ? "Edit Brand" : "Add New Brand"}

@@ -11,37 +11,64 @@ export type Database = {
     Tables: {
       brands: {
         Row: {
+          brand_type: string | null
+          categories: string[] | null
           country: string | null
           created_at: string
+          description: string | null
           founded: number | null
+          founded_city: string | null
+          headquarters: string | null
           id: string
+          is_electric: boolean | null
           known_for: string[] | null
           logo_url: string | null
           name: string
+          notes: string | null
           slug: string
+          status: string | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
+          brand_type?: string | null
+          categories?: string[] | null
           country?: string | null
           created_at?: string
+          description?: string | null
           founded?: number | null
+          founded_city?: string | null
+          headquarters?: string | null
           id?: string
+          is_electric?: boolean | null
           known_for?: string[] | null
           logo_url?: string | null
           name: string
+          notes?: string | null
           slug: string
+          status?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
+          brand_type?: string | null
+          categories?: string[] | null
           country?: string | null
           created_at?: string
+          description?: string | null
           founded?: number | null
+          founded_city?: string | null
+          headquarters?: string | null
           id?: string
+          is_electric?: boolean | null
           known_for?: string[] | null
           logo_url?: string | null
           name?: string
+          notes?: string | null
           slug?: string
+          status?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }

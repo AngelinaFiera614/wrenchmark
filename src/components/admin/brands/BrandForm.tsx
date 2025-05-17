@@ -14,7 +14,16 @@ import {
   BrandFoundedField,
   BrandLogoField,
   BrandKnownForField,
-  BrandSlugField
+  BrandSlugField,
+  BrandDescriptionField,
+  BrandFoundedCityField,
+  BrandHeadquartersField,
+  BrandStatusField,
+  BrandTypeField,
+  BrandIsElectricField,
+  BrandWebsiteField,
+  BrandCategoriesField,
+  BrandNotesField,
 } from "./fields";
 
 interface BrandFormProps {
@@ -35,6 +44,15 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
       logo_url: brand?.logo_url || null,
       known_for: brand?.known_for || [],
       slug: brand?.slug || "",
+      description: brand?.description || "",
+      founded_city: brand?.founded_city || "",
+      headquarters: brand?.headquarters || "",
+      status: brand?.status || "active",
+      brand_type: brand?.brand_type || "mass",
+      is_electric: brand?.is_electric || false,
+      website_url: brand?.website_url || "",
+      categories: brand?.categories || [],
+      notes: brand?.notes || "",
     },
   });
 
@@ -48,6 +66,15 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
         logo_url: brand.logo_url || null,
         known_for: brand.known_for || [],
         slug: brand.slug || brand.name.toLowerCase().replace(/\s+/g, "-"),
+        description: brand.description || "",
+        founded_city: brand.founded_city || "",
+        headquarters: brand.headquarters || "",
+        status: brand.status || "active",
+        brand_type: brand.brand_type || "mass",
+        is_electric: brand.is_electric || false,
+        website_url: brand.website_url || "",
+        categories: brand.categories || [],
+        notes: brand.notes || "",
       });
     } else {
       form.reset({
@@ -57,6 +84,15 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
         logo_url: null,
         known_for: [],
         slug: "",
+        description: "",
+        founded_city: "",
+        headquarters: "",
+        status: "active",
+        brand_type: "mass",
+        is_electric: false,
+        website_url: "",
+        categories: [],
+        notes: "",
       });
     }
   }, [brand, form]);
@@ -64,12 +100,46 @@ const BrandForm = ({ brand, loading, onSubmit, onCancel }: BrandFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <BrandNameField form={form} />
-        <BrandCountryField form={form} />
-        <BrandFoundedField form={form} />
-        <BrandLogoField form={form} />
-        <BrandKnownForField form={form} />
-        <BrandSlugField form={form} />
+        {/* Basic Information */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-accent-teal">Basic Information</h3>
+          <BrandNameField form={form} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <BrandCountryField form={form} />
+            <BrandFoundedField form={form} />
+          </div>
+          <BrandDescriptionField form={form} />
+        </div>
+        
+        {/* Additional Information */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-accent-teal">Additional Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <BrandFoundedCityField form={form} />
+            <BrandHeadquartersField form={form} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <BrandStatusField form={form} />
+            <BrandTypeField form={form} />
+          </div>
+          <BrandIsElectricField form={form} />
+          <BrandWebsiteField form={form} />
+        </div>
+        
+        {/* Tags and Categories */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-accent-teal">Tags and Categories</h3>
+          <BrandKnownForField form={form} />
+          <BrandCategoriesField form={form} />
+        </div>
+        
+        {/* Admin Fields */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-accent-teal">Admin Fields</h3>
+          <BrandNotesField form={form} />
+          <BrandLogoField form={form} />
+          <BrandSlugField form={form} />
+        </div>
           
         <DialogFooter>
           <Button 
