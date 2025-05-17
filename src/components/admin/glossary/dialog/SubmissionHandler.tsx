@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { GlossaryTerm, GlossaryFormValues } from "@/types/glossary";
-import { supabase } from "@/integrations/supabase/client";
+import { createGlossaryTerm, updateGlossaryTerm, generateUniqueSlug } from "@/services/glossaryService";
 
 interface UseSubmissionHandlerProps {
   term: GlossaryTerm | null;
@@ -17,7 +17,6 @@ export const useSubmissionHandler = ({
   user,
   isAdmin,
 }: UseSubmissionHandlerProps) => {
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -47,6 +46,15 @@ export const useSubmissionHandler = ({
     setSaveTimeout(timeout);
     
     try {
+      // Check authentication and permissions
+      if (!user) {
+        throw new Error("You must be logged in to perform this action");
+      }
+      
+      if (!isAdmin) {
+        throw new Error("You don't have permission to manage glossary terms");
+      }
+      
       // Log authentication state
       console.log("Auth state during save:", { 
         isLoggedIn: !!user, 
@@ -76,46 +84,23 @@ export const useSubmissionHandler = ({
         console.log("Updating existing glossary term with ID:", term.id);
         const startTime = Date.now();
         
-        response = await supabase
-          .from('glossary_terms')
-          .update(glossaryData)
-          .eq('id', term.id);
+        response = await updateGlossaryTerm(term.id, glossaryData);
           
         console.log(`Update operation took ${Date.now() - startTime}ms`);
-        
-        if (response.error) {
-          console.error("Supabase update error:", response.error);
-          throw response.error;
-        }
-        
         console.log("Glossary term updated successfully:", response);
         
-        toast({
-          title: "Term updated",
-          description: `${values.term} has been updated successfully.`,
-        });
+        toast("Term updated successfully");
       } else {
         // Create new glossary term
         console.log("Creating new glossary term");
         const startTime = Date.now();
         
-        response = await supabase
-          .from('glossary_terms')
-          .insert([glossaryData]);
+        response = await createGlossaryTerm(glossaryData);
           
         console.log(`Insert operation took ${Date.now() - startTime}ms`);
-        
-        if (response.error) {
-          console.error("Supabase insert error:", response.error);
-          throw response.error;
-        }
-        
         console.log("Glossary term created successfully:", response);
         
-        toast({
-          title: "Term added",
-          description: `${values.term} has been added successfully.`,
-        });
+        toast("Term added successfully");
       }
       
       // Clear the timeout since the operation completed successfully
@@ -137,17 +122,17 @@ export const useSubmissionHandler = ({
       console.error("Error saving glossary term:", error);
       
       // Provide more specific error messages based on error type
-      if (error.code === "PGRST301") {
+      if (error.message && error.message.includes("slug")) {
+        toast({
+          variant: "destructive",
+          title: "Duplicate slug",
+          description: error.message,
+        });
+      } else if (error.code === "PGRST301") {
         toast({
           variant: "destructive",
           title: "Permission denied",
           description: "You don't have permission to perform this action. Please verify you're logged in as an admin.",
-        });
-      } else if (error.code === "23505") {
-        toast({
-          variant: "destructive",
-          title: "Duplicate entry",
-          description: "A term with this slug already exists. Please use a unique slug.",
         });
       } else if (error.message && error.message.includes("JWT")) {
         toast({

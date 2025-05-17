@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { GlossaryTerm, GlossaryFormValues } from "@/types/glossary";
 
@@ -38,9 +37,40 @@ export async function fetchGlossaryTermBySlug(slug: string): Promise<GlossaryTer
 }
 
 /**
+ * Check if a slug already exists
+ */
+export async function checkSlugExists(slug: string, excludeId?: string): Promise<boolean> {
+  let query = supabase
+    .from('glossary_terms')
+    .select('id')
+    .eq('slug', slug);
+    
+  // If we're updating an existing term, exclude it from the check
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+  
+  const { data, error } = await query;
+
+  if (error) {
+    console.error(`Error checking if slug ${slug} exists:`, error);
+    throw error;
+  }
+
+  return data && data.length > 0;
+}
+
+/**
  * Create a new glossary term
  */
 export async function createGlossaryTerm(termData: GlossaryFormValues): Promise<GlossaryTerm> {
+  // Check if slug already exists before creating
+  const slugExists = await checkSlugExists(termData.slug);
+  
+  if (slugExists) {
+    throw new Error(`A glossary term with the slug "${termData.slug}" already exists`);
+  }
+  
   const { data, error } = await supabase
     .from('glossary_terms')
     .insert([termData])
@@ -59,6 +89,15 @@ export async function createGlossaryTerm(termData: GlossaryFormValues): Promise<
  * Update a glossary term
  */
 export async function updateGlossaryTerm(id: string, termData: Partial<GlossaryFormValues>): Promise<GlossaryTerm> {
+  // If updating slug, check if it already exists for another term
+  if (termData.slug) {
+    const slugExists = await checkSlugExists(termData.slug, id);
+    
+    if (slugExists) {
+      throw new Error(`A glossary term with the slug "${termData.slug}" already exists`);
+    }
+  }
+  
   const { data, error } = await supabase
     .from('glossary_terms')
     .update(termData)
@@ -139,4 +178,24 @@ export async function generateSlugFromTerm(term: string): Promise<string> {
   }
 
   return data as string;
+}
+
+/**
+ * Generate a unique slug from a term
+ * If the generated slug already exists, append a number
+ */
+export async function generateUniqueSlug(term: string, existingId?: string): Promise<string> {
+  let baseSlug = await generateSlugFromTerm(term);
+  let slug = baseSlug;
+  let counter = 1;
+  
+  // Keep checking if the slug exists and appending a number until we find a unique slug
+  let slugExists = await checkSlugExists(slug, existingId);
+  while (slugExists) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+    slugExists = await checkSlugExists(slug, existingId);
+  }
+  
+  return slug;
 }

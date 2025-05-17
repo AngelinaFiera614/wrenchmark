@@ -12,4 +12,6 @@ export interface GlossaryTerm {
   updated_at: string;
 }
 
-export type GlossaryFormValues = Omit<GlossaryTerm, 'id' | 'created_at' | 'updated_at'>;
+export type GlossaryFormValues = Omit<GlossaryTerm, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string; // Make ID optional for when editing
+};

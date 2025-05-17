@@ -27,9 +27,11 @@ export function GlossaryForm({
   availableTerms,
   onCancel,
 }: GlossaryFormProps) {
-  const form = useForm<GlossaryFormValues>({
+  // Include ID in the form values when editing
+  const form = useForm<GlossaryFormValues & { id?: string }>({
     resolver: zodResolver(glossarySchema),
     defaultValues: {
+      id: term?.id, // Include the ID when editing
       term: term?.term || '',
       slug: term?.slug || '',
       definition: term?.definition || '',

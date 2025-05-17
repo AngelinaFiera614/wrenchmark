@@ -3,6 +3,7 @@ import * as z from "zod";
 
 // Form schema
 export const glossarySchema = z.object({
+  id: z.string().optional(), // Add optional ID field for editing
   term: z.string().min(1, "Term is required"),
   slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9\-]+$/, {
     message: "Slug can only contain lowercase letters, numbers, and hyphens"
