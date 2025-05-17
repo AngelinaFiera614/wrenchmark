@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { GlossaryTerm } from "@/types/glossary";
 import {
   Card,
@@ -14,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash, Search, ImageOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { useSearchFilter } from "@/hooks/useSearchFilter";
 
 interface AdminGlossaryListProps {
   terms: GlossaryTerm[];
@@ -26,11 +26,11 @@ export function AdminGlossaryList({
   onEdit,
   onDelete,
 }: AdminGlossaryListProps) {
-  const [search, setSearch] = useState("");
+  const { searchTerm, handleSearchChange } = useSearchFilter();
   
   const filteredTerms = terms.filter((term) =>
-    term.term.toLowerCase().includes(search.toLowerCase()) ||
-    term.definition.toLowerCase().includes(search.toLowerCase())
+    term.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    term.definition.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -39,8 +39,8 @@ export function AdminGlossaryList({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search terms..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchTerm}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="pl-10"
         />
       </div>
@@ -111,8 +111,8 @@ export function AdminGlossaryList({
         </div>
       ) : (
         <div className="text-center p-8 border rounded-md">
-          {search ? (
-            <p>No terms matching "{search}"</p>
+          {searchTerm ? (
+            <p>No terms matching "{searchTerm}"</p>
           ) : (
             <p>No terms in the glossary yet</p>
           )}
