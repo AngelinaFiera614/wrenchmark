@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import { Brand } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandFormValues } from "./BrandFormSchema";
 import BrandForm from "./BrandForm";
+import { useAuth } from "@/context/AuthContext";
 
 interface AdminBrandDialogProps {
   open: boolean;
@@ -25,11 +26,51 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
   onClose 
 }) => {
   const { toast } = useToast();
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const { user, isAdmin } = useAuth();
+  
+  // Clear any existing timeout when component unmounts or dialog closes
+  useEffect(() => {
+    return () => {
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+      }
+    };
+  }, [saveTimeout]);
+  
+  // Clear timeout when dialog closes
+  useEffect(() => {
+    if (!open && saveTimeout) {
+      clearTimeout(saveTimeout);
+      setSaveTimeout(null);
+    }
+  }, [open, saveTimeout]);
   
   const handleSubmit = async (values: BrandFormValues) => {
     setLoading(true);
+    
+    // Create a timeout to detect if the save operation is taking too long
+    const timeout = setTimeout(() => {
+      console.error("Brand save operation timed out after 10 seconds");
+      setLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Save operation timed out",
+        description: "The operation took too long. Please try again and check your connection.",
+      });
+    }, 10000); // 10 second timeout
+    
+    setSaveTimeout(timeout);
+    
     try {
+      // Log authentication state
+      console.log("Auth state during save:", { 
+        isLoggedIn: !!user, 
+        userId: user?.id,
+        isAdmin,
+      });
+      
       console.log("Submitting brand data:", values);
       
       // Clean data before sending to database
@@ -58,11 +99,15 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
       if (brand) {
         // Update existing brand
         console.log("Updating existing brand with ID:", brand.id);
+        const startTime = Date.now();
+        
         response = await supabase
           .from('brands')
           .update(brandData)
           .eq('id', brand.id);
           
+        console.log(`Update operation took ${Date.now() - startTime}ms`);
+        
         if (response.error) {
           console.error("Supabase update error:", response.error);
           throw response.error;
@@ -77,10 +122,14 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
       } else {
         // Create new brand
         console.log("Creating new brand");
+        const startTime = Date.now();
+        
         response = await supabase
           .from('brands')
           .insert([brandData]);
           
+        console.log(`Insert operation took ${Date.now() - startTime}ms`);
+        
         if (response.error) {
           console.error("Supabase insert error:", response.error);
           throw response.error;
@@ -94,16 +143,50 @@ const AdminBrandDialog: React.FC<AdminBrandDialogProps> = ({
         });
       }
       
+      // Clear the timeout since the operation completed successfully
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+        setSaveTimeout(null);
+      }
+      
       // Close dialog and refresh data
       onClose(true); 
       
     } catch (error: any) {
+      // Clear the timeout if there's an error
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+        setSaveTimeout(null);
+      }
+      
       console.error("Error saving brand:", error);
-      toast({
-        variant: "destructive",
-        title: "Error saving brand",
-        description: error.message || "Failed to save brand. Please try again.",
-      });
+      
+      // Provide more specific error messages based on error type
+      if (error.code === "PGRST301") {
+        toast({
+          variant: "destructive",
+          title: "Permission denied",
+          description: "You don't have permission to perform this action. Please verify you're logged in as an admin.",
+        });
+      } else if (error.code === "23505") {
+        toast({
+          variant: "destructive",
+          title: "Duplicate entry",
+          description: "A brand with this slug already exists. Please use a unique slug.",
+        });
+      } else if (error.message && error.message.includes("JWT")) {
+        toast({
+          variant: "destructive",
+          title: "Authentication error",
+          description: "Your session may have expired. Please refresh the page and log in again.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error saving brand",
+          description: error.message || "Failed to save brand. Please try again.",
+        });
+      }
     } finally {
       setLoading(false);
     }
