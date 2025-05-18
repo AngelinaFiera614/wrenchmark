@@ -218,12 +218,14 @@ export async function createQuizForLesson(quiz: {
   passing_score: number;
   questions: QuizQuestion[];
 }): Promise<LessonQuiz> {
+  // Convert QuizQuestion[] to JSON-compatible object for Supabase
   const { data, error } = await supabase
     .from("lesson_quizzes")
     .insert({
       lesson_id: quiz.lesson_id,
       passing_score: quiz.passing_score,
-      questions: quiz.questions
+      // Explicitly cast questions to a JSON-compatible format
+      questions: quiz.questions as any
     })
     .select()
     .single();
@@ -245,12 +247,14 @@ export async function updateQuiz(id: string, updates: {
   questions?: QuizQuestion[];
   lesson_id: string;
 }): Promise<LessonQuiz> {
+  // Create an updates object that only includes properties that are provided
+  const updateData: any = { lesson_id: updates.lesson_id };
+  if (updates.passing_score !== undefined) updateData.passing_score = updates.passing_score;
+  if (updates.questions !== undefined) updateData.questions = updates.questions as any;
+
   const { data, error } = await supabase
     .from("lesson_quizzes")
-    .update({
-      passing_score: updates.passing_score,
-      questions: updates.questions
-    })
+    .update(updateData)
     .eq("id", id)
     .select()
     .single();

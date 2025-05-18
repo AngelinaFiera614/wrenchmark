@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Skill, UserSkill } from "@/types/course";
 
@@ -35,9 +34,14 @@ export async function getSkillById(id: string): Promise<Skill | null> {
 }
 
 export async function createSkill(skill: Partial<Skill>): Promise<Skill> {
+  // Ensure required properties are present
+  if (!skill.name) {
+    throw new Error("Skill name is required");
+  }
+
   const { data, error } = await supabase
     .from("skills")
-    .insert([skill])
+    .insert(skill)
     .select()
     .single();
 
@@ -86,7 +90,15 @@ export async function getUserSkills(): Promise<UserSkill[]> {
     throw error;
   }
 
-  return data || [];
+  // Transform the returned data to match UserSkill interface
+  return (data || []).map(item => ({
+    skill_id: item.skill_id,
+    level: item.level,
+    updated_at: new Date().toISOString(), // Set a default value for updated_at
+    skill_name: item.skill_name,
+    skill_category: item.skill_category,
+    skill_icon: item.skill_icon
+  }));
 }
 
 export async function associateSkillWithLesson(

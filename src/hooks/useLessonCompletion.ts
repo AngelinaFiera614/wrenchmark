@@ -20,7 +20,7 @@ export const useLessonCompletion = (courseId: string) => {
         setLoading(true);
         
         // Fixed approach: First get lesson IDs belonging to course
-        const { data: lessonIds, error: lessonError } = await supabase
+        const { data: lessonData, error: lessonError } = await supabase
           .from('lessons')
           .select('id')
           .eq('course_id', courseId);
@@ -31,8 +31,8 @@ export const useLessonCompletion = (courseId: string) => {
         }
         
         // Then fetch progress for those lessons
-        if (lessonIds && lessonIds.length > 0) {
-          const lessonIdArray = lessonIds.map(item => item.id);
+        if (lessonData && lessonData.length > 0) {
+          const lessonIdArray = lessonData.map(item => item.id);
           
           const { data: progressData, error: progressError } = await supabase
             .from('user_progress')
