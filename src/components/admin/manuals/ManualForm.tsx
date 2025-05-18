@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { manualTypes, formSchema, type ManualFormValues } from './ManualFormSchema';
 import FileUploadField from './FileUploadField';
+import { Badge } from '@/components/ui/badge';
 
 interface ManualFormProps {
   defaultValues: Partial<ManualFormValues>;
@@ -27,11 +28,35 @@ const ManualForm: React.FC<ManualFormProps> = ({ defaultValues, onSubmit, onCanc
       model: defaultValues.model || '',
       year: defaultValues.year || new Date().getFullYear(),
       file: undefined,
+      tags: defaultValues.tags || [],
     },
   });
 
+  const [tagInput, setTagInput] = React.useState('');
+
   const handleSubmit = async (values: ManualFormValues) => {
     await onSubmit(values);
+  };
+
+  const addTag = () => {
+    const trimmedTag = tagInput.trim();
+    if (trimmedTag && !form.getValues('tags')?.includes(trimmedTag)) {
+      const currentTags = form.getValues('tags') || [];
+      form.setValue('tags', [...currentTags, trimmedTag]);
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    const currentTags = form.getValues('tags') || [];
+    form.setValue('tags', currentTags.filter(t => t !== tag));
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
   };
 
   return (
@@ -129,6 +154,52 @@ const ManualForm: React.FC<ManualFormProps> = ({ defaultValues, onSubmit, onCanc
         />
 
         <FileUploadField name="file" label="PDF File" />
+
+        {/* Tags Field */}
+        <FormField
+          control={form.control}
+          name="tags"
+          render={() => (
+            <FormItem>
+              <FormLabel>Tags</FormLabel>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {form.watch('tags')?.map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    variant="outline"
+                    className="bg-accent-teal/10 text-accent-teal border-accent-teal/20 flex items-center gap-1"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="ml-1 rounded-full hover:bg-accent-teal/20 p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add a tag (e.g., owner, service, english)"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                  className="flex-1"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={addTag}
+                >
+                  Add
+                </Button>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="outline" type="button" onClick={onCancel}>
