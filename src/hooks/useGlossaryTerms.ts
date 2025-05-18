@@ -1,19 +1,49 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchGlossaryTerms, fetchGlossaryTermBySlug, generateUniqueSlug } from "@/services/glossaryService";
+import { fetchGlossaryTerms, fetchGlossaryTermBySlug, generateUniqueSlug, deleteTerm } from "@/services/glossaryService";
 import { useState } from "react";
 import { checkSlugExists } from "@/services/glossaryService";
+import { GlossaryTerm } from "@/types/glossary";
 
 export function useGlossaryTerms() {
+  const [search, setSearch] = useState<string>("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  
   const { data, isLoading, error } = useQuery({
     queryKey: ["glossaryTerms"],
     queryFn: fetchGlossaryTerms
   });
 
+  // Get all unique categories from terms
+  const categories = data 
+    ? [...new Set(data.flatMap(term => term.category || []))].sort()
+    : [];
+
+  const terms = data || [];
+
+  // Filter terms based on search and categories
+  const filteredTerms = terms.filter(term => {
+    const matchesSearch = !search || 
+      term.term.toLowerCase().includes(search.toLowerCase()) ||
+      term.definition.toLowerCase().includes(search.toLowerCase());
+
+    const matchesCategories = selectedCategories.length === 0 || 
+      (term.category && term.category.some(cat => selectedCategories.includes(cat)));
+
+    return matchesSearch && matchesCategories;
+  });
+
   return {
-    terms: data || [],
+    terms: filteredTerms,
+    allTerms: terms,
     isLoading,
-    error
+    error,
+    search,
+    setSearch,
+    categories,
+    selectedCategories,
+    setSelectedCategories,
+    deleteTerm
   };
 }
 

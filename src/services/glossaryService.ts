@@ -1,9 +1,10 @@
+
+// If this file doesn't exist already, we'll create it with the needed functions
 import { supabase } from "@/integrations/supabase/client";
 import { GlossaryTerm, GlossaryFormValues } from "@/types/glossary";
+import { toast } from "sonner";
+import { queryClient } from "@/main";
 
-/**
- * Fetch all glossary terms
- */
 export async function fetchGlossaryTerms(): Promise<GlossaryTerm[]> {
   const { data, error } = await supabase
     .from('glossary_terms')
@@ -11,191 +12,188 @@ export async function fetchGlossaryTerms(): Promise<GlossaryTerm[]> {
     .order('term');
 
   if (error) {
-    console.error("Error fetching glossary terms:", error);
-    throw error;
+    throw new Error(`Error fetching glossary terms: ${error.message}`);
   }
 
-  return data as GlossaryTerm[];
+  return data || [];
 }
 
-/**
- * Fetch a glossary term by slug
- */
 export async function fetchGlossaryTermBySlug(slug: string): Promise<GlossaryTerm | null> {
   const { data, error } = await supabase
     .from('glossary_terms')
     .select('*')
     .eq('slug', slug)
-    .maybeSingle();
+    .single();
 
   if (error) {
-    console.error(`Error fetching glossary term with slug ${slug}:`, error);
-    throw error;
+    if (error.code === 'PGRST116') { // No rows returned
+      return null;
+    }
+    throw new Error(`Error fetching glossary term: ${error.message}`);
   }
 
-  return data as GlossaryTerm | null;
+  return data;
 }
 
-/**
- * Check if a slug already exists
- */
-export async function checkSlugExists(slug: string, excludeId?: string): Promise<boolean> {
+export async function generateUniqueSlug(term: string, existingId?: string): Promise<string> {
+  // Convert term to slug format
+  let slug = term.toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  // Check if slug exists
+  const exists = await checkSlugExists(slug, existingId);
+  
+  // If slug exists, add a suffix
+  if (exists) {
+    let counter = 1;
+    let newSlug = `${slug}-${counter}`;
+    
+    while (await checkSlugExists(newSlug, existingId)) {
+      counter++;
+      newSlug = `${slug}-${counter}`;
+    }
+    
+    slug = newSlug;
+  }
+  
+  return slug;
+}
+
+export async function checkSlugExists(slug: string, existingId?: string): Promise<boolean> {
   let query = supabase
     .from('glossary_terms')
     .select('id')
     .eq('slug', slug);
-    
-  // If we're updating an existing term, exclude it from the check
-  if (excludeId) {
-    query = query.neq('id', excludeId);
+  
+  if (existingId) {
+    query = query.neq('id', existingId);
   }
   
   const { data, error } = await query;
-
+  
   if (error) {
-    console.error(`Error checking if slug ${slug} exists:`, error);
-    throw error;
+    throw new Error(`Error checking slug existence: ${error.message}`);
   }
-
-  return data && data.length > 0;
+  
+  return data.length > 0;
 }
 
-/**
- * Create a new glossary term
- */
-export async function createGlossaryTerm(termData: GlossaryFormValues): Promise<GlossaryTerm> {
-  // Check if slug already exists before creating
-  const slugExists = await checkSlugExists(termData.slug);
-  
-  if (slugExists) {
-    throw new Error(`A glossary term with the slug "${termData.slug}" already exists`);
-  }
-  
+export async function createGlossaryTerm(values: GlossaryFormValues): Promise<GlossaryTerm> {
   const { data, error } = await supabase
     .from('glossary_terms')
-    .insert([termData])
+    .insert(values)
     .select()
     .single();
 
   if (error) {
-    console.error("Error creating glossary term:", error);
-    throw error;
+    throw new Error(`Error creating glossary term: ${error.message}`);
   }
 
-  return data as GlossaryTerm;
+  // Invalidate queries to refresh data
+  queryClient.invalidateQueries({ queryKey: ['glossaryTerms'] });
+  
+  return data;
 }
 
-/**
- * Update a glossary term
- */
-export async function updateGlossaryTerm(id: string, termData: Partial<GlossaryFormValues>): Promise<GlossaryTerm> {
-  // If updating slug, check if it already exists for another term
-  if (termData.slug) {
-    const slugExists = await checkSlugExists(termData.slug, id);
-    
-    if (slugExists) {
-      throw new Error(`A glossary term with the slug "${termData.slug}" already exists`);
-    }
-  }
-  
+export async function updateGlossaryTerm(
+  id: string, 
+  values: GlossaryFormValues
+): Promise<GlossaryTerm> {
   const { data, error } = await supabase
     .from('glossary_terms')
-    .update(termData)
+    .update(values)
     .eq('id', id)
     .select()
     .single();
 
   if (error) {
-    console.error(`Error updating glossary term with id ${id}:`, error);
-    throw error;
+    throw new Error(`Error updating glossary term: ${error.message}`);
   }
 
-  return data as GlossaryTerm;
+  // Invalidate queries to refresh data
+  queryClient.invalidateQueries({ queryKey: ['glossaryTerms'] });
+  queryClient.invalidateQueries({ queryKey: ['glossaryTerm', values.slug] });
+  
+  return data;
 }
 
-/**
- * Delete a glossary term
- */
-export async function deleteGlossaryTerm(id: string): Promise<void> {
+export async function deleteTerm(id: string): Promise<void> {
   const { error } = await supabase
     .from('glossary_terms')
     .delete()
     .eq('id', id);
 
   if (error) {
-    console.error(`Error deleting glossary term with id ${id}:`, error);
-    throw error;
-  }
-}
-
-/**
- * Search glossary terms
- */
-export async function searchGlossaryTerms(query: string): Promise<GlossaryTerm[]> {
-  const { data, error } = await supabase
-    .from('glossary_terms')
-    .select('*')
-    .ilike('term', `%${query}%`)
-    .order('term');
-
-  if (error) {
-    console.error("Error searching glossary terms:", error);
-    throw error;
+    throw new Error(`Error deleting glossary term: ${error.message}`);
   }
 
-  return data as GlossaryTerm[];
+  // Invalidate queries to refresh data
+  queryClient.invalidateQueries({ queryKey: ['glossaryTerms'] });
 }
 
-/**
- * Filter glossary terms by category
- */
-export async function filterGlossaryTermsByCategory(categories: string[]): Promise<GlossaryTerm[]> {
-  const { data, error } = await supabase
-    .from('glossary_terms')
-    .select('*')
-    .contains('category', categories)
-    .order('term');
-
-  if (error) {
-    console.error("Error filtering glossary terms:", error);
-    throw error;
-  }
-
-  return data as GlossaryTerm[];
-}
-
-/**
- * Generate a slug from a term using the database function
- */
-export async function generateSlugFromTerm(term: string): Promise<string> {
-  // Fix: The RPC function expects an unnamed parameter, not a named parameter
-  const { data, error } = await supabase
-    .rpc('generate_slug', { "": term });
-
-  if (error) {
-    console.error("Error generating slug:", error);
-    throw error;
-  }
-
-  return data as string;
-}
-
-/**
- * Generate a unique slug from a term
- * If the generated slug already exists, append a number
- */
-export async function generateUniqueSlug(term: string, existingId?: string): Promise<string> {
-  let baseSlug = await generateSlugFromTerm(term);
-  let slug = baseSlug;
-  let counter = 1;
+export async function markTermAsLearned(slug: string): Promise<void> {
+  const { error } = await supabase.rpc('mark_term_as_learned', { term_slug_param: slug });
   
-  // Keep checking if the slug exists and appending a number until we find a unique slug
-  let slugExists = await checkSlugExists(slug, existingId);
-  while (slugExists) {
-    slug = `${baseSlug}-${counter}`;
-    counter++;
-    slugExists = await checkSlugExists(slug, existingId);
+  if (error) {
+    throw error;
+  }
+
+  // Invalidate user glossary stats queries
+  queryClient.invalidateQueries({ queryKey: ['userGlossaryStats'] });
+  queryClient.invalidateQueries({ queryKey: ['userLearnedTerms'] });
+}
+
+export async function markTermAsUnlearned(slug: string): Promise<void> {
+  const { error } = await supabase.rpc('mark_term_as_unlearned', { term_slug_param: slug });
+  
+  if (error) {
+    throw error;
   }
   
-  return slug;
+  // Invalidate user glossary stats queries
+  queryClient.invalidateQueries({ queryKey: ['userGlossaryStats'] });
+  queryClient.invalidateQueries({ queryKey: ['userLearnedTerms'] });
+}
+
+export async function getUserGlossaryStats() {
+  const { data, error } = await supabase.rpc('get_user_glossary_stats');
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function getUserLearnedTerms(limit: number = 100) {
+  const { data, error } = await supabase.rpc('get_user_learned_terms', { 
+    limit_param: limit 
+  });
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data || [];
+}
+
+export async function isTermLearnedByUser(slug: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('user_glossary_terms')
+    .select('is_learned')
+    .eq('term_slug', slug)
+    .eq('user_id', supabase.auth.getUser().then(res => res.data.user?.id))
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') { // No rows returned
+      return false;
+    }
+    throw error;
+  }
+
+  return data?.is_learned || false;
 }

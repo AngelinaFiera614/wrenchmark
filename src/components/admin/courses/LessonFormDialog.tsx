@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -13,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { createLesson, updateLesson } from '@/services/lessonService';
 import { queryClient } from '@/main';
 import LessonGlossaryTermsField from './LessonGlossaryTermsField';
+import { cn } from '@/lib/utils';
 
 const lessonFormSchema = z.object({
   title: z.string().min(1, "Title is required"),

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getLessonsByCourseId, deleteLesson } from "@/services/lessonService";
@@ -123,15 +122,12 @@ const AdminLessons: React.FC = () => {
   };
 
   // Handle lesson creation/edit
-  const handleLessonFormSuccess = (lesson: Lesson, isNew: boolean) => {
-    if (isNew) {
-      setLessons([...lessons, lesson].sort((a, b) => a.order - b.order));
-    } else {
-      setLessons(
-        lessons
-          .map((l) => (l.id === lesson.id ? lesson : l))
-          .sort((a, b) => a.order - b.order)
-      );
+  const handleLessonFormSuccess = () => {
+    // Load lessons after a successful operation
+    if (courseId) {
+      getLessonsByCourseId(courseId).then(lessonsData => {
+        setLessons(lessonsData.sort((a, b) => a.order - b.order));
+      });
     }
     setIsLessonDialogOpen(false);
     setEditLesson(null);
