@@ -10,6 +10,7 @@ import { importManual } from '@/services/manuals';
 import { toast } from 'sonner';
 import { ManualType } from '@/types';
 import { ManualWithMotorcycle } from '@/services/manuals/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ImportItem extends BucketFile {
   status: "pending" | "processing" | "success" | "error";
@@ -40,6 +41,12 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
 
   const handleSelectFiles = (files: BucketFile[]) => {
     setSelectedFiles(files);
+  };
+
+  // Required by ManualBucketBrowser props, but not used when in multiSelect mode
+  const handleSelectSingleFile = (file: BucketFile) => {
+    // This function is required by the component props but we don't need it
+    // when using multiSelect mode, as we're using onSelectMultiple instead
   };
 
   const handlePrepareImport = () => {
@@ -211,6 +218,7 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
             <>
               <ManualBucketBrowser 
                 onSelectMultiple={handleSelectFiles}
+                onSelect={handleSelectSingleFile}
                 multiSelect={true} 
               />
               
@@ -341,10 +349,16 @@ const BatchImportDialog: React.FC<BatchImportDialogProps> = ({
                               <>
                                 <X className="h-4 w-4 mr-2 text-red-500" />
                                 <span className="text-red-500">Error</span>
-                                <AlertCircle 
-                                  className="h-4 w-4 ml-1 text-red-500 cursor-help"
-                                  title={item.errorMessage}
-                                />
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <AlertCircle className="h-4 w-4 ml-1 text-red-500 cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {item.errorMessage || 'Unknown error'}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </>
                             )}
                           </div>
