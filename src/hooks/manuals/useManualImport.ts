@@ -1,100 +1,91 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services/motorcycleService';
+import { useManualBucket } from '@/hooks/useManualBucket';
+import { useToast } from '@/hooks/use-toast';
 import { importManual } from '@/services/manuals';
-import { associateTagsWithManual, getOrCreateTagsByNames } from '@/services/manuals/tags';
-import { ImportManualFormValues } from '@/components/admin/manuals/ImportManualForm';
 import { ManualWithMotorcycle } from '@/services/manuals/types';
+import { ImportManualFormValues } from '@/components/admin/manuals/ImportManualFormSchema';
 
 export interface UseManualImportProps {
   onOpenChange: (open: boolean) => void;
   onSaveSuccess: (savedManual: ManualWithMotorcycle) => void;
 }
 
-export const useManualImport = ({
-  onOpenChange,
-  onSaveSuccess
-}: UseManualImportProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+export interface UseManualImportResult {
+  handleImport: (values: ImportManualFormValues) => Promise<void>;
+  isSubmitting: boolean;
+}
+
+export const useManualImport = ({ 
+  onOpenChange, 
+  onSaveSuccess 
+}: UseManualImportProps): UseManualImportResult => {
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const { getMotorcycleId } = useManualBucket();
+  const { toast } = useToast();
 
   const handleImport = async (values: ImportManualFormValues) => {
     try {
       setIsSubmitting(true);
-      console.log("Handling manual import:", values);
+      console.log("Starting manual import process with values:", values);
 
-      // Check if motorcycle exists or create a placeholder
-      console.log(`Looking up motorcycle: ${values.make} ${values.model} ${values.year}`);
-      let motorcycle = await findMotorcycleByDetails(values.make, values.model, values.year);
-
-      if (!motorcycle) {
-        // Create a placeholder motorcycle
-        console.log(`Creating placeholder motorcycle for: ${values.make} ${values.model} ${values.year}`);
-        motorcycle = await createPlaceholderMotorcycle({
-          make: values.make,
-          model: values.model,
-          year: values.year,
+      // Get motorcycle ID from make, model, year
+      const motorcycleId = await getMotorcycleId(
+        values.make, 
+        values.model,
+        values.year
+      );
+      
+      if (!motorcycleId) {
+        console.error("Failed to find or create motorcycle record");
+        toast({
+          title: 'Import Failed',
+          description: 'Could not associate manual with a motorcycle',
+          variant: 'destructive',
         });
-        
-        console.log("Created placeholder motorcycle:", motorcycle);
-        toast.success(`Created placeholder motorcycle for ${values.make} ${values.model} ${values.year}`);
-      } else {
-        console.log("Found existing motorcycle:", motorcycle);
+        return;
       }
-
-      // Check for tags
-      const tags = values.tags || [];
-      console.log("Tags for imported manual:", tags);
-
+      
+      console.log("Importing manual for motorcycle ID:", motorcycleId);
+      
       // Prepare manual data
-      const manualData = {
+      const importData = {
         title: values.title,
         manual_type: values.manual_type,
-        motorcycle_id: motorcycle.id,
-        year: values.year,
-        file_size_mb: values.file_size_mb || undefined,
+        motorcycle_id: motorcycleId,
         file_url: values.file_url,
         file_name: values.file_name,
-        tags: tags
+        file_size_mb: values.file_size_mb,
+        year: values.year,
+        tags: values.tags
       };
       
-      console.log("Importing manual with data:", manualData);
-      
       // Import the manual
-      const importResult = await importManual(manualData);
+      const importedManual = await importManual(importData);
+      console.log("Manual imported successfully:", importedManual);
       
-      if (!importResult) {
-        throw new Error('Failed to import manual file');
-      }
-
-      console.log("Manual imported successfully:", importResult);
-      toast.success('Manual imported successfully');
-      
-      onOpenChange(false);
-      onSaveSuccess({
-        ...importResult,
-        motorcycle_name: `${values.make} ${values.model} ${values.year}`
+      // Success!
+      toast({
+        title: 'Manual Imported',
+        description: 'The manual was successfully imported',
       });
-
-      // Navigate to the motorcycle detail page
-      setTimeout(() => {
-        navigate(`/motorcycles/${motorcycle!.id}`);
-      }, 500);
       
-      return importResult;
+      onSaveSuccess(importedManual);
+      onOpenChange(false);
     } catch (error) {
-      console.error('Error importing manual:', error);
-      toast.error(`Failed to import manual: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
+      console.error("Error in handleImport:", error);
+      toast({
+        title: 'Import Failed',
+        description: error instanceof Error ? error.message : 'Failed to import manual',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return {
-    handleImport,
-    isSubmitting
+  return { 
+    handleImport, 
+    isSubmitting 
   };
 };

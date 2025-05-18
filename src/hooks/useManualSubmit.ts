@@ -2,7 +2,7 @@
 import { useManualFormSubmit, UseManualFormSubmitProps } from './manuals/useManualFormSubmit';
 import { useManualImport, UseManualImportProps } from './manuals/useManualImport';
 import { ManualFormValues } from '@/components/admin/manuals/ManualFormSchema';
-import { ImportManualFormValues } from '@/components/admin/manuals/ImportManualForm';
+import { ImportManualFormValues } from '@/components/admin/manuals/ImportManualFormSchema';
 import { ManualWithMotorcycle } from '@/services/manuals/types';
 
 export interface UseManualSubmitProps {
