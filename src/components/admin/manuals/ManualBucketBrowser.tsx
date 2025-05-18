@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useManualBucket } from '@/hooks/useManualBucket';
-import { Loader2, Search, File } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { formatFileSize } from '@/utils/formatters';
+import FileSearchBar from './bucket-browser/FileSearchBar';
+import FileSelectionHeader from './bucket-browser/FileSelectionHeader';
+import FilesGrid from './bucket-browser/FilesGrid';
+import LoadingState from './bucket-browser/LoadingState';
+import ErrorState from './bucket-browser/ErrorState';
+import EmptyState from './bucket-browser/EmptyState';
 
 export interface BucketFile {
   name: string;
@@ -83,113 +83,37 @@ const ManualBucketBrowser: React.FC<ManualBucketBrowserProps> = ({
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-accent-teal" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">Error: {error}</p>
-        <Button 
-          onClick={() => fetchManualFiles()} 
-          variant="outline" 
-          className="mt-2"
-        >
-          Retry
-        </Button>
-      </div>
-    );
+    return <ErrorState error={error} onRetry={fetchManualFiles} />;
   }
 
   if (filteredFiles.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <File className="mx-auto h-12 w-12 text-muted-foreground opacity-30 mb-3" />
-        <h3 className="text-lg font-medium">No files found</h3>
-        <p className="text-muted-foreground mb-4">
-          {searchTerm ? 'No files match your search.' : 'No files in the manuals bucket.'}
-        </p>
-        <Button onClick={() => fetchManualFiles()} variant="outline">
-          Refresh
-        </Button>
-      </div>
-    );
+    return <EmptyState searchTerm={searchTerm} onRefresh={fetchManualFiles} />;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search files..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1"
-        />
-        <Button 
-          onClick={() => fetchManualFiles()}
-          variant="outline"
-          size="sm"
-        >
-          Refresh
-        </Button>
-      </div>
+      <FileSearchBar 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onRefresh={fetchManualFiles}
+      />
 
-      {multiSelect && (
-        <div className="flex items-center space-x-2 py-2">
-          <Checkbox 
-            id="select-all"
-            checked={selectedFiles.length > 0 && selectedFiles.length === filteredFiles.length}
-            onCheckedChange={(checked) => handleToggleAll(!!checked)}
-          />
-          <label htmlFor="select-all" className="text-sm font-medium">
-            Select all ({filteredFiles.length})
-          </label>
-          {selectedFiles.length > 0 && (
-            <span className="text-muted-foreground text-sm">
-              {selectedFiles.length} selected
-            </span>
-          )}
-        </div>
-      )}
+      <FileSelectionHeader
+        multiSelect={multiSelect}
+        filteredFiles={filteredFiles}
+        selectedFiles={selectedFiles}
+        onToggleAll={handleToggleAll}
+      />
 
-      <div className="grid gap-2 max-h-80 overflow-y-auto">
-        {filteredFiles.map((file) => (
-          <Card
-            key={file.id}
-            className={`p-3 flex items-center cursor-pointer hover:bg-accent/5 ${
-              file.selected ? 'border-accent-teal bg-accent/10' : ''
-            }`}
-            onClick={() => handleSelectFile(file)}
-          >
-            {multiSelect && (
-              <Checkbox
-                checked={file.selected}
-                className="mr-2"
-                onCheckedChange={(checked) => {
-                  if (checked !== file.selected) {
-                    handleSelectFile(file);
-                  }
-                }}
-                onClick={(e) => e.stopPropagation()}
-              />
-            )}
-            <File className="h-4 w-4 mr-2 flex-shrink-0" />
-            <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-sm font-medium truncate">{file.name}</span>
-              <div className="flex text-xs text-muted-foreground">
-                <span>{formatFileSize(file.size)}</span>
-                <span className="mx-1">•</span>
-                <span>{new Date(file.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <FilesGrid 
+        files={filteredFiles}
+        multiSelect={multiSelect}
+        onFileSelect={handleSelectFile}
+      />
     </div>
   );
 };
