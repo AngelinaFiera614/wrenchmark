@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminSidebar } from "./AdminSidebar";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth";
 
 export function AdminHeader() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

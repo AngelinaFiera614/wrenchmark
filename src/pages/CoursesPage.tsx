@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth";
 import { getCoursesWithProgress } from "@/services/courseService";
 import { CourseWithProgress } from "@/types/course";
 import { toast } from "sonner";

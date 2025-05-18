@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth";
 import { GlossaryTerm } from "@/types/glossary";
 import { GlossaryDialogHeader } from "./dialog/DialogHeader";
 import { FormContainer } from "./dialog/FormContainer";

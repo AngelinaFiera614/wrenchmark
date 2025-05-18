@@ -1,134 +1,51 @@
 
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { 
-  markTermAsLearned,
-  markTermAsUnlearned,
-  getUserGlossaryStats,
-  getUserLearnedTerms,
-  isTermLearnedByUser
-} from "@/services/glossary/learningService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/context/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+type ToggleLearnedParams = {
+  slug: string;
+  isLearned: boolean;
+};
 
 export function useGlossaryLearning() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get the learning status of a specific term for the current user
-  const useTermLearningStatus = (slug: string) => {
-    const { data, isLoading } = useQuery({
-      queryKey: ["termLearningStatus", slug, user?.id],
-      queryFn: async () => {
-        if (!user) return null;
-        
-        const isLearned = await isTermLearnedByUser(slug);
-        return { is_learned: isLearned };
-      },
-      enabled: !!user && !!slug
-    });
-
-    return {
-      isLearned: data?.is_learned || false,
-      learnedAt: null, // Note: Current implementation doesn't return learnedAt
-      isLoading
-    };
-  };
-
-  // Toggle a term's learned status
   const toggleTermLearned = useMutation({
-    mutationFn: async ({ 
-      slug, 
-      isLearned 
-    }: { 
-      slug: string; 
-      isLearned: boolean;
-    }) => {
+    mutationFn: async ({ slug, isLearned }: ToggleLearnedParams) => {
       if (!user) throw new Error("User must be logged in");
-      
-      if (isLearned) {
-        await markTermAsLearned(slug);
-      } else {
-        await markTermAsUnlearned(slug);
-      }
-      
-      return true;
+
+      // Call the appropriate RPC function based on the target state
+      const { data, error } = await supabase.rpc(
+        isLearned ? 'mark_term_as_learned' : 'mark_term_as_unlearned',
+        { term_slug_param: slug }
+      );
+
+      if (error) throw error;
+      return data;
     },
     onSuccess: (_, variables) => {
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["termLearningStatus", variables.slug] });
-      queryClient.invalidateQueries({ queryKey: ["userGlossaryStats"] });
-      queryClient.invalidateQueries({ queryKey: ["userLearnedTerms"] });
+      queryClient.invalidateQueries({ queryKey: ['userLearnedTerms'] });
+      queryClient.invalidateQueries({ queryKey: ['glossaryTermStatus', variables.slug] });
+      queryClient.invalidateQueries({ queryKey: ['lessonTermsLearningStatus'] });
+      queryClient.invalidateQueries({ queryKey: ['glossaryStats'] });
       
-      toast({
-        title: variables.isLearned ? "Term marked as learned" : "Term marked as not learned",
-        description: `You've updated your learning status for this term.`,
-        duration: 3000
-      });
+      toast.success(
+        variables.isLearned 
+          ? "Term marked as learned" 
+          : "Term marked as not learned"
+      );
     },
     onError: (error) => {
-      toast({
-        title: "Error updating term status",
-        description: error.message,
-        variant: "destructive",
-        duration: 5000
-      });
+      console.error('Error toggling term learned status:', error);
+      toast.error("Failed to update term status");
     }
   });
 
-  // Get user's glossary stats
-  const useGlossaryStats = () => {
-    const { data, isLoading } = useQuery({
-      queryKey: ["userGlossaryStats", user?.id],
-      queryFn: async () => {
-        if (!user) return {
-          total_terms: 0,
-          learned_terms: 0,
-          learning_percentage: 0
-        };
-        
-        const statsResult = await getUserGlossaryStats();
-        // The function returns an array with a single object, so extract the first element
-        return statsResult[0] || {
-          total_terms: 0,
-          learned_terms: 0,
-          learning_percentage: 0
-        };
-      },
-      enabled: !!user
-    });
-
-    return {
-      totalTerms: data?.total_terms || 0,
-      learnedTerms: data?.learned_terms || 0,
-      percentage: data?.learning_percentage || 0,
-      isLoading
-    };
-  };
-
-  // Get user's recently learned terms
-  const useRecentlyLearnedTerms = (limit = 5) => {
-    const { data, isLoading } = useQuery({
-      queryKey: ["userLearnedTerms", user?.id, limit],
-      queryFn: async () => {
-        if (!user) return [];
-        
-        return await getUserLearnedTerms(limit);
-      },
-      enabled: !!user
-    });
-
-    return {
-      terms: data || [],
-      isLoading
-    };
-  };
-
   return {
-    useTermLearningStatus,
-    toggleTermLearned,
-    useGlossaryStats,
-    useRecentlyLearnedTerms,
-    isAuthenticated: !!user
+    toggleTermLearned
   };
 }

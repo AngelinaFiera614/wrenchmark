@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGlossaryLearning } from '@/hooks/useGlossaryLearning';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { GlossaryTerm } from '@/types/glossary';
