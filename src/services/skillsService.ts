@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Skill, UserSkill } from "@/types/course";
 
@@ -39,9 +40,17 @@ export async function createSkill(skill: Partial<Skill>): Promise<Skill> {
     throw new Error("Skill name is required");
   }
 
+  // Create a properly typed object to satisfy Supabase's type requirements
+  const skillToInsert = {
+    name: skill.name,
+    description: skill.description || null,
+    category: skill.category || null,
+    icon: skill.icon || null
+  };
+
   const { data, error } = await supabase
     .from("skills")
-    .insert(skill)
+    .insert(skillToInsert)
     .select()
     .single();
 

@@ -607,7 +607,7 @@ export type Database = {
         Returns: string
       }
       generate_lesson_slug: {
-        Args: { title_input: string }
+        Args: Record<PropertyKey, never> | { title_input: string }
         Returns: string
       }
       generate_slug: {
