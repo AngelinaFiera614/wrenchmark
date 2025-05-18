@@ -73,10 +73,10 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
         return [];
       }
       
-      // Extract tag IDs safely
+      // Extract tag IDs safely - Fix the null check here
       const tagIds = joinData
         .filter(item => item && typeof item === 'object' && 'tag_id' in item)
-        .map((item: any) => item.tag_id);
+        .map((item: any) => item?.tag_id);
       
       if (tagIds.length === 0) {
         return [];
