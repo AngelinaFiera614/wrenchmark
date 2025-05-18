@@ -8,7 +8,7 @@ import {
   Outlet
 } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/auth";
 import { ComparisonProvider } from "@/context/ComparisonContext";
 import { Layout } from "@/components/layout/Layout";
 import NotFound from "@/pages/NotFound";
