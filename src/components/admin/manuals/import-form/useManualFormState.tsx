@@ -7,12 +7,12 @@ import { useManualBucket } from '@/hooks/useManualBucket';
 import { BucketFile } from '../ManualBucketBrowser';
 import { toast } from 'sonner';
 
-export const useManualFormState = (
-  onSubmit: (values: ImportManualFormValues) => Promise<void>
-) => {
-  const [selectedFile, setSelectedFile] = useState<BucketFile | null>(null);
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export const useManualFormState = (selectedFile: BucketFile | undefined) => {
+  const [fileDetails, setFileDetails] = useState<any>(null);
+  const [fileName, setFileName] = useState<string>('');
+  const [fileSize, setFileSize] = useState<number>(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { parseFileDetails } = useManualBucket();
   
   const form = useForm<ImportManualFormValues>({
@@ -34,6 +34,9 @@ export const useManualFormState = (
   useEffect(() => {
     if (!selectedFile) return;
     
+    setIsProcessing(true);
+    setError(null);
+    
     try {
       console.log("Processing selected file:", selectedFile.name);
       
@@ -42,11 +45,10 @@ export const useManualFormState = (
       console.log(`File size: ${fileSizeMB.toFixed(2)} MB`);
       
       // Parse file name for motorcycle details
-      const { make, model, year, suggestedTags } = parseFileDetails(selectedFile.name);
-      console.log(`Parsed details: make=${make}, model=${model}, year=${year}, suggestedTags=${suggestedTags}`);
-      
-      // Set suggested tags for display
-      setSuggestedTags(suggestedTags || []);
+      const details = parseFileDetails(selectedFile.name);
+      setFileDetails(details);
+      setFileName(selectedFile.name);
+      setFileSize(parseFloat(fileSizeMB.toFixed(2)));
       
       // Generate a title from the file name
       const baseName = selectedFile.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
@@ -72,60 +74,33 @@ export const useManualFormState = (
       // Update form
       form.setValue('title', titleCase);
       form.setValue('manual_type', manualType as any);
-      form.setValue('make', make || '');
-      form.setValue('model', model || '');
-      if (year) {
-        form.setValue('year', year);
+      form.setValue('make', details?.make || '');
+      form.setValue('model', details?.model || '');
+      if (details?.year) {
+        form.setValue('year', details.year);
       }
       form.setValue('file_url', selectedFile.url);
       form.setValue('file_name', selectedFile.name);
       form.setValue('file_size_mb', parseFloat(fileSizeMB.toFixed(2)));
-      form.setValue('tags', suggestedTags || []);
+      form.setValue('tags', details?.suggestedTags || []);
+
     } catch (error) {
       console.error("Error processing selected file:", error);
+      setError("Failed to process the selected file");
       toast.error("Failed to process the selected file");
+    } finally {
+      setIsProcessing(false);
     }
   }, [selectedFile, form, parseFileDetails]);
 
-  const handleSubmit = async (values: ImportManualFormValues) => {
-    try {
-      setIsSubmitting(true);
-      console.log("Submitting form with values:", values);
-      await onSubmit(values);
-      setIsSubmitting(false);
-    } catch (error) {
-      console.error("Error submitting import form:", error);
-      toast.error("Failed to import manual");
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleFileSelect = (file: BucketFile) => {
-    console.log("File selected:", file.name);
-    setSelectedFile(file);
-  };
-
-  const addTag = (tag: string) => {
-    const currentTags = form.getValues('tags') || [];
-    if (!currentTags.includes(tag)) {
-      form.setValue('tags', [...currentTags, tag]);
-    }
-  };
-
-  const removeTag = (tag: string) => {
-    const currentTags = form.getValues('tags') || [];
-    form.setValue('tags', currentTags.filter(t => t !== tag));
-  };
-  
   return {
     form,
-    selectedFile,
-    suggestedTags,
-    isSubmitting,
-    handleSubmit: form.handleSubmit(handleSubmit),
-    handleFileSelect,
-    setSelectedFile,
-    addTag,
-    removeTag
+    fileDetails,
+    fileName,
+    fileSize,
+    isProcessing,
+    error
   };
 };
+
+export default useManualFormState;

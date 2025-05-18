@@ -10,10 +10,13 @@ import AdminManualsList from '@/components/admin/manuals/AdminManualsList';
 import DeleteManualDialog from '@/components/admin/manuals/DeleteManualDialog';
 import BatchImportDialog from '@/components/admin/manuals/BatchImportDialog';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const AdminManuals = () => {
   const [manuals, setManuals] = useState<ManualWithMotorcycle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentManual, setCurrentManual] = useState<ManualWithMotorcycle | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -24,10 +27,12 @@ const AdminManuals = () => {
   const loadManuals = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await getManuals();
       setManuals(data);
     } catch (error) {
       console.error('Error loading manuals:', error);
+      setError('Failed to load manuals. Please try again.');
       toast({
         title: 'Failed to load manuals',
         description: 'Please try again later',
@@ -104,6 +109,10 @@ const AdminManuals = () => {
     setBatchImportOpen(false);
   };
 
+  const handleRetry = () => {
+    loadManuals();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -119,9 +128,26 @@ const AdminManuals = () => {
         </Button>
       </div>
       
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error}
+            <Button 
+              variant="link" 
+              className="px-0 ml-2 text-sm" 
+              onClick={handleRetry}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {loading ? (
-        <div className="flex justify-center py-10">
-          <Loader2 className="h-8 w-8 animate-spin text-accent-teal" />
+        <div className="flex flex-col items-center py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-accent-teal mb-2" />
+          <p className="text-muted-foreground">Loading manuals...</p>
         </div>
       ) : (
         <AdminManualsList 

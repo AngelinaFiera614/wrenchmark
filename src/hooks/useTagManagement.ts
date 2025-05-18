@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { ManualTag, createTag, getTags } from '@/services/manuals/tags';
+import { useToast } from '@/hooks/use-toast';
 
 export interface UseTagManagementProps {
   initialSelectedTags?: string[];
@@ -15,6 +16,7 @@ export function useTagManagement({
   const [selectedTags, setSelectedTags] = useState<string[]>(initialSelectedTags);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Load all available tags
   useEffect(() => {
@@ -27,13 +29,18 @@ export function useTagManagement({
       } catch (err) {
         console.error("Error loading tags:", err);
         setError("Failed to load tags");
+        toast({
+          title: 'Error loading tags',
+          description: 'There was a problem loading tags. Please try again.',
+          variant: 'destructive',
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     loadTags();
-  }, []);
+  }, [toast]);
 
   // Update selected tags
   const handleTagsChange = useCallback((tags: string[]) => {
@@ -55,12 +62,22 @@ export function useTagManagement({
       // Add new tag to available tags
       setAvailableTags(prev => [...prev, newTag]);
       
+      toast({
+        title: 'Tag created',
+        description: `"${name}" tag has been created successfully`,
+      });
+      
       return newTag;
     } catch (err) {
       console.error("Error creating tag:", err);
+      toast({
+        title: 'Error creating tag',
+        description: 'Failed to create tag. Please try again.',
+        variant: 'destructive',
+      });
       throw err;
     }
-  }, []);
+  }, [toast]);
 
   return {
     availableTags,

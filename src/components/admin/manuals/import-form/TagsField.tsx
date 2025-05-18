@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { TagPicker } from '@/components/common/TagPicker';
 import { ManualTag } from '@/services/manuals/tags';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TagsFieldProps {
   tags: string[];
@@ -10,6 +12,7 @@ interface TagsFieldProps {
   onTagsChange?: (tags: string[]) => void;
   isLoading?: boolean;
   disabled?: boolean;
+  error?: string;
 }
 
 const TagsField: React.FC<TagsFieldProps> = ({
@@ -19,7 +22,8 @@ const TagsField: React.FC<TagsFieldProps> = ({
   onRemoveTag,
   onTagsChange,
   isLoading = false,
-  disabled = false
+  disabled = false,
+  error
 }) => {
   // Handle tag selection changes
   const handleTagsChange = (selectedTags: string[]) => {
@@ -39,6 +43,15 @@ const TagsField: React.FC<TagsFieldProps> = ({
     tagsToRemove.forEach(tag => onRemoveTag(tag));
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        <div className="text-sm font-medium">Tags</div>
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium">Tags</div>
@@ -49,6 +62,7 @@ const TagsField: React.FC<TagsFieldProps> = ({
         placeholder="Select or create tags..."
         disabled={disabled || isLoading}
       />
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 };

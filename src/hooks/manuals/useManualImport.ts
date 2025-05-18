@@ -14,6 +14,7 @@ export interface UseManualImportProps {
 export interface UseManualImportResult {
   handleImport: (values: ImportManualFormValues) => Promise<void>;
   isSubmitting: boolean;
+  error: string | null;
 }
 
 export const useManualImport = ({ 
@@ -21,47 +22,29 @@ export const useManualImport = ({
   onSaveSuccess 
 }: UseManualImportProps): UseManualImportResult => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const { files, fetchManualFiles, organizeFiles, parseFileDetails, deleteFile, getMotorcycleId } = useManualBucket();
+  const [error, setError] = useState<string | null>(null);
+  const { parseFileDetails } = useManualBucket();
   const { toast } = useToast();
 
   const handleImport = async (values: ImportManualFormValues) => {
     try {
       setIsSubmitting(true);
+      setError(null);
       console.log("Starting manual import process with values:", values);
 
-      // Get motorcycle ID from make, model, year
-      const motorcycleId = await getMotorcycleId(
-        values.make, 
-        values.model,
-        values.year
-      );
-      
-      if (!motorcycleId) {
-        console.error("Failed to find or create motorcycle record");
-        toast({
-          title: 'Import Failed',
-          description: 'Could not associate manual with a motorcycle',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      console.log("Importing manual for motorcycle ID:", motorcycleId);
-      
-      // Prepare manual data
-      const importData = {
+      // Import the manual directly with the provided values
+      const importedManual = await importManual({
         title: values.title,
         manual_type: values.manual_type,
-        motorcycle_id: motorcycleId,
+        make: values.make,
+        model: values.model,
+        year: values.year,
         file_url: values.file_url,
         file_name: values.file_name,
         file_size_mb: values.file_size_mb,
-        year: values.year,
-        tags: values.tags
-      };
+        tags: values.tags || []
+      });
       
-      // Import the manual
-      const importedManual = await importManual(importData);
       console.log("Manual imported successfully:", importedManual);
       
       // Success!
@@ -74,9 +57,11 @@ export const useManualImport = ({
       onOpenChange(false);
     } catch (error) {
       console.error("Error in handleImport:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to import manual';
+      setError(errorMessage);
       toast({
         title: 'Import Failed',
-        description: error instanceof Error ? error.message : 'Failed to import manual',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -86,6 +71,7 @@ export const useManualImport = ({
 
   return { 
     handleImport, 
-    isSubmitting 
+    isSubmitting,
+    error
   };
 };
