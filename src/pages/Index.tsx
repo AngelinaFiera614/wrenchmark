@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Wrench, UserPlus, LogIn, PanelTop } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from '@/context/auth';
 
 const Index = () => {
   const {

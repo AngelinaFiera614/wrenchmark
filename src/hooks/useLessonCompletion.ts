@@ -1,5 +1,5 @@
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth";
@@ -9,9 +9,41 @@ interface CompleteParams {
   quizScore?: number;
 }
 
-export const useLessonCompletion = () => {
+export const useLessonCompletion = (courseId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Add a query to fetch completed lessons
+  const { data: completedLessons = [], isLoading: loading } = useQuery({
+    queryKey: ['lessonCompletion', courseId],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const query = supabase
+        .from('user_progress')
+        .select('lesson_id')
+        .eq('user_id', user.id);
+      
+      // Add course filter if courseId is provided
+      if (courseId) {
+        const { data: lessons } = await supabase
+          .from('lessons')
+          .select('id')
+          .eq('course_id', courseId);
+        
+        if (lessons && lessons.length > 0) {
+          const lessonIds = lessons.map(l => l.id);
+          query.in('lesson_id', lessonIds);
+        }
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      return data ? data.map(item => item.lesson_id) : [];
+    },
+    enabled: !!user
+  });
 
   const completeLesson = useMutation({
     mutationFn: async ({ lessonId, quizScore }: CompleteParams) => {
@@ -41,5 +73,5 @@ export const useLessonCompletion = () => {
     }
   });
 
-  return { completeLesson };
+  return { completeLesson, completedLessons, loading };
 };

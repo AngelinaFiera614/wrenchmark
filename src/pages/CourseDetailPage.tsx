@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { getCourseBySlug, getCourseProgress } from "@/services/courseService";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ArrowRight, BookOpen, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from '@/context/auth';
 import { useLessonCompletion } from "@/hooks/useLessonCompletion";
 import { Skeleton } from "@/components/ui/skeleton";
 

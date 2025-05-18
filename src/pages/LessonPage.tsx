@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -10,7 +9,7 @@ import LessonSidebar from '@/components/learning/LessonSidebar';
 import QuizComponent from '@/components/learning/QuizComponent';
 import { getQuizForLesson, isLessonCompleted } from '@/services/lessonService';
 import CompleteLessonButton from '@/components/learning/CompleteLessonButton';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import LessonGlossaryTerms from '@/components/learning/LessonGlossaryTerms';
 
 const LessonPage: React.FC = () => {

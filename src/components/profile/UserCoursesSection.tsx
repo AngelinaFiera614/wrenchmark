@@ -1,14 +1,5 @@
-
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { getCoursesWithProgress } from "@/services/courseService";
-import { CourseWithProgress } from "@/types/course";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, BookOpen } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/context/AuthContext";
+import React from 'react';
+import { useAuth } from '@/context/auth';
 
 const UserCoursesSection: React.FC = () => {
   const [courses, setCourses] = useState<CourseWithProgress[]>([]);

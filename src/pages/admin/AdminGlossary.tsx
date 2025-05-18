@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
 import { GlossaryTerm } from '@/types/glossary';
@@ -9,7 +8,7 @@ import { AdminGlossaryEmptyState } from '@/components/admin/glossary/AdminGlossa
 import { GlossaryDeleteDialog } from '@/components/admin/glossary/GlossaryDeleteDialog';
 import BrandsMobileViewToggle from '@/components/admin/brands/BrandsMobileViewToggle';
 import { toast } from '@/components/ui/sonner';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { InlineGlossaryForm } from '@/components/admin/glossary/InlineGlossaryForm';
 
 const AdminGlossary: React.FC = () => {

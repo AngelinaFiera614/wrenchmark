@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -6,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bike, Building2, Wrench, FileText, Component, Users, Compass, Loader } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from '@/context/auth';
 import { toast } from "sonner";
 
 const AdminDashboard = () => {

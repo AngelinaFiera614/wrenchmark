@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -12,7 +11,7 @@ import { Brand } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { BrandFormValues } from "./BrandFormSchema";
 import BrandForm from "./BrandForm";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/auth";
 
 interface AdminBrandDialogProps {
   open: boolean;

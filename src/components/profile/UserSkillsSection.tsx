@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { getUserSkills } from "@/services/skillsService";
 import { UserSkill } from "@/types/course";
@@ -6,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import SkillBadge from "@/components/learning/SkillBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from '@/context/auth';
 
 const UserSkillsSection: React.FC = () => {
   const [skills, setSkills] = useState<UserSkill[]>([]);
