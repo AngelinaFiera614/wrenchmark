@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -31,6 +32,8 @@ interface LessonFormDialogProps {
   lesson?: any;  // The lesson object when editing
   courseId: string;
   onSuccess?: () => void;
+  onCancel?: () => void;
+  existingLessons?: any[];
 }
 
 export default function LessonFormDialog({
@@ -38,7 +41,8 @@ export default function LessonFormDialog({
   onOpenChange,
   lesson,
   courseId,
-  onSuccess
+  onSuccess,
+  onCancel
 }: LessonFormDialogProps) {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
@@ -133,6 +137,11 @@ export default function LessonFormDialog({
     } finally {
       setIsPending(false);
     }
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
+    onCancel?.();
   };
 
   return (
@@ -248,7 +257,7 @@ export default function LessonFormDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={handleCancel}
               >
                 Cancel
               </Button>

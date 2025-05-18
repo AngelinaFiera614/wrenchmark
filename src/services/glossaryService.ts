@@ -82,9 +82,18 @@ export async function checkSlugExists(slug: string, existingId?: string): Promis
 }
 
 export async function createGlossaryTerm(values: GlossaryFormValues): Promise<GlossaryTerm> {
+  // Generate a slug first
+  const slug = await generateUniqueSlug(values.term);
+  
+  // Now we have the actual string value for the slug
+  const termWithSlug = {
+    ...values,
+    slug
+  };
+  
   const { data, error } = await supabase
     .from('glossary_terms')
-    .insert(values)
+    .insert(termWithSlug)
     .select()
     .single();
 
@@ -102,9 +111,21 @@ export async function updateGlossaryTerm(
   id: string, 
   values: GlossaryFormValues
 ): Promise<GlossaryTerm> {
+  // If term was changed, generate a new slug
+  let slug = values.slug;
+  if (values.term) {
+    // Make sure to await the Promise to get the string value
+    slug = await generateUniqueSlug(values.term, id);
+  }
+  
+  const termWithSlug = {
+    ...values,
+    slug
+  };
+
   const { data, error } = await supabase
     .from('glossary_terms')
-    .update(values)
+    .update(termWithSlug)
     .eq('id', id)
     .select()
     .single();
@@ -115,7 +136,7 @@ export async function updateGlossaryTerm(
 
   // Invalidate queries to refresh data
   queryClient.invalidateQueries({ queryKey: ['glossaryTerms'] });
-  queryClient.invalidateQueries({ queryKey: ['glossaryTerm', values.slug] });
+  queryClient.invalidateQueries({ queryKey: ['glossaryTerm', slug] });
   
   return data;
 }
