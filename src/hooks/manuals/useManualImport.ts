@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useManualBucket } from '@/hooks/useManualBucket';
 import { useToast } from '@/hooks/use-toast';
 import { importManual } from '@/services/manuals';
-import { ManualWithMotorcycle } from '@/services/manuals/types';
+import { ManualWithMotorcycle, ImportManualParams } from '@/services/manuals/types';
 import { ImportManualFormValues } from '@/components/admin/manuals/ImportManualFormSchema';
 
 export interface UseManualImportProps {
@@ -33,7 +33,8 @@ export const useManualImport = ({
       console.log("Starting manual import process with values:", values);
 
       // Import the manual directly with the provided values
-      const importedManual = await importManual({
+      // Create a properly typed import params object
+      const importParams: ImportManualParams = {
         title: values.title,
         manual_type: values.manual_type,
         motorcycle_id: "", // This will be generated from make/model/year on the server
@@ -42,10 +43,12 @@ export const useManualImport = ({
         file_name: values.file_name,
         file_size_mb: values.file_size_mb,
         tags: values.tags || [],
-        // These are properly typed now in ImportManualParams
+        // These properties are defined in ImportManualParams
         make: values.make,
         model: values.model
-      });
+      };
+      
+      const importedManual = await importManual(importParams);
       
       console.log("Manual imported successfully:", importedManual);
       
