@@ -27,9 +27,15 @@ export const createManual = async (manual: ManualInfo): Promise<ManualWithMotorc
     throw new Error("Manual title is required for creation");
   }
 
+  // Create a new object with all the required fields to satisfy TypeScript
+  const manualData = {
+    ...manual,
+    title: manual.title // This ensures title is seen as non-optional for the insert
+  };
+
   const { data, error } = await supabase
     .from('manuals')
-    .insert([manual])
+    .insert([manualData])
     .select()
     .single();
 
