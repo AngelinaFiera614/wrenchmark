@@ -16,6 +16,7 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (profileData: Partial<Profile>) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -93,14 +94,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!profileData) {
         console.log("No profile found, creating one");
-        // Create a new profile if one doesn't exist
-        const createdProfile = await createProfileIfNotExists(userId);
-        
-        if (createdProfile) {
-          console.log("Created new profile for user");
-          setProfile(createdProfile);
-        } else {
-          console.error("Failed to create profile");
+        // Try to create a new profile if one doesn't exist
+        try {
+          const createdProfile = await createProfileIfNotExists(userId);
+          
+          if (createdProfile) {
+            console.log("Created new profile for user");
+            setProfile(createdProfile);
+          } else {
+            console.error("Failed to create profile");
+            toast.error("Failed to create user profile. Please try refreshing the page.");
+            setProfile(null);
+          }
+        } catch (profileError) {
+          console.error("Error creating profile:", profileError);
           toast.error("Failed to create user profile. Please try refreshing the page.");
           setProfile(null);
         }
@@ -116,6 +123,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsProfileLoading(false);
       setIsLoading(false);
     }
+  };
+
+  const refreshProfile = async () => {
+    if (!user) return;
+    setIsProfileLoading(true);
+    await fetchProfile(user.id);
   };
 
   const signIn = async (email: string, password: string) => {
@@ -213,6 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signOut,
     updateProfile,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

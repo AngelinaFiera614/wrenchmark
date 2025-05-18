@@ -10,10 +10,10 @@ import UserSkillsSection from '@/components/profile/UserSkillsSection';
 import GlossaryProgressSection from '@/components/profile/GlossaryProgressSection';
 import { createProfileIfNotExists } from '@/services/profileService';
 import { toast } from 'sonner';
-import { Loader } from 'lucide-react';
+import { Loader, RefreshCw } from 'lucide-react';
 
 const ProfilePage: React.FC = () => {
-  const { user, profile, signOut, isLoading } = useAuth();
+  const { user, profile, signOut, isLoading, refreshProfile } = useAuth();
 
   // Try to create a profile if one doesn't exist
   useEffect(() => {
@@ -32,6 +32,14 @@ const ProfilePage: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleRefresh = async () => {
+    if (user) {
+      toast.info("Refreshing your profile information...");
+      await refreshProfile();
+      toast.success("Profile refreshed");
+    }
   };
 
   // Show loading state while auth is processing
@@ -91,17 +99,26 @@ const ProfilePage: React.FC = () => {
                   )}
                 </div>
               </div>
-              <Button variant="outline" onClick={handleSignOut}>
-                Sign Out
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleRefresh} title="Refresh profile data">
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Refresh
+                </Button>
+                <Button variant="outline" onClick={handleSignOut}>
+                  Sign Out
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
                 <p>Account created: {new Date(user.created_at).toLocaleDateString()}</p>
                 {!profile && (
-                  <p className="text-yellow-500 mt-2">
-                    Note: Your profile information is incomplete. Some features may be limited.
-                  </p>
+                  <div className="bg-yellow-900/20 border border-yellow-700 text-yellow-500 px-4 py-2 rounded-md mt-3">
+                    <p className="flex items-center">
+                      <span className="font-medium mr-1">Note:</span> 
+                      Your profile information is incomplete. Click the Refresh button above to try creating your profile.
+                    </p>
+                  </div>
                 )}
               </div>
             </CardContent>

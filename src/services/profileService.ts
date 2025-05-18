@@ -7,6 +7,9 @@ export type Profile = {
   is_admin: boolean;
   created_at: string;
   updated_at: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
 };
 
 // Get profile by user ID
@@ -39,13 +42,20 @@ export const createProfileIfNotExists = async (userId: string, isAdmin: boolean 
       return existingProfile;
     }
     
+    // Get user details from auth to populate profile
+    const { data: authData } = await supabase.auth.getUser(userId);
+    const userEmail = authData?.user?.email || '';
+    const username = userEmail.split('@')[0];
+    const fullName = authData?.user?.user_metadata?.full_name;
+    
     // Profile doesn't exist, create one
     const { data, error } = await supabase
       .from('profiles')
       .insert([{
         id: userId,
         is_admin: isAdmin,
-        username: null // You can set a default username if needed
+        username: username,
+        full_name: fullName
       }])
       .select()
       .single();
