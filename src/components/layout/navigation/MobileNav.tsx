@@ -2,6 +2,18 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { 
+  Home, 
+  Bike, 
+  Book, 
+  Award, 
+  Layers, 
+  Info, 
+  MessageSquareMore, 
+  User, 
+  LayoutDashboard, 
+  LogOut 
+} from "lucide-react";
 
 type MobileNavProps = {
   closeMenu: () => void;
@@ -11,95 +23,78 @@ type MobileNavProps = {
 const MobileNav = ({ closeMenu, handleSignOut }: MobileNavProps) => {
   const { user, isAdmin } = useAuth();
 
+  const navItems = [
+    { to: "/", icon: <Home className="w-5 h-5 mr-3" />, label: "Home" },
+    { to: "/motorcycles", icon: <Bike className="w-5 h-5 mr-3" />, label: "Motorcycles" },
+    { to: "/brands", icon: <Award className="w-5 h-5 mr-3" />, label: "Brands" },
+    { to: "/courses", icon: <Book className="w-5 h-5 mr-3" />, label: "Courses" },
+    { to: "/riding-skills", icon: <Layers className="w-5 h-5 mr-3" />, label: "Riding Skills" },
+    { to: "/glossary", icon: <Layers className="w-5 h-5 mr-3" />, label: "Glossary" },
+    { to: "/about", icon: <Info className="w-5 h-5 mr-3" />, label: "About" },
+    { to: "/contact", icon: <MessageSquareMore className="w-5 h-5 mr-3" />, label: "Contact" }
+  ];
+
   return (
-    <nav className="flex flex-col p-6 space-y-6">
-      <Link
-        to="/motorcycles"
-        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
-        onClick={closeMenu}
-      >
-        Motorcycles
-      </Link>
-      <Link
-        to="/brands"
-        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
-        onClick={closeMenu}
-      >
-        Brands
-      </Link>
-      <Link
-        to="/courses"
-        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
-        onClick={closeMenu}
-      >
-        Courses
-      </Link>
-      <Link
-        to="/riding-skills"
-        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
-        onClick={closeMenu}
-      >
-        Riding Skills
-      </Link>
-      <Link
-        to="/glossary"
-        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
-        onClick={closeMenu}
-      >
-        Glossary
-      </Link>
-      <Link
-        to="/about"
-        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
-        onClick={closeMenu}
-      >
-        About
-      </Link>
-      <Link
-        to="/contact"
-        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
-        onClick={closeMenu}
-      >
-        Contact
-      </Link>
-
-      {!user && (
-        <Link
-          to="/auth"
-          className="text-lg font-medium transition-colors text-accent-teal"
-          onClick={closeMenu}
-        >
-          Sign In / Sign Up
-        </Link>
-      )}
-
-      {user && (
-        <>
-          <Link
-            to="/profile"
-            className="text-lg font-medium transition-colors hover:text-accent-teal"
-            onClick={closeMenu}
-          >
-            My Profile
-          </Link>
-          {isAdmin && (
+    <div className="flex flex-col h-full">
+      <nav className="flex flex-col p-6 space-y-4 overflow-y-auto flex-1">
+        <div className="space-y-2">
+          {navItems.map((item) => (
             <Link
-              to="/admin"
-              className="text-lg font-medium transition-colors hover:text-accent-teal"
+              key={item.to}
+              to={item.to}
+              className="flex items-center py-3 px-4 text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal hover:bg-accent-teal/10 rounded-lg"
               onClick={closeMenu}
             >
-              Admin Dashboard
+              {item.icon}
+              <span>{item.label}</span>
             </Link>
+          ))}
+        </div>
+
+        <div className="border-t border-border/40 pt-4 mt-4">
+          {!user ? (
+            <Link
+              to="/auth"
+              className="flex items-center py-3 px-4 text-lg font-medium text-accent-teal bg-accent-teal/10 rounded-lg"
+              onClick={closeMenu}
+            >
+              <User className="w-5 h-5 mr-3" />
+              Sign In / Sign Up
+            </Link>
+          ) : (
+            <div className="space-y-2">
+              <Link
+                to="/profile"
+                className="flex items-center py-3 px-4 text-lg font-medium transition-colors hover:text-accent-teal hover:bg-accent-teal/10 rounded-lg"
+                onClick={closeMenu}
+              >
+                <User className="w-5 h-5 mr-3" />
+                My Profile
+              </Link>
+              
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="flex items-center py-3 px-4 text-lg font-medium transition-colors hover:text-accent-teal hover:bg-accent-teal/10 rounded-lg"
+                  onClick={closeMenu}
+                >
+                  <LayoutDashboard className="w-5 h-5 mr-3" />
+                  Admin Dashboard
+                </Link>
+              )}
+              
+              <button
+                onClick={handleSignOut}
+                className="flex items-center py-3 px-4 text-lg font-medium text-red-500 hover:bg-red-500/10 w-full text-left rounded-lg"
+              >
+                <LogOut className="w-5 h-5 mr-3" />
+                Sign Out
+              </button>
+            </div>
           )}
-          <button
-            onClick={handleSignOut}
-            className="text-lg font-medium text-red-500 text-left"
-          >
-            Sign Out
-          </button>
-        </>
-      )}
-    </nav>
+        </div>
+      </nav>
+    </div>
   );
 };
 

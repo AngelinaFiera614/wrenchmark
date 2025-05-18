@@ -98,8 +98,21 @@
   animation: fadeIn 0.5s ease-in-out;
 }
 
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.3s ease-in-out;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInBottom {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -122,3 +135,29 @@
   @apply hover:text-accent-teal;
 }
 
+/* Mobile-specific utility classes */
+@media (max-width: 768px) {
+  .touch-button {
+    @apply min-h-[44px] min-w-[44px]; /* Minimum touch target size */
+  }
+  
+  .safe-bottom {
+    @apply pb-[env(safe-area-inset-bottom,0px)]; /* Safe area for notched phones */
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Difficulty level background colors */
+.difficulty-1 { @apply bg-green-500; }
+.difficulty-2 { @apply bg-green-400; }
+.difficulty-3 { @apply bg-yellow-500; }
+.difficulty-4 { @apply bg-orange-500; }
+.difficulty-5 { @apply bg-red-500; }

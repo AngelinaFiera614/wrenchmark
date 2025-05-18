@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Brand } from "@/types";
+import { useMobile } from "@/hooks/use-mobile";
 
 interface BrandCardProps {
   brand: Brand;
@@ -15,6 +16,7 @@ interface BrandCardProps {
 export default function BrandCard({ brand }: BrandCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const isMobile = useMobile();
   
   // Directly use the properties from the Brand interface without optional chaining
   const logo = brand.logo;
@@ -46,7 +48,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
     >
       <CardHeader className="pb-0">
         <div className="mb-2 w-full">
-          <AspectRatio ratio={1 / 1} className="bg-secondary/50 rounded-md overflow-hidden">
+          <AspectRatio ratio={isMobile ? 16/9 : 1/1} className="bg-secondary/50 rounded-md overflow-hidden">
             {(logo && !imageError) ? (
               <img
                 src={logo}
@@ -74,7 +76,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
             )}
           </AspectRatio>
         </div>
-        <h3 className="text-2xl font-bold text-foreground">{brand.name}</h3>
+        <h3 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-foreground`}>{brand.name}</h3>
       </CardHeader>
       
       <CardContent className="py-4">
@@ -103,7 +105,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
             variant="teal"
             className="w-full justify-between"
           >
-            View Details
+            {isMobile ? "Details" : "View Details"}
             <ArrowRight size={18} />
           </Button>
         </Link>

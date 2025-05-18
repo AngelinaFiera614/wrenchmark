@@ -48,26 +48,25 @@ export default function MobileFilters({
   } = useFilterHandlers(filters, onFilterChange);
 
   return (
-    <div className="flex items-center justify-between md:hidden">
+    <div className="flex items-center justify-between md:hidden mb-4">
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
         className="w-full space-y-4"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between bg-background/90 sticky top-16 z-20 py-2">
           <div className="flex items-center gap-2">
-            {/* Removed the duplicate "Filters" text */}
             {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="ml-1">
-                {activeFilterCount}
+              <Badge variant="secondary" className="bg-accent-teal/20 text-accent-teal">
+                {activeFilterCount} active
               </Badge>
             )}
           </div>
           <MobileFilterToggle isOpen={isOpen} />
         </div>
         
-        <CollapsibleContent className="space-y-4">
-          <div className="space-y-4">
+        <CollapsibleContent className="space-y-6 animate-slide-in-bottom bg-background/95 backdrop-blur p-4 rounded-lg border border-border/20">
+          <div className="space-y-6">
             <MakeFilter 
               make={filters.make} 
               commonMakes={commonMakes} 
@@ -92,15 +91,17 @@ export default function MobileFilters({
               onChange={handleDifficultyChange}
             />
 
-            <WeightFilter
-              weightRange={filters.weightRange}
-              onChange={handleWeightRangeChange}
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <WeightFilter
+                weightRange={filters.weightRange}
+                onChange={handleWeightRangeChange}
+              />
 
-            <SeatHeightFilter
-              seatHeightRange={filters.seatHeightRange}
-              onChange={handleSeatHeightRangeChange}
-            />
+              <SeatHeightFilter
+                seatHeightRange={filters.seatHeightRange}
+                onChange={handleSeatHeightRangeChange}
+              />
+            </div>
 
             <YearFilter
               yearRange={filters.yearRange}
@@ -113,7 +114,9 @@ export default function MobileFilters({
               id="abs-mobile"
             />
 
-            <FilterReset />
+            <div className="sticky bottom-0 pt-4 pb-2 bg-background">
+              <FilterReset />
+            </div>
           </div>
         </CollapsibleContent>
       </Collapsible>

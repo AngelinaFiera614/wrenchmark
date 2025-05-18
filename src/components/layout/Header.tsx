@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -8,11 +8,23 @@ import MobileNav from "./navigation/MobileNav";
 import UserMenu from "./navigation/UserMenu";
 import CompareButton from "./navigation/CompareButton";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { useMobile } from "@/hooks/use-mobile";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { signOut, isAdmin } = useAuth();
   const location = useLocation();
+  const isMobile = useMobile();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -28,17 +40,17 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border wrenchmark-header">
+    <header className={`sticky top-0 z-30 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border wrenchmark-header transition-shadow ${isScrolled ? "shadow-md" : ""}`}>
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center">
-          <Link to="/" className="font-bold text-2xl text-accent-teal mr-6">
-            WRENCHMARK
+          <Link to="/" className="font-bold text-2xl text-accent-teal mr-6" onClick={closeMenu}>
+            {isMobile ? "WM" : "WRENCHMARK"}
           </Link>
 
           <DesktopNav />
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 md:space-x-4">
           <ThemeToggle />
           <CompareButton />
           
@@ -53,7 +65,7 @@ const Header = () => {
           <UserMenu handleSignOut={handleSignOut} />
 
           <button
-            className="md:hidden p-1"
+            className="md:hidden p-1 bg-background/80 rounded-md"
             onClick={toggleMenu}
             aria-label="Toggle Menu"
           >
@@ -66,9 +78,9 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu - improved with smooth transition */}
       {isMenuOpen && (
-        <div className="fixed inset-0 top-16 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+        <div className="fixed inset-0 top-16 z-20 bg-background/95 backdrop-blur-md animate-fade-in supports-[backdrop-filter]:bg-background/80 md:hidden">
           <MobileNav closeMenu={closeMenu} handleSignOut={handleSignOut} />
         </div>
       )}
