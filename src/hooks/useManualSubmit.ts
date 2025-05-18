@@ -70,10 +70,16 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
         // If a new file was uploaded, update the file
         if (values.file instanceof File && values.file.size > 0) {
           // We need to upload the new file
-          const uploadResult = await uploadManual(values.file, {
+          const manualData: ManualInfo = {
             id: manualId, // Use existing ID for update
-            ...updateData
-          });
+            motorcycle_id: motorcycle.id,
+            title: values.title, // Ensure title is provided
+            manual_type: values.manual_type,
+            year: values.year,
+            file_size_mb: fileSizeMB
+          };
+          
+          const uploadResult = await uploadManual(values.file, manualData);
           
           // If the upload returns data, use it to update savedManual
           if (uploadResult) {
@@ -91,7 +97,7 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
           throw new Error('File is required for new manuals');
         }
         
-        // Prepare manual data
+        // Prepare manual data - ensure title is provided for new manuals
         const manualData: ManualInfo = {
           title: values.title,
           manual_type: values.manual_type,

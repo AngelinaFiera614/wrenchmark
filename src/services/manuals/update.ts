@@ -22,6 +22,11 @@ export const incrementDownloadCount = async (id: string): Promise<void> => {
  * Create a new manual
  */
 export const createManual = async (manual: ManualInfo): Promise<ManualWithMotorcycle> => {
+  // Ensure we have a title, even if the type allows it to be optional
+  if (!manual.title) {
+    throw new Error("Manual title is required for creation");
+  }
+
   const { data, error } = await supabase
     .from('manuals')
     .insert([manual])

@@ -3,7 +3,7 @@
 
 export interface ManualInfo {
   id?: string;
-  title: string;
+  title?: string; // Changed from required to optional
   motorcycle_id: string;
   manual_type?: string;
   year?: number;

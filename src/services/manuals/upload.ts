@@ -39,6 +39,11 @@ export const uploadManual = async (file: File, manualInfo: ManualInfo): Promise<
       .storage
       .from('manuals')
       .getPublicUrl(path);
+
+    // Make sure title is provided if it's optional
+    if (!manualInfo.title) {
+      manualInfo.title = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+    }
     
     // Create the manual record with the file URL
     const updatedManualInfo = {
@@ -82,6 +87,11 @@ export const importManual = async (importData: ImportManualData): Promise<Manual
     
     if (!fileExists) {
       throw new Error(`File "${importData.file_name}" not found in storage`);
+    }
+    
+    // Make sure title is provided if it's optional
+    if (!importData.title) {
+      importData.title = importData.file_name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
     }
     
     // Create the manual record
