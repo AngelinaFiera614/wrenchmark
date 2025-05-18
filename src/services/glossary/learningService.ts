@@ -64,11 +64,20 @@ export async function getUserLearnedTerms(limit: number = 100) {
  * Checks if a term is marked as learned by the current user
  */
 export async function isTermLearnedByUser(slug: string): Promise<boolean> {
+  // Get the current user first
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  
+  // If no user is logged in, return false
+  if (!userId) {
+    return false;
+  }
+  
   const { data, error } = await supabase
     .from('user_glossary_terms')
     .select('is_learned')
     .eq('term_slug', slug)
-    .eq('user_id', supabase.auth.getUser().then(res => res.data.user?.id))
+    .eq('user_id', userId)
     .single();
 
   if (error) {
