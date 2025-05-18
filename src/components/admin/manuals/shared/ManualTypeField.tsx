@@ -7,7 +7,8 @@ import { SharedManualTypeFieldProps } from './types';
 
 const ManualTypeField: React.FC<SharedManualTypeFieldProps> = ({ 
   control, 
-  name = "manual_type" // Default field name
+  name = "manual_type", // Default field name
+  disabled
 }) => {
   return (
     <FormField
@@ -20,6 +21,7 @@ const ManualTypeField: React.FC<SharedManualTypeFieldProps> = ({
             onValueChange={field.onChange}
             defaultValue={field.value}
             value={field.value}
+            disabled={disabled}
           >
             <FormControl>
               <SelectTrigger>

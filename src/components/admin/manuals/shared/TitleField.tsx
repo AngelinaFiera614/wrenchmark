@@ -1,11 +1,10 @@
 
 import React from 'react';
-import { Control } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { SharedTitleFieldProps } from './types';
 
-const TitleField: React.FC<SharedTitleFieldProps> = ({ control, name = "title" }) => {
+const TitleField: React.FC<SharedTitleFieldProps> = ({ control, name = "title", disabled }) => {
   return (
     <FormField
       control={control}
@@ -14,7 +13,7 @@ const TitleField: React.FC<SharedTitleFieldProps> = ({ control, name = "title" }
         <FormItem>
           <FormLabel>Title</FormLabel>
           <FormControl>
-            <Input {...field} />
+            <Input {...field} disabled={disabled} />
           </FormControl>
           <FormMessage />
         </FormItem>

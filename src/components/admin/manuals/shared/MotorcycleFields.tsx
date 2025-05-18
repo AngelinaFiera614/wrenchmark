@@ -4,7 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { SharedMotorcycleFieldsProps } from './types';
 
-const MotorcycleFields: React.FC<SharedMotorcycleFieldsProps> = ({ control }) => {
+const MotorcycleFields: React.FC<SharedMotorcycleFieldsProps> = ({ control, disabled }) => {
   return (
     <>
       <div className="grid grid-cols-2 gap-4">
@@ -15,7 +15,7 @@ const MotorcycleFields: React.FC<SharedMotorcycleFieldsProps> = ({ control }) =>
             <FormItem>
               <FormLabel>Make</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} disabled={disabled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -29,7 +29,7 @@ const MotorcycleFields: React.FC<SharedMotorcycleFieldsProps> = ({ control }) =>
             <FormItem>
               <FormLabel>Model</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} disabled={disabled} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -48,6 +48,7 @@ const MotorcycleFields: React.FC<SharedMotorcycleFieldsProps> = ({ control }) =>
                 type="number" 
                 {...field}
                 onChange={e => field.onChange(Number(e.target.value))} 
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />

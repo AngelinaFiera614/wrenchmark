@@ -17,15 +17,18 @@ export interface ImportItem extends BucketFile {
 export interface SharedTitleFieldProps {
   control: Control<any>;
   name?: string;
+  disabled?: boolean;
 }
 
 export interface SharedManualTypeFieldProps {
   control: Control<any>;
   name?: string;
+  disabled?: boolean;
 }
 
 export interface SharedMotorcycleFieldsProps {
   control: Control<any>;
+  disabled?: boolean;
 }
 
 export interface SharedFormActionsProps {

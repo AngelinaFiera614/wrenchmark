@@ -36,13 +36,15 @@ export const useManualImport = ({
       const importedManual = await importManual({
         title: values.title,
         manual_type: values.manual_type,
-        make: values.make,
-        model: values.model,
+        motorcycle_id: "", // This will be generated from make/model/year on the server
         year: values.year,
         file_url: values.file_url,
         file_name: values.file_name,
         file_size_mb: values.file_size_mb,
-        tags: values.tags || []
+        tags: values.tags || [],
+        // These are passed separately for motorcycle creation if needed
+        make: values.make,
+        model: values.model
       });
       
       console.log("Manual imported successfully:", importedManual);
