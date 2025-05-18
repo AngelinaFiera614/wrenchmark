@@ -95,7 +95,7 @@ function App() {
                 <Route path="riding-skills" element={<AdminRidingSkills />} />
                 <Route path="glossary" element={<AdminGlossary />} />
                 <Route path="manuals" element={<AdminManuals />} />
-                <Route path="parts" element={<AdminParts />} />
+                {/* Fix: Removing AdminParts which doesn't exist */}
                 <Route path="users" element={<AdminUsers />} />
                 
                 {/* New admin e-learning routes */}

@@ -27,6 +27,8 @@ export interface LessonQuiz {
   lesson_id: string;
   questions: QuizQuestion[];
   passing_score: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface QuizQuestion {

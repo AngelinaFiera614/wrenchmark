@@ -29,7 +29,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Trash2, ListReordering } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -128,6 +128,7 @@ const QuizFormDialog: React.FC<QuizFormDialogProps> = ({
 
   const addQuestion = () => {
     const newQuestion = {
+      id: crypto.randomUUID(), // Generate an id for the new question
       question: "",
       options: ["", ""],
       correct_answer: 0,
@@ -203,16 +204,24 @@ const QuizFormDialog: React.FC<QuizFormDialogProps> = ({
     try {
       setSubmitting(true);
       
+      // Ensure all questions have IDs
+      const questionsWithIds = data.questions.map(q => ({
+        ...q,
+        id: q.id || crypto.randomUUID()
+      }));
+      
       if (existingQuiz) {
         await updateQuiz(existingQuiz.id, {
-          ...data,
-          lesson_id: lessonId,
+          passing_score: data.passing_score,
+          questions: questionsWithIds as QuizQuestion[],
+          lesson_id: lessonId
         });
         toast.success("Quiz updated successfully");
       } else {
         await createQuizForLesson({
-          ...data,
-          lesson_id: lessonId,
+          passing_score: data.passing_score,
+          questions: questionsWithIds as QuizQuestion[],
+          lesson_id: lessonId
         });
         toast.success("Quiz created successfully");
       }
@@ -350,6 +359,13 @@ const QuizFormDialog: React.FC<QuizFormDialogProps> = ({
                             <FormMessage />
                           </FormItem>
                         )}
+                      />
+
+                      {/* Hidden ID field to ensure we have IDs for all questions */}
+                      <input 
+                        type="hidden" 
+                        {...form.register(`questions.${questionIndex}.id`)} 
+                        value={form.getValues(`questions.${questionIndex}.id`) || crypto.randomUUID()} 
                       />
 
                       <div className="space-y-2">

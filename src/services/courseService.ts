@@ -78,9 +78,20 @@ export async function createCourse(course: Partial<Course>): Promise<Course> {
     course.slug = slugData;
   }
 
+  // Fix: Ensure required properties are present
+  if (!course.title || !course.slug) {
+    throw new Error("Course title and slug are required");
+  }
+
   const { data, error } = await supabase
     .from("courses")
-    .insert([course])
+    .insert({
+      title: course.title,
+      slug: course.slug,
+      description: course.description || null,
+      image_url: course.image_url || null,
+      published: course.published !== undefined ? course.published : false
+    })
     .select()
     .single();
 

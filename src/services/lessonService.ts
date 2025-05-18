@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Lesson, LessonQuiz, LessonSkill } from "@/types/course";
+import { Lesson, LessonQuiz, LessonSkill, QuizQuestion } from "@/types/course";
 
 export async function getLessonsByCourseId(courseId: string): Promise<Lesson[]> {
   const { data, error } = await supabase
@@ -79,9 +79,21 @@ export async function createLesson(lesson: Partial<Lesson>): Promise<Lesson> {
     lesson.slug = slugData;
   }
 
+  // Fix: Ensure required properties are present
+  if (!lesson.title || !lesson.slug || !lesson.course_id || lesson.order === undefined) {
+    throw new Error("Lesson title, slug, course_id, and order are required");
+  }
+
   const { data, error } = await supabase
     .from("lessons")
-    .insert([lesson])
+    .insert({
+      title: lesson.title,
+      slug: lesson.slug,
+      course_id: lesson.course_id,
+      order: lesson.order,
+      content: lesson.content || null,
+      published: lesson.published !== undefined ? lesson.published : false
+    })
     .select()
     .single();
 
@@ -190,13 +202,29 @@ export async function getQuizForLesson(lessonId: string): Promise<LessonQuiz | n
     throw error;
   }
 
-  return data;
+  // Parse JSONB questions to strongly typed QuizQuestion array
+  if (data && data.questions) {
+    return {
+      ...data,
+      questions: data.questions as unknown as QuizQuestion[]
+    };
+  }
+
+  return null;
 }
 
-export async function createQuizForLesson(quiz: Partial<LessonQuiz>): Promise<LessonQuiz> {
+export async function createQuizForLesson(quiz: { 
+  lesson_id: string; 
+  passing_score: number;
+  questions: QuizQuestion[];
+}): Promise<LessonQuiz> {
   const { data, error } = await supabase
     .from("lesson_quizzes")
-    .insert([quiz])
+    .insert({
+      lesson_id: quiz.lesson_id,
+      passing_score: quiz.passing_score,
+      questions: quiz.questions
+    })
     .select()
     .single();
 
@@ -205,13 +233,24 @@ export async function createQuizForLesson(quiz: Partial<LessonQuiz>): Promise<Le
     throw error;
   }
 
-  return data;
+  // Parse JSONB questions to strongly typed QuizQuestion array
+  return {
+    ...data,
+    questions: data.questions as unknown as QuizQuestion[]
+  };
 }
 
-export async function updateQuiz(id: string, updates: Partial<LessonQuiz>): Promise<LessonQuiz> {
+export async function updateQuiz(id: string, updates: {
+  passing_score?: number;
+  questions?: QuizQuestion[];
+  lesson_id: string;
+}): Promise<LessonQuiz> {
   const { data, error } = await supabase
     .from("lesson_quizzes")
-    .update(updates)
+    .update({
+      passing_score: updates.passing_score,
+      questions: updates.questions
+    })
     .eq("id", id)
     .select()
     .single();
@@ -221,7 +260,11 @@ export async function updateQuiz(id: string, updates: Partial<LessonQuiz>): Prom
     throw error;
   }
 
-  return data;
+  // Parse JSONB questions to strongly typed QuizQuestion array
+  return {
+    ...data,
+    questions: data.questions as unknown as QuizQuestion[]
+  };
 }
 
 export async function deleteQuiz(id: string): Promise<void> {

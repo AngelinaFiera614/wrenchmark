@@ -18,22 +18,37 @@ export const useLessonCompletion = (courseId: string) => {
 
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('user_progress')
-          .select('lesson_id')
-          .eq('user_id', user.id)
-          .in('lesson_id', supabase
-            .from('lessons')
-            .select('id')
-            .eq('course_id', courseId)
-          );
-
-        if (error) {
-          console.error('Error fetching completed lessons:', error);
-          throw error;
+        
+        // Fixed approach: First get lesson IDs belonging to course
+        const { data: lessonIds, error: lessonError } = await supabase
+          .from('lessons')
+          .select('id')
+          .eq('course_id', courseId);
+          
+        if (lessonError) {
+          console.error('Error fetching lesson IDs:', lessonError);
+          throw lessonError;
         }
-
-        setCompletedLessons(data?.map(item => item.lesson_id) || []);
+        
+        // Then fetch progress for those lessons
+        if (lessonIds && lessonIds.length > 0) {
+          const lessonIdArray = lessonIds.map(item => item.id);
+          
+          const { data: progressData, error: progressError } = await supabase
+            .from('user_progress')
+            .select('lesson_id')
+            .eq('user_id', user.id)
+            .in('lesson_id', lessonIdArray);
+            
+          if (progressError) {
+            console.error('Error fetching lesson progress:', progressError);
+            throw progressError;
+          }
+          
+          setCompletedLessons(progressData?.map(item => item.lesson_id) || []);
+        } else {
+          setCompletedLessons([]);
+        }
       } catch (error) {
         console.error('Error in useLessonCompletion hook:', error);
       } finally {
