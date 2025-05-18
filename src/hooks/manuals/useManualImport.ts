@@ -42,7 +42,7 @@ export const useManualImport = ({
         file_name: values.file_name,
         file_size_mb: values.file_size_mb,
         tags: values.tags || [],
-        // These are passed separately for motorcycle creation if needed
+        // These are properly typed now in ImportManualParams
         make: values.make,
         model: values.model
       });

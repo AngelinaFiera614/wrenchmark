@@ -22,6 +22,9 @@ export interface ManualWithMotorcycle extends ManualInfo {
 
 export interface ImportManualParams extends ManualInfo {
   file_name: string; // Required for import
+  // Add these properties for motorcycle creation during import
+  make?: string;
+  model?: string;
 }
 
 export interface ManualUploadParams extends ManualInfo {
