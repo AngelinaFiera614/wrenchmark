@@ -8,8 +8,8 @@ import { transformToManualTag } from './utils';
  */
 export const updateTag = async (id: string, updates: Partial<Omit<ManualTag, 'id'>>): Promise<ManualTag> => {
   const { data, error } = await supabase
-    .from('manual_tags' as any)
-    .update(updates as any)
+    .from('manual_tags')
+    .update(updates)
     .eq('id', id)
     .select()
     .single();
@@ -28,7 +28,7 @@ export const updateTag = async (id: string, updates: Partial<Omit<ManualTag, 'id
  */
 export const deleteTag = async (id: string): Promise<void> => {
   const { error } = await supabase
-    .from('manual_tags' as any)
+    .from('manual_tags')
     .delete()
     .eq('id', id);
 
@@ -44,7 +44,7 @@ export const deleteTag = async (id: string): Promise<void> => {
 export const associateTagsWithManual = async (manualId: string, tagIds: string[]): Promise<void> => {
   // First, delete existing associations
   const { error: deleteError } = await supabase
-    .from('manual_tag_associations' as any)
+    .from('manual_tag_associations')
     .delete()
     .eq('manual_id', manualId);
 
@@ -61,8 +61,8 @@ export const associateTagsWithManual = async (manualId: string, tagIds: string[]
     }));
 
     const { error: insertError } = await supabase
-      .from('manual_tag_associations' as any)
-      .insert(associations as any);
+      .from('manual_tag_associations')
+      .insert(associations);
 
     if (insertError) {
       console.error("Error creating tag associations:", insertError);

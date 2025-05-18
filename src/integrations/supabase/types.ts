@@ -256,6 +256,63 @@ export type Database = {
           },
         ]
       }
+      manual_tag_associations: {
+        Row: {
+          manual_id: string
+          tag_id: string
+        }
+        Insert: {
+          manual_id: string
+          tag_id: string
+        }
+        Update: {
+          manual_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_tag_associations_manual_id_fkey"
+            columns: ["manual_id"]
+            isOneToOne: false
+            referencedRelation: "manuals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_tag_associations_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "manual_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manual_tags: {
+        Row: {
+          color: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          color: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       manuals: {
         Row: {
           created_at: string
@@ -624,6 +681,15 @@ export type Database = {
           total_lessons: number
           completed_lessons: number
           progress_percentage: number
+        }[]
+      }
+      get_tags_for_manual: {
+        Args: { manual_id_param: string }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          color: string
         }[]
       }
       get_user_top_skills: {

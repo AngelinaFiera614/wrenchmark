@@ -8,7 +8,7 @@ import { transformToManualTag } from './utils';
  */
 export const getTags = async (): Promise<ManualTag[]> => {
   const { data, error } = await supabase
-    .from('manual_tags' as any)
+    .from('manual_tags')
     .select('*')
     .order('name');
 
@@ -30,7 +30,7 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
   try {
     // First try using the RPC function
     const { data, error } = await supabase
-      .rpc('get_tags_for_manual' as any, { manual_id_param: manualId });
+      .rpc('get_tags_for_manual', { manual_id_param: manualId });
     
     if (error) {
       throw error;
@@ -47,7 +47,7 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
     // Fallback method if RPC doesn't exist yet
     try {
       const { data: joinData, error: joinError } = await supabase
-        .from('manual_tag_associations' as any)
+        .from('manual_tag_associations')
         .select(`
           tag_id
         `)
@@ -79,7 +79,7 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
       }
       
       const { data: tagData, error: tagError } = await supabase
-        .from('manual_tags' as any)
+        .from('manual_tags')
         .select('*')
         .in('id', tagIds);
         

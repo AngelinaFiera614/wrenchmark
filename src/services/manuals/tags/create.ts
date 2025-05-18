@@ -8,8 +8,8 @@ import { transformToManualTag, getRandomColor } from './utils';
  */
 export const createTag = async (tag: Omit<ManualTag, 'id'>): Promise<ManualTag> => {
   const { data, error } = await supabase
-    .from('manual_tags' as any)
-    .insert([tag as any])
+    .from('manual_tags')
+    .insert([tag])
     .select()
     .single();
 
@@ -31,7 +31,7 @@ export const getOrCreateTagsByNames = async (tagNames: string[]): Promise<Manual
   
   // First try to find existing tags
   const { data: existingTags, error: fetchError } = await supabase
-    .from('manual_tags' as any)
+    .from('manual_tags')
     .select('*')
     .in('name', tagNames);
 
@@ -59,8 +59,8 @@ export const getOrCreateTagsByNames = async (tagNames: string[]): Promise<Manual
     }));
 
     const { data: createdTags, error: createError } = await supabase
-      .from('manual_tags' as any)
-      .insert(newTags as any)
+      .from('manual_tags')
+      .insert(newTags)
       .select();
 
     if (createError) {
