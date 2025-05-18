@@ -18,6 +18,9 @@ export interface ManualWithMotorcycle extends ManualInfo {
   downloads?: number;
   tags?: string[];
   tag_details?: ManualTag[]; // For expanded tag information
+  motorcycles?: {
+    model_name: string;
+  };
 }
 
 export interface ImportManualParams extends ManualInfo {

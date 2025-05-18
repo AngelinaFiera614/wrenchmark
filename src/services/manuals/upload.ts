@@ -1,7 +1,7 @@
 
 // Functions for handling file uploads
 import { supabase } from "@/integrations/supabase/client";
-import { ManualInfo, ManualWithMotorcycle, ImportManualParams } from './types';
+import { ManualInfo, ManualWithMotorcycle, ImportManualParams, ManualTag } from './types';
 import { createManual } from "./update";
 import { getOrCreateTagsByNames, associateTagsWithManual } from "./tags";
 
@@ -189,8 +189,9 @@ export const importManual = async (params: ImportManualParams): Promise<ManualWi
     }
     
     // Now create the manual record
-    const manualData: ManualInfo = {
-      title: params.title,
+    // Ensure title is provided as it's required in the database schema
+    const manualData = {
+      title: params.title || params.file_name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
       manual_type: params.manual_type,
       motorcycle_id: motorcycleId,
       year: params.year,
@@ -214,6 +215,7 @@ export const importManual = async (params: ImportManualParams): Promise<ManualWi
     console.log('Manual created successfully:', manual);
     
     // Process tags if provided
+    let tagDetails: ManualTag[] = [];
     if (params.tags && params.tags.length > 0) {
       console.log("Processing tags for manual:", params.tags);
       
@@ -226,8 +228,8 @@ export const importManual = async (params: ImportManualParams): Promise<ManualWi
         await associateTagsWithManual(manual.id, tags.map(tag => tag.id));
         console.log("Associated tags with manual");
         
-        // Add tag details to the manual
-        manual.tag_details = tags;
+        // Store the tag details
+        tagDetails = tags;
       } catch (tagError) {
         console.error("Error processing tags:", tagError);
         // Don't fail the import just because tags failed
@@ -237,7 +239,8 @@ export const importManual = async (params: ImportManualParams): Promise<ManualWi
     // Format the response to match ManualWithMotorcycle type
     const manualWithMotorcycle: ManualWithMotorcycle = {
       ...manual,
-      motorcycle_name: manual.motorcycles?.model_name
+      motorcycle_name: manual.motorcycles?.model_name,
+      tag_details: tagDetails
     };
     
     return manualWithMotorcycle;
