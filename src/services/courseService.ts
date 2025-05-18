@@ -1,6 +1,5 @@
-
-import { supabase } from "@/integrations/supabase/client";
-import { Course, CourseProgress, CourseWithProgress } from "@/types/course";
+import { supabase } from '@/integrations/supabase/client';
+import { CourseWithProgress } from '@/types/course';
 
 export async function getCourses(): Promise<Course[]> {
   const { data, error } = await supabase
@@ -147,33 +146,89 @@ export async function getCourseProgress(courseId: string): Promise<CourseProgres
   };
 }
 
+/**
+ * Fetches user's courses with their progress
+ */
 export async function getCoursesWithProgress(): Promise<CourseWithProgress[]> {
-  // Get authenticated user's courses with progress
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) {
+    return [];
+  }
+
+  // First get all courses
   const { data: courses, error: coursesError } = await supabase
-    .from("courses")
-    .select("*")
-    .eq("published", true)
-    .order("created_at", { ascending: false });
+    .from('courses')
+    .select('*')
+    .eq('published', true)
+    .order('created_at', { ascending: false });
 
   if (coursesError) {
-    console.error("Error fetching courses:", coursesError);
-    throw coursesError;
+    console.error('Error fetching courses:', coursesError);
+    return [];
   }
 
-  const coursesWithProgress: CourseWithProgress[] = [];
-  
-  for (const course of courses || []) {
-    try {
-      const progress = await getCourseProgress(course.id);
-      coursesWithProgress.push({
-        ...course,
-        progress
-      });
-    } catch (error) {
-      console.error(`Error getting progress for course ${course.id}:`, error);
-      coursesWithProgress.push(course);
-    }
+  if (!courses || courses.length === 0) {
+    return [];
   }
+
+  // For each course, get its lessons and user progress
+  const coursesWithProgress: CourseWithProgress[] = await Promise.all(
+    courses.map(async (course) => {
+      // Get total lessons for this course
+      const { count: totalLessons, error: countError } = await supabase
+        .from('lessons')
+        .select('*', { count: 'exact', head: true })
+        .eq('course_id', course.id)
+        .eq('published', true);
+
+      if (countError) {
+        console.error(`Error counting lessons for course ${course.id}:`, countError);
+        return { ...course, progress: { completed_lessons: 0, total_lessons: 0, progress_percentage: 0 } };
+      }
+
+      // Get completed lessons for this course
+      const { data: lessonIds, error: lessonsError } = await supabase
+        .from('lessons')
+        .select('id')
+        .eq('course_id', course.id)
+        .eq('published', true);
+
+      if (lessonsError || !lessonIds) {
+        console.error(`Error fetching lesson IDs for course ${course.id}:`, lessonsError);
+        return { ...course, progress: { completed_lessons: 0, total_lessons: totalLessons || 0, progress_percentage: 0 } };
+      }
+
+      // If there are no lessons, return course with 0 progress
+      if (lessonIds.length === 0) {
+        return { ...course, progress: { completed_lessons: 0, total_lessons: 0, progress_percentage: 0 } };
+      }
+
+      // Get user progress for these lessons
+      const { data: completedLessons, error: progressError } = await supabase
+        .from('user_progress')
+        .select('lesson_id')
+        .eq('user_id', userData.user.id)
+        .in('lesson_id', lessonIds.map(lesson => lesson.id));
+
+      if (progressError) {
+        console.error(`Error fetching user progress for course ${course.id}:`, progressError);
+        return { ...course, progress: { completed_lessons: 0, total_lessons: totalLessons || 0, progress_percentage: 0 } };
+      }
+
+      const completed = completedLessons?.length || 0;
+      const total = totalLessons || 0;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return {
+        ...course,
+        progress: {
+          completed_lessons: completed,
+          total_lessons: total,
+          progress_percentage: percentage
+        }
+      };
+    })
+  );
 
   return coursesWithProgress;
 }

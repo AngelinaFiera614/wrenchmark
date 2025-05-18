@@ -10,8 +10,11 @@ import { Button } from "@/components/ui/button";
 
 export default function GlossaryProgressSection() {
   const { useGlossaryStats, useRecentlyLearnedTerms } = useGlossaryLearning();
-  const { totalTerms, learnedTerms, percentage, isLoading: statsLoading } = useGlossaryStats();
-  const { terms: recentTerms, isLoading: termsLoading } = useRecentlyLearnedTerms(5);
+  const { totalLearned, totalTerms, isLoading: statsLoading } = useGlossaryStats();
+  const { recentTerms, isLoading: termsLoading } = useRecentlyLearnedTerms();
+  
+  // Calculate percentage
+  const percentage = totalTerms > 0 ? (totalLearned / totalTerms) * 100 : 0;
 
   const getProgressLabel = () => {
     if (percentage >= 80) return "Expert";
@@ -51,7 +54,7 @@ export default function GlossaryProgressSection() {
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>{learnedTerms} terms learned</span>
+            <span>{totalLearned} terms learned</span>
             <span>{totalTerms} total terms</span>
           </div>
           <Progress value={percentage} className="h-2" />

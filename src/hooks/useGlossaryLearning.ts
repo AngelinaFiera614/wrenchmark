@@ -97,7 +97,17 @@ export function useGlossaryLearning() {
             
           if (termsError) throw termsError;
           
-          return terms || [];
+          // Combine the terms with learned_at dates from user_glossary_terms
+          const enrichedTerms = terms ? terms.map(term => {
+            const userTerm = data.find(ut => ut.term_slug === term.slug);
+            return {
+              ...term,
+              term_slug: term.slug,
+              learned_at: userTerm ? userTerm.learned_at : null
+            };
+          }) : [];
+          
+          return enrichedTerms;
         }
         
         return [];
