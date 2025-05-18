@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Brand } from "@/data/brands";
+import { Brand } from "@/types";
 
 interface BrandCardProps {
   brand: Brand;
@@ -19,7 +19,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
   // Directly use the properties from the Brand interface without optional chaining
   const logo = brand.logo;
   const knownFor = brand.knownFor;
-  const brandId = brand.id;
+  const brandSlug = brand.slug || ''; // Use slug instead of ID for routing
 
   // Get fallback image based on brand name or country
   const getFallbackImage = () => {
@@ -98,7 +98,7 @@ export default function BrandCard({ brand }: BrandCardProps) {
       </CardContent>
       
       <CardFooter className="pt-0 mt-auto">
-        <Link to={`/brands/${brandId}`} className="w-full">
+        <Link to={`/brands/${brandSlug}`} className="w-full">
           <Button 
             variant="teal"
             className="w-full justify-between"
