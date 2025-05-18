@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 import { GlossaryTerm, GlossaryFormValues } from "@/types/glossary";
-import { createGlossaryTerm, updateGlossaryTerm, generateUniqueSlug } from "@/services/glossaryService";
+import { createGlossaryTerm, updateGlossaryTerm } from "@/services/glossary/termService"; 
+import { generateUniqueSlug } from "@/services/glossary/slugService";
 
 interface UseSubmissionHandlerProps {
   term: GlossaryTerm | null;

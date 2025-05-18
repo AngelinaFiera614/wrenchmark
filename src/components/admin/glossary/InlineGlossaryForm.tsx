@@ -4,7 +4,7 @@ import { GlossaryTerm, GlossaryFormValues } from "@/types/glossary";
 import { Button } from "@/components/ui/button";
 import { GlossaryForm } from "./GlossaryForm";
 import { useSubmissionHandler } from "./dialog/SubmissionHandler";
-import { X, ArrowLeft, Save } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 interface InlineGlossaryFormProps {
