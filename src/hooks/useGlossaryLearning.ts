@@ -81,9 +81,19 @@ export function useGlossaryLearning() {
     const { data, isLoading } = useQuery({
       queryKey: ["userGlossaryStats", user?.id],
       queryFn: async () => {
-        if (!user) return null;
+        if (!user) return {
+          total_terms: 0,
+          learned_terms: 0,
+          learning_percentage: 0
+        };
         
-        return await getUserGlossaryStats();
+        const statsResult = await getUserGlossaryStats();
+        // The function returns an array with a single object, so extract the first element
+        return statsResult[0] || {
+          total_terms: 0,
+          learned_terms: 0,
+          learning_percentage: 0
+        };
       },
       enabled: !!user
     });
