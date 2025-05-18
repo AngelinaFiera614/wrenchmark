@@ -3,16 +3,13 @@ import React from 'react';
 import { Control } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { SharedTitleFieldProps } from './types';
 
-interface TitleFieldProps {
-  control: Control<any>;
-}
-
-const TitleField: React.FC<TitleFieldProps> = ({ control }) => {
+const TitleField: React.FC<SharedTitleFieldProps> = ({ control, name = "title" }) => {
   return (
     <FormField
       control={control}
-      name="title"
+      name={name}
       render={({ field }) => (
         <FormItem>
           <FormLabel>Title</FormLabel>

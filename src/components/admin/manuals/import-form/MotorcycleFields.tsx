@@ -4,7 +4,7 @@ import { Control } from 'react-hook-form';
 import SharedMotorcycleFields from '../shared/MotorcycleFields';
 import { ImportManualFormValues } from '../ImportManualForm';
 
-interface MotorcycleFieldsProps {
+export interface MotorcycleFieldsProps {
   control: Control<ImportManualFormValues>;
 }
 

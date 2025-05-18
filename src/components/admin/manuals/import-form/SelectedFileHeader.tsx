@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { BucketFile } from '../ManualBucketBrowser';
 
-interface SelectedFileHeaderProps {
+export interface SelectedFileHeaderProps {
   selectedFile: BucketFile;
   onChangeFile: () => void;
 }

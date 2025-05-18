@@ -2,7 +2,7 @@
 import React from 'react';
 import ManualBucketBrowser, { BucketFile } from '../ManualBucketBrowser';
 
-interface FileSelectionViewProps {
+export interface FileSelectionViewProps {
   onSelectFile: (file: BucketFile) => void;
 }
 

@@ -2,7 +2,7 @@
 import React from 'react';
 import SharedFormActions from '../shared/FormActions';
 
-interface FormActionsProps {
+export interface FormActionsProps {
   onCancel: () => void;
   isSubmitting: boolean;
 }

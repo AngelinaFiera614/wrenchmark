@@ -12,3 +12,27 @@ export interface ImportItem extends BucketFile {
   errorMessage?: string;
   importedManual?: ManualWithMotorcycle;
 }
+
+// Shared component interfaces
+export interface SharedTitleFieldProps {
+  control: Control<any>;
+  name?: string;
+}
+
+export interface SharedManualTypeFieldProps {
+  control: Control<any>;
+  name?: string;
+}
+
+export interface SharedMotorcycleFieldsProps {
+  control: Control<any>;
+}
+
+export interface SharedFormActionsProps {
+  onCancel: () => void;
+  isSubmitting: boolean;
+  submitLabel?: string;
+}
+
+// Need to import this for the control type
+import { Control } from 'react-hook-form';

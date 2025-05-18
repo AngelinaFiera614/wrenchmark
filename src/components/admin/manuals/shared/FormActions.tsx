@@ -2,14 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { SharedFormActionsProps } from './types';
 
-interface FormActionsProps {
-  onCancel: () => void;
-  isSubmitting: boolean;
-  submitLabel?: string;
-}
-
-const FormActions: React.FC<FormActionsProps> = ({
+const FormActions: React.FC<SharedFormActionsProps> = ({
   onCancel,
   isSubmitting,
   submitLabel = "Save"

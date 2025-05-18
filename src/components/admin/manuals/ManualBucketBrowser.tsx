@@ -17,7 +17,7 @@ export interface BucketFile {
   selected?: boolean;
 }
 
-interface ManualBucketBrowserProps {
+export interface ManualBucketBrowserProps {
   onSelect: (file: BucketFile) => void;
   onSelectMultiple?: (files: BucketFile[]) => void;
   multiSelect?: boolean;

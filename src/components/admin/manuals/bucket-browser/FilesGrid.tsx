@@ -3,7 +3,7 @@ import React from 'react';
 import FileCard from './FileCard';
 import { BucketFile } from '../ManualBucketBrowser';
 
-interface FilesGridProps {
+export interface FilesGridProps {
   files: BucketFile[];
   multiSelect?: boolean;
   onFileSelect: (file: BucketFile) => void;

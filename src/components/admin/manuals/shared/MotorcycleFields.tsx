@@ -1,15 +1,10 @@
 
 import React from 'react';
-import { Control } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { SharedMotorcycleFieldsProps } from './types';
 
-// Generic interface that works for any form with make/model/year fields
-interface MotorcycleFieldsProps {
-  control: Control<any>;
-}
-
-const MotorcycleFields: React.FC<MotorcycleFieldsProps> = ({ control }) => {
+const MotorcycleFields: React.FC<SharedMotorcycleFieldsProps> = ({ control }) => {
   return (
     <>
       <div className="grid grid-cols-2 gap-4">

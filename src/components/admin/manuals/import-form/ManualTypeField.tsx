@@ -4,7 +4,7 @@ import { Control } from 'react-hook-form';
 import SharedManualTypeField from '../shared/ManualTypeField';
 import { ImportManualFormValues } from '../ImportManualForm';
 
-interface ManualTypeFieldProps {
+export interface ManualTypeFieldProps {
   control: Control<ImportManualFormValues>;
 }
 

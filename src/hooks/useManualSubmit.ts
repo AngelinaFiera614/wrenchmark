@@ -4,17 +4,23 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services/motorcycleService';
 import { uploadManual, updateManual, importManual } from '@/services/manuals';
-import { ManualWithMotorcycle, ManualInfo } from '@/services/manuals';
+import { ManualWithMotorcycle, ManualInfo, ManualUpdateParams } from '@/services/manuals/types';
 import { ManualFormValues } from '@/components/admin/manuals/ManualFormSchema';
 import { ImportManualFormValues } from '@/components/admin/manuals/ImportManualForm';
 
-interface UseManualSubmitProps {
+export interface UseManualSubmitProps {
   onOpenChange: (open: boolean) => void;
   onSaveSuccess: (savedManual: ManualWithMotorcycle) => void;
   manualId?: string;
 }
 
-export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseManualSubmitProps) => {
+export interface ManualSubmitHookResult {
+  handleSubmit: (values: ManualFormValues) => Promise<void>;
+  handleImport: (values: ImportManualFormValues) => Promise<void>;
+  isSubmitting: boolean;
+}
+
+export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseManualSubmitProps): ManualSubmitHookResult => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -46,7 +52,8 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
       
       if (manualId) {
         // Update existing manual
-        const updateData: ManualInfo = {
+        const updateData: ManualUpdateParams = {
+          id: manualId,
           title: values.title,
           manual_type: values.manual_type,
           motorcycle_id: motorcycle.id,
@@ -141,20 +148,18 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
       }
 
       // Prepare manual data
-      const manualData: ManualInfo = {
+      const manualData = {
         title: values.title,
         manual_type: values.manual_type,
         motorcycle_id: motorcycle.id,
         year: values.year,
         file_size_mb: values.file_size_mb || undefined,
         file_url: values.file_url,
+        file_name: values.file_name
       };
       
       // Import the manual
-      const importResult = await importManual({
-        ...manualData,
-        file_name: values.file_name
-      });
+      const importResult = await importManual(manualData);
       
       if (!importResult) {
         throw new Error('Failed to import manual file');

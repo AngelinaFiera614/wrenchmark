@@ -1,15 +1,8 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ImportItem } from '../shared/types';
 import { ManualType } from '@/types';
-
-interface ConfirmDetailsStepProps {
-  importItems: ImportItem[];
-  onBack: () => void;
-  onStartImport: () => void;
-  onManualTypeChange: (fileId: string, manualType: ManualType) => void;
-}
+import { ConfirmDetailsStepProps } from './types';
 
 const ConfirmDetailsStep: React.FC<ConfirmDetailsStepProps> = ({
   importItems,

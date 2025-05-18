@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { BucketFile } from '../ManualBucketBrowser';
@@ -6,9 +7,9 @@ import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services
 import { importManual } from '@/services/manuals';
 import { ManualType } from '@/types';
 import { ManualWithMotorcycle } from '@/services/manuals/types';
-import { ImportItem } from '../shared/types';
+import { ImportItem, ImportProcessorResult } from './types';
 
-export const useImportProcessor = () => {
+export const useImportProcessor = (): ImportProcessorResult => {
   const [selectedFiles, setSelectedFiles] = useState<BucketFile[]>([]);
   const [importItems, setImportItems] = useState<ImportItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -66,7 +67,7 @@ export const useImportProcessor = () => {
     );
   };
 
-  const processImport = async () => {
+  const processImport = async (): Promise<ManualWithMotorcycle[]> => {
     setIsProcessing(true);
     const successfulImports: ManualWithMotorcycle[] = [];
     

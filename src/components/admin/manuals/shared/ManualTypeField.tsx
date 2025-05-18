@@ -2,16 +2,10 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Control } from 'react-hook-form';
 import { manualTypes } from '../ManualFormSchema';
+import { SharedManualTypeFieldProps } from './types';
 
-// Generic interface that works for any form with manual_type field
-interface ManualTypeFieldProps {
-  control: Control<any>;
-  name?: string;
-}
-
-const ManualTypeField: React.FC<ManualTypeFieldProps> = ({ 
+const ManualTypeField: React.FC<SharedManualTypeFieldProps> = ({ 
   control, 
   name = "manual_type" // Default field name
 }) => {

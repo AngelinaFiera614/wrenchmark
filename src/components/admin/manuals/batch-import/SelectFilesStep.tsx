@@ -2,14 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import ManualBucketBrowser, { BucketFile } from "../ManualBucketBrowser";
-
-interface SelectFilesStepProps {
-  selectedFiles: BucketFile[];
-  onSelectFiles: (files: BucketFile[]) => void;
-  onSelectSingleFile: (file: BucketFile) => void;
-  onCancel: () => void;
-  onContinue: () => void;
-}
+import { SelectFilesStepProps } from './types';
 
 const SelectFilesStep: React.FC<SelectFilesStepProps> = ({
   selectedFiles,

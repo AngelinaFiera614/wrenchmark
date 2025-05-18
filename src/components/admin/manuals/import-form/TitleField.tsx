@@ -4,7 +4,7 @@ import { Control } from 'react-hook-form';
 import SharedTitleField from '../shared/TitleField';
 import { ImportManualFormValues } from '../ImportManualForm';
 
-interface TitleFieldProps {
+export interface TitleFieldProps {
   control: Control<ImportManualFormValues>;
 }
 

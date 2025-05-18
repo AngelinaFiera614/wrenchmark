@@ -5,7 +5,19 @@ import { StorageFile } from '@/hooks/useStorageList';
 import { parseFileName } from '@/utils/fileNameParser';
 import { listManualFiles } from '@/services/manuals/storage';
 
-export const useManualBucket = () => {
+export interface ManualBucketHookResult {
+  files: StorageFile[];
+  isLoading: boolean;
+  error: string | null;
+  fetchManualFiles: () => Promise<void>;
+  parseFileDetails: (fileName: string) => {
+    make: string;
+    model: string;
+    year: number | null;
+  };
+}
+
+export const useManualBucket = (): ManualBucketHookResult => {
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
