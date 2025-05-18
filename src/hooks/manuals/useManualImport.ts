@@ -21,7 +21,7 @@ export const useManualImport = ({
   onSaveSuccess 
 }: UseManualImportProps): UseManualImportResult => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const { getMotorcycleId } = useManualBucket();
+  const { files, fetchManualFiles, organizeFiles, parseFileDetails, deleteFile, getMotorcycleId } = useManualBucket();
   const { toast } = useToast();
 
   const handleImport = async (values: ImportManualFormValues) => {

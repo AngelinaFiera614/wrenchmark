@@ -1,60 +1,54 @@
-
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { TagPicker } from '@/components/common/TagPicker';
+import { ManualTag } from '@/services/manuals/tags';
 
 interface TagsFieldProps {
   tags: string[];
-  suggestedTags: string[];
+  availableTags: ManualTag[];
   onAddTag: (tag: string) => void;
   onRemoveTag: (tag: string) => void;
+  onTagsChange?: (tags: string[]) => void;
+  isLoading?: boolean;
+  disabled?: boolean;
 }
 
 const TagsField: React.FC<TagsFieldProps> = ({
   tags,
-  suggestedTags,
+  availableTags,
   onAddTag,
-  onRemoveTag
+  onRemoveTag,
+  onTagsChange,
+  isLoading = false,
+  disabled = false
 }) => {
+  // Handle tag selection changes
+  const handleTagsChange = (selectedTags: string[]) => {
+    // If we have an onTagsChange handler, use that
+    if (onTagsChange) {
+      onTagsChange(selectedTags);
+      return;
+    }
+    
+    // Otherwise use the add/remove handlers
+    // First, find tags to add (tags that are in selectedTags but not in tags)
+    const tagsToAdd = selectedTags.filter(tag => !tags.includes(tag));
+    tagsToAdd.forEach(tag => onAddTag(tag));
+    
+    // Then, find tags to remove (tags that are in tags but not in selectedTags)
+    const tagsToRemove = tags.filter(tag => !selectedTags.includes(tag));
+    tagsToRemove.forEach(tag => onRemoveTag(tag));
+  };
+
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium">Tags</div>
-      <div className="flex flex-wrap gap-2">
-        {tags?.map((tag) => (
-          <Badge 
-            key={tag} 
-            variant="outline"
-            className="bg-accent-teal/10 text-accent-teal border-accent-teal/20 flex items-center gap-1"
-          >
-            {tag}
-            <button
-              type="button"
-              onClick={() => onRemoveTag(tag)}
-              className="ml-1 rounded-full hover:bg-accent-teal/20 p-0.5"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
-        ))}
-      </div>
-      
-      {suggestedTags.length > 0 && (
-        <div className="mt-2">
-          <div className="text-xs text-muted-foreground mb-1">Suggested tags:</div>
-          <div className="flex flex-wrap gap-2">
-            {suggestedTags.map((tag) => (
-              <Badge 
-                key={tag} 
-                variant="outline"
-                className="bg-accent-teal/5 hover:bg-accent-teal/20 cursor-pointer transition-colors"
-                onClick={() => onAddTag(tag)}
-              >
-                + {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
+      <TagPicker
+        selectedTags={tags}
+        availableTags={availableTags}
+        onTagsChange={handleTagsChange}
+        placeholder="Select or create tags..."
+        disabled={disabled || isLoading}
+      />
     </div>
   );
 };
