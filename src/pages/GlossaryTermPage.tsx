@@ -4,12 +4,15 @@ import { useParams, Navigate } from 'react-router-dom';
 import { useGlossaryTerm } from '@/hooks/useGlossaryTerms';
 import GlossaryTermDetail from '@/components/glossary/GlossaryTermDetail';
 import { Loader } from 'lucide-react';
+import { useGlossaryLearning } from '@/hooks/useGlossaryLearning';
 
 const GlossaryTermPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: term, isLoading, error } = useGlossaryTerm(slug || '');
+  const { useGlossaryStats } = useGlossaryLearning();
+  const { isLoading: isLoadingStats } = useGlossaryStats();
   
-  if (isLoading) {
+  if (isLoading || isLoadingStats) {
     return (
       <div className="container py-12 flex justify-center">
         <Loader className="h-8 w-8 animate-spin text-accent-teal" />

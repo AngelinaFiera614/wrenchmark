@@ -217,6 +217,7 @@ export type Database = {
           content: string | null
           course_id: string
           created_at: string
+          glossary_terms: string[] | null
           id: string
           order: number
           published: boolean
@@ -228,6 +229,7 @@ export type Database = {
           content?: string | null
           course_id: string
           created_at?: string
+          glossary_terms?: string[] | null
           id?: string
           order: number
           published?: boolean
@@ -239,6 +241,7 @@ export type Database = {
           content?: string | null
           course_id?: string
           created_at?: string
+          glossary_terms?: string[] | null
           id?: string
           order?: number
           published?: boolean
@@ -592,6 +595,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_glossary_terms: {
+        Row: {
+          id: string
+          is_learned: boolean
+          learned_at: string | null
+          term_slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_learned?: boolean
+          learned_at?: string | null
+          term_slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_learned?: boolean
+          learned_at?: string | null
+          term_slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_glossary_terms_term_slug_fkey"
+            columns: ["term_slug"]
+            isOneToOne: false
+            referencedRelation: "glossary_terms"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           completed_at: string
@@ -692,6 +730,22 @@ export type Database = {
           color: string
         }[]
       }
+      get_user_glossary_stats: {
+        Args: { user_id_param?: string }
+        Returns: {
+          total_terms: number
+          learned_terms: number
+          learning_percentage: number
+        }[]
+      }
+      get_user_learned_terms: {
+        Args: { limit_param?: number; user_id_param?: string }
+        Returns: {
+          term_slug: string
+          term: string
+          learned_at: string
+        }[]
+      }
       get_user_top_skills: {
         Args: { limit_param?: number; user_id_param?: string }
         Returns: {
@@ -708,6 +762,14 @@ export type Database = {
       }
       is_admin: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      mark_term_as_learned: {
+        Args: { term_slug_param: string }
+        Returns: boolean
+      }
+      mark_term_as_unlearned: {
+        Args: { term_slug_param: string }
         Returns: boolean
       }
     }

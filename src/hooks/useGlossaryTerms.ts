@@ -1,111 +1,99 @@
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/components/ui/sonner';
-import { 
-  fetchGlossaryTerms,
-  fetchGlossaryTermBySlug,
-  createGlossaryTerm,
-  updateGlossaryTerm,
-  deleteGlossaryTerm,
-  searchGlossaryTerms,
-  filterGlossaryTermsByCategory
-} from '@/services/glossaryService';
-import { GlossaryTerm, GlossaryFormValues } from '@/types/glossary';
+import { useQuery } from "@tanstack/react-query";
+import { fetchGlossaryTerms, fetchGlossaryTermBySlug, generateUniqueSlug } from "@/services/glossaryService";
+import { useState } from "react";
+import { checkSlugExists } from "@/services/glossaryService";
 
 export function useGlossaryTerms() {
-  const queryClient = useQueryClient();
-  const [search, setSearch] = useState<string>('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  
-  // Get all glossary terms
-  const {
-    data: terms = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['glossaryTerms'],
-    queryFn: fetchGlossaryTerms,
-  });
-  
-  // Get unique categories from the glossary terms
-  const uniqueCategories = Array.from(
-    new Set(terms.flatMap((term) => term.category || []))
-  ).sort();
-  
-  // Filter terms based on search and categories
-  const filteredTerms = terms.filter((term) => {
-    const matchesSearch = !search || 
-      term.term.toLowerCase().includes(search.toLowerCase()) || 
-      term.definition.toLowerCase().includes(search.toLowerCase());
-      
-    const matchesCategories = 
-      selectedCategories.length === 0 || 
-      selectedCategories.some(cat => term.category.includes(cat));
-      
-    return matchesSearch && matchesCategories;
-  });
-
-  // Create term mutation
-  const createMutation = useMutation({
-    mutationFn: (termData: GlossaryFormValues) => createGlossaryTerm(termData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['glossaryTerms'] });
-      toast.success("Glossary term added successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to add term: ${error.message}`);
-    }
-  });
-
-  // Update term mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, termData }: { id: string; termData: Partial<GlossaryFormValues> }) => 
-      updateGlossaryTerm(id, termData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['glossaryTerms'] });
-      toast.success("Glossary term updated successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update term: ${error.message}`);
-    }
-  });
-
-  // Delete term mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteGlossaryTerm(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['glossaryTerms'] });
-      toast.success("Glossary term deleted successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete term: ${error.message}`);
-    }
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["glossaryTerms"],
+    queryFn: fetchGlossaryTerms
   });
 
   return {
-    terms: filteredTerms,
-    allTerms: terms,
+    terms: data || [],
     isLoading,
-    error,
-    search,
-    setSearch,
-    categories: uniqueCategories,
-    selectedCategories,
-    setSelectedCategories,
-    createTerm: createMutation.mutate,
-    updateTerm: updateMutation.mutate,
-    deleteTerm: deleteMutation.mutate,
-    isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending,
+    error
   };
 }
 
 export function useGlossaryTerm(slug: string) {
-  return useQuery({
-    queryKey: ['glossaryTerm', slug],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["glossaryTerm", slug],
     queryFn: () => fetchGlossaryTermBySlug(slug),
-    enabled: !!slug,
+    enabled: !!slug
   });
+
+  return {
+    data,
+    isLoading,
+    error
+  };
+}
+
+export function useSlugGenerator() {
+  const [isChecking, setIsChecking] = useState(false);
+  const [generatedSlug, setGeneratedSlug] = useState<string>("");
+  const [slugExists, setSlugExists] = useState(false);
+
+  const generateSlugFromTerm = async (term: string, existingId?: string) => {
+    setIsChecking(true);
+    try {
+      const slug = await generateUniqueSlug(term, existingId);
+      setGeneratedSlug(slug);
+      setSlugExists(false);
+      return slug;
+    } catch (error) {
+      console.error("Error generating slug:", error);
+      return "";
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  const checkIfSlugExists = async (slug: string, existingId?: string) => {
+    setIsChecking(true);
+    try {
+      const exists = await checkSlugExists(slug, existingId);
+      setSlugExists(exists);
+      return exists;
+    } catch (error) {
+      console.error("Error checking slug:", error);
+      return true;
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  return {
+    generateSlugFromTerm,
+    checkIfSlugExists,
+    generatedSlug,
+    slugExists,
+    isChecking
+  };
+}
+
+export function useGlossaryCategoryFilter() {
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const { terms, isLoading } = useGlossaryTerms();
+
+  const availableCategories = isLoading 
+    ? [] 
+    : [...new Set(terms.flatMap(term => term.category || []))].sort();
+
+  const filteredTerms = selectedCategories.length > 0
+    ? terms.filter(term => 
+        term.category && 
+        term.category.some(cat => selectedCategories.includes(cat))
+      )
+    : terms;
+
+  return {
+    availableCategories,
+    selectedCategories,
+    setSelectedCategories,
+    filteredTerms,
+    isLoading
+  };
 }

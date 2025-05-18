@@ -1,188 +1,237 @@
 
-import React, { useState, useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { createLesson, updateLesson } from "@/services/lessonService";
-import { Lesson } from "@/types/course";
-import { toast } from "sonner";
-import {
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { createLesson, updateLesson } from '@/services/lessonService';
+import { queryClient } from '@/main';
+import LessonGlossaryTermsField from './LessonGlossaryTermsField';
 
-const formSchema = z.object({
-  title: z
-    .string()
-    .min(3, { message: "Title must be at least 3 characters long" }),
+const lessonFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  slug: z.string().min(1, "Slug is required"),
+  order: z.coerce.number().int().positive("Order must be a positive integer"),
   content: z.string().optional(),
-  order: z.coerce.number().int().min(0),
   published: z.boolean().default(false),
-  slug: z.string().optional(),
+  glossary_terms: z.array(z.string()).default([])
 });
 
-type FormData = z.infer<typeof formSchema>;
+type LessonFormValues = z.infer<typeof lessonFormSchema>;
 
 interface LessonFormDialogProps {
-  lesson: Lesson | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  lesson?: any;  // The lesson object when editing
   courseId: string;
-  onSuccess: (lesson: Lesson, isNew: boolean) => void;
-  onCancel: () => void;
-  existingLessons: Lesson[];
+  onSuccess?: () => void;
 }
 
-const LessonFormDialog: React.FC<LessonFormDialogProps> = ({
+export default function LessonFormDialog({
+  open,
+  onOpenChange,
   lesson,
   courseId,
-  onSuccess,
-  onCancel,
-  existingLessons,
-}) => {
-  const [submitting, setSubmitting] = useState<boolean>(false);
-  const isEditing = !!lesson;
+  onSuccess
+}: LessonFormDialogProps) {
+  const { toast } = useToast();
+  const [isPending, setIsPending] = useState(false);
+  const isEditing = !!lesson?.id;
 
-  // Determine next order number for new lessons
-  const getNextOrderNumber = () => {
-    if (existingLessons.length === 0) return 0;
-    const maxOrder = Math.max(...existingLessons.map(l => l.order));
-    return maxOrder + 1;
-  };
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<LessonFormValues>({
+    resolver: zodResolver(lessonFormSchema),
     defaultValues: {
-      title: lesson?.title || "",
-      content: lesson?.content || "",
-      order: lesson?.order ?? getNextOrderNumber(),
-      published: lesson?.published || false,
-      slug: lesson?.slug || "",
-    },
+      title: "",
+      slug: "",
+      order: 1,
+      content: "",
+      published: false,
+      glossary_terms: []
+    }
   });
 
+  // Populate form when editing
   useEffect(() => {
-    if (lesson) {
+    if (lesson && open) {
       form.reset({
-        title: lesson.title,
+        title: lesson.title || "",
+        slug: lesson.slug || "",
+        order: lesson.order || 1,
         content: lesson.content || "",
-        order: lesson.order,
-        published: lesson.published,
-        slug: lesson.slug,
+        published: lesson.published || false,
+        glossary_terms: lesson.glossary_terms || []
       });
-    } else {
+    } else if (open) {
+      // For new lessons, reset the form
       form.reset({
         title: "",
-        content: "",
-        order: getNextOrderNumber(),
-        published: false,
         slug: "",
+        order: 1,
+        content: "",
+        published: false,
+        glossary_terms: []
       });
     }
-  }, [lesson, form, existingLessons]);
+  }, [lesson, open, form]);
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      setSubmitting(true);
+  // Auto-generate slug from title
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const title = e.target.value;
+    form.setValue('title', title);
+    
+    if (!isEditing || !form.getValues('slug')) {
+      // Only auto-generate slug if creating new lesson or slug is empty
+      const slug = title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-');
       
-      let savedLesson: Lesson;
-      if (isEditing && lesson) {
-        savedLesson = await updateLesson(lesson.id, data);
-        toast.success("Lesson updated successfully");
-      } else {
-        savedLesson = await createLesson({
-          ...data,
-          course_id: courseId,
-        });
-        toast.success("Lesson created successfully");
-      }
+      form.setValue('slug', slug);
+    }
+  };
 
-      onSuccess(savedLesson, !isEditing);
+  const onSubmit = async (values: LessonFormValues) => {
+    setIsPending(true);
+    try {
+      if (isEditing) {
+        await updateLesson(lesson.id, {
+          ...values,
+          course_id: courseId
+        });
+        toast({
+          title: "Lesson updated",
+          description: `${values.title} has been updated successfully.`
+        });
+      } else {
+        await createLesson({
+          ...values,
+          course_id: courseId
+        });
+        toast({
+          title: "Lesson created",
+          description: `${values.title} has been created successfully.`
+        });
+      }
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['courseLessons', courseId] });
+      onOpenChange(false);
+      onSuccess?.();
     } catch (error) {
       console.error("Error saving lesson:", error);
-      toast.error(isEditing ? "Failed to update lesson" : "Failed to create lesson");
+      toast({
+        title: "Error",
+        description: `Failed to ${isEditing ? 'update' : 'create'} lesson. Please try again.`,
+        variant: "destructive"
+      });
     } finally {
-      setSubmitting(false);
+      setIsPending(false);
     }
   };
 
   return (
-    <DialogContent className="sm:max-w-[650px]">
-      <DialogHeader>
-        <DialogTitle>{isEditing ? "Edit Lesson" : "Create Lesson"}</DialogTitle>
-        <DialogDescription>
-          {isEditing
-            ? "Make changes to the lesson details."
-            : "Enter the details for the new lesson."}
-        </DialogDescription>
-      </DialogHeader>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter lesson title"
-                    {...field}
-                    autoFocus
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEditing ? 'Edit Lesson' : 'Create New Lesson'}</DialogTitle>
+          <DialogDescription>
+            {isEditing 
+              ? 'Make changes to the lesson details below.'
+              : 'Add a new lesson to this course.'}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Introduction to Motorcycles" 
+                      {...field} 
+                      onChange={handleTitleChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Slug</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="introduction-to-motorcycles" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <FormField
               control={form.control}
               name="order"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Order *</FormLabel>
+                  <FormLabel>Order</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      {...field}
+                    <Input 
+                      type="number" 
+                      min="1"
+                      placeholder="1" 
+                      {...field} 
                     />
                   </FormControl>
-                  <FormDescription>
-                    Position in the course (0 = first)
-                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Lesson content (supports Markdown)" 
+                      className="min-h-[200px]"
+                      {...field} 
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            <LessonGlossaryTermsField form={form} />
+            
             <FormField
               control={form.control}
               name="published"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                   <div className="space-y-0.5">
                     <FormLabel>Published</FormLabel>
                     <FormDescription>
-                      Make this lesson visible to users
+                      Make this lesson visible to students
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -194,43 +243,36 @@ const LessonFormDialog: React.FC<LessonFormDialogProps> = ({
                 </FormItem>
               )}
             />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="content"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Content (Markdown)</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="# Lesson content using Markdown"
-                    rows={12}
-                    {...field}
-                    value={field.value || ""}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Use Markdown formatting for lesson content
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </Form>
-    </DialogContent>
+            
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isEditing ? 'Update Lesson' : 'Create Lesson'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
-};
+}
 
-export default LessonFormDialog;
+const FormDescription = React.forwardRef<
+  HTMLParagraphElement, 
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => {
+  return (
+    <p
+      ref={ref}
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  );
+});
+FormDescription.displayName = "FormDescription";

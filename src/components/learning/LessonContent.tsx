@@ -1,57 +1,106 @@
 
-import React from "react";
-import { Lesson } from "@/types/course";
-import { Card, CardContent } from "@/components/ui/card";
-import ReactMarkdown from "react-markdown";
-import { Skeleton } from "@/components/ui/skeleton";
+import React, { useMemo } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Card, CardContent } from '@/components/ui/card';
+import GlossaryTermTooltip from './GlossaryTermTooltip';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { GlossaryTerm } from '@/types/glossary';
 
 interface LessonContentProps {
-  lesson: Lesson | null;
-  loading?: boolean;
+  content: string;
+  glossaryTermSlugs?: string[];
 }
 
-const LessonContent: React.FC<LessonContentProps> = ({ lesson, loading = false }) => {
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <Skeleton className="h-8 w-3/4 mb-6" />
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-11/12" />
-            <Skeleton className="h-4 w-10/12" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-9/12" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+const LessonContent: React.FC<LessonContentProps> = ({ content, glossaryTermSlugs = [] }) => {
+  // Fetch glossary terms if they were provided
+  const { data: glossaryTerms = [] } = useQuery({
+    queryKey: ['lessonContentGlossaryTerms', glossaryTermSlugs],
+    queryFn: async () => {
+      if (!glossaryTermSlugs.length) return [];
+      
+      const { data, error } = await supabase
+        .from('glossary_terms')
+        .select('*')
+        .in('slug', glossaryTermSlugs);
+        
+      if (error) throw error;
+      return data as GlossaryTerm[];
+    },
+    enabled: glossaryTermSlugs.length > 0
+  });
+  
+  // Create a map of terms for easy lookup
+  const termsMap = useMemo(() => {
+    const map: Record<string, GlossaryTerm> = {};
+    glossaryTerms.forEach(term => {
+      map[term.term.toLowerCase()] = term;
+    });
+    return map;
+  }, [glossaryTerms]);
+  
+  // Process the markdown content to highlight glossary terms
+  const processedContent = useMemo(() => {
+    if (!glossaryTerms.length) return content;
+    
+    let result = content;
+    
+    // Sort terms by length (descending) to avoid issues with terms that are substrings of others
+    const sortedTerms = glossaryTerms
+      .map(term => term.term)
+      .sort((a, b) => b.length - a.length);
+    
+    // Replace term occurrences with marked version
+    sortedTerms.forEach(term => {
+      const regex = new RegExp(`\\b${escapeRegExp(term)}\\b`, 'gi');
+      result = result.replace(regex, `[[TERM:${term}]]`);
+    });
+    
+    return result;
+  }, [content, glossaryTerms]);
 
-  if (!lesson) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-8">
-            <h3 className="text-lg font-medium mb-2">Lesson not found</h3>
-            <p className="text-muted-foreground">The lesson you're looking for doesn't exist or is not available.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  // Helper function to escape special characters in regex
+  function escapeRegExp(string: string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
-
+  
   return (
     <Card>
-      <CardContent className="p-6">
-        <h1 className="text-2xl font-bold mb-6">{lesson.title}</h1>
-        <div className="prose prose-invert max-w-none">
-          {lesson.content ? (
-            <ReactMarkdown>{lesson.content}</ReactMarkdown>
-          ) : (
-            <p className="text-muted-foreground">No content available for this lesson.</p>
-          )}
-        </div>
+      <CardContent className="prose prose-invert max-w-none p-6">
+        <ReactMarkdown
+          components={{
+            p: ({ children }) => {
+              if (typeof children === 'string') {
+                return <p>{children}</p>;
+              }
+
+              // Process any paragraph that might contain our term markers
+              return (
+                <p>
+                  {React.Children.map(children, child => {
+                    if (typeof child !== 'string') return child;
+                    
+                    // Split by term markers and replace with tooltips
+                    const parts = child.split(/\[\[TERM:([^\]]+)\]\]/g);
+                    return parts.map((part, i) => {
+                      // Even indices are regular text, odd indices are term references
+                      if (i % 2 === 0) return part;
+                      
+                      const term = termsMap[part.toLowerCase()];
+                      return term ? (
+                        <GlossaryTermTooltip key={i} term={term}>
+                          {part}
+                        </GlossaryTermTooltip>
+                      ) : part;
+                    });
+                  })}
+                </p>
+              );
+            }
+          }}
+        >
+          {processedContent}
+        </ReactMarkdown>
       </CardContent>
     </Card>
   );
