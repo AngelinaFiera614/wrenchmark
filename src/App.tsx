@@ -19,10 +19,12 @@ import AdminMotorcycles from "@/pages/admin/AdminMotorcycles";
 import AdminBrands from "@/pages/admin/AdminBrands";
 import AdminRepairSkills from "@/pages/admin/AdminRepairSkills";
 import AdminManuals from "@/pages/admin/AdminManuals";
-import AdminParts from "@/pages/admin/AdminParts";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
 import AdminGlossary from "@/pages/admin/AdminGlossary";
+import AdminCourses from "@/pages/admin/AdminCourses";
+import AdminLessons from "@/pages/admin/AdminLessons";
+import AdminSkills from "@/pages/admin/AdminSkills";
 
 // Import actual page components
 import Index from "@/pages/Index";
@@ -39,6 +41,9 @@ import RidingSkillsPage from "@/pages/RidingSkillsPage";
 import Auth from "@/pages/Auth";
 import GlossaryPage from "@/pages/GlossaryPage";
 import GlossaryTermPage from "@/pages/GlossaryTermPage";
+import CoursesPage from "@/pages/CoursesPage";
+import CourseDetailPage from "@/pages/CourseDetailPage";
+import LessonPage from "@/pages/LessonPage";
 
 function App() {
   return (
@@ -66,6 +71,12 @@ function App() {
               <Route path="riding-skills/:id" element={<RidingSkillDetailPage />} />
               <Route path="glossary" element={<GlossaryPage />} />
               <Route path="glossary/:slug" element={<GlossaryTermPage />} />
+              
+              {/* New e-learning routes */}
+              <Route path="courses" element={<CoursesPage />} />
+              <Route path="courses/:slug" element={<CourseDetailPage />} />
+              <Route path="courses/:courseSlug/:lessonSlug" element={<LessonPage />} />
+              
               <Route path="*" element={<NotFound />} />
             </Route>
 
@@ -86,6 +97,11 @@ function App() {
                 <Route path="manuals" element={<AdminManuals />} />
                 <Route path="parts" element={<AdminParts />} />
                 <Route path="users" element={<AdminUsers />} />
+                
+                {/* New admin e-learning routes */}
+                <Route path="courses" element={<AdminCourses />} />
+                <Route path="courses/:courseId/lessons" element={<AdminLessons />} />
+                <Route path="skills" element={<AdminSkills />} />
               </Route>
             </Route>
           </Routes>

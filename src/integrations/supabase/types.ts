@@ -72,6 +72,39 @@ export type Database = {
         }
         Relationships: []
       }
+      courses: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          published: boolean
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          published?: boolean
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          published?: boolean
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       glossary_terms: {
         Row: {
           category: string[] | null
@@ -110,6 +143,118 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      lesson_quizzes: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          passing_score: number
+          questions: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          passing_score: number
+          questions: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          passing_score?: number
+          questions?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_quizzes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_skills: {
+        Row: {
+          lesson_id: string
+          level: number
+          skill_id: string
+        }
+        Insert: {
+          lesson_id: string
+          level?: number
+          skill_id: string
+        }
+        Update: {
+          lesson_id?: string
+          level?: number
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_skills_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          content: string | null
+          course_id: string
+          created_at: string
+          id: string
+          order: number
+          published: boolean
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          order: number
+          published?: boolean
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          order?: number
+          published?: boolean
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       manuals: {
         Row: {
@@ -360,11 +505,111 @@ export type Database = {
         }
         Relationships: []
       }
+      skills: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          completed_at: string
+          lesson_id: string
+          quiz_score: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          lesson_id: string
+          quiz_score?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          lesson_id?: string
+          quiz_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_skills: {
+        Row: {
+          level: number
+          skill_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          level?: number
+          skill_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          level?: number
+          skill_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      complete_lesson: {
+        Args: { lesson_id_param: string; quiz_score_param?: number }
+        Returns: boolean
+      }
+      generate_course_slug: {
+        Args: { title_input: string }
+        Returns: string
+      }
+      generate_lesson_slug: {
+        Args: { title_input: string }
+        Returns: string
+      }
       generate_slug: {
         Args: { "": string }
         Returns: string
@@ -373,9 +618,31 @@ export type Database = {
         Args: { input_text: string }
         Returns: string
       }
+      get_course_progress: {
+        Args: { course_id_param: string; user_id_param?: string }
+        Returns: {
+          total_lessons: number
+          completed_lessons: number
+          progress_percentage: number
+        }[]
+      }
+      get_user_top_skills: {
+        Args: { limit_param?: number; user_id_param?: string }
+        Returns: {
+          skill_id: string
+          skill_name: string
+          skill_category: string
+          skill_icon: string
+          level: number
+        }[]
+      }
       increment_manual_downloads: {
         Args: { manual_id: string }
         Returns: undefined
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
       }
     }
     Enums: {
