@@ -3,6 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { ManualTag, TagAssociation } from "./types";
 
 /**
+ * Helper function to safely transform data into ManualTag format
+ */
+const transformToManualTag = (item: any): ManualTag => {
+  return {
+    id: String(item?.id || ''),
+    name: String(item?.name || ''),
+    description: item?.description ? String(item.description) : undefined,
+    color: String(item?.color || '#00D2B4')
+  };
+};
+
+/**
  * Get all manual tags
  */
 export const getTags = async (): Promise<ManualTag[]> => {
@@ -16,14 +28,10 @@ export const getTags = async (): Promise<ManualTag[]> => {
     throw error;
   }
 
-  // Transform and validate the data to ensure it matches the ManualTag interface
-  // This avoids TypeScript errors by ensuring we return a properly typed array
-  return (data || []).map(item => ({
-    id: String(item.id),
-    name: String(item.name),
-    description: item.description ? String(item.description) : undefined,
-    color: String(item.color || '#00D2B4')
-  })) as ManualTag[];
+  // Safely transform and validate the data
+  return Array.isArray(data) 
+    ? data.map(item => transformToManualTag(item))
+    : [];
 };
 
 /**
@@ -39,13 +47,10 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
       throw error;
     }
     
-    // Transform and validate the data
-    return (data || []).map(item => ({
-      id: String(item.id),
-      name: String(item.name),
-      description: item.description ? String(item.description) : undefined,
-      color: String(item.color || '#00D2B4')
-    })) as ManualTag[];
+    // Safely transform and validate the data
+    return Array.isArray(data)
+      ? data.map(item => transformToManualTag(item))
+      : [];
     
   } catch (error) {
     console.log("RPC method failed, using fallback query method", error);
@@ -64,12 +69,18 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
         throw joinError;
       }
       
-      if (!joinData || joinData.length === 0) {
+      if (!joinData || !Array.isArray(joinData) || joinData.length === 0) {
         return [];
       }
       
       // Extract tag IDs safely
-      const tagIds = joinData.map((item: any) => item.tag_id);
+      const tagIds = joinData
+        .filter(item => item && typeof item === 'object' && 'tag_id' in item)
+        .map((item: any) => item.tag_id);
+      
+      if (tagIds.length === 0) {
+        return [];
+      }
       
       const { data: tagData, error: tagError } = await supabase
         .from('manual_tags' as any)
@@ -81,13 +92,10 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
         throw tagError;
       }
       
-      // Transform and validate the data
-      return (tagData || []).map(item => ({
-        id: String(item.id),
-        name: String(item.name),
-        description: item.description ? String(item.description) : undefined,
-        color: String(item.color || '#00D2B4')
-      })) as ManualTag[];
+      // Safely transform and validate the data
+      return Array.isArray(tagData)
+        ? tagData.map(item => transformToManualTag(item))
+        : [];
     } catch (fallbackError) {
       console.error("Fallback method also failed:", fallbackError);
       return [];
@@ -110,13 +118,8 @@ export const createTag = async (tag: Omit<ManualTag, 'id'>): Promise<ManualTag> 
     throw error;
   }
 
-  // Transform and validate the data
-  return {
-    id: String(data.id),
-    name: String(data.name),
-    description: data.description ? String(data.description) : undefined,
-    color: String(data.color || '#00D2B4')
-  } as ManualTag;
+  // Safely transform and validate the data
+  return transformToManualTag(data);
 };
 
 /**
@@ -135,13 +138,8 @@ export const updateTag = async (id: string, updates: Partial<Omit<ManualTag, 'id
     throw error;
   }
 
-  // Transform and validate the data
-  return {
-    id: String(data.id),
-    name: String(data.name),
-    description: data.description ? String(data.description) : undefined,
-    color: String(data.color || '#00D2B4')
-  } as ManualTag;
+  // Safely transform and validate the data
+  return transformToManualTag(data);
 };
 
 /**
@@ -210,13 +208,10 @@ export const getOrCreateTagsByNames = async (tagNames: string[]): Promise<Manual
     throw fetchError;
   }
 
-  // Transform and validate existing tags
-  const validExistingTags = (existingTags || []).map(item => ({
-    id: String(item.id),
-    name: String(item.name),
-    description: item.description ? String(item.description) : undefined,
-    color: String(item.color || '#00D2B4')
-  })) as ManualTag[];
+  // Safely transform and validate existing tags
+  const validExistingTags = Array.isArray(existingTags)
+    ? existingTags.map(item => transformToManualTag(item))
+    : [];
 
   const existingTagNames = validExistingTags.map(tag => tag.name.toLowerCase());
   const newTagNames = tagNames.filter(name => 
@@ -241,13 +236,10 @@ export const getOrCreateTagsByNames = async (tagNames: string[]): Promise<Manual
       throw createError;
     }
 
-    // Transform and validate created tags
-    const validCreatedTags = (createdTags || []).map(item => ({
-      id: String(item.id),
-      name: String(item.name),
-      description: item.description ? String(item.description) : undefined,
-      color: String(item.color || '#00D2B4')
-    })) as ManualTag[];
+    // Safely transform and validate created tags
+    const validCreatedTags = Array.isArray(createdTags)
+      ? createdTags.map(item => transformToManualTag(item))
+      : [];
 
     // Combine existing and newly created tags
     return [...validExistingTags, ...validCreatedTags];
