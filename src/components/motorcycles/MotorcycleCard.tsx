@@ -58,7 +58,7 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
       "overflow-hidden transition-all hover:shadow-lg",
       isSelected && "ring-2 ring-accent-teal"
     )}>
-      <Link to={`/motorcycle/${id}`}>
+      <Link to={`/motorcycles/${id}`}>
         <div className="relative aspect-[16/9] overflow-hidden">
           {image_url ? (
             <img

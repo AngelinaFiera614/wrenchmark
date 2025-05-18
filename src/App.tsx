@@ -64,6 +64,11 @@ function App() {
                 path="motorcycles/:motorcycleId"
                 element={<MotorcycleDetail />}
               />
+              {/* Add support for the old URL pattern */}
+              <Route
+                path="motorcycle/:motorcycleId"
+                element={<MotorcycleDetail />}
+              />
               <Route path="brands" element={<BrandsDirectory />} />
               <Route path="brands/:brandId" element={<BrandDetail />} />
               <Route path="compare" element={<ComparisonPage />} />
@@ -95,7 +100,6 @@ function App() {
                 <Route path="riding-skills" element={<AdminRidingSkills />} />
                 <Route path="glossary" element={<AdminGlossary />} />
                 <Route path="manuals" element={<AdminManuals />} />
-                {/* Fix: Removing AdminParts which doesn't exist */}
                 <Route path="users" element={<AdminUsers />} />
                 
                 {/* New admin e-learning routes */}
