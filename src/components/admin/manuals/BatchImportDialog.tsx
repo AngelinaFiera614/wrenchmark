@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useImportProcessor } from './batch-import/useImportProcessor';
+import { useImportProcessor } from './batch-import/hooks';
 import { BatchImportDialogProps } from './batch-import/types';
 import SelectFilesStep from './batch-import/SelectFilesStep';
 import ConfirmDetailsStep from './batch-import/ConfirmDetailsStep';
