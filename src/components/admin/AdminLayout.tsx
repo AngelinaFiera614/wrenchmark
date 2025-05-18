@@ -1,24 +1,14 @@
 
-import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { useAuth } from "@/context/AuthContext";
 import { Loader } from "lucide-react";
 
 const AdminLayout = () => {
-  const { isAdmin, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { isLoading } = useAuth();
   
-  useEffect(() => {
-    console.log("AdminLayout - Auth state:", { isAdmin, isLoading });
-    
-    if (!isLoading && !isAdmin) {
-      console.log("AdminLayout: User not admin, redirecting to home");
-      navigate("/");
-    }
-  }, [isAdmin, isLoading, navigate]);
-  
+  // Only show loading state if auth is still loading
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -30,6 +20,8 @@ const AdminLayout = () => {
     );
   }
   
+  // ProtectedRoute has already verified admin status,
+  // so we can safely render the admin layout
   return (
     <div className="min-h-screen flex flex-col">
       <AdminHeader />
