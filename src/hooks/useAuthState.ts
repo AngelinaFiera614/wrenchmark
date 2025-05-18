@@ -5,19 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { getProfileById, createProfileIfNotExists } from "@/services/profileService";
 import type { Profile } from "@/services/profileService";
 import { toast } from "sonner";
+import { useAuthInitialization } from "./useAuthInitialization";
 
 export function useAuthState() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [authChangeComplete, setAuthChangeComplete] = useState(false);
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [profileCreationAttempted, setProfileCreationAttempted] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
       console.log("Fetching profile data for user:", userId);
+      setIsProfileLoading(true);
       const profileData = await getProfileById(userId);
       
       if (!profileData) {
@@ -65,64 +66,14 @@ export function useAuthState() {
     await fetchProfile(user.id);
   }, [user, fetchProfile]);
 
-  useEffect(() => {
-    console.log("Setting up auth state listener");
-    // Set up auth state listener FIRST to prevent missing events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log("Auth state changed:", event, currentSession?.user?.email);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          // Use setTimeout to prevent deadlock and set a flag to avoid double fetching
-          if (!isProfileLoading) {
-            setIsProfileLoading(true);
-            setTimeout(() => {
-              fetchProfile(currentSession.user.id);
-            }, 0);
-          }
-        } else {
-          setProfile(null);
-          setProfileCreationAttempted(false);
-          // Only set loading to false if this is not the initial load
-          if (authChangeComplete) {
-            setIsLoading(false);
-          }
-        }
-      }
-    );
-
-    // THEN check for existing session
-    const initializeAuth = async () => {
-      try {
-        console.log("Initializing auth");
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Got session:", currentSession?.user?.email || "No session");
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
-        } else {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Error initializing auth:", error);
-        setIsLoading(false);
-      }
-
-      // Mark initial auth check as complete
-      setAuthChangeComplete(true);
-    };
-
-    initializeAuth();
-
-    return () => {
-      console.log("Unsubscribing from auth state changes");
-      subscription.unsubscribe();
-    };
-  }, [fetchProfile, isProfileLoading]);
+  // Use the extracted authentication initialization logic
+  useAuthInitialization({
+    setSession,
+    setUser,
+    setIsLoading,
+    fetchProfile,
+    setIsProfileLoading
+  });
 
   return {
     session,
