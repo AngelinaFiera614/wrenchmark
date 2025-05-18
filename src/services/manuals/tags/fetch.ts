@@ -64,8 +64,15 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
       
       // Extract tag IDs safely with proper null checks
       const tagIds = joinData
-        .filter(item => item !== null && typeof item === 'object' && 'tag_id' in item && item.tag_id !== null)
-        .map(item => item.tag_id);
+        .filter(item => item !== null && typeof item === 'object')
+        .map(item => {
+          // Ensure item is an object with tag_id
+          if (item && 'tag_id' in item && item.tag_id !== null) {
+            return item.tag_id;
+          }
+          return null;
+        })
+        .filter((tagId): tagId is string => tagId !== null);
       
       if (tagIds.length === 0) {
         return [];
