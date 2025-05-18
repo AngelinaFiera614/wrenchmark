@@ -15,6 +15,7 @@ export type Profile = {
 // Get profile by user ID
 export const getProfileById = async (userId: string): Promise<Profile | null> => {
   try {
+    console.log(`[profileService] Fetching profile for user ID: ${userId}`);
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -22,13 +23,19 @@ export const getProfileById = async (userId: string): Promise<Profile | null> =>
       .maybeSingle();
 
     if (error) {
-      console.error("Error fetching profile:", error);
+      console.error("[profileService] Error fetching profile:", error);
       return null;
     }
 
-    return data as Profile | null;
+    if (!data) {
+      console.log(`[profileService] No profile found for user ID: ${userId}`);
+      return null;
+    }
+
+    console.log(`[profileService] Successfully fetched profile for: ${data.username || userId}`);
+    return data as Profile;
   } catch (error) {
-    console.error("Error in getProfileById:", error);
+    console.error("[profileService] Error in getProfileById:", error);
     return null;
   }
 };
@@ -36,18 +43,27 @@ export const getProfileById = async (userId: string): Promise<Profile | null> =>
 // Create profile if it doesn't exist
 export const createProfileIfNotExists = async (userId: string, isAdmin: boolean = false): Promise<Profile | null> => {
   try {
+    console.log(`[profileService] Checking if profile exists for user ID: ${userId}`);
     // First check if profile exists
     const existingProfile = await getProfileById(userId);
     if (existingProfile) {
+      console.log(`[profileService] Profile already exists for user ID: ${userId}`);
       return existingProfile;
     }
     
     // Get user details from auth to populate profile
+    console.log(`[profileService] Fetching auth user details for profile creation`);
     const { data: authData } = await supabase.auth.getUser(userId);
+    if (!authData?.user) {
+      console.error(`[profileService] Could not retrieve auth data for user ID: ${userId}`);
+      return null;
+    }
+    
     const userEmail = authData?.user?.email || '';
     const username = userEmail.split('@')[0];
     const fullName = authData?.user?.user_metadata?.full_name;
     
+    console.log(`[profileService] Creating new profile for user: ${username}`);
     // Profile doesn't exist, create one
     const { data, error } = await supabase
       .from('profiles')
@@ -61,13 +77,23 @@ export const createProfileIfNotExists = async (userId: string, isAdmin: boolean 
       .single();
 
     if (error) {
-      console.error("Error creating profile:", error);
+      console.error("[profileService] Error creating profile:", error);
+      
+      // Check if the profile was actually created despite the error
+      // This can happen with race conditions
+      const profileCheck = await getProfileById(userId);
+      if (profileCheck) {
+        console.log("[profileService] Profile exists despite insertion error, returning it");
+        return profileCheck;
+      }
+      
       return null;
     }
 
+    console.log(`[profileService] Successfully created profile for: ${username}`);
     return data as Profile;
   } catch (error) {
-    console.error("Error in createProfileIfNotExists:", error);
+    console.error("[profileService] Error in createProfileIfNotExists:", error);
     return null;
   }
 };
@@ -83,13 +109,13 @@ export const updateProfile = async (profile: Partial<Profile> & { id: string }):
       .single();
 
     if (error) {
-      console.error("Error updating profile:", error);
+      console.error("[profileService] Error updating profile:", error);
       return null;
     }
 
     return data as Profile;
   } catch (error) {
-    console.error("Error in updateProfile:", error);
+    console.error("[profileService] Error in updateProfile:", error);
     return null;
   }
 };
@@ -100,7 +126,7 @@ export const isUserAdmin = async (userId: string): Promise<boolean> => {
     const profile = await getProfileById(userId);
     return profile?.is_admin || false;
   } catch (error) {
-    console.error("Error checking admin status:", error);
+    console.error("[profileService] Error checking admin status:", error);
     return false;
   }
 };
@@ -117,13 +143,13 @@ export const makeUserAdmin = async (userId: string): Promise<boolean> => {
       .eq('id', userId);
       
     if (error) {
-      console.error("Error making user admin:", error);
+      console.error("[profileService] Error making user admin:", error);
       return false;
     }
     
     return true;
   } catch (error) {
-    console.error("Error in makeUserAdmin:", error);
+    console.error("[profileService] Error in makeUserAdmin:", error);
     return false;
   }
 };

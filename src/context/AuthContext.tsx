@@ -28,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [authChangeComplete, setAuthChangeComplete] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [profileCreationAttempted, setProfileCreationAttempted] = useState(false);
 
   useEffect(() => {
     console.log("Setting up auth state listener");
@@ -48,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } else {
           setProfile(null);
+          setProfileCreationAttempted(false);
           // Only set loading to false if this is not the initial load
           if (authChangeComplete) {
             setIsLoading(false);
@@ -94,22 +96,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!profileData) {
         console.log("No profile found, creating one");
-        // Try to create a new profile if one doesn't exist
-        try {
-          const createdProfile = await createProfileIfNotExists(userId);
-          
-          if (createdProfile) {
-            console.log("Created new profile for user");
-            setProfile(createdProfile);
-          } else {
-            console.error("Failed to create profile");
+        
+        if (!profileCreationAttempted) {
+          setProfileCreationAttempted(true);
+          // Try to create a new profile if one doesn't exist
+          try {
+            const createdProfile = await createProfileIfNotExists(userId);
+            
+            if (createdProfile) {
+              console.log("Created new profile for user");
+              setProfile(createdProfile);
+              toast.success("Profile created successfully");
+            } else {
+              console.error("Failed to create profile");
+              toast.error("Failed to create user profile. Please try refreshing the page.");
+              setProfile(null);
+            }
+          } catch (profileError) {
+            console.error("Error creating profile:", profileError);
             toast.error("Failed to create user profile. Please try refreshing the page.");
             setProfile(null);
           }
-        } catch (profileError) {
-          console.error("Error creating profile:", profileError);
-          toast.error("Failed to create user profile. Please try refreshing the page.");
-          setProfile(null);
         }
       } else {
         console.log("Admin status:", profileData.is_admin);
@@ -128,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshProfile = async () => {
     if (!user) return;
     setIsProfileLoading(true);
+    setProfileCreationAttempted(false); // Reset this flag to allow re-creation attempt
     await fetchProfile(user.id);
   };
 
@@ -141,10 +149,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         // Ensure profile exists after login
+        setProfileCreationAttempted(false); // Reset flag for new login
+        
+        // Wait for profile to be created/fetched before allowing redirect
         const profile = await getProfileById(data.user.id);
         if (!profile) {
           console.log("Creating profile after login");
-          await createProfileIfNotExists(data.user.id);
+          const createdProfile = await createProfileIfNotExists(data.user.id);
+          if (createdProfile) {
+            setProfile(createdProfile);
+          } else {
+            toast.error("Failed to create profile. Please try refreshing.");
+          }
+        } else {
+          setProfile(profile);
         }
       }
       // Auth state listener will handle session update
@@ -164,7 +182,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Create profile immediately after signup if we have a user
       if (data.user) {
         console.log("Creating profile immediately after signup");
-        await createProfileIfNotExists(data.user.id);
+        setProfileCreationAttempted(false); // Reset flag for new signup
+        const createdProfile = await createProfileIfNotExists(data.user.id);
+        if (createdProfile) {
+          setProfile(createdProfile);
+        }
       }
       
       toast.success("Signup successful! Please check your email to verify your account.");

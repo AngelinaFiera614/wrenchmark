@@ -29,7 +29,7 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const location = useLocation();
-  const { signIn, signUp, session, user, isLoading } = useAuth();
+  const { signIn, signUp, session, user, isLoading, profile } = useAuth();
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -43,14 +43,18 @@ const Auth = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
-        <Loader className="h-8 w-8 animate-spin text-accent-teal" />
+        <div className="flex flex-col items-center space-y-4">
+          <Loader className="h-8 w-8 animate-spin text-accent-teal" />
+          <p className="text-muted-foreground">Verifying authentication...</p>
+        </div>
       </div>
     );
   }
   
-  // Only redirect when session is fully loaded and exists
-  if (session && user) {
-    console.log("Auth: Redirecting authenticated user");
+  // Only redirect when session, user AND profile all exist
+  // This ensures we wait for the entire authentication flow to complete
+  if (session && user && profile) {
+    console.log("Auth: User has complete authentication, redirecting");
     // Get the intended destination or default to home
     const from = location.state?.from?.pathname || "/";
     return <Navigate to={from} replace />;
