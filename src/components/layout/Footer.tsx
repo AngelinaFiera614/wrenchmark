@@ -22,7 +22,7 @@ export default function Footer() {
             Contact
           </Link>
           <Link 
-            to="/feedback" 
+            to="/contact" 
             className="text-sm text-muted-foreground hover:text-accent-teal wrenchmark-link"
           >
             Feedback

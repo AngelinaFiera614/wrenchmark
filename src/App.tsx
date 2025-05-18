@@ -35,6 +35,7 @@ import BrandDetail from "@/pages/BrandDetail";
 import ComparisonPage from "@/pages/ComparisonPage";
 import ProfilePage from "@/pages/ProfilePage";
 import RidingSkillDetailPage from "@/pages/RidingSkillDetailPage";
+import RidingSkillsPage from "@/pages/RidingSkillsPage";
 import Auth from "@/pages/Auth";
 import GlossaryPage from "@/pages/GlossaryPage";
 import GlossaryTermPage from "@/pages/GlossaryTermPage";
@@ -61,6 +62,7 @@ function App() {
               <Route path="brands" element={<BrandsDirectory />} />
               <Route path="brands/:brandId" element={<BrandDetail />} />
               <Route path="compare" element={<ComparisonPage />} />
+              <Route path="riding-skills" element={<RidingSkillsPage />} />
               <Route path="riding-skills/:id" element={<RidingSkillDetailPage />} />
               <Route path="glossary" element={<GlossaryPage />} />
               <Route path="glossary/:slug" element={<GlossaryTermPage />} />

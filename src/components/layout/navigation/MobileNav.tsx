@@ -28,6 +28,20 @@ const MobileNav = ({ closeMenu, handleSignOut }: MobileNavProps) => {
         Brands
       </Link>
       <Link
+        to="/riding-skills"
+        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
+        onClick={closeMenu}
+      >
+        Riding Skills
+      </Link>
+      <Link
+        to="/glossary"
+        className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
+        onClick={closeMenu}
+      >
+        Glossary
+      </Link>
+      <Link
         to="/about"
         className="text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal"
         onClick={closeMenu}

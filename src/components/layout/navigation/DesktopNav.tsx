@@ -18,6 +18,18 @@ const DesktopNav = () => {
         Brands
       </Link>
       <Link
+        to="/riding-skills"
+        className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent-teal wrenchmark-link"
+      >
+        Riding Skills
+      </Link>
+      <Link
+        to="/glossary"
+        className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent-teal wrenchmark-link"
+      >
+        Glossary
+      </Link>
+      <Link
         to="/about"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent-teal wrenchmark-link"
       >
