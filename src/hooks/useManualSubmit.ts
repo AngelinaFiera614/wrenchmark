@@ -3,9 +3,10 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services/motorcycleService';
-import { uploadManual, updateManual } from '@/services/manuals';
+import { uploadManual, updateManual, importManual } from '@/services/manuals';
 import { ManualWithMotorcycle, ManualInfo } from '@/services/manuals';
 import { ManualFormValues } from '@/components/admin/manuals/ManualFormSchema';
+import { ImportManualFormValues } from '@/components/admin/manuals/ImportManualForm';
 
 interface UseManualSubmitProps {
   onOpenChange: (open: boolean) => void;
@@ -121,5 +122,63 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
     }
   };
 
-  return { handleSubmit, isSubmitting };
+  const handleImport = async (values: ImportManualFormValues) => {
+    try {
+      setIsSubmitting(true);
+
+      // Check if motorcycle exists or create a placeholder
+      let motorcycle = await findMotorcycleByDetails(values.make, values.model, values.year);
+
+      if (!motorcycle) {
+        // Create a placeholder motorcycle
+        motorcycle = await createPlaceholderMotorcycle({
+          make: values.make,
+          model: values.model,
+          year: values.year,
+        });
+        
+        toast.success(`Created placeholder motorcycle for ${values.make} ${values.model} ${values.year}`);
+      }
+
+      // Prepare manual data
+      const manualData: ManualInfo = {
+        title: values.title,
+        manual_type: values.manual_type,
+        motorcycle_id: motorcycle.id,
+        year: values.year,
+        file_size_mb: values.file_size_mb || undefined,
+        file_url: values.file_url,
+      };
+      
+      // Import the manual
+      const importResult = await importManual({
+        ...manualData,
+        file_name: values.file_name
+      });
+      
+      if (!importResult) {
+        throw new Error('Failed to import manual file');
+      }
+
+      toast.success('Manual imported successfully');
+      
+      onOpenChange(false);
+      onSaveSuccess({
+        ...importResult,
+        motorcycle_name: `${values.make} ${values.model} ${values.year}`
+      });
+
+      // Navigate to the motorcycle detail page
+      setTimeout(() => {
+        navigate(`/motorcycles/${motorcycle!.id}`);
+      }, 500);
+    } catch (error) {
+      console.error('Error importing manual:', error);
+      toast.error('Failed to import manual');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return { handleSubmit, handleImport, isSubmitting };
 };

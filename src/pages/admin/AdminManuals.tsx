@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ManualWithMotorcycle } from '@/services/manuals';
 import { getManuals, deleteManual } from '@/services/manuals';
@@ -8,6 +8,8 @@ import AdminManualDialog from '@/components/admin/manuals/AdminManualDialog';
 import AdminManualsHeader from '@/components/admin/manuals/AdminManualsHeader';
 import AdminManualsList from '@/components/admin/manuals/AdminManualsList';
 import DeleteManualDialog from '@/components/admin/manuals/DeleteManualDialog';
+import BatchImportDialog from '@/components/admin/manuals/BatchImportDialog';
+import { Button } from '@/components/ui/button';
 
 const AdminManuals = () => {
   const [manuals, setManuals] = useState<ManualWithMotorcycle[]>([]);
@@ -16,6 +18,7 @@ const AdminManuals = () => {
   const [currentManual, setCurrentManual] = useState<ManualWithMotorcycle | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [batchImportOpen, setBatchImportOpen] = useState(false);
   const { toast } = useToast();
 
   const loadManuals = async () => {
@@ -95,9 +98,26 @@ const AdminManuals = () => {
     }
   };
 
+  const handleBatchImportSuccess = (importedManuals: ManualWithMotorcycle[]) => {
+    // Add imported manuals to the list
+    setManuals([...manuals, ...importedManuals]);
+    setBatchImportOpen(false);
+  };
+
   return (
     <div className="space-y-6">
-      <AdminManualsHeader onCreateManual={handleCreate} />
+      <div className="flex justify-between items-center">
+        <AdminManualsHeader onCreateManual={handleCreate} />
+        
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          onClick={() => setBatchImportOpen(true)}
+        >
+          <Upload className="h-4 w-4" />
+          Batch Import
+        </Button>
+      </div>
       
       {loading ? (
         <div className="flex justify-center py-10">
@@ -125,6 +145,13 @@ const AdminManuals = () => {
         onOpenChange={open => !open && setDeleteId(null)}
         onDelete={handleDelete}
         loading={deleteLoading}
+      />
+      
+      {/* Batch Import Dialog */}
+      <BatchImportDialog 
+        open={batchImportOpen}
+        onOpenChange={setBatchImportOpen}
+        onImportSuccess={handleBatchImportSuccess}
       />
     </div>
   );

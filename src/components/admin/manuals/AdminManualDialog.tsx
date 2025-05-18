@@ -1,10 +1,13 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ManualWithMotorcycle } from '@/services/manuals';
 import ManualForm from './ManualForm';
+import ImportManualForm from './ImportManualForm';
 import { useManualSubmit } from '@/hooks/useManualSubmit';
 import { ManualFormValues } from './ManualFormSchema';
+import { ImportManualFormValues } from './ImportManualForm';
 
 interface AdminManualDialogProps {
   open: boolean;
@@ -19,7 +22,8 @@ const AdminManualDialog: React.FC<AdminManualDialogProps> = ({
   manual, 
   onSaveSuccess 
 }) => {
-  const { handleSubmit, isSubmitting } = useManualSubmit({ 
+  const [activeTab, setActiveTab] = useState<string>("upload");
+  const { handleSubmit, handleImport, isSubmitting } = useManualSubmit({ 
     onOpenChange, 
     onSaveSuccess,
     manualId: manual?.id 
@@ -52,22 +56,63 @@ const AdminManualDialog: React.FC<AdminManualDialogProps> = ({
     }
   }, [open]);
 
+  // Reset to upload tab when dialog opens for a fresh start
+  useEffect(() => {
+    if (open) {
+      // If editing, always use the upload tab
+      setActiveTab(manual ? "upload" : "upload");
+    }
+  }, [open, manual]);
+
   const handleFormSubmit = async (values: ManualFormValues) => {
     await handleSubmit(values);
+  };
+
+  const handleImportSubmit = async (values: ImportManualFormValues) => {
+    await handleImport(values);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{manual ? 'Edit Manual' : 'Upload Manual'}</DialogTitle>
+          <DialogTitle>{manual ? 'Edit Manual' : 'Add Manual'}</DialogTitle>
         </DialogHeader>
-        <ManualForm
-          defaultValues={defaultValues}
-          onSubmit={handleFormSubmit}
-          onCancel={() => onOpenChange(false)}
-          isSubmitting={isSubmitting}
-        />
+        
+        {manual ? (
+          // When editing, only show the upload form
+          <ManualForm
+            defaultValues={defaultValues}
+            onSubmit={handleFormSubmit}
+            onCancel={() => onOpenChange(false)}
+            isSubmitting={isSubmitting}
+          />
+        ) : (
+          // When creating, show tabs for upload and import
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="upload">Upload New</TabsTrigger>
+              <TabsTrigger value="import">Import Existing</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upload">
+              <ManualForm
+                defaultValues={defaultValues}
+                onSubmit={handleFormSubmit}
+                onCancel={() => onOpenChange(false)}
+                isSubmitting={isSubmitting}
+              />
+            </TabsContent>
+            
+            <TabsContent value="import">
+              <ImportManualForm
+                onSubmit={handleImportSubmit}
+                onCancel={() => onOpenChange(false)}
+                isSubmitting={isSubmitting}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );
