@@ -111,15 +111,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       console.log("Profile data received:", data ? "Yes" : "No");
-      if (data) {
-        console.log("Admin status:", data.is_admin);
-        setProfile(data as Profile | null);
+      
+      if (!data) {
+        console.log("No profile found, creating one");
+        // Create a default profile for the user
+        const { data: newProfile, error: createError } = await supabase
+          .from("profiles")
+          .insert([{
+            id: userId,
+            is_admin: false, // Default to non-admin
+            username: user?.email?.split('@')[0] || null,
+          }])
+          .select("*")
+          .single();
+        
+        if (createError) {
+          console.error("Error creating profile:", createError);
+          toast.error("Failed to create user profile. Some features may not work correctly.");
+          setProfile(null);
+        } else {
+          console.log("Created new profile for user");
+          setProfile(newProfile as Profile);
+        }
       } else {
-        console.log("No profile found, user may not be in profiles table");
-        setProfile(null);
+        console.log("Admin status:", data.is_admin);
+        setProfile(data as Profile);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
+      toast.error("Failed to load user profile. Some features may not work correctly.");
+      setProfile(null);
     } finally {
       setIsProfileLoading(false);
       setIsLoading(false);

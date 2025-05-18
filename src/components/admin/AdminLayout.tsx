@@ -1,12 +1,13 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { useAuth } from "@/context/AuthContext";
 import { Loader } from "lucide-react";
+import { toast } from "sonner";
 
 const AdminLayout = () => {
-  const { isLoading } = useAuth();
+  const { isLoading, user, profile, isAdmin } = useAuth();
   
   // Only show loading state if auth is still loading
   if (isLoading) {
@@ -19,9 +20,20 @@ const AdminLayout = () => {
       </div>
     );
   }
+
+  // Double-check admin status even though ProtectedRoute should have handled this
+  if (!user || !profile) {
+    console.log("AdminLayout: No user or profile found, redirecting");
+    toast.error("Authentication required to access admin area");
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!isAdmin) {
+    console.log("AdminLayout: User is not an admin, redirecting");
+    toast.error("You don't have permission to access the admin area");
+    return <Navigate to="/" replace />;
+  }
   
-  // ProtectedRoute has already verified admin status,
-  // so we can safely render the admin layout
   return (
     <div className="min-h-screen flex flex-col">
       <AdminHeader />

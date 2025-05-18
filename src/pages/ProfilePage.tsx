@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,44 @@ import { Helmet } from 'react-helmet-async';
 import UserCoursesSection from '@/components/profile/UserCoursesSection';
 import UserSkillsSection from '@/components/profile/UserSkillsSection';
 import GlossaryProgressSection from '@/components/profile/GlossaryProgressSection';
+import { createProfileIfNotExists } from '@/services/profileService';
+import { toast } from 'sonner';
+import { Loader } from 'lucide-react';
 
 const ProfilePage: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut, isLoading } = useAuth();
+
+  // Try to create a profile if one doesn't exist
+  useEffect(() => {
+    const ensureProfile = async () => {
+      if (user && !profile) {
+        console.log("Profile page: Creating profile for user", user.id);
+        const createdProfile = await createProfileIfNotExists(user.id);
+        if (!createdProfile) {
+          toast.error("Could not create a user profile. Some features may not work correctly.");
+        }
+      }
+    };
+    
+    ensureProfile();
+  }, [user, profile]);
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  // Show loading state while auth is processing
+  if (isLoading) {
+    return (
+      <div className="container py-12">
+        <div className="max-w-md mx-auto text-center">
+          <Loader className="h-8 w-8 animate-spin text-accent-teal mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Loading profile...</h2>
+          <p className="text-muted-foreground">Please wait while we load your profile information.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -67,6 +98,11 @@ const ProfilePage: React.FC = () => {
             <CardContent>
               <div className="text-sm text-muted-foreground">
                 <p>Account created: {new Date(user.created_at).toLocaleDateString()}</p>
+                {!profile && (
+                  <p className="text-yellow-500 mt-2">
+                    Note: Your profile information is incomplete. Some features may be limited.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

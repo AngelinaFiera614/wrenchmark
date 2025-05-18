@@ -10,19 +10,20 @@ type ProtectedRouteProps = {
 };
 
 const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, profile, isLoading } = useAuth();
   const location = useLocation();
   
   // Add logging to help diagnose issues
   useEffect(() => {
     console.log("ProtectedRoute - Auth state:", { 
       isLoading, 
-      user: user ? "exists" : "null", 
+      user: user ? "exists" : "null",
+      profile: profile ? "exists" : "null",
       isAdmin,
       requireAdmin,
       path: location.pathname 
     });
-  }, [isLoading, user, isAdmin, requireAdmin, location.pathname]);
+  }, [isLoading, user, profile, isAdmin, requireAdmin, location.pathname]);
 
   // Show loading indicator while auth state is being determined
   if (isLoading) {
@@ -40,6 +41,12 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
     console.log("ProtectedRoute: User not authenticated, redirecting to auth page");
     // Save the location they tried to access for redirecting after login
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (!profile) {
+    console.log("ProtectedRoute: No profile found, user may need to refresh");
+    toast.error("Your profile could not be loaded. Please try refreshing the page.");
+    return <Navigate to="/" replace />;
   }
 
   if (requireAdmin && !isAdmin) {

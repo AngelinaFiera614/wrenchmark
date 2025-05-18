@@ -30,6 +30,38 @@ export const getProfileById = async (userId: string): Promise<Profile | null> =>
   }
 };
 
+// Create profile if it doesn't exist
+export const createProfileIfNotExists = async (userId: string, isAdmin: boolean = false): Promise<Profile | null> => {
+  try {
+    // First check if profile exists
+    const existingProfile = await getProfileById(userId);
+    if (existingProfile) {
+      return existingProfile;
+    }
+    
+    // Profile doesn't exist, create one
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert([{
+        id: userId,
+        is_admin: isAdmin,
+        username: null // You can set a default username if needed
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating profile:", error);
+      return null;
+    }
+
+    return data as Profile;
+  } catch (error) {
+    console.error("Error in createProfileIfNotExists:", error);
+    return null;
+  }
+};
+
 // Update profile
 export const updateProfile = async (profile: Partial<Profile> & { id: string }): Promise<Profile | null> => {
   try {
@@ -59,6 +91,29 @@ export const isUserAdmin = async (userId: string): Promise<boolean> => {
     return profile?.is_admin || false;
   } catch (error) {
     console.error("Error checking admin status:", error);
+    return false;
+  }
+};
+
+// Make user an admin
+export const makeUserAdmin = async (userId: string): Promise<boolean> => {
+  try {
+    // Check if profile exists, create if it doesn't
+    await createProfileIfNotExists(userId, true);
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_admin: true })
+      .eq('id', userId);
+      
+    if (error) {
+      console.error("Error making user admin:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in makeUserAdmin:", error);
     return false;
   }
 };
