@@ -14,6 +14,8 @@ import MotorcycleFields from './import-form/MotorcycleFields';
 import FormActions from './import-form/FormActions';
 import { BucketFile } from './ManualBucketBrowser';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
 
 // Schema specifically for importing existing manual files
 export const importSchema = z.object({
@@ -25,6 +27,7 @@ export const importSchema = z.object({
   file_url: z.string().url('Invalid file URL'),
   file_name: z.string(),
   file_size_mb: z.number().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 export type ImportManualFormValues = z.infer<typeof importSchema>;
@@ -41,6 +44,7 @@ const ImportManualForm: React.FC<ImportManualFormProps> = ({
   isSubmitting
 }) => {
   const [selectedFile, setSelectedFile] = useState<BucketFile | null>(null);
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const { parseFileDetails } = useManualBucket();
   
   const form = useForm<ImportManualFormValues>({
@@ -53,7 +57,8 @@ const ImportManualForm: React.FC<ImportManualFormProps> = ({
       year: new Date().getFullYear(),
       file_url: '',
       file_name: '',
-      file_size_mb: 0
+      file_size_mb: 0,
+      tags: []
     },
   });
 
@@ -69,8 +74,11 @@ const ImportManualForm: React.FC<ImportManualFormProps> = ({
       console.log(`File size: ${fileSizeMB.toFixed(2)} MB`);
       
       // Parse file name for motorcycle details
-      const { make, model, year } = parseFileDetails(selectedFile.name);
-      console.log(`Parsed details: make=${make}, model=${model}, year=${year}`);
+      const { make, model, year, suggestedTags } = parseFileDetails(selectedFile.name);
+      console.log(`Parsed details: make=${make}, model=${model}, year=${year}, suggestedTags=${suggestedTags}`);
+      
+      // Set suggested tags for display
+      setSuggestedTags(suggestedTags || []);
       
       // Generate a title from the file name
       const baseName = selectedFile.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
@@ -104,6 +112,7 @@ const ImportManualForm: React.FC<ImportManualFormProps> = ({
       form.setValue('file_url', selectedFile.url);
       form.setValue('file_name', selectedFile.name);
       form.setValue('file_size_mb', parseFloat(fileSizeMB.toFixed(2)));
+      form.setValue('tags', suggestedTags || []);
     } catch (error) {
       console.error("Error processing selected file:", error);
       toast.error("Failed to process the selected file");
@@ -125,6 +134,18 @@ const ImportManualForm: React.FC<ImportManualFormProps> = ({
     setSelectedFile(file);
   };
 
+  const addTag = (tag: string) => {
+    const currentTags = form.getValues('tags') || [];
+    if (!currentTags.includes(tag)) {
+      form.setValue('tags', [...currentTags, tag]);
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    const currentTags = form.getValues('tags') || [];
+    form.setValue('tags', currentTags.filter(t => t !== tag));
+  };
+
   if (!selectedFile) {
     return <FileSelectionView onSelectFile={handleFileSelect} />;
   }
@@ -140,6 +161,47 @@ const ImportManualForm: React.FC<ImportManualFormProps> = ({
         <TitleField control={form.control} />
         <ManualTypeField control={form.control} />
         <MotorcycleFields control={form.control} />
+        
+        {/* Tags section */}
+        <div className="space-y-2">
+          <div className="text-sm font-medium">Tags</div>
+          <div className="flex flex-wrap gap-2">
+            {form.watch('tags')?.map((tag) => (
+              <Badge 
+                key={tag} 
+                variant="outline"
+                className="bg-accent-teal/10 text-accent-teal border-accent-teal/20 flex items-center gap-1"
+              >
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="ml-1 rounded-full hover:bg-accent-teal/20 p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          
+          {suggestedTags.length > 0 && (
+            <div className="mt-2">
+              <div className="text-xs text-muted-foreground mb-1">Suggested tags:</div>
+              <div className="flex flex-wrap gap-2">
+                {suggestedTags.map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    variant="outline"
+                    className="bg-accent-teal/5 hover:bg-accent-teal/20 cursor-pointer transition-colors"
+                    onClick={() => addTag(tag)}
+                  >
+                    + {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         
         <input type="hidden" {...form.register('file_url')} />
         <input type="hidden" {...form.register('file_name')} />

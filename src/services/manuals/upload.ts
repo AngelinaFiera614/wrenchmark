@@ -3,6 +3,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ManualInfo, ManualWithMotorcycle } from "./types";
 import { createManual } from "./update";
+import { getOrCreateTagsByNames, associateTagsWithManual } from "./tags";
 
 /**
  * Upload a file to storage
@@ -31,7 +32,7 @@ export const uploadManualFile = async (file: File, path: string): Promise<string
 };
 
 /**
- * Complete process to upload a manual file and create the database record
+ * Complete process to upload a manual file and create the database record with tags
  */
 export const uploadManual = async (file: File, manualInfo: ManualInfo): Promise<ManualWithMotorcycle> => {
   try {
@@ -62,13 +63,35 @@ export const uploadManual = async (file: File, manualInfo: ManualInfo): Promise<
     // Create the manual record with the file URL
     const updatedManualInfo = {
       ...manualInfo,
-      file_url: fileData.publicUrl
+      file_url: fileData.publicUrl,
+      file_name: file.name
     };
     
     console.log("Creating manual record with data:", updatedManualInfo);
     // Create the manual record or use existing ID
     const manual = await createManual(updatedManualInfo);
     console.log("Manual record created:", manual);
+    
+    // Process tags if provided
+    if (manualInfo.tags && manualInfo.tags.length > 0) {
+      console.log("Processing tags for manual:", manualInfo.tags);
+      
+      try {
+        // Get or create the tags by name
+        const tags = await getOrCreateTagsByNames(manualInfo.tags);
+        console.log("Retrieved/created tags:", tags);
+        
+        // Associate tags with the manual
+        await associateTagsWithManual(manual.id, tags.map(tag => tag.id));
+        console.log("Associated tags with manual");
+        
+        // Add tag details to the manual object
+        manual.tag_details = tags;
+      } catch (tagError) {
+        console.error("Error processing tags:", tagError);
+        // Don't fail the whole upload just because tags failed
+      }
+    }
     
     return manual;
   } catch (error) {
@@ -128,7 +151,9 @@ export const importManual = async (importData: ImportManualData): Promise<Manual
       motorcycle_id: importData.motorcycle_id,
       year: importData.year,
       file_size_mb: importData.file_size_mb,
-      file_url: importData.file_url
+      file_url: importData.file_url,
+      file_name: importData.file_name,
+      tags: importData.tags
     });
     
     // Create the manual record
@@ -139,9 +164,32 @@ export const importManual = async (importData: ImportManualData): Promise<Manual
       year: importData.year,
       file_size_mb: importData.file_size_mb,
       file_url: importData.file_url,
+      file_name: importData.file_name
     });
     
     console.log("Manual record created successfully:", manual);
+    
+    // Process tags if provided
+    if (importData.tags && importData.tags.length > 0) {
+      console.log("Processing tags for imported manual:", importData.tags);
+      
+      try {
+        // Get or create the tags by name
+        const tags = await getOrCreateTagsByNames(importData.tags);
+        console.log("Retrieved/created tags:", tags);
+        
+        // Associate tags with the manual
+        await associateTagsWithManual(manual.id, tags.map(tag => tag.id));
+        console.log("Associated tags with manual");
+        
+        // Add tag details to the manual object
+        manual.tag_details = tags;
+      } catch (tagError) {
+        console.error("Error processing tags for imported manual:", tagError);
+        // Don't fail the whole import just because tags failed
+      }
+    }
+    
     return manual;
   } catch (error) {
     console.error("Error importing manual:", error);

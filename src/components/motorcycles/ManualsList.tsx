@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Manual, ManualType } from "@/types";
+import { ManualWithMotorcycle, ManualTag } from "@/services/manuals/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ interface ManualsListProps {
   motorcycleId: string;
 }
 
+type ManualType = 'owner' | 'service' | 'wiring';
+
 const ManualTypeColors: Record<ManualType, string> = {
   owner: "bg-blue-500/20 text-blue-300",
   service: "bg-amber-500/20 text-amber-300",
@@ -19,7 +21,7 @@ const ManualTypeColors: Record<ManualType, string> = {
 };
 
 const ManualsList: React.FC<ManualsListProps> = ({ motorcycleId }) => {
-  const [manuals, setManuals] = useState<Manual[]>([]);
+  const [manuals, setManuals] = useState<ManualWithMotorcycle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ const ManualsList: React.FC<ManualsListProps> = ({ motorcycleId }) => {
     fetchManuals();
   }, [motorcycleId]);
 
-  const handleDownload = async (manual: Manual) => {
+  const handleDownload = async (manual: ManualWithMotorcycle) => {
     // Open the file in a new tab
     window.open(manual.file_url, "_blank");
     
@@ -82,7 +84,7 @@ const ManualsList: React.FC<ManualsListProps> = ({ motorcycleId }) => {
             <div className="flex items-start justify-between mb-3">
               <Badge 
                 variant="outline" 
-                className={`${ManualTypeColors[manual.manual_type as ManualType]} capitalize border-0`}
+                className={`${ManualTypeColors[manual.manual_type as ManualType] || 'bg-gray-500/20 text-gray-300'} capitalize border-0`}
               >
                 {manual.manual_type}
               </Badge>
@@ -90,6 +92,26 @@ const ManualsList: React.FC<ManualsListProps> = ({ motorcycleId }) => {
             </div>
             
             <h3 className="text-lg font-medium mb-1">{manual.title}</h3>
+            
+            {/* Tags */}
+            {manual.tag_details && manual.tag_details.length > 0 && (
+              <div className="flex flex-wrap gap-1 my-2">
+                {manual.tag_details.map((tag) => (
+                  <Badge 
+                    key={tag.id}
+                    variant="outline"
+                    className="text-xs px-1.5 py-0 h-5"
+                    style={{ 
+                      backgroundColor: `${tag.color}20`, 
+                      color: tag.color,
+                      borderColor: `${tag.color}40`
+                    }}
+                  >
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
             
             <div className="flex items-center mt-auto pt-3 text-sm text-muted-foreground">
               {manual.file_size_mb && (

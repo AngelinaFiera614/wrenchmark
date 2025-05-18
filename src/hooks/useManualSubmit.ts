@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services/motorcycleService';
 import { uploadManual, updateManual, importManual } from '@/services/manuals';
+import { associateTagsWithManual, getOrCreateTagsByNames } from '@/services/manuals/tags';
 import { ManualWithMotorcycle, ManualInfo, ManualUpdateParams } from '@/services/manuals/types';
 import { ManualFormValues } from '@/components/admin/manuals/ManualFormSchema';
 import { ImportManualFormValues } from '@/components/admin/manuals/ImportManualForm';
@@ -55,6 +56,10 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
         console.log(`File size: ${fileSizeMB} MB`);
       }
 
+      // Check for tags
+      const tags = values.tags || [];
+      console.log("Tags for manual:", tags);
+
       let savedManual: ManualWithMotorcycle;
       
       if (manualId) {
@@ -76,6 +81,34 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
         savedManual = await updateManual(manualId, updateData);
         console.log("Updated manual:", savedManual);
         
+        // Update tags
+        if (tags.length > 0) {
+          try {
+            // Get or create the tags by name
+            const tagObjects = await getOrCreateTagsByNames(tags);
+            console.log("Retrieved/created tags:", tagObjects);
+            
+            // Associate tags with the manual
+            await associateTagsWithManual(manualId, tagObjects.map(tag => tag.id));
+            console.log("Updated tags for manual");
+            
+            // Add tag details to the saved manual
+            savedManual.tag_details = tagObjects;
+          } catch (tagError) {
+            console.error("Error updating tags:", tagError);
+            toast.error("Failed to update tags");
+            // Don't fail the whole update just because tags failed
+          }
+        } else {
+          // Remove all tags if the array is empty
+          try {
+            await associateTagsWithManual(manualId, []);
+            console.log("Removed all tags from manual");
+          } catch (tagError) {
+            console.error("Error removing tags:", tagError);
+          }
+        }
+        
         // If a new file was uploaded, update the file
         if (values.file instanceof File && values.file.size > 0) {
           console.log("Uploading new file for existing manual");
@@ -86,7 +119,8 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
             title: values.title, // Ensure title is provided
             manual_type: values.manual_type,
             year: values.year,
-            file_size_mb: fileSizeMB
+            file_size_mb: fileSizeMB,
+            tags: tags
           };
           
           const uploadResult = await uploadManual(values.file, manualData);
@@ -96,7 +130,8 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
             console.log("Updated file URL:", uploadResult.file_url);
             savedManual = {
               ...savedManual,
-              file_url: uploadResult.file_url
+              file_url: uploadResult.file_url,
+              tag_details: uploadResult.tag_details
             };
           }
         }
@@ -116,6 +151,7 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
           motorcycle_id: motorcycle.id,
           year: values.year,
           file_size_mb: fileSizeMB,
+          tags: tags
         };
         
         // Upload the new manual
@@ -172,6 +208,10 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
         console.log("Found existing motorcycle:", motorcycle);
       }
 
+      // Check for tags
+      const tags = values.tags || [];
+      console.log("Tags for imported manual:", tags);
+
       // Prepare manual data
       const manualData = {
         title: values.title,
@@ -180,7 +220,8 @@ export const useManualSubmit = ({ onOpenChange, onSaveSuccess, manualId }: UseMa
         year: values.year,
         file_size_mb: values.file_size_mb || undefined,
         file_url: values.file_url,
-        file_name: values.file_name
+        file_name: values.file_name,
+        tags: tags
       };
       
       console.log("Importing manual with data:", manualData);
