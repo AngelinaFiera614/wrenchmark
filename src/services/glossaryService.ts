@@ -1,4 +1,3 @@
-
 // If this file doesn't exist already, we'll create it with the needed functions
 import { supabase } from "@/integrations/supabase/client";
 import { GlossaryTerm, GlossaryFormValues } from "@/types/glossary";

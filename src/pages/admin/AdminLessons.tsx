@@ -165,6 +165,8 @@ const AdminLessons: React.FC = () => {
             </Button>
           </DialogTrigger>
           <LessonFormDialog
+            open={isLessonDialogOpen}
+            onOpenChange={setIsLessonDialogOpen}
             lesson={editLesson}
             courseId={courseId || ""}
             onSuccess={handleLessonFormSuccess}
