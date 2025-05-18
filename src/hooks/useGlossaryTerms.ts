@@ -1,8 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchGlossaryTerms, fetchGlossaryTermBySlug, generateUniqueSlug, deleteTerm } from "@/services/glossaryService";
+import { fetchGlossaryTerms, fetchGlossaryTermBySlug, deleteTerm } from "@/services/glossary/termService";
+import { generateUniqueSlug, checkSlugExists } from "@/services/glossary/slugService";
 import { useState } from "react";
-import { checkSlugExists } from "@/services/glossaryService";
 import { GlossaryTerm } from "@/types/glossary";
 
 export function useGlossaryTerms() {

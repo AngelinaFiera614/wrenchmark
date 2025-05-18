@@ -1,8 +1,14 @@
 
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { 
+  markTermAsLearned,
+  markTermAsUnlearned,
+  getUserGlossaryStats,
+  getUserLearnedTerms,
+  isTermLearnedByUser
+} from "@/services/glossary/learningService";
 
 export function useGlossaryLearning() {
   const { user } = useAuth();
@@ -16,21 +22,15 @@ export function useGlossaryLearning() {
       queryFn: async () => {
         if (!user) return null;
         
-        const { data } = await supabase
-          .from("user_glossary_terms")
-          .select("is_learned, learned_at")
-          .eq("user_id", user.id)
-          .eq("term_slug", slug)
-          .maybeSingle();
-          
-        return data;
+        const isLearned = await isTermLearnedByUser(slug);
+        return { is_learned: isLearned };
       },
       enabled: !!user && !!slug
     });
 
     return {
       isLearned: data?.is_learned || false,
-      learnedAt: data?.learned_at || null,
+      learnedAt: null, // Note: Current implementation doesn't return learnedAt
       isLoading
     };
   };
@@ -46,17 +46,13 @@ export function useGlossaryLearning() {
     }) => {
       if (!user) throw new Error("User must be logged in");
       
-      const functionName = isLearned 
-        ? 'mark_term_as_learned' 
-        : 'mark_term_as_unlearned';
-        
-      const { data, error } = await supabase
-        .rpc(functionName, {
-          term_slug_param: slug
-        });
-        
-      if (error) throw error;
-      return data;
+      if (isLearned) {
+        await markTermAsLearned(slug);
+      } else {
+        await markTermAsUnlearned(slug);
+      }
+      
+      return true;
     },
     onSuccess: (_, variables) => {
       // Invalidate relevant queries
@@ -87,11 +83,7 @@ export function useGlossaryLearning() {
       queryFn: async () => {
         if (!user) return null;
         
-        const { data, error } = await supabase
-          .rpc("get_user_glossary_stats");
-          
-        if (error) throw error;
-        return data[0];
+        return await getUserGlossaryStats();
       },
       enabled: !!user
     });
@@ -111,13 +103,7 @@ export function useGlossaryLearning() {
       queryFn: async () => {
         if (!user) return [];
         
-        const { data, error } = await supabase
-          .rpc("get_user_learned_terms", {
-            limit_param: limit
-          });
-          
-        if (error) throw error;
-        return data;
+        return await getUserLearnedTerms(limit);
       },
       enabled: !!user
     });
