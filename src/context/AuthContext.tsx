@@ -2,18 +2,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
-
-type Profile = {
-  id: string;
-  username: string | null;
-  is_admin: boolean;
-  created_at: string;
-  updated_at: string;
-  full_name: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-};
+import { toast } from "sonner";
+import { createProfileIfNotExists, getProfileById } from "@/services/profileService";
+import type { Profile } from "@/services/profileService";
 
 type AuthContextType = {
   session: Session | null;
@@ -46,13 +37,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Handle profile fetching with proper loading states
         if (currentSession?.user) {
           // Use setTimeout to prevent deadlock and set a flag to avoid double fetching
           if (!isProfileLoading) {
             setIsProfileLoading(true);
             setTimeout(() => {
-              console.log("Fetching profile for user:", currentSession.user.id);
               fetchProfile(currentSession.user.id);
             }, 0);
           }
@@ -100,46 +89,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (userId: string) => {
     try {
       console.log("Fetching profile data for user:", userId);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      console.log("Profile data received:", data ? "Yes" : "No");
+      const profileData = await getProfileById(userId);
       
-      if (!data) {
+      if (!profileData) {
         console.log("No profile found, creating one");
-        // Create a default profile for the user
-        const { data: newProfile, error: createError } = await supabase
-          .from("profiles")
-          .insert([{
-            id: userId,
-            is_admin: false, // Default to non-admin
-            username: user?.email?.split('@')[0] || null,
-          }])
-          .select("*")
-          .single();
+        // Create a new profile if one doesn't exist
+        const createdProfile = await createProfileIfNotExists(userId);
         
-        if (createError) {
-          console.error("Error creating profile:", createError);
-          toast.error("Failed to create user profile. Some features may not work correctly.");
-          setProfile(null);
-        } else {
+        if (createdProfile) {
           console.log("Created new profile for user");
-          setProfile(newProfile as Profile);
+          setProfile(createdProfile);
+        } else {
+          console.error("Failed to create profile");
+          toast.error("Failed to create user profile. Please try refreshing the page.");
+          setProfile(null);
         }
       } else {
-        console.log("Admin status:", data.is_admin);
-        setProfile(data as Profile);
+        console.log("Admin status:", profileData.is_admin);
+        setProfile(profileData);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-      toast.error("Failed to load user profile. Some features may not work correctly.");
+      toast.error("Failed to load user profile. Please try refreshing the page.");
       setProfile(null);
     } finally {
       setIsProfileLoading(false);
@@ -151,9 +122,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("Signing in user:", email);
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       console.log("Sign in successful");
+
+      if (data.user) {
+        // Ensure profile exists after login
+        const profile = await getProfileById(data.user.id);
+        if (!profile) {
+          console.log("Creating profile after login");
+          await createProfileIfNotExists(data.user.id);
+        }
+      }
       // Auth state listener will handle session update
     } catch (error: any) {
       setIsLoading(false);
@@ -165,8 +145,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error, data } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
+      
+      // Create profile immediately after signup if we have a user
+      if (data.user) {
+        console.log("Creating profile immediately after signup");
+        await createProfileIfNotExists(data.user.id);
+      }
+      
       toast.success("Signup successful! Please check your email to verify your account.");
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");

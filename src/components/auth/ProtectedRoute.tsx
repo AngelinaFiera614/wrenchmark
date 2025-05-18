@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Loader } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { createProfileIfNotExists } from "@/services/profileService";
 
 type ProtectedRouteProps = {
   requireAdmin?: boolean;
@@ -25,6 +26,30 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
     });
   }, [isLoading, user, profile, isAdmin, requireAdmin, location.pathname]);
 
+  // Try to create profile if user exists but profile doesn't
+  useEffect(() => {
+    const ensureProfile = async () => {
+      if (user && !profile && !isLoading) {
+        console.log("ProtectedRoute: User exists but profile doesn't, attempting to create profile");
+        try {
+          const createdProfile = await createProfileIfNotExists(user.id);
+          if (createdProfile) {
+            console.log("ProtectedRoute: Successfully created profile");
+            // The auth context will update the profile state via onAuthStateChange
+            // so we don't need to do anything else here
+          } else {
+            console.error("ProtectedRoute: Failed to create profile");
+            toast.error("Failed to create user profile. Please try refreshing the page.");
+          }
+        } catch (error) {
+          console.error("ProtectedRoute: Error creating profile:", error);
+        }
+      }
+    };
+
+    ensureProfile();
+  }, [user, profile, isLoading]);
+
   // Show loading indicator while auth state is being determined
   if (isLoading) {
     return (
@@ -43,12 +68,7 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (!profile) {
-    console.log("ProtectedRoute: No profile found, user may need to refresh");
-    toast.error("Your profile could not be loaded. Please try refreshing the page.");
-    return <Navigate to="/" replace />;
-  }
-
+  // Try to proceed even if profile doesn't exist yet, as we're attempting to create it
   if (requireAdmin && !isAdmin) {
     // If admin access is required but user is not an admin
     console.log("ProtectedRoute: User not admin, access denied");

@@ -5,9 +5,31 @@ import { AdminHeader } from "./AdminHeader";
 import { useAuth } from "@/context/AuthContext";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { createProfileIfNotExists } from "@/services/profileService";
 
 const AdminLayout = () => {
   const { isLoading, user, profile, isAdmin } = useAuth();
+  
+  // Try to create profile if user exists but profile doesn't
+  useEffect(() => {
+    const ensureProfile = async () => {
+      if (user && !profile && !isLoading) {
+        console.log("AdminLayout: User exists but profile doesn't, attempting to create profile");
+        try {
+          const createdProfile = await createProfileIfNotExists(user.id);
+          if (!createdProfile) {
+            console.error("AdminLayout: Failed to create profile");
+            toast.error("Failed to create user profile. Please try refreshing the page.");
+          }
+        } catch (error) {
+          console.error("AdminLayout: Error creating profile:", error);
+        }
+      }
+    };
+
+    ensureProfile();
+  }, [user, profile, isLoading]);
   
   // Only show loading state if auth is still loading
   if (isLoading) {
@@ -22,8 +44,8 @@ const AdminLayout = () => {
   }
 
   // Double-check admin status even though ProtectedRoute should have handled this
-  if (!user || !profile) {
-    console.log("AdminLayout: No user or profile found, redirecting");
+  if (!user) {
+    console.log("AdminLayout: No user found, redirecting");
     toast.error("Authentication required to access admin area");
     return <Navigate to="/auth" replace />;
   }
