@@ -16,7 +16,14 @@ export const getTags = async (): Promise<ManualTag[]> => {
     throw error;
   }
 
-  return data as ManualTag[] || [];
+  // Transform and validate the data to ensure it matches the ManualTag interface
+  // This avoids TypeScript errors by ensuring we return a properly typed array
+  return (data || []).map(item => ({
+    id: String(item.id),
+    name: String(item.name),
+    description: item.description ? String(item.description) : undefined,
+    color: String(item.color || '#00D2B4')
+  })) as ManualTag[];
 };
 
 /**
@@ -24,6 +31,7 @@ export const getTags = async (): Promise<ManualTag[]> => {
  */
 export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> => {
   try {
+    // First try using the RPC function
     const { data, error } = await supabase
       .rpc('get_tags_for_manual' as any, { manual_id_param: manualId });
     
@@ -31,7 +39,14 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
       throw error;
     }
     
-    return data as ManualTag[] || [];
+    // Transform and validate the data
+    return (data || []).map(item => ({
+      id: String(item.id),
+      name: String(item.name),
+      description: item.description ? String(item.description) : undefined,
+      color: String(item.color || '#00D2B4')
+    })) as ManualTag[];
+    
   } catch (error) {
     console.log("RPC method failed, using fallback query method", error);
     
@@ -66,7 +81,13 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
         throw tagError;
       }
       
-      return tagData as ManualTag[] || [];
+      // Transform and validate the data
+      return (tagData || []).map(item => ({
+        id: String(item.id),
+        name: String(item.name),
+        description: item.description ? String(item.description) : undefined,
+        color: String(item.color || '#00D2B4')
+      })) as ManualTag[];
     } catch (fallbackError) {
       console.error("Fallback method also failed:", fallbackError);
       return [];
@@ -89,7 +110,13 @@ export const createTag = async (tag: Omit<ManualTag, 'id'>): Promise<ManualTag> 
     throw error;
   }
 
-  return data as ManualTag;
+  // Transform and validate the data
+  return {
+    id: String(data.id),
+    name: String(data.name),
+    description: data.description ? String(data.description) : undefined,
+    color: String(data.color || '#00D2B4')
+  } as ManualTag;
 };
 
 /**
@@ -108,7 +135,13 @@ export const updateTag = async (id: string, updates: Partial<Omit<ManualTag, 'id
     throw error;
   }
 
-  return data as ManualTag;
+  // Transform and validate the data
+  return {
+    id: String(data.id),
+    name: String(data.name),
+    description: data.description ? String(data.description) : undefined,
+    color: String(data.color || '#00D2B4')
+  } as ManualTag;
 };
 
 /**
@@ -177,7 +210,15 @@ export const getOrCreateTagsByNames = async (tagNames: string[]): Promise<Manual
     throw fetchError;
   }
 
-  const existingTagNames = (existingTags as ManualTag[] || []).map(tag => tag.name.toLowerCase());
+  // Transform and validate existing tags
+  const validExistingTags = (existingTags || []).map(item => ({
+    id: String(item.id),
+    name: String(item.name),
+    description: item.description ? String(item.description) : undefined,
+    color: String(item.color || '#00D2B4')
+  })) as ManualTag[];
+
+  const existingTagNames = validExistingTags.map(tag => tag.name.toLowerCase());
   const newTagNames = tagNames.filter(name => 
     !existingTagNames.includes(name.toLowerCase())
   );
@@ -200,11 +241,19 @@ export const getOrCreateTagsByNames = async (tagNames: string[]): Promise<Manual
       throw createError;
     }
 
+    // Transform and validate created tags
+    const validCreatedTags = (createdTags || []).map(item => ({
+      id: String(item.id),
+      name: String(item.name),
+      description: item.description ? String(item.description) : undefined,
+      color: String(item.color || '#00D2B4')
+    })) as ManualTag[];
+
     // Combine existing and newly created tags
-    return [...(existingTags as ManualTag[] || []), ...(createdTags as ManualTag[] || [])] as ManualTag[];
+    return [...validExistingTags, ...validCreatedTags];
   }
 
-  return existingTags as ManualTag[] || [];
+  return validExistingTags;
 };
 
 // Helper function to generate random colors for auto-generated tags
