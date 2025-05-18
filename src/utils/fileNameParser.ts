@@ -7,48 +7,75 @@ export const parseFileName = (fileName: string) => {
   // Remove .pdf or other extensions
   const baseName = fileName.replace(/\.[^/.]+$/, "");
   
-  // Split by common separators
-  const parts = baseName.split(/[-_\s]+/);
+  console.log("Parsing filename:", fileName, "Base name:", baseName);
   
-  // Simple extraction logic
+  // Handle common prefixes that should be removed
+  const cleanName = baseName.replace(/^(manual|service|workshop|repair|owner|handbook|guide)[\s\-_]+/i, '');
+  
+  // Split by common separators
+  const parts = cleanName.split(/[-_\s]+/);
+  console.log("Parts after splitting:", parts);
+  
   let make = '';
   let model = '';
   let year: number | null = null;
   
-  if (parts.length >= 3) {
-    // Try to find year (usually the last part or second-to-last part)
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const yearCandidate = parseInt(parts[i], 10);
-      if (!isNaN(yearCandidate) && yearCandidate > 1900 && yearCandidate <= new Date().getFullYear() + 1) {
-        year = yearCandidate;
-        parts.splice(i, 1); // Remove year from parts
-        break;
-      }
-    }
-    
-    // First part is usually make
-    make = parts[0] || '';
-    
-    // Rest is model
-    model = parts.slice(1).join(' ');
-  } else if (parts.length === 2) {
-    make = parts[0] || '';
-    
-    // Check if second part is a year
-    const yearCandidate = parseInt(parts[1], 10);
-    if (!isNaN(yearCandidate) && yearCandidate > 1900 && yearCandidate <= new Date().getFullYear() + 1) {
+  // Known motorcycle makes for better identification
+  const knownMakes = [
+    'honda', 'yamaha', 'suzuki', 'kawasaki', 'harley', 'davidson', 'harleydavidson',
+    'bmw', 'ducati', 'triumph', 'ktm', 'aprilia', 'royalenfield', 'royal', 'enfield',
+    'indian', 'victory', 'buell', 'husqvarna', 'moto', 'guzzi', 'motoguzzi'
+  ];
+  
+  // Try to find year (usually a 4-digit number between 1900 and current year + 1)
+  for (let i = 0; i < parts.length; i++) {
+    const yearCandidate = parseInt(parts[i], 10);
+    if (!isNaN(yearCandidate) && yearCandidate >= 1900 && yearCandidate <= new Date().getFullYear() + 1) {
       year = yearCandidate;
-    } else {
-      model = parts[1] || '';
+      parts.splice(i, 1); // Remove year from parts
+      break;
     }
-  } else if (parts.length === 1) {
-    make = parts[0] || '';
   }
-
+  
+  // Try to identify known make in the first few parts
+  for (let i = 0; i < Math.min(3, parts.length); i++) {
+    const lowerPart = parts[i].toLowerCase();
+    if (knownMakes.includes(lowerPart)) {
+      make = parts[i];
+      parts.splice(i, 1);
+      
+      // Handle special cases like "royal enfield" that might be split
+      if (lowerPart === 'royal' && parts.length > 0 && parts[0].toLowerCase() === 'enfield') {
+        make = 'Royal Enfield';
+        parts.splice(0, 1);
+      } else if (lowerPart === 'harley' && parts.length > 0 && parts[0].toLowerCase() === 'davidson') {
+        make = 'Harley Davidson';
+        parts.splice(0, 1);
+      } else if (lowerPart === 'moto' && parts.length > 0 && parts[0].toLowerCase() === 'guzzi') {
+        make = 'Moto Guzzi';
+        parts.splice(0, 1);
+      }
+      break;
+    }
+  }
+  
+  // If no make was found, use first part as make
+  if (!make && parts.length > 0) {
+    make = parts[0];
+    parts.splice(0, 1);
+  }
+  
+  // Remaining parts form the model
+  model = parts.join(' ');
+  
   // Capitalize make and model
   make = make.charAt(0).toUpperCase() + make.slice(1);
-  model = model.charAt(0).toUpperCase() + model.slice(1);
-
+  if (model) {
+    model = model.charAt(0).toUpperCase() + model.slice(1);
+  }
+  
+  console.log("Parsed result:", { make, model, year });
+  
   return {
     make,
     model,

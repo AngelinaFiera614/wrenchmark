@@ -37,11 +37,17 @@ export const useImportProcessor = (): ImportProcessorResult => {
       
       // Set default manual type based on filename
       let manualType: ManualType = 'owner';
-      if (file.name.toLowerCase().includes('service')) {
+      const lowerName = file.name.toLowerCase();
+      
+      if (lowerName.includes('service') || lowerName.includes('repair') || 
+          lowerName.includes('workshop') || lowerName.includes('maintenance')) {
         manualType = 'service';
-      } else if (file.name.toLowerCase().includes('wiring')) {
+      } else if (lowerName.includes('wiring') || lowerName.includes('diagram') || 
+               lowerName.includes('electric') || lowerName.includes('schematic')) {
         manualType = 'wiring';
       }
+      
+      console.log(`Prepared import item for ${file.name}: ${make} ${model} ${year}, type: ${manualType}`);
       
       return {
         ...file,
@@ -88,16 +94,23 @@ export const useImportProcessor = (): ImportProcessorResult => {
       );
       
       try {
+        console.log(`Processing import for: ${item.name}, make: "${item.make}", model: "${item.model}", year: ${item.year}`);
+        
         // Check if motorcycle exists or create a placeholder
+        console.log(`Looking up motorcycle: ${item.make} ${item.model} ${item.year || new Date().getFullYear()}`);
         let motorcycle = await findMotorcycleByDetails(item.make, item.model, item.year || new Date().getFullYear());
 
         if (!motorcycle) {
+          console.log(`No motorcycle found, creating placeholder for: ${item.make} ${item.model} ${item.year || new Date().getFullYear()}`);
           // Create a placeholder motorcycle
           motorcycle = await createPlaceholderMotorcycle({
             make: item.make,
             model: item.model,
             year: item.year || new Date().getFullYear(),
           });
+          console.log("Created placeholder motorcycle:", motorcycle);
+        } else {
+          console.log("Found existing motorcycle:", motorcycle);
         }
 
         // Calculate file size in MB if available
@@ -106,6 +119,8 @@ export const useImportProcessor = (): ImportProcessorResult => {
         // Generate a title from the filename
         const baseName = item.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
         const title = `${item.manualType.charAt(0).toUpperCase() + item.manualType.slice(1)} Manual: ${baseName}`;
+        
+        console.log(`Importing manual with title: "${title}", motorcycle_id: ${motorcycle.id}`);
 
         // Import the manual
         const importedManual = await importManual({
@@ -118,6 +133,8 @@ export const useImportProcessor = (): ImportProcessorResult => {
           file_size_mb: fileSizeMB
         });
         
+        console.log("Manual successfully imported:", importedManual);
+        
         // Update status to success
         setImportItems(items => 
           items.map(i => 
@@ -129,6 +146,7 @@ export const useImportProcessor = (): ImportProcessorResult => {
         
         successfulImports.push(importedManual);
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Error importing ${item.name}:`, error);
         
         // Update status to error
@@ -138,11 +156,13 @@ export const useImportProcessor = (): ImportProcessorResult => {
               ? { 
                   ...i, 
                   status: 'error',
-                  errorMessage: error instanceof Error ? error.message : 'Unknown error'
+                  errorMessage
                 } 
               : i
           )
         );
+        
+        toast.error(`Failed to import ${item.name}: ${errorMessage}`);
       }
     }
     

@@ -8,18 +8,26 @@ import { createManual } from "./update";
  * Upload a file to storage
  */
 export const uploadManualFile = async (file: File, path: string): Promise<string> => {
-  const { data, error } = await supabase
-    .storage
-    .from('manuals')
-    .upload(path, file);
+  try {
+    console.log(`Uploading file ${file.name} to path ${path}`);
+    
+    const { data, error } = await supabase
+      .storage
+      .from('manuals')
+      .upload(path, file);
 
-  if (error) {
-    console.error("Error uploading manual file:", error);
+    if (error) {
+      console.error("Error uploading manual file:", error);
+      throw error;
+    }
+
+    console.log("File uploaded successfully:", data.path);
+    // Return the path to the uploaded file
+    return data.path;
+  } catch (error) {
+    console.error("Exception in uploadManualFile:", error);
     throw error;
   }
-
-  // Return the path to the uploaded file
-  return data.path;
 };
 
 /**
@@ -27,12 +35,15 @@ export const uploadManualFile = async (file: File, path: string): Promise<string
  */
 export const uploadManual = async (file: File, manualInfo: ManualInfo): Promise<ManualWithMotorcycle> => {
   try {
+    console.log("Starting manual upload process for:", file.name, "with info:", manualInfo);
+    
     // Generate a unique file path
     const timestamp = Date.now();
     const filePath = `${timestamp}_${file.name.replace(/\s+/g, '_')}`;
     
     // Upload the file to storage
     const path = await uploadManualFile(file, filePath);
+    console.log("File uploaded to path:", path);
     
     // Get the public URL for the file
     const { data: fileData } = await supabase
@@ -40,9 +51,12 @@ export const uploadManual = async (file: File, manualInfo: ManualInfo): Promise<
       .from('manuals')
       .getPublicUrl(path);
 
+    console.log("Generated public URL:", fileData.publicUrl);
+
     // Make sure title is provided if it's optional
     if (!manualInfo.title) {
       manualInfo.title = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+      console.log("Generated title from filename:", manualInfo.title);
     }
     
     // Create the manual record with the file URL
@@ -51,8 +65,10 @@ export const uploadManual = async (file: File, manualInfo: ManualInfo): Promise<
       file_url: fileData.publicUrl
     };
     
+    console.log("Creating manual record with data:", updatedManualInfo);
     // Create the manual record or use existing ID
     const manual = await createManual(updatedManualInfo);
+    console.log("Manual record created:", manual);
     
     return manual;
   } catch (error) {
@@ -69,8 +85,11 @@ export interface ImportManualData extends ManualInfo {
 }
 
 export const importManual = async (importData: ImportManualData): Promise<ManualWithMotorcycle> => {
+  console.log("Starting manual import process for:", importData.file_name);
+  
   try {
     // Verify file exists in storage
+    console.log("Checking if file exists in storage:", importData.file_name);
     const { data: fileList, error: listError } = await supabase
       .storage
       .from('manuals')
@@ -83,16 +102,34 @@ export const importManual = async (importData: ImportManualData): Promise<Manual
       throw listError;
     }
     
+    console.log("Files found in storage:", fileList?.map(f => f.name));
     const fileExists = fileList?.some(item => item.name === importData.file_name);
     
     if (!fileExists) {
+      console.error(`File "${importData.file_name}" not found in storage`);
       throw new Error(`File "${importData.file_name}" not found in storage`);
     }
     
     // Make sure title is provided if it's optional
     if (!importData.title) {
       importData.title = importData.file_name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+      console.log("Generated title from filename:", importData.title);
     }
+    
+    // Ensure motorcycle_id is valid
+    if (!importData.motorcycle_id) {
+      console.error("Missing motorcycle_id in import data");
+      throw new Error("Motorcycle ID is required for manual import");
+    }
+    
+    console.log("Creating manual record with data:", {
+      title: importData.title,
+      manual_type: importData.manual_type,
+      motorcycle_id: importData.motorcycle_id,
+      year: importData.year,
+      file_size_mb: importData.file_size_mb,
+      file_url: importData.file_url
+    });
     
     // Create the manual record
     const manual = await createManual({
@@ -104,6 +141,7 @@ export const importManual = async (importData: ImportManualData): Promise<Manual
       file_url: importData.file_url,
     });
     
+    console.log("Manual record created successfully:", manual);
     return manual;
   } catch (error) {
     console.error("Error importing manual:", error);

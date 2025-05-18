@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { StorageFile } from '@/hooks/useStorageList';
@@ -17,7 +16,7 @@ export interface ManualBucketHookResult {
   };
 }
 
-export const useManualBucket = (): ManualBucketHookResult => {
+export function useManualBucket() {
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +43,10 @@ export const useManualBucket = (): ManualBucketHookResult => {
     }
   };
 
-  // Use the imported parseFileName function
-  const parseFileDetails = parseFileName;
+  // Function to parse file details from filename
+  const parseFileDetails = (fileName: string) => {
+    return parseFileName(fileName);
+  };
 
   return { 
     files, 
@@ -54,4 +55,4 @@ export const useManualBucket = (): ManualBucketHookResult => {
     fetchManualFiles,
     parseFileDetails 
   };
-};
+}

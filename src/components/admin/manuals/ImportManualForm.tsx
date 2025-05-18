@@ -13,6 +13,7 @@ import ManualTypeField from './import-form/ManualTypeField';
 import MotorcycleFields from './import-form/MotorcycleFields';
 import FormActions from './import-form/FormActions';
 import { BucketFile } from './ManualBucketBrowser';
+import { toast } from 'sonner';
 
 // Schema specifically for importing existing manual files
 export const importSchema = z.object({
@@ -60,47 +61,67 @@ const ImportManualForm: React.FC<ImportManualFormProps> = ({
   useEffect(() => {
     if (!selectedFile) return;
     
-    // Calculate size in MB
-    const fileSizeMB = selectedFile.size / (1024 * 1024);
-    
-    // Parse file name for motorcycle details
-    const { make, model, year } = parseFileDetails(selectedFile.name);
-    
-    // Generate a title from the file name
-    const baseName = selectedFile.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-    const titleCase = baseName
-      .split(" ")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-    
-    // Guess manual type based on filename
-    let manualType = 'owner';
-    if (selectedFile.name.toLowerCase().includes('service') || 
-        selectedFile.name.toLowerCase().includes('repair')) {
-      manualType = 'service';
-    } else if (selectedFile.name.toLowerCase().includes('wiring') || 
-              selectedFile.name.toLowerCase().includes('diagram')) {
-      manualType = 'wiring';
+    try {
+      console.log("Processing selected file:", selectedFile.name);
+      
+      // Calculate size in MB
+      const fileSizeMB = selectedFile.size / (1024 * 1024);
+      console.log(`File size: ${fileSizeMB.toFixed(2)} MB`);
+      
+      // Parse file name for motorcycle details
+      const { make, model, year } = parseFileDetails(selectedFile.name);
+      console.log(`Parsed details: make=${make}, model=${model}, year=${year}`);
+      
+      // Generate a title from the file name
+      const baseName = selectedFile.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+      const titleCase = baseName
+        .split(" ")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+      
+      // Guess manual type based on filename
+      const lowerName = selectedFile.name.toLowerCase();
+      let manualType = 'owner';
+      
+      if (lowerName.includes('service') || lowerName.includes('repair') || 
+          lowerName.includes('workshop') || lowerName.includes('maintenance')) {
+        manualType = 'service';
+      } else if (lowerName.includes('wiring') || lowerName.includes('diagram') || 
+                lowerName.includes('electric') || lowerName.includes('schematic')) {
+        manualType = 'wiring';
+      }
+      
+      console.log(`Detected manual type: ${manualType}`);
+      
+      // Update form
+      form.setValue('title', titleCase);
+      form.setValue('manual_type', manualType as any);
+      form.setValue('make', make || '');
+      form.setValue('model', model || '');
+      if (year) {
+        form.setValue('year', year);
+      }
+      form.setValue('file_url', selectedFile.url);
+      form.setValue('file_name', selectedFile.name);
+      form.setValue('file_size_mb', parseFloat(fileSizeMB.toFixed(2)));
+    } catch (error) {
+      console.error("Error processing selected file:", error);
+      toast.error("Failed to process the selected file");
     }
-    
-    // Update form
-    form.setValue('title', titleCase);
-    form.setValue('manual_type', manualType as any);
-    form.setValue('make', make);
-    form.setValue('model', model);
-    if (year) {
-      form.setValue('year', year);
-    }
-    form.setValue('file_url', selectedFile.url);
-    form.setValue('file_name', selectedFile.name);
-    form.setValue('file_size_mb', parseFloat(fileSizeMB.toFixed(2)));
   }, [selectedFile, form, parseFileDetails]);
 
   const handleSubmit = async (values: ImportManualFormValues) => {
-    await onSubmit(values);
+    try {
+      console.log("Submitting form with values:", values);
+      await onSubmit(values);
+    } catch (error) {
+      console.error("Error submitting import form:", error);
+      toast.error("Failed to import manual");
+    }
   };
 
   const handleFileSelect = (file: BucketFile) => {
+    console.log("File selected:", file.name);
     setSelectedFile(file);
   };
 
