@@ -16,7 +16,7 @@ export const getTags = async (): Promise<ManualTag[]> => {
     throw error;
   }
 
-  return data || [];
+  return data as ManualTag[] || [];
 };
 
 /**
@@ -24,25 +24,42 @@ export const getTags = async (): Promise<ManualTag[]> => {
  */
 export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> => {
   const { data, error } = await supabase
-    .from('manual_tag_associations')
-    .select(`
-      tag_id,
-      manual_tags:tag_id (
-        id,
-        name,
-        description,
-        color
-      )
-    `)
-    .eq('manual_id', manualId);
-
+    .rpc('get_tags_for_manual', { manual_id_param: manualId });
+  
   if (error) {
-    console.error("Error fetching tags for manual:", error);
-    throw error;
+    // Fallback method if RPC doesn't exist yet
+    const { data: joinData, error: joinError } = await supabase
+      .from('manual_tag_associations')
+      .select(`
+        tag_id
+      `)
+      .eq('manual_id', manualId);
+      
+    if (joinError) {
+      console.error("Error fetching tag associations for manual:", joinError);
+      throw joinError;
+    }
+    
+    if (!joinData || joinData.length === 0) {
+      return [];
+    }
+    
+    const tagIds = joinData.map(item => item.tag_id);
+    
+    const { data: tagData, error: tagError } = await supabase
+      .from('manual_tags')
+      .select('*')
+      .in('id', tagIds);
+      
+    if (tagError) {
+      console.error("Error fetching tags by IDs:", tagError);
+      throw tagError;
+    }
+    
+    return tagData as ManualTag[] || [];
   }
 
-  // Extract the tag details from the joined results
-  return data?.map(item => item.manual_tags as ManualTag) || [];
+  return data as ManualTag[] || [];
 };
 
 /**
@@ -51,7 +68,7 @@ export const getTagsForManual = async (manualId: string): Promise<ManualTag[]> =
 export const createTag = async (tag: Omit<ManualTag, 'id'>): Promise<ManualTag> => {
   const { data, error } = await supabase
     .from('manual_tags')
-    .insert([tag])
+    .insert([tag as any])
     .select()
     .single();
 
@@ -60,7 +77,7 @@ export const createTag = async (tag: Omit<ManualTag, 'id'>): Promise<ManualTag> 
     throw error;
   }
 
-  return data;
+  return data as ManualTag;
 };
 
 /**
@@ -69,7 +86,7 @@ export const createTag = async (tag: Omit<ManualTag, 'id'>): Promise<ManualTag> 
 export const updateTag = async (id: string, updates: Partial<Omit<ManualTag, 'id'>>): Promise<ManualTag> => {
   const { data, error } = await supabase
     .from('manual_tags')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
     .select()
     .single();
@@ -79,7 +96,7 @@ export const updateTag = async (id: string, updates: Partial<Omit<ManualTag, 'id
     throw error;
   }
 
-  return data;
+  return data as ManualTag;
 };
 
 /**
@@ -121,7 +138,7 @@ export const associateTagsWithManual = async (manualId: string, tagIds: string[]
 
     const { error: insertError } = await supabase
       .from('manual_tag_associations')
-      .insert(associations);
+      .insert(associations as any);
 
     if (insertError) {
       console.error("Error creating tag associations:", insertError);
@@ -163,7 +180,7 @@ export const getOrCreateTagsByNames = async (tagNames: string[]): Promise<Manual
 
     const { data: createdTags, error: createError } = await supabase
       .from('manual_tags')
-      .insert(newTags)
+      .insert(newTags as any)
       .select();
 
     if (createError) {
@@ -172,10 +189,10 @@ export const getOrCreateTagsByNames = async (tagNames: string[]): Promise<Manual
     }
 
     // Combine existing and newly created tags
-    return [...(existingTags || []), ...(createdTags || [])];
+    return [...(existingTags || []), ...(createdTags || [])] as ManualTag[];
   }
 
-  return existingTags || [];
+  return existingTags as ManualTag[] || [];
 };
 
 // Helper function to generate random colors for auto-generated tags
