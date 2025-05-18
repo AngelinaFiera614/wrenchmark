@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ImportItem } from './types';
+import { ImportItem } from '../shared/types';
 import { ManualType } from '@/types';
 
 interface ConfirmDetailsStepProps {

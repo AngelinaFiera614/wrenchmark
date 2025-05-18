@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { BucketFile } from '../ManualBucketBrowser';
@@ -7,7 +6,7 @@ import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services
 import { importManual } from '@/services/manuals';
 import { ManualType } from '@/types';
 import { ManualWithMotorcycle } from '@/services/manuals/types';
-import { ImportItem } from './types';
+import { ImportItem } from '../shared/types';
 
 export const useImportProcessor = () => {
   const [selectedFiles, setSelectedFiles] = useState<BucketFile[]>([]);

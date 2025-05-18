@@ -1,17 +1,10 @@
 
-import { ManualType } from '@/types';
 import { BucketFile } from '../ManualBucketBrowser';
 import { ManualWithMotorcycle } from '@/services/manuals/types';
+import { ImportItem } from '../shared/types';
 
-export interface ImportItem extends BucketFile {
-  status: "pending" | "processing" | "success" | "error";
-  manualType: ManualType;
-  make: string;
-  model: string;
-  year: number | null;
-  errorMessage?: string;
-  importedManual?: ManualWithMotorcycle;
-}
+// Re-export ImportItem for convenience
+export { ImportItem };
 
 export interface BatchImportDialogProps {
   open: boolean;

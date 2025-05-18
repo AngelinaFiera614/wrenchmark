@@ -3,7 +3,7 @@ import React from 'react';
 import { Loader2, Check, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ImportItem } from './types';
+import { ImportItem } from '../shared/types';
 
 interface ImportProgressStepProps {
   importItems: ImportItem[];
