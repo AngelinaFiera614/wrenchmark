@@ -4,20 +4,23 @@
 export interface ManualInfo {
   id?: string;
   title?: string;
-  motorcycle_id: string;
+  motorcycle_id?: string; // Now optional
   manual_type?: string;
   year?: number;
   file_size_mb?: number;
   file_url?: string;
-  file_name?: string; // Added for import functionality
-  tags?: string[]; // Added for tag support
+  file_name?: string;
+  tags?: string[];
+  // Added for direct storage on manual
+  make?: string;
+  model?: string;
 }
 
 export interface ManualWithMotorcycle extends ManualInfo {
   motorcycle_name?: string;
   downloads?: number;
   tags?: string[];
-  tag_details?: ManualTag[]; // For expanded tag information
+  tag_details?: ManualTag[];
   motorcycles?: {
     model_name: string;
   };
@@ -25,7 +28,7 @@ export interface ManualWithMotorcycle extends ManualInfo {
 
 export interface ImportManualParams extends ManualInfo {
   file_name: string; // Required for import
-  // Add these properties for motorcycle creation during import
+  // Added for manual metadata
   make?: string;
   model?: string;
 }
@@ -41,7 +44,10 @@ export interface ManualUpdateParams {
   manual_type?: string;
   year?: number;
   file_size_mb?: number;
-  tags?: string[]; // Added for tag support
+  tags?: string[];
+  // Added for direct storage on manual
+  make?: string;
+  model?: string;
 }
 
 // Tag related interfaces

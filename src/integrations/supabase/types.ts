@@ -323,8 +323,10 @@ export type Database = {
           file_size_mb: number | null
           file_url: string | null
           id: string
+          make: string | null
           manual_type: string | null
-          motorcycle_id: string
+          model: string | null
+          motorcycle_id: string | null
           title: string
           updated_at: string
           year: number | null
@@ -335,8 +337,10 @@ export type Database = {
           file_size_mb?: number | null
           file_url?: string | null
           id?: string
+          make?: string | null
           manual_type?: string | null
-          motorcycle_id: string
+          model?: string | null
+          motorcycle_id?: string | null
           title: string
           updated_at?: string
           year?: number | null
@@ -347,8 +351,10 @@ export type Database = {
           file_size_mb?: number | null
           file_url?: string | null
           id?: string
+          make?: string | null
           manual_type?: string | null
-          motorcycle_id?: string
+          model?: string | null
+          motorcycle_id?: string | null
           title?: string
           updated_at?: string
           year?: number | null

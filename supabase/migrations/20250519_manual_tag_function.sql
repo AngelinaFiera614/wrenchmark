@@ -1,18 +1,29 @@
 
--- Function to retrieve tags for a manual
-CREATE OR REPLACE FUNCTION public.get_tags_for_manual(manual_id_param UUID)
-RETURNS TABLE (
-  id UUID,
-  name TEXT,
-  description TEXT,
-  color TEXT
-) AS $$
+-- Function to generate custom manual tags by file name patterns
+CREATE OR REPLACE FUNCTION public.suggest_manual_tags_by_filename(filename text)
+RETURNS text[] AS $$
+DECLARE
+    result text[];
 BEGIN
-  RETURN QUERY
-  SELECT mt.id, mt.name, mt.description, mt.color
-  FROM manual_tags mt
-  JOIN manual_tag_associations mta ON mt.id = mta.tag_id
-  WHERE mta.manual_id = manual_id_param
-  ORDER BY mt.name;
+    result := '{}';
+    
+    -- Check for common patterns and add appropriate tags
+    IF filename ILIKE '%repair%' OR filename ILIKE '%service%' OR filename ILIKE '%maintenance%' THEN
+        result := array_append(result, 'repair');
+    END IF;
+    
+    IF filename ILIKE '%electrical%' OR filename ILIKE '%wiring%' OR filename ILIKE '%diagram%' THEN
+        result := array_append(result, 'electrical');
+    END IF;
+    
+    IF filename ILIKE '%parts%' OR filename ILIKE '%catalog%' OR filename ILIKE '%component%' THEN
+        result := array_append(result, 'parts');
+    END IF;
+    
+    IF filename ILIKE '%owner%' OR filename ILIKE '%manual%' OR filename ILIKE '%handbook%' THEN
+        result := array_append(result, 'owner');
+    END IF;
+    
+    RETURN result;
 END;
 $$ LANGUAGE plpgsql;

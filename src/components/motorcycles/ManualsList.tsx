@@ -93,6 +93,13 @@ const ManualsList: React.FC<ManualsListProps> = ({ motorcycleId }) => {
             
             <h3 className="text-lg font-medium mb-1">{manual.title}</h3>
             
+            {/* Display make/model from manual if available */}
+            {(manual.make || manual.model) && (
+              <div className="text-sm text-muted-foreground mb-2">
+                {manual.make} {manual.model}
+              </div>
+            )}
+            
             {/* Tags */}
             {manual.tag_details && manual.tag_details.length > 0 && (
               <div className="flex flex-wrap gap-1 my-2">

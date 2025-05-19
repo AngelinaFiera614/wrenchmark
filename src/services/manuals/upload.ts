@@ -109,95 +109,35 @@ export interface ImportManualData extends ManualInfo {
 
 /**
  * Function to import an existing manual file (already in storage)
+ * Now stores make/model/year directly on the manual record without creating motorcycles
  */
 export const importManual = async (params: ImportManualParams): Promise<ManualWithMotorcycle> => {
   console.log('Importing manual with params:', params);
   
   try {
-    // First, check if we need to create a motorcycle record
-    let motorcycleId = params.motorcycle_id;
-    
-    if (!motorcycleId && params.make && params.model) {
-      // Find if a motorcycle with this make/model exists
-      const { data: existingBikes } = await supabase
-        .from('motorcycles')
-        .select('id, model_name, brand_id')
-        .eq('model_name', params.model);
-      
-      if (existingBikes && existingBikes.length > 0) {
-        // Use existing motorcycle
-        motorcycleId = existingBikes[0].id;
-        console.log('Using existing motorcycle:', motorcycleId);
-      } else {
-        // Need to find or create the brand first
-        const { data: brands } = await supabase
-          .from('brands')
-          .select('id')
-          .ilike('name', params.make)
-          .limit(1);
-        
-        let brandId: string;
-        if (brands && brands.length > 0) {
-          // Use existing brand
-          brandId = brands[0].id;
-          console.log('Using existing brand:', brandId);
-        } else {
-          // Create new brand
-          const slug = params.make.toLowerCase().replace(/\s+/g, '-');
-          const { data: newBrand, error: brandError } = await supabase
-            .from('brands')
-            .insert({
-              name: params.make,
-              slug: slug
-            })
-            .select()
-            .single();
-          
-          if (brandError) {
-            throw new Error(`Failed to create brand: ${brandError.message}`);
-          }
-          
-          brandId = newBrand.id;
-          console.log('Created new brand:', brandId);
-        }
-        
-        // Create new motorcycle
-        const slug = `${params.make}-${params.model}`.toLowerCase().replace(/\s+/g, '-');
-        const { data: newMotorcycle, error: motorcycleError } = await supabase
-          .from('motorcycles')
-          .insert({
-            brand_id: brandId,
-            model_name: params.model,
-            year: params.year,
-            slug: slug,
-            is_placeholder: true // Mark as placeholder for incomplete record
-          })
-          .select()
-          .single();
-        
-        if (motorcycleError) {
-          throw new Error(`Failed to create motorcycle: ${motorcycleError.message}`);
-        }
-        
-        motorcycleId = newMotorcycle.id;
-        console.log('Created new motorcycle:', motorcycleId);
-      }
-    }
-    
-    if (!motorcycleId) {
-      throw new Error('Missing motorcycle ID and not enough information to create one');
-    }
-    
-    // Now create the manual record
-    // Ensure title is provided as it's required in the database schema
-    const manualData = {
+    // Create the manual record with make/model/year directly
+    // Use motorcycle_id if provided, but it's now optional
+    const manualData: any = {
       title: params.title || params.file_name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
       manual_type: params.manual_type,
-      motorcycle_id: motorcycleId,
-      year: params.year,
       file_url: params.file_url,
-      file_size_mb: params.file_size_mb
+      file_size_mb: params.file_size_mb,
+      year: params.year
     };
+    
+    // Add motorcycle_id only if provided
+    if (params.motorcycle_id) {
+      manualData.motorcycle_id = params.motorcycle_id;
+    }
+    
+    // Store make/model directly on the manual record
+    if (params.make) {
+      manualData.make = params.make;
+    }
+    
+    if (params.model) {
+      manualData.model = params.model;
+    }
     
     console.log('Creating manual with data:', manualData);
     
@@ -205,7 +145,7 @@ export const importManual = async (params: ImportManualParams): Promise<ManualWi
     const { data: manual, error: manualError } = await supabase
       .from('manuals')
       .insert(manualData)
-      .select('*, motorcycles!inner(model_name)')
+      .select('*, motorcycles(*)')
       .single();
     
     if (manualError) {
@@ -237,9 +177,12 @@ export const importManual = async (params: ImportManualParams): Promise<ManualWi
     }
     
     // Format the response to match ManualWithMotorcycle type
+    // Include make/model from the manual itself if motorcycle is not linked
     const manualWithMotorcycle: ManualWithMotorcycle = {
       ...manual,
-      motorcycle_name: manual.motorcycles?.model_name,
+      motorcycle_name: manual.motorcycles?.model_name || manual.model,
+      make: manual.make,
+      model: manual.model,
       tag_details: tagDetails
     };
     

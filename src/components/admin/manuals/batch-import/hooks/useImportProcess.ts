@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { findMotorcycleByDetails, createPlaceholderMotorcycle } from '@/services/motorcycleService';
 import { importManual } from '@/services/manuals';
 import { ManualWithMotorcycle } from '@/services/manuals/types';
 import { ImportItem } from '../types';
@@ -39,23 +38,6 @@ export const useImportProcess = ({
       try {
         console.log(`Processing import for: ${item.name}, make: "${item.make}", model: "${item.model}", year: ${item.year}`);
         
-        // Check if motorcycle exists or create a placeholder
-        console.log(`Looking up motorcycle: ${item.make} ${item.model} ${item.year || new Date().getFullYear()}`);
-        let motorcycle = await findMotorcycleByDetails(item.make, item.model, item.year || new Date().getFullYear());
-
-        if (!motorcycle) {
-          console.log(`No motorcycle found, creating placeholder for: ${item.make} ${item.model} ${item.year || new Date().getFullYear()}`);
-          // Create a placeholder motorcycle
-          motorcycle = await createPlaceholderMotorcycle({
-            make: item.make,
-            model: item.model,
-            year: item.year || new Date().getFullYear(),
-          });
-          console.log("Created placeholder motorcycle:", motorcycle);
-        } else {
-          console.log("Found existing motorcycle:", motorcycle);
-        }
-
         // Calculate file size in MB if available
         const fileSizeMB = item.size ? parseFloat((item.size / (1024 * 1024)).toFixed(2)) : undefined;
         
@@ -63,15 +45,16 @@ export const useImportProcess = ({
         const baseName = item.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
         const title = `${item.manualType.charAt(0).toUpperCase() + item.manualType.slice(1)} Manual: ${baseName}`;
         
-        console.log(`Importing manual with title: "${title}", motorcycle_id: ${motorcycle.id}`);
+        console.log(`Importing manual with title: "${title}", make: ${item.make}, model: ${item.model}`);
 
-        // Import the manual
+        // Import the manual with make/model directly
         const importedManual = await importManual({
           file_name: item.name,
           file_url: item.url,
           title,
           manual_type: item.manualType,
-          motorcycle_id: motorcycle.id,
+          make: item.make,
+          model: item.model,
           year: item.year || undefined,
           file_size_mb: fileSizeMB
         });

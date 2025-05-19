@@ -1,191 +1,123 @@
 
-// Functions for fetching manuals
 import { supabase } from "@/integrations/supabase/client";
-import { ManualInfo, ManualWithMotorcycle, ManualTag } from "./types";
-import { getTagsForManual } from "./tags";
+import { ManualWithMotorcycle } from "./types";
+import { incrementDownloadCount } from "./update";
 
 /**
- * Get all manuals with motorcycle information
+ * Get a list of all manuals
  */
-export const getManuals = async (): Promise<ManualWithMotorcycle[]> => {
-  const { data, error } = await supabase
-    .from('manuals')
-    .select(`
-      *,
-      motorcycles:motorcycle_id (
-        model_name,
-        year,
-        brand:brand_id (name)
-      )
-    `)
-    .order('title');
-
-  if (error) {
-    console.error("Error fetching manuals:", error);
-    throw error;
-  }
-
-  // Transform the response to get motorcycle name
-  const manuals = (data || []).map(item => {
-    const motorcycle = item.motorcycles;
-    return {
-      ...item,
-      motorcycle_name: motorcycle 
-        ? `${motorcycle.brand?.name} ${motorcycle.model_name} ${motorcycle.year || ''}` 
-        : 'Unknown'
-    };
-  });
-
-  // Fetch tags for each manual
-  const manualsWithTags = await Promise.all(
-    manuals.map(async (manual) => {
-      try {
-        const tagDetails = await getTagsForManual(manual.id);
-        return {
-          ...manual,
-          tag_details: tagDetails
-        };
-      } catch (err) {
-        console.error(`Error fetching tags for manual ${manual.id}:`, err);
-        return manual;
-      }
-    })
-  );
-
-  return manualsWithTags;
-};
-
-/**
- * Get manuals for a specific motorcycle
- */
-export const getManualsByMotorcycleId = async (motorcycleId: string): Promise<any[]> => {
-  const { data, error } = await supabase
-    .from('manuals')
-    .select('*')
-    .eq('motorcycle_id', motorcycleId)
-    .order('title');
-
-  if (error) {
-    console.error("Error fetching manuals for motorcycle:", error);
-    throw error;
-  }
-
-  // Fetch tags for each manual
-  const manualsWithTags = await Promise.all(
-    (data || []).map(async (manual) => {
-      try {
-        const tagDetails = await getTagsForManual(manual.id);
-        return {
-          ...manual,
-          tag_details: tagDetails
-        };
-      } catch (err) {
-        console.error(`Error fetching tags for manual ${manual.id}:`, err);
-        return manual;
-      }
-    })
-  );
-
-  return manualsWithTags || [];
-};
-
-/**
- * Get a manual by ID with motorcycle information
- */
-export const getManualById = async (id: string): Promise<ManualWithMotorcycle | null> => {
-  const { data, error } = await supabase
-    .from('manuals')
-    .select(`
-      *,
-      motorcycles:motorcycle_id (
-        model_name,
-        year,
-        brand:brand_id (name)
-      )
-    `)
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    if (error.code === 'PGRST116') {
-      return null; // No match found
-    }
-    console.error("Error fetching manual:", error);
-    throw error;
-  }
-
-  if (!data) return null;
-
-  const motorcycle = data.motorcycles;
-  const manual = {
-    ...data,
-    motorcycle_name: motorcycle 
-      ? `${motorcycle.brand?.name} ${motorcycle.model_name} ${motorcycle.year || ''}` 
-      : 'Unknown'
-  };
-
-  // Fetch tags for this manual
+export async function getManuals(): Promise<ManualWithMotorcycle[]> {
   try {
-    const tagDetails = await getTagsForManual(manual.id);
-    return {
-      ...manual,
-      tag_details: tagDetails
-    };
-  } catch (err) {
-    console.error(`Error fetching tags for manual ${manual.id}:`, err);
-    return manual;
-  }
-};
+    // Get all manuals with their associated motorcycles
+    const { data, error } = await supabase
+      .from('manuals')
+      .select('*, motorcycles(*)')
+      .order('created_at', { ascending: false });
 
-/**
- * Search manuals by title, tags, or motorcycle details
- */
-export const searchManuals = async (searchQuery: string): Promise<ManualWithMotorcycle[]> => {
-  // First search directly in the manuals table
-  const { data: manualResults, error: manualError } = await supabase
-    .from('manuals')
-    .select(`
-      *,
-      motorcycles:motorcycle_id (
-        model_name,
-        year,
-        brand:brand_id (name)
-      )
-    `)
-    .or(`title.ilike.%${searchQuery}%,manual_type.ilike.%${searchQuery}%`)
-    .order('title');
+    if (error) {
+      console.error("Error fetching manuals:", error);
+      throw new Error(error.message);
+    }
 
-  if (manualError) {
-    console.error("Error searching manuals:", manualError);
-    throw manualError;
-  }
-
-  // Transform the results
-  const manuals = (manualResults || []).map(item => {
-    const motorcycle = item.motorcycles;
-    return {
-      ...item,
-      motorcycle_name: motorcycle 
-        ? `${motorcycle.brand?.name} ${motorcycle.model_name} ${motorcycle.year || ''}` 
-        : 'Unknown'
-    };
-  });
-
-  // Fetch tags for each manual
-  const manualsWithTags = await Promise.all(
-    manuals.map(async (manual) => {
-      try {
-        const tagDetails = await getTagsForManual(manual.id);
+    // Get tags for each manual
+    const manualsWithTags = await Promise.all(
+      data.map(async (manual) => {
+        const { data: tagData } = await supabase
+          .rpc('get_tags_for_manual', { manual_id_param: manual.id });
+          
+        // Format the response to match ManualWithMotorcycle type
         return {
           ...manual,
-          tag_details: tagDetails
+          // Use motorcycle_name or manual.model as fallback
+          motorcycle_name: manual.motorcycles?.model_name || manual.model || "",
+          tag_details: tagData || []
         };
-      } catch (err) {
-        console.error(`Error fetching tags for manual ${manual.id}:`, err);
-        return manual;
-      }
-    })
-  );
+      })
+    );
 
-  return manualsWithTags;
-};
+    return manualsWithTags;
+  } catch (error) {
+    console.error("Error in getManuals:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get a manual by ID
+ */
+export async function getManual(id: string): Promise<ManualWithMotorcycle> {
+  try {
+    const { data, error } = await supabase
+      .from('manuals')
+      .select('*, motorcycles(*)')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Get tags
+    const { data: tagData } = await supabase
+      .rpc('get_tags_for_manual', { manual_id_param: id });
+
+    // Return formatted manual with tags
+    return {
+      ...data,
+      // Use motorcycle_name or manual.model as fallback
+      motorcycle_name: data.motorcycles?.model_name || data.model || "",
+      tag_details: tagData || []
+    };
+  } catch (error) {
+    console.error("Error in getManual:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get all manuals for a specific motorcycle
+ */
+export async function getManualsByMotorcycleId(motorcycleId: string): Promise<ManualWithMotorcycle[]> {
+  try {
+    const { data, error } = await supabase
+      .from('manuals')
+      .select('*, motorcycles(*)')
+      .eq('motorcycle_id', motorcycleId)
+      .order('manual_type');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Get tags for each manual
+    const manualsWithTags = await Promise.all(
+      data.map(async (manual) => {
+        const { data: tagData } = await supabase
+          .rpc('get_tags_for_manual', { manual_id_param: manual.id });
+          
+        return {
+          ...manual,
+          motorcycle_name: manual.motorcycles?.model_name || "",
+          tag_details: tagData || []
+        };
+      })
+    );
+
+    return manualsWithTags;
+  } catch (error) {
+    console.error("Error in getManualsByMotorcycleId:", error);
+    throw error;
+  }
+}
+
+/**
+ * Increment the download count for a manual
+ */
+export async function incrementManualDownloadCount(manualId: string): Promise<void> {
+  try {
+    await incrementDownloadCount(manualId);
+  } catch (error) {
+    console.error("Error incrementing download count:", error);
+    throw error;
+  }
+}

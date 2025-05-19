@@ -32,18 +32,16 @@ export const useManualImport = ({
       setError(null);
       console.log("Starting manual import process with values:", values);
 
-      // Import the manual directly with the provided values
-      // Create a properly typed import params object
+      // Import the manual with make/model/year as direct properties
       const importParams: ImportManualParams = {
         title: values.title,
         manual_type: values.manual_type,
-        motorcycle_id: "", // This will be generated from make/model/year on the server
         year: values.year,
         file_url: values.file_url,
         file_name: values.file_name,
         file_size_mb: values.file_size_mb,
         tags: values.tags || [],
-        // These properties are defined in ImportManualParams
+        // Store make/model directly on the manual
         make: values.make,
         model: values.model
       };
