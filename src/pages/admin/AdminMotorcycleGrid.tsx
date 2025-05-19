@@ -4,14 +4,11 @@ import { AdminMotorcycleGrid } from "@/components/admin/motorcycles/AdminMotorcy
 
 const AdminMotorcycleGridPage = () => {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Motorcycle Grid Editor</h1>
-        <p className="text-muted-foreground mt-2">
-          Spreadsheet-style editor for efficiently managing motorcycle models. Use inline editing for quick updates or the detail view for complete specifications.
-        </p>
-      </div>
-
+    <div className="container py-6">
+      <h1 className="text-2xl font-bold mb-6 text-accent-teal">Motorcycles Grid Editor</h1>
+      <p className="text-gray-400 mb-8">
+        Quickly edit multiple motorcycles in a spreadsheet-like interface.
+      </p>
       <AdminMotorcycleGrid />
     </div>
   );

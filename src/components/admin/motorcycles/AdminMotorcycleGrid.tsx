@@ -58,7 +58,7 @@ export function AdminMotorcycleGrid() {
           model_name,
           brand_id,
           year,
-          description,
+          summary,
           status,
           brands:brand_id (
             id,
@@ -77,7 +77,7 @@ export function AdminMotorcycleGrid() {
         brand_name: item.brands?.name || "Unknown",
         year_start: item.year || undefined,
         year_end: null,
-        description: item.description || "",
+        description: item.summary || "", // Use summary instead of description
         status: item.status || "draft",
         isDirty: false,
       }));
@@ -164,6 +164,7 @@ export function AdminMotorcycleGrid() {
             ...saveData,
             slug: slugText,
             year: motorcycle.year_start, // Map to existing year field
+            summary: motorcycle.description, // Map description to summary field
           })
           .select();
       } else {
@@ -174,6 +175,7 @@ export function AdminMotorcycleGrid() {
             ...saveData,
             slug: slugText,
             year: motorcycle.year_start, // Map to existing year field
+            summary: motorcycle.description, // Map description to summary field
           })
           .eq("id", id)
           .select();
