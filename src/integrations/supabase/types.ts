@@ -698,7 +698,7 @@ export type Database = {
         Returns: boolean
       }
       generate_course_slug: {
-        Args: { title_input: string }
+        Args: Record<PropertyKey, never> | { title_input: string }
         Returns: string
       }
       generate_lesson_slug: {

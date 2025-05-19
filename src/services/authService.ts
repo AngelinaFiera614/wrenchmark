@@ -92,26 +92,81 @@ export async function updateProfileData(
 
 export async function fetchCurrentSession() {
   try {
-    const { data } = await supabase.auth.getSession();
+    console.log("[authService] Fetching current session");
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error("[authService] Error fetching session:", error);
+      return null;
+    }
+    
+    if (data.session) {
+      const expiresAt = data.session.expires_at;
+      const now = Math.floor(Date.now() / 1000);
+      console.log(`[authService] Session expires at: ${new Date(expiresAt * 1000).toISOString()}, now: ${new Date(now * 1000).toISOString()}`);
+    }
+    
     return data.session;
   } catch (error) {
-    console.error("Error fetching session:", error);
+    console.error("[authService] Error fetching session:", error);
     return null;
   }
 }
 
-// Add a function to refresh auth session
+// Function to refresh auth session
 export async function refreshSession() {
   try {
+    console.log("[authService] Refreshing session");
     const { data, error } = await supabase.auth.refreshSession();
+    
     if (error) {
-      console.error("Error refreshing session:", error);
+      console.error("[authService] Error refreshing session:", error);
+      
+      // Try to get current session to see status
+      const currentSession = await fetchCurrentSession();
+      if (!currentSession) {
+        console.log("[authService] No current session found during refresh failure");
+      }
+      
       return null;
     }
-    console.log("Session refreshed successfully");
-    return data.session;
+    
+    if (data.session) {
+      console.log("[authService] Session refreshed successfully, expires:", new Date(data.session.expires_at * 1000).toISOString());
+      return data.session;
+    } else {
+      console.log("[authService] No session after refresh");
+      return null;
+    }
   } catch (error) {
-    console.error("Error in refreshSession:", error);
+    console.error("[authService] Error in refreshSession:", error);
     return null;
+  }
+}
+
+// Function to verify if the current user is admin
+export async function verifyAdminStatus() {
+  try {
+    console.log("[authService] Verifying admin status");
+    
+    // First check if we have a session
+    const currentSession = await fetchCurrentSession();
+    if (!currentSession || !currentSession.user) {
+      console.log("[authService] No active session found during admin verification");
+      return false;
+    }
+    
+    // Get user profile
+    const profile = await getProfileById(currentSession.user.id);
+    if (!profile) {
+      console.log("[authService] No profile found during admin verification");
+      return false;
+    }
+    
+    console.log(`[authService] Admin status verified: ${profile.is_admin}`);
+    return profile.is_admin;
+  } catch (error) {
+    console.error("[authService] Error verifying admin status:", error);
+    return false;
   }
 }
