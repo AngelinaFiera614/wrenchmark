@@ -13,3 +13,5 @@ export * from './suspension';
 export * from './wheel';
 export * from './glossary';
 export * from './manual-tags';
+export * from './accessories'; // Add this line to include accessories types
+export * from './colors'; // Add this line to include colors types

@@ -5,7 +5,8 @@ import { Accessory, AccessoryFormState, AccessoryCompatibility } from "@/types/a
 // Fetch all accessories
 export const getAllAccessories = async (): Promise<Accessory[]> => {
   try {
-    const { data, error } = await supabase
+    // Use the any type to bypass the TypeScript error until the Supabase types are regenerated
+    const { data, error } = await (supabase as any)
       .from('accessories')
       .select('*')
       .order('name');
@@ -15,7 +16,7 @@ export const getAllAccessories = async (): Promise<Accessory[]> => {
       return [];
     }
     
-    return data;
+    return data as Accessory[];
   } catch (error) {
     console.error("Error in getAllAccessories:", error);
     return [];
@@ -25,7 +26,7 @@ export const getAllAccessories = async (): Promise<Accessory[]> => {
 // Fetch accessories by category
 export const getAccessoriesByCategory = async (category: string): Promise<Accessory[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('accessories')
       .select('*')
       .eq('category', category)
@@ -36,7 +37,7 @@ export const getAccessoriesByCategory = async (category: string): Promise<Access
       return [];
     }
     
-    return data;
+    return data as Accessory[];
   } catch (error) {
     console.error("Error in getAccessoriesByCategory:", error);
     return [];
@@ -46,7 +47,7 @@ export const getAccessoriesByCategory = async (category: string): Promise<Access
 // Fetch compatible accessories for a configuration
 export const getCompatibleAccessories = async (configurationId: string): Promise<Accessory[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('accessory_compatibility')
       .select(`
         accessory_id,
@@ -60,7 +61,7 @@ export const getCompatibleAccessories = async (configurationId: string): Promise
     }
     
     // Extract accessory data from nested structures
-    return data.map(item => item.accessories);
+    return data.map((item: any) => item.accessories) as Accessory[];
   } catch (error) {
     console.error("Error in getCompatibleAccessories:", error);
     return [];
@@ -70,7 +71,7 @@ export const getCompatibleAccessories = async (configurationId: string): Promise
 // Create a new accessory
 export const createAccessory = async (accessoryData: AccessoryFormState): Promise<Accessory | null> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('accessories')
       .insert({
         name: accessoryData.name,
@@ -88,7 +89,7 @@ export const createAccessory = async (accessoryData: AccessoryFormState): Promis
       return null;
     }
     
-    return data;
+    return data as Accessory;
   } catch (error) {
     console.error("Error in createAccessory:", error);
     return null;
@@ -98,7 +99,7 @@ export const createAccessory = async (accessoryData: AccessoryFormState): Promis
 // Update an accessory
 export const updateAccessory = async (accessoryId: string, accessoryData: Partial<AccessoryFormState>): Promise<Accessory | null> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('accessories')
       .update({
         name: accessoryData.name,
@@ -117,7 +118,7 @@ export const updateAccessory = async (accessoryId: string, accessoryData: Partia
       return null;
     }
     
-    return data;
+    return data as Accessory;
   } catch (error) {
     console.error("Error in updateAccessory:", error);
     return null;
@@ -128,7 +129,7 @@ export const updateAccessory = async (accessoryId: string, accessoryData: Partia
 export const deleteAccessory = async (accessoryId: string): Promise<boolean> => {
   try {
     // First delete all compatibility records
-    const { error: compError } = await supabase
+    const { error: compError } = await (supabase as any)
       .from('accessory_compatibility')
       .delete()
       .eq('accessory_id', accessoryId);
@@ -139,7 +140,7 @@ export const deleteAccessory = async (accessoryId: string): Promise<boolean> => 
     }
     
     // Then delete the accessory
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('accessories')
       .delete()
       .eq('id', accessoryId);
@@ -159,7 +160,7 @@ export const deleteAccessory = async (accessoryId: string): Promise<boolean> => 
 // Add accessory compatibility
 export const addAccessoryCompatibility = async (accessoryId: string, configurationId: string, notes?: string): Promise<AccessoryCompatibility | null> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('accessory_compatibility')
       .insert({
         accessory_id: accessoryId,
@@ -174,7 +175,7 @@ export const addAccessoryCompatibility = async (accessoryId: string, configurati
       return null;
     }
     
-    return data;
+    return data as AccessoryCompatibility;
   } catch (error) {
     console.error("Error in addAccessoryCompatibility:", error);
     return null;
@@ -184,7 +185,7 @@ export const addAccessoryCompatibility = async (accessoryId: string, configurati
 // Remove accessory compatibility
 export const removeAccessoryCompatibility = async (accessoryId: string, configurationId: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('accessory_compatibility')
       .delete()
       .eq('accessory_id', accessoryId)
