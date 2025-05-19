@@ -16,7 +16,7 @@ export const getColorsForConfiguration = async (configurationId: string): Promis
       return [];
     }
     
-    return data;
+    return data as ColorOption[];
   } catch (error) {
     console.error("Error in getColorsForConfiguration:", error);
     return [];
@@ -43,7 +43,7 @@ export const createColor = async (configurationId: string, colorData: ColorFormS
       return null;
     }
     
-    return data;
+    return data as ColorOption;
   } catch (error) {
     console.error("Error in createColor:", error);
     return null;
@@ -70,7 +70,7 @@ export const updateColor = async (colorId: string, colorData: Partial<ColorFormS
       return null;
     }
     
-    return data;
+    return data as ColorOption;
   } catch (error) {
     console.error("Error in updateColor:", error);
     return null;

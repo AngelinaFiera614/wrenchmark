@@ -18,7 +18,7 @@ export const getAllMotorcycleModels = async (): Promise<MotorcycleModel[]> => {
       return [];
     }
     
-    return data;
+    return data as MotorcycleModel[];
   } catch (error) {
     console.error("Error in getAllMotorcycleModels:", error);
     return [];
@@ -54,7 +54,7 @@ export const getMotorcycleModelBySlug = async (slug: string): Promise<Motorcycle
       return null;
     }
     
-    return data;
+    return data as MotorcycleModel;
   } catch (error) {
     console.error("Error in getMotorcycleModelBySlug:", error);
     return null;
@@ -176,7 +176,7 @@ export const getModelsForComparison = async (slugs: string[]): Promise<Motorcycl
       return [];
     }
     
-    return data || [];
+    return (data || []) as MotorcycleModel[];
   } catch (error) {
     console.error("Error in getModelsForComparison:", error);
     return [];

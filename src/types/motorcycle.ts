@@ -78,7 +78,7 @@ export interface MotorcycleModel {
   base_description: string;
   production_start_year: number;
   production_end_year?: number;
-  production_status: 'active' | 'discontinued' | 'revived' | 'concept' | 'limited';
+  production_status: string; // Changed from union type to string to match what the database returns
   default_image_url: string;
   slug: string;
   brand?: any; // Will be populated with brand data in queries

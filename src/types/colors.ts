@@ -1,7 +1,7 @@
 
 export interface ColorOption {
   id: string;
-  configuration_id: string;
+  model_year_id: string;   // Changed from configuration_id to match the database
   name: string;
   hex_code?: string;
   image_url?: string;
