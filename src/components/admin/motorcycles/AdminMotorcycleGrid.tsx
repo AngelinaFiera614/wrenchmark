@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -41,17 +40,19 @@ export function AdminMotorcycleGrid() {
   const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
   const { toast } = useToast();
 
-  // Load brands for dropdown with error handling
+  // Load brands for dropdown with error handling using the correct useQuery syntax
   const { data: brands = [], isError: isBrandsError } = useQuery({
     queryKey: ["admin-brands"],
     queryFn: getAllBrands,
-    onError: (error) => {
-      console.error("Error loading brands:", error);
-      toast({
-        variant: "destructive",
-        title: "Failed to load brands",
-        description: "Please try refreshing the page.",
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error("Error loading brands:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load brands",
+          description: "Please try refreshing the page.",
+        });
+      }
     }
   });
 
