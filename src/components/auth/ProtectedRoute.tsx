@@ -1,5 +1,5 @@
 
-import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -12,95 +12,118 @@ type ProtectedRouteProps = {
 };
 
 const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, isAdmin, isAdminVerified, profile, isLoading, adminVerificationState, refreshProfile } = useAuth();
+  const { 
+    user, 
+    isAdmin, 
+    isAdminVerified, 
+    profile, 
+    isLoading, 
+    adminVerificationState, 
+    refreshProfile,
+    forceAdminVerification
+  } = useAuth();
+  
   const location = useLocation();
-  const navigate = useNavigate();
+  const [verificationInProgress, setVerificationInProgress] = useState(false);
+  const [localAdminVerified, setLocalAdminVerified] = useState(false);
   
-  const [localVerified, setLocalVerified] = useState(false);
-  
-  // Enhanced verification for admin access - within the component only
+  // Enhanced verification for admin routes
   useEffect(() => {
-    // Only perform additional verification for admin routes
+    // Only perform verification for admin routes
     if (!requireAdmin) return;
     
-    // If already verified through the auth context
+    // Skip verification if already verified through the auth context
     if (isAdminVerified) {
       console.log("[ProtectedRoute] Admin already verified via context, allowing access");
-      setLocalVerified(true);
+      setLocalAdminVerified(true);
       return;
     }
     
-    // If we have confirmation user is admin from profile
-    if (isAdmin && adminVerificationState === 'verified') {
-      console.log("[ProtectedRoute] Admin verified via profile, allowing access");
-      setLocalVerified(true);
-      return;
-    }
-
-    const verifyAccess = async () => {
+    // If verification is in progress or we've determined admin status, don't re-verify
+    if (verificationInProgress || localAdminVerified) return;
+    
+    const verifyAdminAccess = async () => {
       console.log("[ProtectedRoute] Verifying admin access", {
         isLoading,
         user: user ? user.id : "null",
-        profile: profile ? `exists (admin: ${profile.is_admin})` : "null",
+        profile: profile ? "exists" : "null",
         isAdmin,
-        requireAdmin,
-        path: location.pathname,
         adminVerificationState
       });
       
-      // If auth is still loading, wait for it
+      // If auth is still loading, wait
       if (isLoading) {
         console.log("[ProtectedRoute] Auth still loading, waiting...");
         return;
       }
       
-      // No user means we'll redirect (handled in render)
+      // If no user, we'll redirect (handled in render)
       if (!user) {
-        console.log("[ProtectedRoute] No user found, will redirect to auth");
+        console.log("[ProtectedRoute] No user found, will redirect");
         return;
       }
-
+      
+      setVerificationInProgress(true);
+      
       try {
-        // Do a direct check against the database for admin status as a final verification
-        console.log("[ProtectedRoute] Performing direct admin status check");
-        const adminStatus = await verifyAdminStatus(user.id);
+        // First try force verification through the AuthContext
+        console.log("[ProtectedRoute] Performing force admin verification");
+        const isAdminUser = await forceAdminVerification();
         
-        if (adminStatus) {
-          console.log("[ProtectedRoute] Direct admin check confirmed admin status");
-          setLocalVerified(true);
+        if (isAdminUser) {
+          console.log("[ProtectedRoute] Force verification confirmed admin status");
+          setLocalAdminVerified(true);
+          return;
+        }
+        
+        // If force verification failed, try a direct check
+        console.log("[ProtectedRoute] Force verification failed, trying direct check");
+        const directCheck = await verifyAdminStatus(user.id);
+        
+        if (directCheck) {
+          console.log("[ProtectedRoute] Direct check confirmed admin status");
+          setLocalAdminVerified(true);
         } else {
-          console.log("[ProtectedRoute] Direct admin check denied admin status");
+          // One last attempt - refresh profile and session
+          console.log("[ProtectedRoute] Direct check failed, trying profile refresh");
           
-          // Final attempt to refresh profile and session
-          try {
-            await refreshSession();
-            
-            // If no profile, try to create one
-            if (!profile) {
-              await createProfileIfNotExists(user.id);
-            }
-            
-            await refreshProfile();
-            
-            // Check admin status one last time
-            const finalCheck = await verifyAdminStatus(user.id);
-            setLocalVerified(finalCheck);
-          } catch (error) {
-            console.error("[ProtectedRoute] Error in final verification attempt:", error);
-            setLocalVerified(false);
+          await refreshSession();
+          if (!profile) {
+            await createProfileIfNotExists(user.id);
           }
+          await refreshProfile();
+          
+          // Final check
+          const finalCheck = await verifyAdminStatus(user.id);
+          setLocalAdminVerified(finalCheck);
+          
+          console.log("[ProtectedRoute] Final admin check result:", finalCheck);
         }
       } catch (error) {
-        console.error("[ProtectedRoute] Error in direct admin check:", error);
+        console.error("[ProtectedRoute] Error in admin verification:", error);
+        setLocalAdminVerified(false);
+      } finally {
+        setVerificationInProgress(false);
       }
     };
     
-    verifyAccess();
-  }, [isLoading, user, profile, isAdmin, requireAdmin, location.pathname, 
-      refreshProfile, adminVerificationState, isAdminVerified]);
+    verifyAdminAccess();
+  }, [
+    user, 
+    profile, 
+    isAdmin, 
+    isAdminVerified, 
+    requireAdmin, 
+    isLoading, 
+    adminVerificationState,
+    refreshProfile,
+    verificationInProgress,
+    localAdminVerified,
+    forceAdminVerification
+  ]);
   
   // Show loading state during verification
-  if (isLoading || (requireAdmin && adminVerificationState === 'pending' && !localVerified && !isAdminVerified)) {
+  if (isLoading || (requireAdmin && verificationInProgress)) {
     return (
       <div className="flex justify-center items-center h-screen bg-background">
         <div className="flex flex-col items-center space-y-4">
@@ -116,11 +139,12 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
   // If not logged in at all, redirect to auth
   if (!user) {
     console.log("[ProtectedRoute] User not authenticated, redirecting to auth page");
+    toast.error("Please sign in to continue");
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // For admin routes, check both context verification and local verification
-  if (requireAdmin && !isAdmin && !isAdminVerified && !localVerified) {
+  // For admin routes, check verification status
+  if (requireAdmin && !isAdmin && !isAdminVerified && !localAdminVerified) {
     console.log("[ProtectedRoute] User not admin, access denied");
     toast.error("You don't have permission to access this area");
     return <Navigate to="/" replace />;
@@ -128,7 +152,7 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
 
   // Allow access if:
   // 1. Not an admin route, OR
-  // 2. Admin route AND (isAdmin OR isAdminVerified OR localVerified)
+  // 2. Admin route AND (isAdmin OR isAdminVerified OR localAdminVerified)
   console.log("[ProtectedRoute] Access granted to path:", location.pathname);
   return <Outlet />;
 };

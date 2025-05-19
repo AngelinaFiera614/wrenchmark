@@ -54,6 +54,8 @@ export async function signUp(email: string, password: string) {
 
 export async function signOut() {
   try {
+    // Clear admin cache before signing out
+    adminStatusCache.clear();
     await supabase.auth.signOut();
     toast.success("You have been signed out");
   } catch (error: any) {
@@ -177,12 +179,40 @@ export async function refreshSession() {
   }
 }
 
-// Create a cache for admin status with a TTL (time to live)
-const adminStatusCache = new Map<string, {isAdmin: boolean, timestamp: number}>();
-const ADMIN_CACHE_TTL = 60000; // 1 minute
+// Create a persistent cache for admin status with a TTL (time to live)
+// Using localStorage for persistence across page reloads
+const ADMIN_CACHE_KEY = 'wrenchmark_admin_status';
+const ADMIN_CACHE_TTL = 60 * 60 * 1000; // 1 hour in milliseconds
 
-// Function to verify if the current user is admin
-export async function verifyAdminStatus(userId?: string) {
+// In-memory cache for quick access
+const adminStatusCache = new Map<string, {isAdmin: boolean, timestamp: number}>();
+
+// Load initial cache from localStorage if available
+try {
+  const storedCache = localStorage.getItem(ADMIN_CACHE_KEY);
+  if (storedCache) {
+    const parsedCache = JSON.parse(storedCache);
+    // Only use cache if it's not expired
+    if (parsedCache && parsedCache.timestamp && (Date.now() - parsedCache.timestamp < ADMIN_CACHE_TTL)) {
+      if (parsedCache.userId && parsedCache.isAdmin !== undefined) {
+        adminStatusCache.set(parsedCache.userId, {
+          isAdmin: parsedCache.isAdmin,
+          timestamp: parsedCache.timestamp
+        });
+        console.log("[authService] Loaded admin status from persistent cache:", parsedCache);
+      }
+    } else {
+      // Clear expired cache
+      localStorage.removeItem(ADMIN_CACHE_KEY);
+    }
+  }
+} catch (error) {
+  console.error("[authService] Error loading admin cache from localStorage:", error);
+  // Continue without the cache
+}
+
+// Function to verify if a user is admin with improved caching
+export async function verifyAdminStatus(userId?: string): Promise<boolean> {
   try {
     console.log("[authService] Verifying admin status");
     
@@ -194,7 +224,7 @@ export async function verifyAdminStatus(userId?: string) {
       return false;
     }
     
-    // Check cache first
+    // Check in-memory cache first
     const cachedStatus = adminStatusCache.get(userIdToCheck);
     if (cachedStatus && (Date.now() - cachedStatus.timestamp < ADMIN_CACHE_TTL)) {
       console.log(`[authService] Using cached admin status for user ${userIdToCheck}: ${cachedStatus.isAdmin}`);
@@ -202,22 +232,84 @@ export async function verifyAdminStatus(userId?: string) {
     }
     
     // Get user profile
+    console.log(`[authService] No valid cache found, fetching profile for user ${userIdToCheck}`);
     const profile = await getProfileById(userIdToCheck);
+    
     if (!profile) {
       console.log("[authService] No profile found during admin verification");
       
-      // Cache the negative result
-      adminStatusCache.set(userIdToCheck, {isAdmin: false, timestamp: Date.now()});
-      return false;
+      // Try to create a profile if one doesn't exist
+      const createdProfile = await createProfileIfNotExists(userIdToCheck);
+      if (!createdProfile) {
+        // Cache the negative result
+        updateAdminCache(userIdToCheck, false);
+        return false;
+      }
+      
+      // Use the created profile
+      const isAdmin = Boolean(createdProfile.is_admin);
+      updateAdminCache(userIdToCheck, isAdmin);
+      return isAdmin;
     }
     
     console.log(`[authService] Admin status for user ${userIdToCheck}: ${profile.is_admin}`);
     
-    // Cache the result
-    adminStatusCache.set(userIdToCheck, {isAdmin: Boolean(profile.is_admin), timestamp: Date.now()});
+    // Update both caches
+    updateAdminCache(userIdToCheck, Boolean(profile.is_admin));
     return Boolean(profile.is_admin);
   } catch (error) {
     console.error("[authService] Error verifying admin status:", error);
+    return false;
+  }
+}
+
+// Helper function to update both in-memory and persistent cache
+function updateAdminCache(userId: string, isAdmin: boolean) {
+  // Update in-memory cache
+  adminStatusCache.set(userId, {
+    isAdmin: isAdmin, 
+    timestamp: Date.now()
+  });
+  
+  // Update persistent cache in localStorage
+  try {
+    localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify({
+      userId,
+      isAdmin,
+      timestamp: Date.now()
+    }));
+  } catch (error) {
+    console.error("[authService] Error saving to localStorage:", error);
+    // Continue even if localStorage fails
+  }
+  
+  console.log(`[authService] Updated admin cache for ${userId}: ${isAdmin}`);
+}
+
+// Function to force clear admin cache and re-verify
+export async function forceAdminVerification(userId?: string): Promise<boolean> {
+  try {
+    console.log("[authService] Performing forced admin verification");
+    
+    const userIdToCheck = userId || (await fetchCurrentSession())?.user?.id;
+    
+    if (!userIdToCheck) {
+      console.log("[authService] No user ID available for forced verification");
+      return false;
+    }
+    
+    // Clear cache for this user
+    adminStatusCache.delete(userIdToCheck);
+    try {
+      localStorage.removeItem(ADMIN_CACHE_KEY);
+    } catch (e) {
+      console.error("[authService] Error clearing localStorage:", e);
+    }
+    
+    // Perform a fresh verification
+    return await verifyAdminStatus(userIdToCheck);
+  } catch (error) {
+    console.error("[authService] Error in forceAdminVerification:", error);
     return false;
   }
 }

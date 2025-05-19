@@ -1,7 +1,9 @@
 
 import { Session, User } from "@supabase/supabase-js";
 import type { Profile } from "@/services/profileService";
-import type { AdminVerificationState } from "@/hooks/useAuthState";
+
+// Define a more specific admin verification state
+export type AdminVerificationState = 'unknown' | 'pending' | 'verified' | 'failed';
 
 export type AuthContextType = {
   session: Session | null;
@@ -16,4 +18,5 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   updateProfile: (profileData: Partial<Profile>) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  forceAdminVerification: () => Promise<boolean>;
 };

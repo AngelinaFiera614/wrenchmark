@@ -6,6 +6,7 @@ import { getProfileById, createProfileIfNotExists } from "@/services/profileServ
 import type { Profile } from "@/services/profileService";
 import { toast } from "sonner";
 import { useAuthInitialization } from "./useAuthInitialization";
+import { forceAdminVerification, verifyAdminStatus } from "@/services/authService";
 
 export type AdminVerificationState = 'unknown' | 'pending' | 'verified' | 'failed';
 
@@ -51,9 +52,9 @@ export function useAuthState() {
               if (createdProfile.is_admin) {
                 setIsAdminVerified(true);
                 setAdminVerificationState('verified');
+              } else {
+                setAdminVerificationState('failed');
               }
-              
-              toast.success("Profile created successfully");
             } else {
               const error = new Error("Failed to create profile");
               console.error("[useAuthState]", error);
@@ -81,6 +82,9 @@ export function useAuthState() {
           setIsAdminVerified(true);
           setAdminVerificationState('verified');
           console.log("[useAuthState] Admin status verified from profile data");
+        } else {
+          setIsAdminVerified(false);
+          setAdminVerificationState('failed');
         }
       }
     } catch (error: any) {
@@ -149,6 +153,31 @@ export function useAuthState() {
       }
     }
   }, [user, profile, isAdminVerified]);
+  
+  // Add function to force admin verification
+  const forceVerifyAdmin = useCallback(async () => {
+    if (!user) {
+      console.log("[useAuthState] Cannot verify admin status: no user");
+      return false;
+    }
+    
+    console.log("[useAuthState] Forcing admin verification");
+    setAdminVerificationState('pending');
+    
+    try {
+      const isAdmin = await forceAdminVerification(user.id);
+      
+      setAdminStatus(isAdmin);
+      setIsAdminVerified(isAdmin);
+      setAdminVerificationState(isAdmin ? 'verified' : 'failed');
+      
+      return isAdmin;
+    } catch (error) {
+      console.error("[useAuthState] Error in force verification:", error);
+      setAdminVerificationState('failed');
+      return false;
+    }
+  }, [user]);
 
   return {
     session,
@@ -164,6 +193,7 @@ export function useAuthState() {
     refreshProfile,
     setProfileCreationAttempted,
     setIsAdminVerified,
-    setAdminVerificationState
+    setAdminVerificationState,
+    forceVerifyAdmin
   };
 }

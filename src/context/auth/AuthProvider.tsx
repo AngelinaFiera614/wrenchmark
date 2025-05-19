@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import { useAuthState } from "@/hooks/useAuthState";
-import { signIn, signUp, signOut, updateProfileData, refreshSession, verifyAdminStatus } from "@/services/authService";
+import { signIn, signUp, signOut, updateProfileData, refreshSession, verifyAdminStatus, forceAdminVerification } from "@/services/authService";
 import type { Profile } from "@/services/profileService";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAdminVerified,
     isAdminVerified,
     adminVerificationState,
+    forceVerifyAdmin
   } = useAuthState();
 
   // Immediately refresh session on initial render with a debounce mechanism
@@ -166,6 +167,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Error handled in service
     }
   };
+  
+  const handleForceAdminVerification = async () => {
+    if (forceVerifyAdmin) {
+      return await forceVerifyAdmin();
+    }
+    return false;
+  };
 
   const value = {
     session,
@@ -180,6 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut: handleSignOut,
     updateProfile: handleUpdateProfile,
     refreshProfile,
+    forceAdminVerification: handleForceAdminVerification
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

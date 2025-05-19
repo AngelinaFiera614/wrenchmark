@@ -6,30 +6,35 @@ import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { createProfileIfNotExists } from "@/services/profileService";
-import { refreshSession, verifyAdminStatus } from "@/services/authService";
+import { verifyAdminStatus } from "@/services/authService";
 
 const AdminLayout = () => {
-  const { isLoading, user, profile, isAdmin, isAdminVerified, adminVerificationState, refreshProfile } = useAuth();
+  const { isLoading, user, profile, isAdmin, isAdminVerified, adminVerificationState, forceAdminVerification } = useAuth();
+  const [verificationInProgress, setVerificationInProgress] = useState(false);
   const [localVerified, setLocalVerified] = useState(false);
   const navigate = useNavigate();
   
   // Enhanced verification for admin access - within the component only
   useEffect(() => {
+    // Skip verification if already verified
     if (isAdminVerified) {
-      console.log("[AdminLayout] Admin already verified, allowing access");
+      console.log("[AdminLayout] Admin already verified via context, allowing access");
       setLocalVerified(true);
       return;
     }
     
-    // If we've confirmed user is admin from auth context
-    if (isAdmin && adminVerificationState === 'verified') {
-      console.log("[AdminLayout] Admin verified via context, allowing access");
-      setLocalVerified(true);
+    // Skip if already locally verified
+    if (localVerified) {
+      console.log("[AdminLayout] Admin already verified locally, allowing access");
       return;
     }
-
+    
+    // Skip if verification is in progress
+    if (verificationInProgress) return;
+    
     const verifyAdminAccess = async () => {
+      setVerificationInProgress(true);
+      
       console.log("[AdminLayout] Verifying admin access", {
         isLoading,
         user: user ? "exists" : "null",
@@ -41,48 +46,73 @@ const AdminLayout = () => {
       // If auth is still loading, wait for it
       if (isLoading) {
         console.log("[AdminLayout] Auth still loading, waiting...");
+        setVerificationInProgress(false);
         return;
       }
       
       // If no user, we'll redirect (handled in render)
       if (!user) {
         console.log("[AdminLayout] No user found, will redirect");
+        setVerificationInProgress(false);
         return;
       }
 
       try {
-        // Do a direct check against the database for admin status as a fallback
-        console.log("[AdminLayout] Performing final admin status check");
-        const adminStatus = await verifyAdminStatus(user.id);
+        // First try the force verification through AuthContext
+        console.log("[AdminLayout] Performing force admin verification");
+        const isAdminUser = await forceAdminVerification();
         
-        if (adminStatus) {
+        if (isAdminUser) {
+          console.log("[AdminLayout] Force verification confirmed admin status");
+          setLocalVerified(true);
+          setVerificationInProgress(false);
+          return;
+        }
+        
+        // Try direct database check as backup
+        console.log("[AdminLayout] Force verification failed, trying direct check");
+        const directCheck = await verifyAdminStatus(user.id);
+        
+        if (directCheck) {
           console.log("[AdminLayout] Direct admin check confirmed admin status");
           setLocalVerified(true);
         } else {
           console.log("[AdminLayout] Direct admin check denied admin status");
           setLocalVerified(false);
           
-          // Force a profile refresh as a last resort
-          if (profile === null) {
-            console.log("[AdminLayout] No profile found, attempting to create/refresh");
-            try {
-              await createProfileIfNotExists(user.id);
-              await refreshProfile();
-            } catch (error) {
-              console.error("[AdminLayout] Error creating/refreshing profile:", error);
-            }
-          }
+          // Force client-side navigation to home
+          toast.error("You don't have permission to access the admin area");
+          navigate("/", { replace: true });
         }
       } catch (error) {
-        console.error("[AdminLayout] Error in direct admin check:", error);
+        console.error("[AdminLayout] Error in admin verification:", error);
+        setLocalVerified(false);
+        
+        // Force client-side navigation on error
+        navigate("/", { replace: true });
+      } finally {
+        setVerificationInProgress(false);
       }
     };
     
-    verifyAdminAccess();
-  }, [isLoading, user, profile, isAdmin, adminVerificationState, isAdminVerified, refreshProfile]);
+    // Add a small delay before verification to let other processes complete
+    const timeoutId = setTimeout(verifyAdminAccess, 100);
+    return () => clearTimeout(timeoutId);
+  }, [
+    isLoading, 
+    user, 
+    profile, 
+    isAdmin, 
+    adminVerificationState, 
+    isAdminVerified, 
+    navigate, 
+    localVerified, 
+    verificationInProgress,
+    forceAdminVerification
+  ]);
   
   // Show loading while verification is in progress
-  if (isLoading || (!localVerified && adminVerificationState === 'pending')) {
+  if (isLoading || verificationInProgress) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
@@ -96,8 +126,8 @@ const AdminLayout = () => {
     );
   }
 
-  // If we've verified admin status locally or through context
-  if (localVerified || isAdminVerified || isAdmin) {
+  // If we've verified admin status
+  if (isAdminVerified || localVerified || isAdmin) {
     return (
       <div className="min-h-screen flex flex-col">
         <AdminHeader />

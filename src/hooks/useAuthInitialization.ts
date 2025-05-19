@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { refreshSession } from "@/services/authService";
+import { refreshSession, verifyAdminStatus } from "@/services/authService";
 import type { AdminVerificationState } from "@/hooks/useAuthState";
 
 interface AuthInitializationProps {
@@ -27,6 +27,7 @@ export function useAuthInitialization({
     let isMounted = true;
     console.log("[useAuthInitialization] Setting up auth state listener");
     
+    // Queue for processing auth state events in order
     let authStateEventQueue: Array<{event: string, session: Session | null}> = [];
     let isProcessingAuthEvents = false;
     
@@ -41,25 +42,54 @@ export function useAuthInitialization({
       
       console.log(`[useAuthInitialization] Processing auth event: ${event}`);
       
+      // Special handling for token refresh events to preserve admin state
+      const preserveAdminVerification = (
+        event === 'TOKEN_REFRESHED' || 
+        event === 'REFRESHED' ||
+        event === 'SIGNED_IN'
+      );
+      
+      if (!preserveAdminVerification) {
+        // Only reset admin verification for non-refresh events
+        setAdminVerificationState('pending');
+      } else {
+        console.log(`[useAuthInitialization] Preserving admin verification state for ${event} event`);
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         console.log(`[useAuthInitialization] Auth event processed, fetching profile for: ${session.user.id}`);
         setIsProfileLoading(true);
-        setAdminVerificationState('pending');
+        
+        // Verify admin status immediately for better UX
+        if (!preserveAdminVerification) {
+          try {
+            const isAdmin = await verifyAdminStatus(session.user.id);
+            if (isAdmin) {
+              console.log("[useAuthInitialization] Admin status verified during auth event");
+              setAdminVerificationState('verified');
+            }
+          } catch (error) {
+            console.error("[useAuthInitialization] Error verifying admin status:", error);
+          }
+        }
         
         try {
           await fetchProfile(session.user.id);
         } catch (err) {
           console.error("[useAuthInitialization] Error in fetchProfile during queue processing:", err);
-          setAdminVerificationState('failed');
+          if (!preserveAdminVerification) {
+            setAdminVerificationState('failed');
+          }
         } finally {
           if (isMounted) {
             setIsLoading(false);
           }
         }
       } else {
+        // No user session
         setIsLoading(false);
         setAdminVerificationState('unknown');
       }
@@ -76,10 +106,7 @@ export function useAuthInitialization({
     const handleAuthStateChange = (event: string, currentSession: Session | null) => {
       if (!isMounted) return;
       
-      // For specifc events like token_refreshed, don't reset admin verification
-      const preserveAdminVerification = event === 'TOKEN_REFRESHED';
-      
-      console.log(`[useAuthInitialization] Auth event: ${event}, user: ${currentSession?.user?.email || "none"}, preserveVerification: ${preserveAdminVerification}`);
+      console.log(`[useAuthInitialization] Auth event: ${event}, user: ${currentSession?.user?.email || "none"}`);
       
       // Add event to queue
       authStateEventQueue.push({ event, session: currentSession });
@@ -102,6 +129,25 @@ export function useAuthInitialization({
       try {
         console.log("[useAuthInitialization] Initializing auth");
         setIsLoading(true);
+        
+        // Try to load session from localStorage first for immediate UI updates
+        try {
+          const storedSession = localStorage.getItem('sb-session');
+          if (storedSession) {
+            try {
+              const parsedSession = JSON.parse(storedSession);
+              if (parsedSession) {
+                console.log("[useAuthInitialization] Found stored session, using it initially");
+                // Just set the session/user temporarily, will be replaced by getSession() response
+                handleAuthStateChange("STORED", parsedSession);
+              }
+            } catch (e) {
+              console.error("[useAuthInitialization] Error parsing stored session:", e);
+            }
+          }
+        } catch (e) {
+          console.error("[useAuthInitialization] Error accessing localStorage:", e);
+        }
         
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
