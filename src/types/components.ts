@@ -18,6 +18,7 @@ export interface SuspensionOption extends ComponentOption {
   front_type?: string;
   rear_type?: string;
   brand?: string;
+  adjustability?: string;
 }
 
 export interface BrakeOption extends ComponentOption {
@@ -30,6 +31,7 @@ export interface BrakeOption extends ComponentOption {
 export interface FrameOption extends ComponentOption {
   type: string;
   material?: string;
+  notes?: string;
 }
 
 export interface WheelOption extends ComponentOption {

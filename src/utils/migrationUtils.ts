@@ -8,7 +8,7 @@ export const createEngineFromMotorcycle = async (
 ): Promise<string | null> => {
   try {
     // Extract engine information
-    const name = motorcycle.engine || `${motorcycle.engine_cc}cc Engine`;
+    const engineName = motorcycle.engine || `${motorcycle.engine_cc || motorcycle.engine_size}cc Engine`;
     const displacement = motorcycle.engine_cc || motorcycle.engine_size || 0;
     const power = motorcycle.horsepower_hp || motorcycle.horsepower || 0;
     const torque = motorcycle.torque_nm || 0;
@@ -29,7 +29,7 @@ export const createEngineFromMotorcycle = async (
     const { data, error } = await supabase
       .from('engines')
       .insert({
-        name: name,
+        name: engineName,
         displacement_cc: displacement,
         power_hp: power,
         torque_nm: torque,

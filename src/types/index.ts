@@ -36,6 +36,8 @@ export interface Motorcycle {
   created_at?: string;
   is_placeholder?: boolean;
   migration_status?: string;
+  status?: string;
+  engine?: string;
   // Compatibility aliases
   engine_cc?: number;
   horsepower_hp?: number;

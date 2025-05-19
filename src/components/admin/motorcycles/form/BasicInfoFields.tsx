@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Control } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { getAllBrands } from "@/services/brandService";
 
 interface BasicInfoFieldsProps {
   control: Control<any>;
-  brands: { id: string; name: string }[];
+  brands?: { id: string; name: string }[];
 }
 
-export function BasicInfoFields({ control, brands }: BasicInfoFieldsProps) {
+export function BasicInfoFields({ control, brands = [] }: BasicInfoFieldsProps) {
+  const { data: fetchedBrands } = useQuery({
+    queryKey: ["brands"],
+    queryFn: getAllBrands,
+    enabled: brands.length === 0
+  });
+
+  const brandsToUse = brands.length > 0 ? brands : (fetchedBrands || []);
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Basic Information</h3>
@@ -38,7 +48,7 @@ export function BasicInfoFields({ control, brands }: BasicInfoFieldsProps) {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {brands.map((brand) => (
+                {brandsToUse.map((brand) => (
                   <SelectItem key={brand.id} value={brand.id}>
                     {brand.name}
                   </SelectItem>

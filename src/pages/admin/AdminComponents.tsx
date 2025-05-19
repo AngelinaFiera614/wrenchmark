@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { fetchEngines, fetchBrakeSystems, fetchFrames, fetchSuspensions, fetchWheels } from "@/services/componentService";
 import { ComponentDialogManager } from "@/components/admin/motorcycles/form/ComponentDialogManager";
 
-const AdminComponents = () => {
+export default function AdminComponents() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("engines");
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
@@ -306,6 +305,4 @@ const AdminComponents = () => {
       />
     </div>
   );
-};
-
-export default AdminComponents;
+}

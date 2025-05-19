@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -10,7 +9,6 @@ import {
   Package,
   Settings,
   SlidersHorizontal,
-  Tool,
   Users,
   Wrench,
 } from "lucide-react";
@@ -47,7 +45,7 @@ const AdminSidebar = () => {
     {
       name: "Repair Skills",
       href: "/admin/repair-skills",
-      icon: <Tool className="h-5 w-5" />,
+      icon: <Wrench className="h-5 w-5" />,
     },
     {
       name: "Riding Skills",
