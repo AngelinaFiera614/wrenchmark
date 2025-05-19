@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -76,10 +77,7 @@ function App() {
             <Route path="/admin/brands" element={<AdminBrands />} />
             <Route path="/admin/manuals" element={<AdminManuals />} />
             <Route path="/admin/users" element={<AdminUsers />} />
-            {
-              path: "/admin/motorcycles/grid",
-              element: <AdminMotorcycleGridPage />,
-            },
+            <Route path="/admin/motorcycles/grid" element={<AdminMotorcycleGridPage />} />
           </Route>
         </Routes>
       </Router>
