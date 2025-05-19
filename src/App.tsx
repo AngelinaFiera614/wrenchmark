@@ -1,129 +1,90 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
   Route,
   Routes,
-  useLocation,
-  Outlet
-} from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/context/auth";
-import { ComparisonProvider } from "@/context/ComparisonContext";
-import { Layout } from "@/components/layout/Layout";
-import NotFound from "@/pages/NotFound";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import AdminLayout from "@/components/admin/AdminLayout";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminMotorcycles from "@/pages/admin/AdminMotorcycles";
-import AdminBrands from "@/pages/admin/AdminBrands";
-import AdminRepairSkills from "@/pages/admin/AdminRepairSkills";
-import AdminManuals from "@/pages/admin/AdminManuals";
-import AdminUsers from "@/pages/admin/AdminUsers";
-import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
-import AdminGlossary from "@/pages/admin/AdminGlossary";
-import AdminCourses from "@/pages/admin/AdminCourses";
-import AdminLessons from "@/pages/admin/AdminLessons";
-import AdminSkills from "@/pages/admin/AdminSkills";
-
-// Import actual page components
-import Index from "@/pages/Index";
-import About from "@/pages/About";
-import Contact from "@/pages/Contact";
-import Motorcycles from "@/pages/Motorcycles";
-import MotorcycleDetail from "@/pages/MotorcycleDetail";
-import BrandsDirectory from "@/pages/BrandsDirectory";
-import BrandDetail from "@/pages/BrandDetail";
-import ComparisonPage from "@/pages/ComparisonPage";
-import ProfilePage from "@/pages/ProfilePage";
-import RidingSkillDetailPage from "@/pages/RidingSkillDetailPage";
-import RidingSkillsPage from "@/pages/RidingSkillsPage";
-import Auth from "@/pages/Auth";
-import GlossaryPage from "@/pages/GlossaryPage";
-import GlossaryTermPage from "@/pages/GlossaryTermPage";
-import CoursesPage from "@/pages/CoursesPage";
-import CourseDetailPage from "@/pages/CourseDetailPage";
-import LessonPage from "@/pages/LessonPage";
+  Navigate,
+} from 'react-router-dom';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react';
+import { SessionContextProvider } from '@supabase/auth-helpers-react';
+import Home from './pages/Home';
+import MotorcycleDetail from './pages/MotorcycleDetail';
+import BrandDetail from './pages/BrandDetail';
+import AuthPage from './pages/AuthPage';
+import AccountPage from './pages/AccountPage';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminMotorcycles from './pages/admin/AdminMotorcycles';
+import AdminBrands from './pages/admin/AdminBrands';
+import AdminManuals from './pages/admin/AdminManuals';
+import AdminUsers from './pages/admin/AdminUsers';
+import ManualDetail from './pages/ManualDetail';
+import { useAuth } from './context/auth';
+import AdminMotorcycleGridPage from "./pages/admin/AdminMotorcycleGrid";
 
 function App() {
+  const [supabaseClient] = useState(() => useSupabaseClient());
+  const session = useSession();
+  const { isAdminVerified } = useAuth();
+
   return (
-    <AuthProvider>
-      <ComparisonProvider>
-        <Router>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            
-            {/* Routes wrapped with Layout */}
-            <Route element={<Layout><Outlet /></Layout>}>
-              <Route index element={<Index />} />
-              <Route path="about" element={<About />} />
-              <Route path="contact" element={<Contact />} />
-              <Route path="motorcycles" element={<Motorcycles />} />
-              <Route
-                path="motorcycles/:motorcycleId"
-                element={<MotorcycleDetail />}
+    <SessionContextProvider
+      supabaseClient={supabaseClient}
+      initialSession={session}
+    >
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/motorcycles/:slug" element={<MotorcycleDetail />} />
+          <Route path="/brands/:slug" element={<BrandDetail />} />
+          <Route path="/manuals/:id" element={<ManualDetail />} />
+          <Route
+            path="/auth"
+            element={
+              <AuthPage
+                supabaseClient={supabaseClient}
+                appearance={{ theme: ThemeSupa }}
+                providers={['google', 'github']}
+                redirectTo={`${window.location.origin}/account`}
               />
-              {/* Add support for the old URL pattern */}
-              <Route
-                path="motorcycle/:motorcycleId"
-                element={<MotorcycleDetail />}
-              />
-              <Route path="brands" element={<BrandsDirectory />} />
-              <Route path="brands/:brandId" element={<BrandDetail />} />
-              <Route path="compare" element={<ComparisonPage />} />
-              <Route path="riding-skills" element={<RidingSkillsPage />} />
-              <Route path="riding-skills/:id" element={<RidingSkillDetailPage />} />
-              <Route path="glossary" element={<GlossaryPage />} />
-              <Route path="glossary/:slug" element={<GlossaryTermPage />} />
-              
-              {/* New e-learning routes */}
-              <Route path="courses" element={<CoursesPage />} />
-              <Route path="courses/:slug" element={<CourseDetailPage />} />
-              <Route path="courses/:courseSlug/:lessonSlug" element={<LessonPage />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Route>
+            }
+          />
+          <Route
+            path="/account"
+            element={
+              session ? (
+                <AccountPage supabaseClient={supabaseClient} />
+              ) : (
+                <Navigate to="/auth" />
+              )
+            }
+          />
 
-            {/* Protected Routes - Requires Authentication */}
-            <Route path="profile" element={<ProtectedRoute />}>
-              <Route path="/profile" element={<ProfilePage />} />
-            </Route>
-
-            {/* Admin Routes - Protected with isAdmin = true */}
-            <Route path="admin" element={<ProtectedRoute requireAdmin />}>
-              <Route element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="motorcycles" element={<AdminMotorcycles />} />
-                <Route path="brands" element={<AdminBrands />} />
-                <Route path="repair-skills" element={<AdminRepairSkills />} />
-                <Route path="riding-skills" element={<AdminRidingSkills />} />
-                <Route path="glossary" element={<AdminGlossary />} />
-                <Route path="manuals" element={<AdminManuals />} />
-                <Route path="users" element={<AdminUsers />} />
-                
-                {/* New admin e-learning routes */}
-                <Route path="courses" element={<AdminCourses />} />
-                <Route path="courses/:courseId/lessons" element={<AdminLessons />} />
-                <Route path="skills" element={<AdminSkills />} />
-              </Route>
-            </Route>
-          </Routes>
-        </Router>
-        <Toaster />
-      </ComparisonProvider>
-    </AuthProvider>
+          {/* Admin Routes - only accessible if isAdminVerified is true */}
+          <Route
+            path="/admin"
+            element={
+              isAdminVerified ? (
+                <AdminLayout />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          >
+            <Route path="/admin/motorcycles" element={<AdminMotorcycles />} />
+            <Route path="/admin/brands" element={<AdminBrands />} />
+            <Route path="/admin/manuals" element={<AdminManuals />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            {
+              path: "/admin/motorcycles/grid",
+              element: <AdminMotorcycleGridPage />,
+            },
+          </Route>
+        </Routes>
+      </Router>
+    </SessionContextProvider>
   );
-}
-
-// Helper component to scroll to top on route change
-function ScrollToTop() {
-  const location = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location]);
-
-  return null;
 }
 
 export default App;

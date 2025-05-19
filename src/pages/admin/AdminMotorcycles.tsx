@@ -1,7 +1,8 @@
+
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Loader2, LayoutGrid } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -85,13 +86,25 @@ const AdminMotorcycles = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Motorcycles</h1>
-        <Button 
-          className="bg-accent-teal text-black hover:bg-accent-teal/80"
-          onClick={handleAddMotorcycle}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex items-center gap-1"
+            asChild
+          >
+            <Link to="/admin/motorcycles/grid">
+              <LayoutGrid className="h-4 w-4" />
+              Grid View
+            </Link>
+          </Button>
+          <Button 
+            className="bg-accent-teal text-black hover:bg-accent-teal/80"
+            onClick={handleAddMotorcycle}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New
+          </Button>
+        </div>
       </div>
       <p className="text-muted-foreground">
         Manage motorcycle listings in the database. Add, edit, or remove motorcycles.
