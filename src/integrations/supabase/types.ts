@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      brake_systems: {
+        Row: {
+          brake_type_front: string | null
+          brake_type_rear: string | null
+          created_at: string
+          has_traction_control: boolean | null
+          id: string
+          notes: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          brake_type_front?: string | null
+          brake_type_rear?: string | null
+          created_at?: string
+          has_traction_control?: boolean | null
+          id?: string
+          notes?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          brake_type_front?: string | null
+          brake_type_rear?: string | null
+          created_at?: string
+          has_traction_control?: boolean | null
+          id?: string
+          notes?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           brand_type: string | null
@@ -72,6 +105,47 @@ export type Database = {
         }
         Relationships: []
       }
+      color_options: {
+        Row: {
+          created_at: string
+          hex_code: string | null
+          id: string
+          image_url: string | null
+          is_limited: boolean | null
+          model_year_id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hex_code?: string | null
+          id?: string
+          image_url?: string | null
+          is_limited?: boolean | null
+          model_year_id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hex_code?: string | null
+          id?: string
+          image_url?: string | null
+          is_limited?: boolean | null
+          model_year_id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "color_options_model_year_id_fkey"
+            columns: ["model_year_id"]
+            isOneToOne: false
+            referencedRelation: "model_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           created_at: string
@@ -101,6 +175,75 @@ export type Database = {
           published?: boolean
           slug?: string
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      engines: {
+        Row: {
+          cooling: string | null
+          created_at: string
+          cylinder_count: number | null
+          displacement_cc: number
+          engine_type: string | null
+          id: string
+          name: string
+          power_hp: number | null
+          torque_nm: number | null
+          updated_at: string
+          valve_count: number | null
+        }
+        Insert: {
+          cooling?: string | null
+          created_at?: string
+          cylinder_count?: number | null
+          displacement_cc: number
+          engine_type?: string | null
+          id?: string
+          name: string
+          power_hp?: number | null
+          torque_nm?: number | null
+          updated_at?: string
+          valve_count?: number | null
+        }
+        Update: {
+          cooling?: string | null
+          created_at?: string
+          cylinder_count?: number | null
+          displacement_cc?: number
+          engine_type?: string | null
+          id?: string
+          name?: string
+          power_hp?: number | null
+          torque_nm?: number | null
+          updated_at?: string
+          valve_count?: number | null
+        }
+        Relationships: []
+      }
+      frames: {
+        Row: {
+          created_at: string
+          id: string
+          material: string | null
+          notes: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material?: string | null
+          notes?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material?: string | null
+          notes?: string | null
+          type?: string
           updated_at?: string
         }
         Relationships: []
@@ -369,6 +512,197 @@ export type Database = {
           },
         ]
       }
+      model_configurations: {
+        Row: {
+          brake_system_id: string | null
+          created_at: string
+          engine_id: string | null
+          frame_id: string | null
+          fuel_capacity_l: number | null
+          ground_clearance_mm: number | null
+          id: string
+          image_url: string | null
+          is_default: boolean | null
+          model_year_id: string
+          name: string | null
+          seat_height_mm: number | null
+          suspension_id: string | null
+          updated_at: string
+          weight_kg: number | null
+          wheel_id: string | null
+          wheelbase_mm: number | null
+        }
+        Insert: {
+          brake_system_id?: string | null
+          created_at?: string
+          engine_id?: string | null
+          frame_id?: string | null
+          fuel_capacity_l?: number | null
+          ground_clearance_mm?: number | null
+          id?: string
+          image_url?: string | null
+          is_default?: boolean | null
+          model_year_id: string
+          name?: string | null
+          seat_height_mm?: number | null
+          suspension_id?: string | null
+          updated_at?: string
+          weight_kg?: number | null
+          wheel_id?: string | null
+          wheelbase_mm?: number | null
+        }
+        Update: {
+          brake_system_id?: string | null
+          created_at?: string
+          engine_id?: string | null
+          frame_id?: string | null
+          fuel_capacity_l?: number | null
+          ground_clearance_mm?: number | null
+          id?: string
+          image_url?: string | null
+          is_default?: boolean | null
+          model_year_id?: string
+          name?: string | null
+          seat_height_mm?: number | null
+          suspension_id?: string | null
+          updated_at?: string
+          weight_kg?: number | null
+          wheel_id?: string | null
+          wheelbase_mm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_configurations_brake_system_id_fkey"
+            columns: ["brake_system_id"]
+            isOneToOne: false
+            referencedRelation: "brake_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_configurations_engine_id_fkey"
+            columns: ["engine_id"]
+            isOneToOne: false
+            referencedRelation: "engines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_configurations_frame_id_fkey"
+            columns: ["frame_id"]
+            isOneToOne: false
+            referencedRelation: "frames"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_configurations_model_year_id_fkey"
+            columns: ["model_year_id"]
+            isOneToOne: false
+            referencedRelation: "model_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_configurations_suspension_id_fkey"
+            columns: ["suspension_id"]
+            isOneToOne: false
+            referencedRelation: "suspensions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_configurations_wheel_id_fkey"
+            columns: ["wheel_id"]
+            isOneToOne: false
+            referencedRelation: "wheels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_years: {
+        Row: {
+          changes: string | null
+          created_at: string
+          id: string
+          motorcycle_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          changes?: string | null
+          created_at?: string
+          id?: string
+          motorcycle_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          changes?: string | null
+          created_at?: string
+          id?: string
+          motorcycle_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_years_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      motorcycle_models: {
+        Row: {
+          base_description: string | null
+          brand_id: string
+          created_at: string
+          default_image_url: string | null
+          id: string
+          name: string
+          production_end_year: number | null
+          production_start_year: number | null
+          production_status: string
+          slug: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          base_description?: string | null
+          brand_id: string
+          created_at?: string
+          default_image_url?: string | null
+          id?: string
+          name: string
+          production_end_year?: number | null
+          production_start_year?: number | null
+          production_status?: string
+          slug: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          base_description?: string | null
+          brand_id?: string
+          created_at?: string
+          default_image_url?: string | null
+          id?: string
+          name?: string
+          production_end_year?: number | null
+          production_start_year?: number | null
+          production_status?: string
+          slug?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "motorcycle_models_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       motorcycles: {
         Row: {
           brand_id: string
@@ -382,6 +716,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_placeholder: boolean
+          migration_status: string | null
           model_name: string
           seat_height_mm: number | null
           slug: string
@@ -408,6 +743,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_placeholder?: boolean
+          migration_status?: string | null
           model_name: string
           seat_height_mm?: number | null
           slug: string
@@ -434,6 +770,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_placeholder?: boolean
+          migration_status?: string | null
           model_name?: string
           seat_height_mm?: number | null
           slug?: string
@@ -607,6 +944,36 @@ export type Database = {
         }
         Relationships: []
       }
+      suspensions: {
+        Row: {
+          adjustability: string | null
+          brand: string | null
+          created_at: string
+          front_type: string | null
+          id: string
+          rear_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          adjustability?: string | null
+          brand?: string | null
+          created_at?: string
+          front_type?: string | null
+          id?: string
+          rear_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adjustability?: string | null
+          brand?: string | null
+          created_at?: string
+          front_type?: string | null
+          id?: string
+          rear_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_glossary_terms: {
         Row: {
           id: string
@@ -699,6 +1066,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wheels: {
+        Row: {
+          created_at: string
+          front_size: string | null
+          id: string
+          notes: string | null
+          rear_size: string | null
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          front_size?: string | null
+          id?: string
+          notes?: string | null
+          rear_size?: string | null
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          front_size?: string | null
+          id?: string
+          notes?: string | null
+          rear_size?: string | null
+          type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {

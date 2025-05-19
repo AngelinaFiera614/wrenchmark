@@ -4,6 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescripti
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Control } from "react-hook-form";
 
 interface AdditionalFieldsProps {
@@ -56,6 +57,38 @@ export function AdditionalFields({ control, onGenerateSlug }: AdditionalFieldsPr
               </div>
               <FormDescription>
                 Used for URLs (e.g., brand-model-year)
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Production Status</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value || "active"}
+                value={field.value || "active"}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="active">Active Production</SelectItem>
+                  <SelectItem value="discontinued">Discontinued</SelectItem>
+                  <SelectItem value="revived">Revived</SelectItem>
+                  <SelectItem value="concept">Concept Only</SelectItem>
+                  <SelectItem value="limited">Limited Production</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Current production status of this motorcycle model
               </FormDescription>
               <FormMessage />
             </FormItem>

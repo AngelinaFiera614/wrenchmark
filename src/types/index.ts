@@ -120,7 +120,7 @@ export interface MotorcyclePlaceholder {
   year: number;
 }
 
-// Future schema types - these will be implemented in the next phases
+// New schema types for the normalized database
 export interface MotorcycleModel {
   id: string;
   brand_id: string;

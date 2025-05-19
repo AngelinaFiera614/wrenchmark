@@ -23,38 +23,43 @@ export function PerformanceFields({ control }: PerformanceFieldsProps) {
             <FormControl>
               <Input placeholder="e.g. 649cc Inline-4" {...field} />
             </FormControl>
+            <FormDescription>
+              Engine description (e.g. 649cc Inline-4, 1103cc V4)
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
       
-      <FormField
-        control={control}
-        name="horsepower_hp"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Horsepower (HP)</FormLabel>
-            <FormControl>
-              <Input type="number" step="0.1" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={control}
-        name="torque_nm"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Torque (Nm)</FormLabel>
-            <FormControl>
-              <Input type="number" step="0.1" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={control}
+          name="horsepower_hp"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Horsepower (HP)</FormLabel>
+              <FormControl>
+                <Input type="number" step="0.1" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={control}
+          name="torque_nm"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Torque (Nm)</FormLabel>
+              <FormControl>
+                <Input type="number" step="0.1" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
       
       <FormField
         control={control}

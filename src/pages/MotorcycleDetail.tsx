@@ -13,6 +13,7 @@ export default function MotorcycleDetail() {
   const [motorcycle, setMotorcycle] = useState<Motorcycle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isNormalizedModel, setIsNormalizedModel] = useState(false);
   
   useEffect(() => {
     const fetchMotorcycle = async () => {
@@ -28,6 +29,8 @@ export default function MotorcycleDetail() {
         
         if (data) {
           setMotorcycle(data);
+          // Check if this is from the new schema
+          setIsNormalizedModel(!!data.migration_status && data.migration_status === 'migrated');
           document.title = `${data.make} ${data.model} | Wrenchmark`;
         } else {
           setError(`Motorcycle not found: ${slug}`);
@@ -83,6 +86,12 @@ export default function MotorcycleDetail() {
             </Button>
           </Link>
         </div>
+        
+        {isNormalizedModel && (
+          <div className="mb-4 p-2 bg-accent-teal/20 rounded-md text-sm">
+            This motorcycle is using the new normalized data schema.
+          </div>
+        )}
         
         <MotorcycleDetailComponent motorcycle={motorcycle} />
       </div>
