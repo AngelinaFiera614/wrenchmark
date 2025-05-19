@@ -1,11 +1,13 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { getProfileById, createProfileIfNotExists } from "@/services/profileService";
 import type { Profile } from "@/services/profileService";
 import { toast } from "sonner";
 import { useAuthInitialization } from "./useAuthInitialization";
+
+export type AdminVerificationState = 'unknown' | 'pending' | 'verified' | 'failed';
 
 export function useAuthState() {
   const [session, setSession] = useState<Session | null>(null);
@@ -17,6 +19,11 @@ export function useAuthState() {
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const [profileError, setProfileError] = useState<Error | null>(null);
   const [adminStatus, setAdminStatus] = useState(false);
+  const [isAdminVerified, setIsAdminVerified] = useState(false);
+  const [adminVerificationState, setAdminVerificationState] = useState<AdminVerificationState>('unknown');
+  
+  // Track admin verification attempts to prevent infinite loops
+  const adminVerificationAttempts = useRef(0);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -40,6 +47,12 @@ export function useAuthState() {
               console.log("[useAuthState] Admin status:", createdProfile.is_admin);
               setProfile(createdProfile);
               setAdminStatus(createdProfile.is_admin || false);
+              
+              if (createdProfile.is_admin) {
+                setIsAdminVerified(true);
+                setAdminVerificationState('verified');
+              }
+              
               toast.success("Profile created successfully");
             } else {
               const error = new Error("Failed to create profile");
@@ -48,6 +61,7 @@ export function useAuthState() {
               toast.error("Failed to create user profile. Please try refreshing the page.");
               setProfile(null);
               setAdminStatus(false);
+              setAdminVerificationState('failed');
             }
           } catch (error: any) {
             console.error("[useAuthState] Error creating profile:", error);
@@ -55,12 +69,19 @@ export function useAuthState() {
             toast.error("Failed to create user profile. Please try refreshing the page.");
             setProfile(null);
             setAdminStatus(false);
+            setAdminVerificationState('failed');
           }
         }
       } else {
         console.log("[useAuthState] Found existing profile, admin status:", profileData.is_admin);
         setProfile(profileData);
         setAdminStatus(profileData.is_admin || false);
+        
+        if (profileData.is_admin) {
+          setIsAdminVerified(true);
+          setAdminVerificationState('verified');
+          console.log("[useAuthState] Admin status verified from profile data");
+        }
       }
     } catch (error: any) {
       console.error("[useAuthState] Error fetching profile:", error);
@@ -103,34 +124,46 @@ export function useAuthState() {
     }
   }, [user, profile, isProfileLoading, profileError, refreshProfile]);
 
-  // Use the extracted authentication initialization logic
+  // Use the extracted authentication initialization logic with improved admin handling
   useAuthInitialization({
     setSession,
     setUser,
     setIsLoading,
     fetchProfile,
-    setIsProfileLoading
+    setIsProfileLoading,
+    setAdminVerificationState
   });
   
-  // Add explicit logging for admin status
+  // Add explicit logging for admin status with deterministic verification
   useEffect(() => {
     if (user && profile !== null) {
       const isAdmin = profile?.is_admin || false;
-      console.log(`[useAuthState] User ${user.id} admin status: ${isAdmin}`);
+      console.log(`[useAuthState] User ${user.id} admin status from profile: ${isAdmin}`);
       setAdminStatus(isAdmin);
+      
+      // If profile says user is admin, mark as verified
+      if (isAdmin && !isAdminVerified) {
+        console.log("[useAuthState] Setting admin as verified based on profile data");
+        setIsAdminVerified(true);
+        setAdminVerificationState('verified');
+      }
     }
-  }, [user, profile]);
+  }, [user, profile, isAdminVerified]);
 
   return {
     session,
     user,
     profile,
     isAdmin: adminStatus,
+    isAdminVerified,
+    adminVerificationState,
     isLoading: isLoading || isProfileLoading,
     isProfileLoading,
     profileError,
     setProfile,
     refreshProfile,
     setProfileCreationAttempted,
+    setIsAdminVerified,
+    setAdminVerificationState
   };
 }

@@ -4,6 +4,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { refreshSession } from "@/services/authService";
+import type { AdminVerificationState } from "@/hooks/useAuthState";
 
 interface AuthInitializationProps {
   setSession: (session: Session | null) => void;
@@ -11,6 +12,7 @@ interface AuthInitializationProps {
   setIsLoading: (isLoading: boolean) => void;
   fetchProfile: (userId: string) => Promise<void>;
   setIsProfileLoading: (isLoading: boolean) => void;
+  setAdminVerificationState: (state: AdminVerificationState) => void;
 }
 
 export function useAuthInitialization({
@@ -18,7 +20,8 @@ export function useAuthInitialization({
   setUser,
   setIsLoading,
   fetchProfile,
-  setIsProfileLoading
+  setIsProfileLoading,
+  setAdminVerificationState
 }: AuthInitializationProps) {
   useEffect(() => {
     let isMounted = true;
@@ -44,11 +47,13 @@ export function useAuthInitialization({
       if (session?.user) {
         console.log(`[useAuthInitialization] Auth event processed, fetching profile for: ${session.user.id}`);
         setIsProfileLoading(true);
+        setAdminVerificationState('pending');
         
         try {
           await fetchProfile(session.user.id);
         } catch (err) {
           console.error("[useAuthInitialization] Error in fetchProfile during queue processing:", err);
+          setAdminVerificationState('failed');
         } finally {
           if (isMounted) {
             setIsLoading(false);
@@ -56,13 +61,14 @@ export function useAuthInitialization({
         }
       } else {
         setIsLoading(false);
+        setAdminVerificationState('unknown');
       }
       
       isProcessingAuthEvents = false;
       
-      // Process next event if available
+      // Process next event if available with a small delay to prevent race conditions
       if (authStateEventQueue.length > 0) {
-        setTimeout(processAuthEventQueue, 0);
+        setTimeout(processAuthEventQueue, 50);
       }
     };
     
@@ -70,7 +76,10 @@ export function useAuthInitialization({
     const handleAuthStateChange = (event: string, currentSession: Session | null) => {
       if (!isMounted) return;
       
-      console.log(`[useAuthInitialization] Auth event: ${event}, user: ${currentSession?.user?.email || "none"}`);
+      // For specifc events like token_refreshed, don't reset admin verification
+      const preserveAdminVerification = event === 'TOKEN_REFRESHED';
+      
+      console.log(`[useAuthInitialization] Auth event: ${event}, user: ${currentSession?.user?.email || "none"}, preserveVerification: ${preserveAdminVerification}`);
       
       // Add event to queue
       authStateEventQueue.push({ event, session: currentSession });
@@ -110,14 +119,18 @@ export function useAuthInitialization({
           
           if (expiresAt && expiresAt < now + 300) { // Less than 5 minutes until expiry
             console.log("[useAuthInitialization] Session close to expiry, refreshing");
-            const refreshedSession = await refreshSession();
-            
-            if (refreshedSession) {
-              console.log("[useAuthInitialization] Session refreshed successfully");
-              handleAuthStateChange("REFRESHED", refreshedSession);
-              return; // handleAuthStateChange will take care of the rest
-            } else {
-              console.log("[useAuthInitialization] Session refresh failed or returned null");
+            try {
+              const refreshedSession = await refreshSession();
+              
+              if (refreshedSession) {
+                console.log("[useAuthInitialization] Session refreshed successfully");
+                handleAuthStateChange("REFRESHED", refreshedSession);
+                return; // handleAuthStateChange will take care of the rest
+              } else {
+                console.log("[useAuthInitialization] Session refresh failed or returned null");
+              }
+            } catch (err) {
+              console.error("[useAuthInitialization] Error refreshing session:", err);
             }
           }
         }
@@ -128,10 +141,12 @@ export function useAuthInitialization({
         console.error("[useAuthInitialization] Error initializing auth:", error);
         toast.error("Failed to initialize authentication");
         setIsLoading(false);
+        setAdminVerificationState('failed');
       }
     };
 
-    initializeAuth();
+    // Initialize auth with a small delay to ensure subscription is set up
+    setTimeout(initializeAuth, 50);
 
     // Cleanup function
     return () => {
@@ -139,5 +154,5 @@ export function useAuthInitialization({
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [setSession, setUser, setIsLoading, fetchProfile, setIsProfileLoading]);
+  }, [setSession, setUser, setIsLoading, fetchProfile, setIsProfileLoading, setAdminVerificationState]);
 }

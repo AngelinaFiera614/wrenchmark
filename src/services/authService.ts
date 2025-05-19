@@ -113,8 +113,9 @@ export async function fetchCurrentSession() {
   }
 }
 
-// Function to refresh auth session with rate limiting protection
+// Function to refresh auth session with rate limiting protection and a cache
 let lastRefreshTime = 0;
+let refreshPromise: Promise<Session | null> | null = null;
 const REFRESH_COOLDOWN = 5000; // 5 seconds minimum between refreshes
 
 export async function refreshSession() {
@@ -126,41 +127,59 @@ export async function refreshSession() {
       return await fetchCurrentSession();
     }
     
+    // If a refresh is already in progress, return that promise
+    if (refreshPromise) {
+      console.log("[authService] Refresh already in progress, reusing promise");
+      return refreshPromise;
+    }
+    
     lastRefreshTime = now;
     console.log("[authService] Refreshing session");
     
-    const { data, error } = await supabase.auth.refreshSession();
+    // Create a new promise and store it
+    refreshPromise = supabase.auth.refreshSession()
+      .then(({ data, error }) => {
+        if (error) {
+          // Special handling for "Auth session missing" which isn't necessarily an error
+          if (error.message === "Auth session missing!") {
+            console.log("[authService] No active session to refresh");
+            return null;
+          }
+          
+          console.error("[authService] Error refreshing session:", error);
+          throw error;
+        }
+        
+        if (data.session) {
+          console.log("[authService] Session refreshed successfully, expires:", new Date(data.session.expires_at * 1000).toISOString());
+          return data.session;
+        } else {
+          console.log("[authService] No session after refresh");
+          return null;
+        }
+      })
+      .catch(async (error) => {
+        console.error("[authService] Error in refreshSession:", error);
+        return await fetchCurrentSession(); // Fallback to current session
+      })
+      .finally(() => {
+        // Clear the cached promise after 1 second to allow future refreshes
+        setTimeout(() => {
+          refreshPromise = null;
+        }, 1000);
+      });
     
-    if (error) {
-      // Special handling for "Auth session missing" which isn't necessarily an error
-      if (error.message === "Auth session missing!") {
-        console.log("[authService] No active session to refresh");
-        return null;
-      }
-      
-      console.error("[authService] Error refreshing session:", error);
-      
-      // Try to get current session to see status
-      const currentSession = await fetchCurrentSession();
-      if (!currentSession) {
-        console.log("[authService] No current session found during refresh failure");
-      }
-      
-      return currentSession;
-    }
-    
-    if (data.session) {
-      console.log("[authService] Session refreshed successfully, expires:", new Date(data.session.expires_at * 1000).toISOString());
-      return data.session;
-    } else {
-      console.log("[authService] No session after refresh");
-      return null;
-    }
+    return await refreshPromise;
   } catch (error) {
     console.error("[authService] Error in refreshSession:", error);
+    refreshPromise = null;
     return await fetchCurrentSession(); // Fallback to current session
   }
 }
+
+// Create a cache for admin status with a TTL (time to live)
+const adminStatusCache = new Map<string, {isAdmin: boolean, timestamp: number}>();
+const ADMIN_CACHE_TTL = 60000; // 1 minute
 
 // Function to verify if the current user is admin
 export async function verifyAdminStatus(userId?: string) {
@@ -175,15 +194,28 @@ export async function verifyAdminStatus(userId?: string) {
       return false;
     }
     
+    // Check cache first
+    const cachedStatus = adminStatusCache.get(userIdToCheck);
+    if (cachedStatus && (Date.now() - cachedStatus.timestamp < ADMIN_CACHE_TTL)) {
+      console.log(`[authService] Using cached admin status for user ${userIdToCheck}: ${cachedStatus.isAdmin}`);
+      return cachedStatus.isAdmin;
+    }
+    
     // Get user profile
     const profile = await getProfileById(userIdToCheck);
     if (!profile) {
       console.log("[authService] No profile found during admin verification");
+      
+      // Cache the negative result
+      adminStatusCache.set(userIdToCheck, {isAdmin: false, timestamp: Date.now()});
       return false;
     }
     
     console.log(`[authService] Admin status for user ${userIdToCheck}: ${profile.is_admin}`);
-    return profile.is_admin;
+    
+    // Cache the result
+    adminStatusCache.set(userIdToCheck, {isAdmin: Boolean(profile.is_admin), timestamp: Date.now()});
+    return Boolean(profile.is_admin);
   } catch (error) {
     console.error("[authService] Error verifying admin status:", error);
     return false;

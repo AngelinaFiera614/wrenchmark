@@ -15,6 +15,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     setProfile,
     refreshProfile,
+    setIsAdminVerified,
+    isAdminVerified,
+    adminVerificationState,
   } = useAuthState();
 
   // Immediately refresh session on initial render with a debounce mechanism
@@ -79,26 +82,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [session]);
 
-  // Verify admin status separately from profile
+  // Verify admin status separately from profile, with improved stability
   useEffect(() => {
-    if (!user) return;
+    // Only run admin verification if we have a user and haven't verified admin status yet
+    if (!user || isAdminVerified) return;
     
+    // Avoid race conditions by using a deterministic source of admin status
+    if (profile?.is_admin === true) {
+      console.log("[AuthProvider] Admin status verified from profile");
+      setIsAdminVerified(true);
+      return;
+    }
+
+    // Only proceed with direct admin check if profile exists but doesn't have admin
+    // or if we haven't verified status yet
     const checkAdminStatus = async () => {
-      if (profile?.is_admin === true) return; // Already know user is admin
-      
       try {
-        await verifyAdminStatus(user.id);
+        console.log("[AuthProvider] Performing direct admin verification");
+        const isUserAdmin = await verifyAdminStatus(user.id);
+        
+        if (isUserAdmin) {
+          console.log("[AuthProvider] User confirmed as admin via direct check");
+          setIsAdminVerified(true);
+        } else {
+          console.log("[AuthProvider] User is not admin via direct check");
+          setIsAdminVerified(false);
+        }
       } catch (error) {
         console.error("[AuthProvider] Error during admin verification:", error);
       }
     };
     
-    if (user) {
-      checkAdminStatus();
-    }
-  }, [user, profile]);
+    const timeoutId = setTimeout(checkAdminStatus, 300);
+    return () => clearTimeout(timeoutId);
+  }, [user, profile, isAdminVerified, setIsAdminVerified, adminVerificationState]);
 
-  // Force profile refresh when user or session changes
+  // Force profile refresh when user or session changes, with debouncing
   useEffect(() => {
     if (user && session) {
       console.log("[AuthProvider] User or session changed, refreshing profile");
@@ -153,6 +172,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     profile,
     isAdmin,
+    isAdminVerified,
+    adminVerificationState,
     isLoading,
     signIn: handleSignIn,
     signUp: handleSignUp,
