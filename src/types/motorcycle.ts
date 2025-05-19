@@ -81,6 +81,8 @@ export interface MotorcycleModel {
   production_status: 'active' | 'discontinued' | 'revived' | 'concept' | 'limited';
   default_image_url: string;
   slug: string;
+  brand?: any; // Will be populated with brand data in queries
+  years?: ModelYear[]; // Will be populated with year data in queries
 }
 
 export interface ModelYear {
@@ -88,6 +90,9 @@ export interface ModelYear {
   motorcycle_id: string;
   year: number;
   changes?: string;
+  image_url?: string;
+  msrp_usd?: number;
+  configurations?: Configuration[]; // Will be populated with configuration data in queries
   engine_id?: string;
   abs_id?: string;
   frame_id?: string;
@@ -98,22 +103,33 @@ export interface ModelYear {
 export interface Configuration {
   id: string;
   model_year_id: string;
+  name: string;
   engine_id: string;
-  abs_id: string;
+  brake_system_id: string;
   frame_id: string;
   suspension_id: string;
   wheel_id: string;
   color_id?: string;
-  name?: string;
+  seat_height_mm?: number;
+  weight_kg?: number;
+  wheelbase_mm?: number;
+  fuel_capacity_l?: number;
+  ground_clearance_mm?: number;
+  image_url?: string;
   is_default: boolean;
+  colors?: any[]; // Will be populated with color data in queries
+  engine?: any; // Will be populated with engine data in queries
+  brakes?: any; // Will be populated with brake data in queries
+  frame?: any; // Will be populated with frame data in queries
+  suspension?: any; // Will be populated with suspension data in queries
+  wheels?: any; // Will be populated with wheel data in queries
+  accessories?: any[]; // Will be populated with compatible accessories in queries
 }
 
-export interface ColorOption {
-  id: string;
-  motorcycle_id: string;
-  year_id: string;
-  name: string;
-  hex_code?: string;
-  image_url?: string;
-  is_limited: boolean;
+// Add types for model comparison
+export interface ModelComparison {
+  models: (MotorcycleModel & {
+    selectedYear: ModelYear;
+    selectedConfig: Configuration;
+  })[];
 }

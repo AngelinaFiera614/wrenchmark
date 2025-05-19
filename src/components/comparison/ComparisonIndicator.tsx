@@ -14,7 +14,9 @@ export function ComparisonIndicator() {
   }
   
   const handleCompareClick = () => {
-    navigate("/compare");
+    // Create a comma-separated list of slugs for the URL
+    const slugs = motorcyclesToCompare.map(m => m.slug).join(',');
+    navigate(`/compare?models=${slugs}`);
   };
   
   const handleClearClick = (e: React.MouseEvent) => {
@@ -50,6 +52,7 @@ export function ComparisonIndicator() {
           variant="ghost" 
           size="sm" 
           className="ml-1 bg-black/20 hover:bg-black/30 text-black h-7"
+          onClick={handleCompareClick}
         >
           View
         </Button>
