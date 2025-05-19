@@ -31,7 +31,7 @@ export function EditableBrandCell({
   displayValue,
   isEditing,
   onChange,
-  brands,
+  brands = [], // Provide default empty array to prevent undefined
   error,
 }: EditableBrandCellProps) {
   const [open, setOpen] = useState(false);
@@ -44,6 +44,9 @@ export function EditableBrandCell({
       setOpen(false);
     }
   }, [isEditing]);
+
+  // Ensure brands is always an array
+  const safetyBrands = Array.isArray(brands) ? brands : [];
 
   if (isEditing) {
     return (
@@ -61,7 +64,7 @@ export function EditableBrandCell({
               )}
             >
               {value
-                ? brands.find((brand) => brand.id === value)?.name || "Unknown Brand"
+                ? safetyBrands.find((brand) => brand.id === value)?.name || "Unknown Brand"
                 : "Select brand..."}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
@@ -87,7 +90,7 @@ export function EditableBrandCell({
                 )}
               </CommandEmpty>
               <CommandGroup>
-                {brands.map((brand) => (
+                {safetyBrands.map((brand) => (
                   <CommandItem
                     key={brand.id}
                     value={brand.name}

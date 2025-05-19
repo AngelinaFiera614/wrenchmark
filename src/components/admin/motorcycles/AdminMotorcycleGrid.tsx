@@ -41,10 +41,18 @@ export function AdminMotorcycleGrid() {
   const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
   const { toast } = useToast();
 
-  // Load brands for dropdown
-  const { data: brands = [] } = useQuery({
+  // Load brands for dropdown with error handling
+  const { data: brands = [], isError: isBrandsError } = useQuery({
     queryKey: ["admin-brands"],
-    queryFn: getAllBrands
+    queryFn: getAllBrands,
+    onError: (error) => {
+      console.error("Error loading brands:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load brands",
+        description: "Please try refreshing the page.",
+      });
+    }
   });
 
   // Fetch motorcycles with brand info
@@ -335,6 +343,14 @@ export function AdminMotorcycleGrid() {
 
   return (
     <div className="space-y-4">
+      {isBrandsError && (
+        <div className="bg-red-500/10 border border-red-500 p-4 rounded-md mb-4">
+          <p className="text-red-500 font-medium">Failed to load brands data.</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Some functionality may be limited. Please try refreshing the page.
+          </p>
+        </div>
+      )}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -349,127 +365,135 @@ export function AdminMotorcycleGrid() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {motorcycles.map((motorcycle) => (
-              <TableRow 
-                key={motorcycle.id}
-                className={motorcycle.isDirty ? "bg-muted/20" : ""}
-              >
-                <TableCell>
-                  <EditableNumberCell
-                    value={motorcycle.year_start}
-                    isEditing={editingRows[motorcycle.id]}
-                    onChange={(value) => handleCellChange(motorcycle.id, "year_start", value)}
-                    error={errors[motorcycle.id]?.year_start}
-                    min={1885}
-                    max={new Date().getFullYear() + 5}
-                  />
-                </TableCell>
-                <TableCell>
-                  <EditableNumberCell
-                    value={motorcycle.year_end}
-                    isEditing={editingRows[motorcycle.id]}
-                    onChange={(value) => handleCellChange(motorcycle.id, "year_end", value)}
-                    allowNull
-                    min={motorcycle.year_start || 1885}
-                    max={2100}
-                    placeholder="Present"
-                  />
-                </TableCell>
-                <TableCell>
-                  <EditableTextCell
-                    value={motorcycle.model_name}
-                    isEditing={editingRows[motorcycle.id]}
-                    onChange={(value) => handleCellChange(motorcycle.id, "model_name", value)}
-                    error={errors[motorcycle.id]?.model_name}
-                  />
-                </TableCell>
-                <TableCell>
-                  <EditableBrandCell
-                    value={motorcycle.brand_id}
-                    displayValue={motorcycle.brand_name || ""}
-                    isEditing={editingRows[motorcycle.id]}
-                    onChange={(value) => handleCellChange(motorcycle.id, "brand_id", value)}
-                    brands={brands}
-                    error={errors[motorcycle.id]?.brand_id}
-                  />
-                </TableCell>
-                <TableCell>
-                  <EditableTextCell
-                    value={motorcycle.description || ""}
-                    isEditing={editingRows[motorcycle.id]}
-                    onChange={(value) => handleCellChange(motorcycle.id, "description", value)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <EditableStatusCell
-                    value={motorcycle.status || "draft"}
-                    isEditing={editingRows[motorcycle.id]}
-                    onChange={(value) => handleCellChange(motorcycle.id, "status", value)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {editingRows[motorcycle.id] ? (
-                      <>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleSaveRow(motorcycle.id)}
-                          disabled={!motorcycle.isDirty}
-                        >
-                          <Check className="h-4 w-4 text-green-500" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleCancelEdit(motorcycle.id)}
-                        >
-                          <X className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleEditRow(motorcycle.id)}
-                        >
-                          <span className="sr-only">Edit</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-4 w-4"
-                          >
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                            <path d="m15 5 4 4" />
-                          </svg>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleOpenDetailedEditor(motorcycle)}
-                        >
-                          <Info className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-destructive"
-                          onClick={() => handleDeleteRow(motorcycle.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
+            {motorcycles.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                  No motorcycles found.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              motorcycles.map((motorcycle) => (
+                <TableRow 
+                  key={motorcycle.id}
+                  className={motorcycle.isDirty ? "bg-muted/20" : ""}
+                >
+                  <TableCell>
+                    <EditableNumberCell
+                      value={motorcycle.year_start}
+                      isEditing={editingRows[motorcycle.id]}
+                      onChange={(value) => handleCellChange(motorcycle.id, "year_start", value)}
+                      error={errors[motorcycle.id]?.year_start}
+                      min={1885}
+                      max={new Date().getFullYear() + 5}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <EditableNumberCell
+                      value={motorcycle.year_end}
+                      isEditing={editingRows[motorcycle.id]}
+                      onChange={(value) => handleCellChange(motorcycle.id, "year_end", value)}
+                      allowNull
+                      min={motorcycle.year_start || 1885}
+                      max={2100}
+                      placeholder="Present"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <EditableTextCell
+                      value={motorcycle.model_name}
+                      isEditing={editingRows[motorcycle.id]}
+                      onChange={(value) => handleCellChange(motorcycle.id, "model_name", value)}
+                      error={errors[motorcycle.id]?.model_name}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <EditableBrandCell
+                      value={motorcycle.brand_id}
+                      displayValue={motorcycle.brand_name || ""}
+                      isEditing={editingRows[motorcycle.id]}
+                      onChange={(value) => handleCellChange(motorcycle.id, "brand_id", value)}
+                      brands={brands}
+                      error={errors[motorcycle.id]?.brand_id}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <EditableTextCell
+                      value={motorcycle.description || ""}
+                      isEditing={editingRows[motorcycle.id]}
+                      onChange={(value) => handleCellChange(motorcycle.id, "description", value)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <EditableStatusCell
+                      value={motorcycle.status || "draft"}
+                      isEditing={editingRows[motorcycle.id]}
+                      onChange={(value) => handleCellChange(motorcycle.id, "status", value)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {editingRows[motorcycle.id] ? (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleSaveRow(motorcycle.id)}
+                            disabled={!motorcycle.isDirty}
+                          >
+                            <Check className="h-4 w-4 text-green-500" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleCancelEdit(motorcycle.id)}
+                          >
+                            <X className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditRow(motorcycle.id)}
+                          >
+                            <span className="sr-only">Edit</span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="h-4 w-4"
+                            >
+                              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                              <path d="m15 5 4 4" />
+                            </svg>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleOpenDetailedEditor(motorcycle)}
+                          >
+                            <Info className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive"
+                            onClick={() => handleDeleteRow(motorcycle.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
