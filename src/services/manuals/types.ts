@@ -1,5 +1,6 @@
 
 // Basic manual types used across the service
+import { ManualTag } from '@/types/manual-tags';
 
 export interface ManualInfo {
   id?: string;
@@ -50,15 +51,5 @@ export interface ManualUpdateParams {
   model?: string;
 }
 
-// Tag related interfaces
-export interface ManualTag {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-}
-
-export interface TagAssociation {
-  manual_id: string;
-  tag_id: string;
-}
+// Import ManualTag from the new location
+export type { ManualTag, TagAssociation } from '@/types/manual-tags';

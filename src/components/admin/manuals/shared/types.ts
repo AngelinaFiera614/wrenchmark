@@ -1,5 +1,5 @@
 
-import { ManualType } from '@/types';
+import { ManualType } from '@/types/manual';
 import { BucketFile } from '../ManualBucketBrowser';
 import { ManualWithMotorcycle } from '@/services/manuals/types';
 
