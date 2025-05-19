@@ -1,112 +1,162 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
+  LayoutDashboard,
   Bike,
-  BookOpenCheck,
-  Building,
-  Map,
-  Package,
-  Settings,
-  SlidersHorizontal,
+  BadgeCheck,
+  Settings2,
+  FileText,
+  BookOpen,
+  GraduationCap,
+  Notebook,
   Users,
+  ArrowLeft,
+  Route,
+  Hammer,
   Wrench,
 } from "lucide-react";
 
-const AdminSidebar = () => {
+export function AdminSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   
-  const navigationLinks = [
-    {
-      name: "Motorcycles",
-      href: "/admin/motorcycles",
-      icon: <Bike className="h-5 w-5" />,
-    },
-    {
-      name: "Components",
-      href: "/admin/components",
-      icon: <Wrench className="h-5 w-5" />,
-    },
-    {
-      name: "Brands",
-      href: "/admin/brands",
-      icon: <Building className="h-5 w-5" />,
-    },
-    {
-      name: "Manuals",
-      href: "/admin/manuals",
-      icon: <BookOpenCheck className="h-5 w-5" />,
-    },
-    {
-      name: "Parts & Accessories",
-      href: "/admin/parts",
-      icon: <Package className="h-5 w-5" />,
-    },
-    {
-      name: "Repair Skills",
-      href: "/admin/repair-skills",
-      icon: <Wrench className="h-5 w-5" />,
-    },
-    {
-      name: "Riding Skills",
-      href: "/admin/riding-skills",
-      icon: <Map className="h-5 w-5" />,
-    },
-    {
-      name: "Users",
-      href: "/admin/users",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      name: "Settings",
-      href: "/admin/settings",
-      icon: <Settings className="h-5 w-5" />,
-    },
-  ];
+  const isActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
 
   return (
-    <div className="w-64 min-w-64 h-screen bg-black border-r border-r-accent-teal/10 flex flex-col">
-      <div className="p-6">
-        <h2 className="text-lg font-bold text-accent-teal tracking-tight">
-          WRENCHMARK
-        </h2>
-        <p className="text-xs text-muted-foreground">Admin Dashboard</p>
+    <div className="w-64 min-h-screen border-r border-border/40 bg-background">
+      <div className="p-4 border-b border-border/40">
+        <div className="flex items-center gap-2">
+          <div className="p-1 bg-accent-teal/20 rounded">
+            <span className="text-accent-teal font-bold text-lg">WM</span>
+          </div>
+          <h1 className="text-xl font-bold">Admin</h1>
+        </div>
       </div>
       
-      <nav className="flex-1 px-3 py-2 space-y-1">
-        {navigationLinks.map((item) => {
-          const isActive = location.pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-accent-teal text-black"
-                  : "hover:bg-accent-teal/10 text-gray-300 hover:text-white"
-              )}
-            >
-              <span className="mr-3">{item.icon}</span>
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="p-2">
+        <nav className="space-y-1">
+          <NavLink to="/admin" end>
+            <LayoutDashboard className="h-4 w-4 mr-2" />
+            Dashboard
+          </NavLink>
+          
+          <div className="pt-4 pb-2">
+            <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Content
+            </p>
+          </div>
+          
+          <NavLink to="/admin/motorcycles">
+            <Bike className="h-4 w-4 mr-2" />
+            Motorcycles
+          </NavLink>
+          
+          <NavLink to="/admin/brands">
+            <BadgeCheck className="h-4 w-4 mr-2" />
+            Brands
+          </NavLink>
+          
+          <NavLink to="/admin/components">
+            <Settings2 className="h-4 w-4 mr-2" />
+            Components
+          </NavLink>
+          
+          <NavLink to="/admin/accessories">
+            <Wrench className="h-4 w-4 mr-2" />
+            Accessories
+          </NavLink>
+          
+          <NavLink to="/admin/manuals">
+            <FileText className="h-4 w-4 mr-2" />
+            Manuals
+          </NavLink>
+          
+          <NavLink to="/admin/glossary">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Glossary
+          </NavLink>
+          
+          <div className="pt-4 pb-2">
+            <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Learning
+            </p>
+          </div>
+          
+          <NavLink to="/admin/courses">
+            <GraduationCap className="h-4 w-4 mr-2" />
+            Courses
+          </NavLink>
+          
+          <NavLink to="/admin/lessons">
+            <Notebook className="h-4 w-4 mr-2" />
+            Lessons
+          </NavLink>
+          
+          <NavLink to="/admin/riding-skills">
+            <Route className="h-4 w-4 mr-2" />
+            Riding Skills
+          </NavLink>
+          
+          <NavLink to="/admin/repair-skills">
+            <Hammer className="h-4 w-4 mr-2" />
+            Repair Skills
+          </NavLink>
+          
+          <div className="pt-4 pb-2">
+            <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              System
+            </p>
+          </div>
+          
+          <NavLink to="/admin/users">
+            <Users className="h-4 w-4 mr-2" />
+            Users
+          </NavLink>
+        </nav>
+      </div>
       
-      <div className="p-4 border-t border-accent-teal/10">
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-accent-teal/20 flex items-center justify-center text-accent-teal">
-            <SlidersHorizontal className="h-4 w-4" />
-          </div>
-          <div className="ml-3">
-            <p className="text-xs font-medium text-white">Admin Mode</p>
-            <p className="text-xs text-gray-400">Database Manager</p>
-          </div>
-        </div>
+      <div className="absolute bottom-0 w-full p-4 border-t border-border/40">
+        <Button 
+          variant="outline" 
+          className="w-full justify-start" 
+          onClick={() => navigate('/')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Site
+        </Button>
       </div>
     </div>
   );
-};
+}
 
-export default AdminSidebar;
+function NavLink({
+  to,
+  children,
+  end = false,
+}: {
+  to: string;
+  children: React.ReactNode;
+  end?: boolean;
+}) {
+  let location = useLocation();
+  let active = end ? location.pathname === to : location.pathname.startsWith(to);
+
+  return (
+    <Button variant="ghost" asChild className="w-full justify-start" active={String(active) === 'true'}>
+      <NavLinkInner to={to} className="w-full">
+        {children}
+      </NavLinkInner>
+    </Button>
+  );
+}
+
+function NavLinkInner({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <NavLink to={to} className="flex items-center w-full h-10 px-3 rounded-md hover:bg-secondary/50 data-[active=true]:bg-secondary/50">
+      {children}
+    </NavLink>
+  );
+}

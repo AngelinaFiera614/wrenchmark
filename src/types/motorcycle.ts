@@ -10,6 +10,13 @@ export type MotorcycleCategory =
   | "Scooter" 
   | "Off-road";
 
+export type ProductionStatus = 
+  | "active" 
+  | "revived" 
+  | "discontinued" 
+  | "concept" 
+  | "limited";
+
 export interface Motorcycle {
   id: string;
   make: string;
