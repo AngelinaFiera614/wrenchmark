@@ -1,17 +1,14 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { AuthContext } from "./AuthContext";
-import { useAuthState } from "@/hooks/useAuthState";
+import { useAuthState } from "@/hooks/auth/useAuthState";
 import { 
   signIn, 
   signUp, 
   signOut, 
-  updateProfileData, 
-  verifyAdminStatus, 
-  forceAdminVerification 
+  updateProfileData
 } from "@/services/auth";
 import type { Profile } from "@/services/profileService";
-import { toast } from "sonner";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -22,49 +19,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     setProfile,
     refreshProfile,
-    setIsAdminVerified,
     isAdminVerified,
     adminVerificationState,
     forceVerifyAdmin
   } = useAuthState();
-
-  // Only verify admin status separately from profile if we have a user and
-  // haven't verified admin status yet
-  useEffect(() => {
-    if (!user || isAdminVerified || adminVerificationState !== 'pending') return;
-    
-    // Use profile as source of truth when available
-    if (profile?.is_admin === true) {
-      console.log("[AuthProvider] Admin status verified from profile");
-      setIsAdminVerified(true);
-      return;
-    }
-
-    // Verify admin status if profile doesn't indicate admin status
-    const checkAdminStatus = async () => {
-      try {
-        console.log("[AuthProvider] Performing direct admin verification");
-        // Avoid race conditions by adding a small delay
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        const isUserAdmin = await verifyAdminStatus(user.id);
-        
-        if (isUserAdmin) {
-          console.log("[AuthProvider] User confirmed as admin via direct check");
-          setIsAdminVerified(true);
-        } else {
-          console.log("[AuthProvider] User is not admin via direct check");
-          setIsAdminVerified(false);
-        }
-      } catch (error) {
-        console.error("[AuthProvider] Error during admin verification:", error);
-      }
-    };
-    
-    // Add a delay before verification to reduce race conditions
-    const timeoutId = setTimeout(checkAdminStatus, 600);
-    return () => clearTimeout(timeoutId);
-  }, [user, profile, isAdminVerified, setIsAdminVerified, adminVerificationState]);
 
   const handleSignIn = async (email: string, password: string) => {
     try {

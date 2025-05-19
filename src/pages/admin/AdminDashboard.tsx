@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,23 +7,10 @@ import { Bike, Building2, Wrench, FileText, Component, Users, Compass, Loader } 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/auth';
-import { toast } from "sonner";
 
 const AdminDashboard = () => {
-  const { isAdmin, user } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   
-  // Additional check to ensure admin access
-  useEffect(() => {
-    console.log("Admin Dashboard - Auth state:", { isAdmin, userId: user?.id });
-    
-    if (!isAdmin) {
-      console.log("Unauthorized access attempt to admin dashboard");
-      toast.error("You don't have access to the admin dashboard");
-      navigate("/");
-    }
-  }, [isAdmin, user, navigate]);
-
   // Fetch counts of different content types
   const { data: counts, isLoading, error } = useQuery({
     queryKey: ["admin-dashboard-counts"],
@@ -57,7 +45,6 @@ const AdminDashboard = () => {
         };
       } catch (err) {
         console.error("Error fetching admin dashboard counts:", err);
-        toast.error("Failed to load dashboard data");
         throw err;
       }
     },

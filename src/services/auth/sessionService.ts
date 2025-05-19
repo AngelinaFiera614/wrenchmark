@@ -22,12 +22,6 @@ export async function fetchCurrentSession(): Promise<Session | null> {
       return null;
     }
     
-    if (data.session) {
-      const expiresAt = data.session.expires_at;
-      const now = Math.floor(Date.now() / 1000);
-      console.log(`[sessionService] Session expires at: ${new Date(expiresAt * 1000).toISOString()}, now: ${new Date(now * 1000).toISOString()}`);
-    }
-    
     return data.session;
   } catch (error) {
     console.error("[sessionService] Error fetching session:", error);
@@ -67,13 +61,7 @@ export async function refreshSession(): Promise<Session | null> {
           throw error;
         }
         
-        if (data.session) {
-          console.log("[sessionService] Session refreshed successfully, expires:", new Date(data.session.expires_at * 1000).toISOString());
-          return data.session;
-        } else {
-          console.log("[sessionService] No session after refresh");
-          return null;
-        }
+        return data.session;
       })
       .catch(async (error) => {
         console.error("[sessionService] Error in refreshSession:", error);

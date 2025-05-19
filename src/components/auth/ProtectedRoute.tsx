@@ -9,7 +9,7 @@ type ProtectedRouteProps = {
 };
 
 const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, isAdmin, isAdminVerified, adminVerificationState, isLoading } = useAuth();
+  const { user, isAdmin, isAdminVerified, isLoading } = useAuth();
   const location = useLocation();
   
   // Show loading state during auth verification
@@ -31,18 +31,6 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
     console.log("[ProtectedRoute] User not authenticated, redirecting to auth page");
     toast.error("Please sign in to continue");
     return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-
-  // For admin routes, check if admin verification is still pending
-  if (requireAdmin && adminVerificationState === 'pending') {
-    return (
-      <div className="flex justify-center items-center h-screen bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader className="h-8 w-8 animate-spin text-accent-teal" />
-          <p className="text-muted-foreground">Verifying admin permissions...</p>
-        </div>
-      </div>
-    );
   }
 
   // For admin routes, check if user has admin permissions

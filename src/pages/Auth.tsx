@@ -18,7 +18,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
-import { refreshSession } from "@/services/auth";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -30,13 +29,9 @@ type AuthFormValues = z.infer<typeof authSchema>;
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [authComplete, setAuthComplete] = useState(false);
-  const [redirectAttempts, setRedirectAttempts] = useState(0);
-  const [lastRedirectTime, setLastRedirectTime] = useState(0);
-  
   const location = useLocation();
   const navigate = useNavigate();
-  const { signIn, signUp, session, user, isLoading, profile } = useAuth();
+  const { signIn, signUp, user, isLoading } = useAuth();
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -46,46 +41,26 @@ const Auth = () => {
     },
   });
 
-  // Effect to handle successful authentication with protection against redirect loops
+  // If user is already authenticated, redirect to desired location or home
   useEffect(() => {
-    // Skip if we're still loading or authentication is not complete
-    if (isLoading || !session || !user || !authComplete) return;
-    
-    // Get the intended destination or default to home
-    const from = location.state?.from?.pathname || "/";
-    const now = Date.now();
-    
-    // Check if we've redirected too many times in a short period
-    if (redirectAttempts > 5 && now - lastRedirectTime < 3000) {
-      console.log("Auth: Too many redirect attempts, stopping redirect loop");
-      toast.error("Navigation error detected. Please try refreshing the page.");
-      return;
+    if (user && !isLoading) {
+      console.log("Auth: User is authenticated, redirecting");
+      // Navigate to the location they tried to visit or default to home page
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
     }
-    
-    // Update redirect tracking
-    setRedirectAttempts(prev => prev + 1);
-    setLastRedirectTime(now);
-    
-    console.log("Auth: User has complete authentication, redirecting to:", from);
-    navigate(from, { replace: true });
-  }, [session, user, authComplete, location.state, navigate, isLoading, redirectAttempts, lastRedirectTime]);
+  }, [user, isLoading, navigate, location.state]);
 
-  // If we're still loading auth state, show a loading spinner
+  // Show loading while auth is initializing
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
         <div className="flex flex-col items-center space-y-4">
           <Loader className="h-8 w-8 animate-spin text-accent-teal" />
-          <p className="text-muted-foreground">Verifying authentication...</p>
+          <p className="text-muted-foreground">Checking authentication...</p>
         </div>
       </div>
     );
-  }
-  
-  // If already authenticated (all pieces are present), mark as complete for redirect
-  if (session && user && profile && !authComplete) {
-    console.log("Auth: Already authenticated, will redirect");
-    setAuthComplete(true);
   }
 
   const onSubmit = async (values: AuthFormValues) => {
@@ -96,13 +71,9 @@ const Auth = () => {
       if (isLogin) {
         console.log("Auth: Attempting sign in");
         await signIn(values.email, values.password);
-        
-        // Mark as complete to trigger redirect
-        setAuthComplete(true);
       } else {
         console.log("Auth: Attempting sign up");
         await signUp(values.email, values.password);
-        // Show success message but stay on page
         toast.success("Please check your email to verify your account!");
       }
     } catch (error: any) {
@@ -117,18 +88,6 @@ const Auth = () => {
     setIsLogin(!isLogin);
     form.reset();
   };
-
-  // Show redirect message when authentication is complete
-  if (authComplete && !isLoading && user && session) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader className="h-8 w-8 animate-spin text-accent-teal" />
-          <p className="text-muted-foreground">Authentication successful, redirecting...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background px-4 py-12">
@@ -172,7 +131,7 @@ const Auth = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-accent-teal text-black hover:bg-accent-teal/80" disabled={isSubmitting || authComplete}>
+              <Button type="submit" className="w-full bg-accent-teal text-black hover:bg-accent-teal/80" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader className="mr-2 h-4 w-4 animate-spin" />
@@ -188,7 +147,7 @@ const Auth = () => {
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-muted-foreground text-center">
             {isLogin ? "Don't have an account?" : "Already have an account?"}
-            <Button variant="link" className="ml-1 p-0" onClick={toggleAuthMode} disabled={isSubmitting || authComplete}>
+            <Button variant="link" className="ml-1 p-0" onClick={toggleAuthMode} disabled={isSubmitting}>
               {isLogin ? "Sign Up" : "Sign In"}
             </Button>
           </div>

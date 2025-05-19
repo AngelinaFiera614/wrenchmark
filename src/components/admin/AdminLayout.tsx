@@ -4,24 +4,24 @@ import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
-import { toast } from "sonner";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 const AdminLayout = () => {
-  const { user, isAdmin, isAdminVerified, adminVerificationState, isLoading } = useAuth();
+  const { user, isAdmin, isAdminVerified, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  // If auth state indicates a problem with admin access, redirect to home
+  // If user is not admin after loading completes, redirect
   useEffect(() => {
-    if (!isLoading && user && adminVerificationState === 'failed') {
-      console.log("[AdminLayout] Admin verification failed, redirecting");
+    if (!isLoading && user && !isAdmin && !isAdminVerified) {
+      console.log("[AdminLayout] User is not admin, redirecting");
       toast.error("You don't have permission to access the admin area");
       navigate("/", { replace: true });
     }
-  }, [adminVerificationState, isLoading, user, navigate]);
+  }, [isAdmin, isAdminVerified, isLoading, user, navigate]);
   
   // Show loading while auth verification is in progress
-  if (isLoading || adminVerificationState === 'pending') {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
@@ -58,9 +58,7 @@ const AdminLayout = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Admin verification failed
-  console.log("[AdminLayout] User is not an admin, redirecting");
-  toast.error("You don't have permission to access the admin area");
+  // Default fallback - redirect to home
   return <Navigate to="/" replace />;
 };
 
