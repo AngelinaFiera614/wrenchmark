@@ -1,17 +1,18 @@
 
 import { MotorcycleModel } from '@/types/motorcycle';
+import ComparisonSectionHeader from '../ComparisonSectionHeader';
 
-interface ComparisonOverviewProps {
+interface ComparisonEngineProps {
   models: MotorcycleModel[];
   getSelectedYear: (model: MotorcycleModel) => any;
   getSelectedConfig: (model: MotorcycleModel) => any;
 }
 
-export default function ComparisonOverview({
+export default function ComparisonEngine({
   models,
   getSelectedYear,
   getSelectedConfig
-}: ComparisonOverviewProps) {
+}: ComparisonEngineProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
@@ -27,10 +28,10 @@ export default function ComparisonOverview({
         </thead>
         <tbody>
           <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Engine</td>
+            <td className="py-3 pl-4 font-medium">Engine Type</td>
             {models.map(model => (
               <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.engine?.name || 'N/A'}
+                {getSelectedConfig(model)?.engine?.engine_type || 'N/A'}
               </td>
             ))}
           </tr>
@@ -60,26 +61,6 @@ export default function ComparisonOverview({
               <td key={model.id} className="py-3 px-4">
                 {getSelectedConfig(model)?.engine?.torque_nm 
                   ? `${getSelectedConfig(model)?.engine?.torque_nm} Nm`
-                  : 'N/A'}
-              </td>
-            ))}
-          </tr>
-          <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Weight</td>
-            {models.map(model => (
-              <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.weight_kg
-                  ? `${getSelectedConfig(model)?.weight_kg} kg`
-                  : 'N/A'}
-              </td>
-            ))}
-          </tr>
-          <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Seat Height</td>
-            {models.map(model => (
-              <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.seat_height_mm
-                  ? `${getSelectedConfig(model)?.seat_height_mm} mm`
                   : 'N/A'}
               </td>
             ))}
