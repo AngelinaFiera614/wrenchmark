@@ -1,4 +1,3 @@
-
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
@@ -6,7 +5,7 @@ import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { verifyAdminStatus } from "@/services/authService";
+import { verifyAdminStatus } from "@/services/auth";
 
 const AdminLayout = () => {
   const { isLoading, user, profile, isAdmin, isAdminVerified, adminVerificationState, forceAdminVerification } = useAuth();

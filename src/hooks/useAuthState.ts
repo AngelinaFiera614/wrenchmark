@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +5,7 @@ import { getProfileById, createProfileIfNotExists } from "@/services/profileServ
 import type { Profile } from "@/services/profileService";
 import { toast } from "sonner";
 import { useAuthInitialization } from "./useAuthInitialization";
-import { forceAdminVerification, verifyAdminStatus } from "@/services/authService";
+import { forceAdminVerification, verifyAdminStatus } from "@/services/auth";
 
 export type AdminVerificationState = 'unknown' | 'pending' | 'verified' | 'failed';
 

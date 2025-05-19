@@ -2,7 +2,15 @@
 import React, { useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import { useAuthState } from "@/hooks/useAuthState";
-import { signIn, signUp, signOut, updateProfileData, refreshSession, verifyAdminStatus, forceAdminVerification } from "@/services/authService";
+import { 
+  signIn, 
+  signUp, 
+  signOut, 
+  updateProfileData, 
+  refreshSession, 
+  verifyAdminStatus, 
+  forceAdminVerification 
+} from "@/services/auth";
 import type { Profile } from "@/services/profileService";
 import { toast } from "sonner";
 

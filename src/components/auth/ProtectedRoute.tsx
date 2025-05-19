@@ -1,11 +1,10 @@
-
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createProfileIfNotExists } from "@/services/profileService";
-import { refreshSession, verifyAdminStatus } from "@/services/authService";
+import { refreshSession, verifyAdminStatus } from "@/services/auth";
 
 type ProtectedRouteProps = {
   requireAdmin?: boolean;

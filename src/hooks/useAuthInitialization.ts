@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { refreshSession, verifyAdminStatus } from "@/services/authService";
+import { refreshSession, verifyAdminStatus } from "@/services/auth";
 import type { AdminVerificationState } from "@/hooks/useAuthState";
 
 interface AuthInitializationProps {
