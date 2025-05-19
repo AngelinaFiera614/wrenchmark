@@ -1,91 +1,28 @@
 
-import { MotorcycleModel } from '@/types/motorcycle';
+import React from 'react';
+import { Motorcycle } from '@/types';
+import ComparisonSectionHeader from '../ComparisonSectionHeader';
 
 interface ComparisonOverviewProps {
-  models: MotorcycleModel[];
-  getSelectedYear: (model: MotorcycleModel) => any;
-  getSelectedConfig: (model: MotorcycleModel) => any;
+  motorcycles?: Motorcycle[];
+  // Add future props for model comparison
 }
 
-export default function ComparisonOverview({
-  models,
-  getSelectedYear,
-  getSelectedConfig
-}: ComparisonOverviewProps) {
+export default function ComparisonOverview({ motorcycles = [] }: ComparisonOverviewProps) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b border-border/40">
-            <th className="text-left py-3 pl-4 font-semibold text-accent-teal">Specification</th>
-            {models.map(model => (
-              <th key={model.id} className="text-left py-3 px-4 font-semibold">
-                {model.name} {getSelectedYear(model)?.year}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Engine</td>
-            {models.map(model => (
-              <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.engine?.name || 'N/A'}
-              </td>
-            ))}
-          </tr>
-          <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Displacement</td>
-            {models.map(model => (
-              <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.engine?.displacement_cc 
-                  ? `${getSelectedConfig(model)?.engine?.displacement_cc} cc`
-                  : 'N/A'}
-              </td>
-            ))}
-          </tr>
-          <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Power</td>
-            {models.map(model => (
-              <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.engine?.power_hp 
-                  ? `${getSelectedConfig(model)?.engine?.power_hp} hp`
-                  : 'N/A'}
-              </td>
-            ))}
-          </tr>
-          <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Torque</td>
-            {models.map(model => (
-              <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.engine?.torque_nm 
-                  ? `${getSelectedConfig(model)?.engine?.torque_nm} Nm`
-                  : 'N/A'}
-              </td>
-            ))}
-          </tr>
-          <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Weight</td>
-            {models.map(model => (
-              <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.weight_kg
-                  ? `${getSelectedConfig(model)?.weight_kg} kg`
-                  : 'N/A'}
-              </td>
-            ))}
-          </tr>
-          <tr className="border-b border-border/20">
-            <td className="py-3 pl-4 font-medium">Seat Height</td>
-            {models.map(model => (
-              <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.seat_height_mm
-                  ? `${getSelectedConfig(model)?.seat_height_mm} mm`
-                  : 'N/A'}
-              </td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
+    <div>
+      <ComparisonSectionHeader title="Overview" />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+        {motorcycles.map((motorcycle) => (
+          <div key={motorcycle.id} className="bg-muted/30 border border-border rounded-lg p-4">
+            <h3 className="text-lg font-medium">{motorcycle.name}</h3>
+            <div className="mt-2 text-sm text-muted-foreground">
+              <p>{motorcycle.description || 'No description available'}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

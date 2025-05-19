@@ -1,18 +1,21 @@
 
 import { MotorcycleModel } from "@/types/motorcycle";
+import { Motorcycle } from "@/types";
 import ComparisonSectionHeader from "../ComparisonSectionHeader";
 import { compareArrayValues, getComparisonClass } from "@/lib/comparison-utils";
 
 interface ComparisonFeaturesProps {
-  models: MotorcycleModel[];
-  getSelectedYear: (model: MotorcycleModel) => any;
-  getSelectedConfig: (model: MotorcycleModel) => any;
+  models?: MotorcycleModel[];
+  getSelectedYear?: (model: MotorcycleModel) => any;
+  getSelectedConfig?: (model: MotorcycleModel) => any;
+  motorcycles?: Motorcycle[]; // Add support for legacy Motorcycle type
 }
 
 export default function ComparisonFeatures({ 
   models,
   getSelectedYear,
-  getSelectedConfig
+  getSelectedConfig,
+  motorcycles
 }: ComparisonFeaturesProps) {
   // This component will be fully implemented in a future update
   return (

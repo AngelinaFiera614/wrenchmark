@@ -1,12 +1,13 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 
 // Import pages
-import IndexPage from './pages/IndexPage';
+import IndexPage from './pages/Index';
 import About from './pages/About';
 import Motorcycles from './pages/Motorcycles';
 import MotorcycleDetail from './pages/MotorcycleDetail';
@@ -41,9 +42,8 @@ import AdminComponents from './pages/admin/AdminComponents';
 import AdminAccessories from './pages/admin/AdminAccessories';
 
 // Import components
-import Layout from './components/Layout';
-import AdminLayout from './components/admin/AdminLayout';
-import ProtectedRoute from './components/ProtectedRoute';
+import { Layout } from './components/layout/Layout';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Import context providers
 import { ComparisonProvider } from './context/ComparisonContext';
@@ -101,12 +101,15 @@ function App() {
                 <Route path="repair-skills" element={<AdminRepairSkills />} />
               </Route>
             </Routes>
-            <Toaster position="top-right" />
+            <Toaster />
           </div>
         </ThemeProvider>
       </ComparisonProvider>
     </QueryClientProvider>
   );
 }
+
+// This import needs to be done after App is defined to avoid circular dependency
+import AdminLayout from './components/admin/AdminLayout';
 
 export default App;

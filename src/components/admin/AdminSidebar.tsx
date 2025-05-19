@@ -1,5 +1,7 @@
+
 import React from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { NavLink as RouterNavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -141,22 +143,14 @@ function NavLink({
   children: React.ReactNode;
   end?: boolean;
 }) {
-  let location = useLocation();
-  let active = end ? location.pathname === to : location.pathname.startsWith(to);
+  const location = useLocation();
+  const active = end ? location.pathname === to : location.pathname.startsWith(to);
 
   return (
-    <Button variant="ghost" asChild className="w-full justify-start" active={String(active) === 'true'}>
-      <NavLinkInner to={to} className="w-full">
+    <Button variant="ghost" asChild className="w-full justify-start" data-active={active}>
+      <RouterNavLink to={to} end={end}>
         {children}
-      </NavLinkInner>
+      </RouterNavLink>
     </Button>
-  );
-}
-
-function NavLinkInner({ to, children }: { to: string; children: React.ReactNode }) {
-  return (
-    <NavLink to={to} className="flex items-center w-full h-10 px-3 rounded-md hover:bg-secondary/50 data-[active=true]:bg-secondary/50">
-      {children}
-    </NavLink>
   );
 }
