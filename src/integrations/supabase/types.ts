@@ -1184,6 +1184,10 @@ export type Database = {
         Args: { lesson_id_param: string; quiz_score_param?: number }
         Returns: boolean
       }
+      current_user_is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       generate_course_slug: {
         Args: Record<PropertyKey, never> | { title_input: string }
         Returns: string

@@ -24,7 +24,7 @@ export const getProfileById = async (userId: string): Promise<Profile | null> =>
 
     if (error) {
       console.error("[profileService] Error fetching profile:", error);
-      return null;
+      throw error;
     }
 
     if (!data) {
@@ -36,7 +36,7 @@ export const getProfileById = async (userId: string): Promise<Profile | null> =>
     return data as Profile;
   } catch (error) {
     console.error("[profileService] Error in getProfileById:", error);
-    return null;
+    throw error;
   }
 };
 
@@ -87,14 +87,14 @@ export const createProfileIfNotExists = async (userId: string, isAdmin: boolean 
         return profileCheck;
       }
       
-      return null;
+      throw error;
     }
 
     console.log(`[profileService] Successfully created profile for: ${username}`);
     return data as Profile;
   } catch (error) {
     console.error("[profileService] Error in createProfileIfNotExists:", error);
-    return null;
+    throw error;
   }
 };
 
@@ -110,13 +110,13 @@ export const updateProfile = async (profile: Partial<Profile> & { id: string }):
 
     if (error) {
       console.error("[profileService] Error updating profile:", error);
-      return null;
+      throw error;
     }
 
     return data as Profile;
   } catch (error) {
     console.error("[profileService] Error in updateProfile:", error);
-    return null;
+    throw error;
   }
 };
 
