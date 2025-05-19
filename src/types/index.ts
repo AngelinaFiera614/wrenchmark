@@ -1,4 +1,14 @@
-export type MotorcycleCategory = "Sport" | "Cruiser" | "Touring" | "Adventure" | "Naked" | "Dual-sport" | "Standard" | "Scooter" | "Off-road";
+
+export type MotorcycleCategory = 
+  | "Sport" 
+  | "Cruiser" 
+  | "Touring" 
+  | "Adventure" 
+  | "Naked" 
+  | "Dual-sport" 
+  | "Standard" 
+  | "Scooter" 
+  | "Off-road";
 
 export interface Motorcycle {
   id: string;
@@ -25,7 +35,7 @@ export interface Motorcycle {
   slug?: string;
   created_at?: string;
   is_placeholder?: boolean;
-  // Adding aliases for compatibility with existing code
+  // Compatibility aliases
   engine_cc?: number;
   horsepower_hp?: number;
 }
@@ -50,7 +60,7 @@ export interface Brand {
   categories?: string[];
   notes?: string;
   
-  // Adding aliases for components that expect these properties
+  // Aliases for compatibility
   logo?: string;
   knownFor?: string[];
 }
@@ -65,7 +75,7 @@ export interface MotorcycleFilters {
   weightRange: [number, number];
   seatHeightRange: [number, number];
   abs: boolean | null;
-  styleTags?: string[]; // Add styleTags for compatibility
+  styleTags?: string[];
 }
 
 export interface MotorcycleFilterUpdates {
@@ -108,4 +118,97 @@ export interface MotorcyclePlaceholder {
   make: string;
   model: string;
   year: number;
+}
+
+// Future schema types - these will be implemented in the next phases
+export interface MotorcycleModel {
+  id: string;
+  brand_id: string;
+  name: string;
+  type: string;
+  base_description: string;
+  production_start_year: number;
+  production_end_year?: number;
+  production_status: 'active' | 'discontinued' | 'revived' | 'concept' | 'limited';
+  default_image_url: string;
+  slug: string;
+}
+
+export interface Engine {
+  id: string;
+  name: string;
+  displacement_cc: number;
+  cooling: string;
+  cylinder_count: number;
+  valve_count: number;
+  power_hp: number;
+  torque_nm: number;
+  engine_type: string;
+}
+
+export interface BrakeSystem {
+  id: string;
+  type: string;
+  has_traction_control: boolean;
+  brake_type_front: string;
+  brake_type_rear: string;
+  notes?: string;
+}
+
+export interface Frame {
+  id: string;
+  type: string;
+  material: string;
+  notes?: string;
+}
+
+export interface Suspension {
+  id: string;
+  front_type: string;
+  rear_type: string;
+  adjustability?: string;
+  brand?: string;
+}
+
+export interface Wheel {
+  id: string;
+  type: string;
+  front_size: string;
+  rear_size: string;
+  notes?: string;
+}
+
+export interface ModelYear {
+  id: string;
+  motorcycle_id: string;
+  year: number;
+  changes?: string;
+  engine_id?: string;
+  abs_id?: string;
+  frame_id?: string;
+  suspension_id?: string;
+  wheel_id?: string;
+}
+
+export interface ColorOption {
+  id: string;
+  motorcycle_id: string;
+  year_id: string;
+  name: string;
+  hex_code?: string;
+  image_url?: string;
+  is_limited: boolean;
+}
+
+export interface Configuration {
+  id: string;
+  model_year_id: string;
+  engine_id: string;
+  abs_id: string;
+  frame_id: string;
+  suspension_id: string;
+  wheel_id: string;
+  color_id?: string;
+  name?: string;
+  is_default: boolean;
 }

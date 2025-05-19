@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Brand, Motorcycle, MotorcyclePlaceholder } from "@/types";
 
@@ -51,39 +52,16 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
     }
   }
 
-  // Calculate ground clearance based on motorcycle category if not available
-  let groundClearance = 150; // default value
-  if (motorcycle.category) {
-    switch(motorcycle.category.toLowerCase()) {
-      case 'adventure':
-      case 'dual-sport':
-      case 'off-road':
-        groundClearance = 220;
-        break;
-      case 'cruiser':
-        groundClearance = 135;
-        break;
-      case 'sport':
-        groundClearance = 130;
-        break;
-      case 'touring':
-        groundClearance = 140;
-        break;
-      default:
-        groundClearance = 150;
-    }
-  }
-
   return {
     id: motorcycle.id,
     make: motorcycle.brand?.name || "Unknown",
     brand_id: motorcycle.brand_id,
     model: motorcycle.model_name,
-    year: motorcycle.year || 2023,
+    year: motorcycle.year || new Date().getFullYear(),
     category: motorcycle.category || "Standard",
     style_tags: motorcycle.tags || [],
     difficulty_level: motorcycle.difficulty_level || 1,
-    image_url: motorcycle.image_url || "https://images.unsplash.com/photo-1558981285-6f0c94958bb6?q=80&w=1000",
+    image_url: motorcycle.image_url || "/placeholder.svg",
     engine_size: engineSize,
     horsepower: motorcycle.horsepower_hp || 0,
     weight_kg: motorcycle.weight_kg || 0,
@@ -92,12 +70,12 @@ const transformMotorcycle = (motorcycle: SupabaseMotorcycle): Motorcycle => {
     top_speed_kph: motorcycle.top_speed_kph || 0,
     torque_nm: motorcycle.torque_nm || 0, 
     wheelbase_mm: motorcycle.wheelbase_mm || 0,
-    ground_clearance_mm: groundClearance,
+    ground_clearance_mm: 150, // Default value until we add this field
     fuel_capacity_l: motorcycle.fuel_capacity_l || 0,
     smart_features: motorcycle.tags || [],
     summary: motorcycle.summary || `${motorcycle.model_name} ${motorcycle.year}`,
     slug: motorcycle.slug,
-    // Add compatibility aliases
+    // Add consistency aliases
     engine_cc: engineSize,
     horsepower_hp: motorcycle.horsepower_hp || 0
   };
@@ -130,7 +108,6 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
 // Get motorcycle by ID
 export const getMotorcycleById = async (id: string): Promise<Motorcycle | null> => {
   try {
-    console.log("Fetching motorcycle by ID:", id);
     const { data, error } = await supabase
       .from('motorcycles')
       .select(`
@@ -144,20 +121,15 @@ export const getMotorcycleById = async (id: string): Promise<Motorcycle | null> 
 
     if (error) {
       if (error.code === 'PGRST116') {
-        // No rows found
-        console.log("No motorcycle found with ID:", id);
-        return null;
+        return null; // No motorcycle found
       }
-      console.error("Error fetching motorcycle:", error);
-      throw new Error(`Error fetching motorcycle: ${error.message}`);
+      throw error;
     }
 
     if (!data) {
-      console.log("No data returned for motorcycle with ID:", id);
       return null;
     }
 
-    console.log("Motorcycle data fetched:", data);
     return transformMotorcycle(data as SupabaseMotorcycle);
   } catch (error) {
     console.error("Error in getMotorcycleById:", error);
@@ -181,11 +153,9 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
 
     if (error) {
       if (error.code === 'PGRST116') {
-        // No rows found
-        return null;
+        return null; // No motorcycle found
       }
-      console.error("Error fetching motorcycle by slug:", error);
-      throw new Error(`Error fetching motorcycle by slug: ${error.message}`);
+      throw error;
     }
 
     return data ? transformMotorcycle(data as SupabaseMotorcycle) : null;
@@ -213,8 +183,7 @@ export const findMotorcycleByDetails = async (
 
     if (brandError) {
       if (brandError.code === "PGRST116") {
-        // No brand found with that name, will handle this later
-        return null;
+        return null; // No brand found
       }
       throw brandError;
     }
@@ -225,22 +194,9 @@ export const findMotorcycleByDetails = async (
     const { data: motorcycleData, error: motorcycleError } = await supabase
       .from("motorcycles")
       .select(`
-        id, 
-        brand_id,
-        model_name,
-        year, 
-        category,
-        image_url,
-        summary,
-        difficulty_level,
-        horsepower_hp,
-        weight_kg,
-        seat_height_mm,
-        has_abs,
-        engine,
-        brands:brand_id (
-          name,
-          country
+        *,
+        brand:brand_id (
+          id, name, country, logo_url, known_for, slug
         )
       `)
       .eq("brand_id", brandId)
@@ -250,39 +206,15 @@ export const findMotorcycleByDetails = async (
 
     if (motorcycleError) {
       if (motorcycleError.code === "PGRST116") {
-        // No motorcycle found
-        return null;
+        return null; // No motorcycle found
       }
       throw motorcycleError;
     }
 
-    // Convert the database structure to the Motorcycle interface
-    return {
-      id: motorcycleData.id,
-      make: motorcycleData.brands.name,
-      model: motorcycleData.model_name,
-      brand_id: motorcycleData.brand_id,
-      year: motorcycleData.year,
-      category: motorcycleData.category || "Unknown",
-      image_url: motorcycleData.image_url || "/placeholder.svg",
-      style_tags: [],
-      difficulty_level: motorcycleData.difficulty_level || 3,
-      engine_size: 0, // Default value
-      horsepower: motorcycleData.horsepower_hp || 0,
-      weight_kg: motorcycleData.weight_kg || 0,
-      seat_height_mm: motorcycleData.seat_height_mm || 0,
-      abs: !!motorcycleData.has_abs,
-      top_speed_kph: 0, // Default value
-      torque_nm: 0, // Default value
-      wheelbase_mm: 0, // Default value
-      ground_clearance_mm: 0, // Default value
-      fuel_capacity_l: 0, // Default value
-      smart_features: [],
-      summary: motorcycleData.summary || `${motorcycleData.year} ${motorcycleData.brands.name} ${motorcycleData.model_name}`
-    };
+    return transformMotorcycle(motorcycleData as SupabaseMotorcycle);
   } catch (error) {
     console.error("Error finding motorcycle by details:", error);
-    return null; // Return null instead of throwing, as this is often a valid case
+    return null; 
   }
 };
 
@@ -350,52 +282,16 @@ export const createPlaceholderMotorcycle = async (
         seat_height_mm: 0
       })
       .select(`
-        id, 
-        brand_id,
-        model_name,
-        year, 
-        category,
-        image_url,
-        summary,
-        difficulty_level,
-        horsepower_hp,
-        weight_kg,
-        seat_height_mm,
-        has_abs,
-        brands:brand_id (
-          name,
-          country
+        *,
+        brand:brand_id (
+          id, name, country, logo_url, known_for, slug
         )
       `)
       .single();
       
     if (motorcycleError) throw motorcycleError;
     
-    // 3. Return the new motorcycle in the expected format
-    return {
-      id: newMotorcycle.id,
-      make: placeholderData.make,
-      model: newMotorcycle.model_name,
-      brand_id: newMotorcycle.brand_id,
-      year: newMotorcycle.year,
-      category: newMotorcycle.category || "Unknown",
-      image_url: newMotorcycle.image_url || "/placeholder.svg",
-      style_tags: [],
-      difficulty_level: newMotorcycle.difficulty_level || 3,
-      engine_size: 0,
-      horsepower: newMotorcycle.horsepower_hp || 0,
-      weight_kg: newMotorcycle.weight_kg || 0,
-      seat_height_mm: newMotorcycle.seat_height_mm || 0,
-      abs: !!newMotorcycle.has_abs,
-      top_speed_kph: 0,
-      torque_nm: 0,
-      wheelbase_mm: 0,
-      ground_clearance_mm: 0,
-      fuel_capacity_l: 0,
-      smart_features: [],
-      summary: newMotorcycle.summary || `${newMotorcycle.year} ${placeholderData.make} ${newMotorcycle.model_name}`,
-      is_placeholder: true
-    };
+    return transformMotorcycle(newMotorcycle as SupabaseMotorcycle);
   } catch (error) {
     console.error("Error creating placeholder motorcycle:", error);
     throw error;

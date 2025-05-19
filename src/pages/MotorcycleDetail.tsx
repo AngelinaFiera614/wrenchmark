@@ -5,36 +5,33 @@ import MotorcycleDetailComponent from "@/components/motorcycles/MotorcycleDetail
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
-import { getMotorcycleById } from "@/services/motorcycleService";
+import { getMotorcycleBySlug } from "@/services/motorcycleService";
 import { Motorcycle } from "@/types";
 
 export default function MotorcycleDetail() {
-  const { motorcycleId } = useParams<{ motorcycleId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [motorcycle, setMotorcycle] = useState<Motorcycle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchMotorcycle = async () => {
-      if (!motorcycleId) {
-        setError("No motorcycle ID provided");
+      if (!slug) {
+        setError("No motorcycle slug provided");
         setIsLoading(false);
         return;
       }
 
       try {
         setIsLoading(true);
-        console.log("Fetching motorcycle with ID:", motorcycleId);
-        const data = await getMotorcycleById(motorcycleId);
+        const data = await getMotorcycleBySlug(slug);
         
         if (data) {
-          console.log("Motorcycle data fetched:", data);
           setMotorcycle(data);
           document.title = `${data.make} ${data.model} | Wrenchmark`;
         } else {
-          console.log("Motorcycle not found with ID:", motorcycleId);
-          setError(`Motorcycle with ID ${motorcycleId} not found`);
-          toast.error(`Motorcycle with ID ${motorcycleId} not found`);
+          setError(`Motorcycle not found: ${slug}`);
+          toast.error(`Motorcycle not found: ${slug}`);
         }
       } catch (err) {
         console.error("Error fetching motorcycle:", err);
@@ -46,7 +43,7 @@ export default function MotorcycleDetail() {
     };
     
     fetchMotorcycle();
-  }, [motorcycleId]);
+  }, [slug]);
   
   if (isLoading) {
     return (
