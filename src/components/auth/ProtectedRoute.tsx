@@ -1,10 +1,9 @@
+
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { createProfileIfNotExists } from "@/services/profileService";
-import { refreshSession, verifyAdminStatus } from "@/services/auth";
 
 type ProtectedRouteProps = {
   requireAdmin?: boolean;
@@ -15,16 +14,13 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
     user, 
     isAdmin, 
     isAdminVerified, 
-    profile, 
     isLoading, 
     adminVerificationState, 
-    refreshProfile,
     forceAdminVerification
   } = useAuth();
   
   const location = useLocation();
-  const [verificationInProgress, setVerificationInProgress] = useState(false);
-  const [localAdminVerified, setLocalAdminVerified] = useState(false);
+  const [adminVerified, setAdminVerified] = useState(false);
   
   // Enhanced verification for admin routes
   useEffect(() => {
@@ -33,96 +29,31 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
     
     // Skip verification if already verified through the auth context
     if (isAdminVerified) {
-      console.log("[ProtectedRoute] Admin already verified via context, allowing access");
-      setLocalAdminVerified(true);
+      console.log("[ProtectedRoute] Admin already verified via context");
+      setAdminVerified(true);
       return;
     }
     
-    // If verification is in progress or we've determined admin status, don't re-verify
-    if (verificationInProgress || localAdminVerified) return;
+    // If user isn't logged in or verification isn't required, skip verification
+    if (!user || !requireAdmin || adminVerified) return;
     
     const verifyAdminAccess = async () => {
-      console.log("[ProtectedRoute] Verifying admin access", {
-        isLoading,
-        user: user ? user.id : "null",
-        profile: profile ? "exists" : "null",
-        isAdmin,
-        adminVerificationState
-      });
-      
-      // If auth is still loading, wait
-      if (isLoading) {
-        console.log("[ProtectedRoute] Auth still loading, waiting...");
-        return;
-      }
-      
-      // If no user, we'll redirect (handled in render)
-      if (!user) {
-        console.log("[ProtectedRoute] No user found, will redirect");
-        return;
-      }
-      
-      setVerificationInProgress(true);
-      
       try {
-        // First try force verification through the AuthContext
-        console.log("[ProtectedRoute] Performing force admin verification");
+        // Use the forceAdminVerification function from auth context
         const isAdminUser = await forceAdminVerification();
-        
-        if (isAdminUser) {
-          console.log("[ProtectedRoute] Force verification confirmed admin status");
-          setLocalAdminVerified(true);
-          return;
-        }
-        
-        // If force verification failed, try a direct check
-        console.log("[ProtectedRoute] Force verification failed, trying direct check");
-        const directCheck = await verifyAdminStatus(user.id);
-        
-        if (directCheck) {
-          console.log("[ProtectedRoute] Direct check confirmed admin status");
-          setLocalAdminVerified(true);
-        } else {
-          // One last attempt - refresh profile and session
-          console.log("[ProtectedRoute] Direct check failed, trying profile refresh");
-          
-          await refreshSession();
-          if (!profile) {
-            await createProfileIfNotExists(user.id);
-          }
-          await refreshProfile();
-          
-          // Final check
-          const finalCheck = await verifyAdminStatus(user.id);
-          setLocalAdminVerified(finalCheck);
-          
-          console.log("[ProtectedRoute] Final admin check result:", finalCheck);
-        }
+        console.log("[ProtectedRoute] Force admin verification result:", isAdminUser);
+        setAdminVerified(isAdminUser);
       } catch (error) {
         console.error("[ProtectedRoute] Error in admin verification:", error);
-        setLocalAdminVerified(false);
-      } finally {
-        setVerificationInProgress(false);
+        setAdminVerified(false);
       }
     };
     
     verifyAdminAccess();
-  }, [
-    user, 
-    profile, 
-    isAdmin, 
-    isAdminVerified, 
-    requireAdmin, 
-    isLoading, 
-    adminVerificationState,
-    refreshProfile,
-    verificationInProgress,
-    localAdminVerified,
-    forceAdminVerification
-  ]);
+  }, [user, isAdminVerified, requireAdmin, adminVerified, forceAdminVerification]);
   
-  // Show loading state during verification
-  if (isLoading || (requireAdmin && verificationInProgress)) {
+  // Show loading state during auth or admin verification
+  if (isLoading || (requireAdmin && !isAdminVerified && !adminVerified && user)) {
     return (
       <div className="flex justify-center items-center h-screen bg-background">
         <div className="flex flex-col items-center space-y-4">
@@ -135,24 +66,21 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
     );
   }
 
-  // If not logged in at all, redirect to auth
+  // If not logged in, redirect to auth
   if (!user) {
     console.log("[ProtectedRoute] User not authenticated, redirecting to auth page");
     toast.error("Please sign in to continue");
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // For admin routes, check verification status
-  if (requireAdmin && !isAdmin && !isAdminVerified && !localAdminVerified) {
+  // For admin routes, check if user has admin permissions
+  if (requireAdmin && !isAdmin && !isAdminVerified && !adminVerified) {
     console.log("[ProtectedRoute] User not admin, access denied");
     toast.error("You don't have permission to access this area");
     return <Navigate to="/" replace />;
   }
 
-  // Allow access if:
-  // 1. Not an admin route, OR
-  // 2. Admin route AND (isAdmin OR isAdminVerified OR localAdminVerified)
-  console.log("[ProtectedRoute] Access granted to path:", location.pathname);
+  // Allow access
   return <Outlet />;
 };
 

@@ -1,117 +1,47 @@
+
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { verifyAdminStatus } from "@/services/auth";
+import { useEffect } from "react";
 
 const AdminLayout = () => {
-  const { isLoading, user, profile, isAdmin, isAdminVerified, adminVerificationState, forceAdminVerification } = useAuth();
-  const [verificationInProgress, setVerificationInProgress] = useState(false);
-  const [localVerified, setLocalVerified] = useState(false);
+  const { isLoading, user, isAdmin, isAdminVerified, adminVerificationState, forceAdminVerification } = useAuth();
   const navigate = useNavigate();
   
-  // Enhanced verification for admin access - within the component only
+  // Verify admin status once when component mounts
   useEffect(() => {
-    // Skip verification if already verified
-    if (isAdminVerified) {
-      console.log("[AdminLayout] Admin already verified via context, allowing access");
-      setLocalVerified(true);
-      return;
-    }
+    // Skip if already verified or no user
+    if (isAdminVerified || !user) return;
     
-    // Skip if already locally verified
-    if (localVerified) {
-      console.log("[AdminLayout] Admin already verified locally, allowing access");
-      return;
-    }
-    
-    // Skip if verification is in progress
-    if (verificationInProgress) return;
-    
-    const verifyAdminAccess = async () => {
-      setVerificationInProgress(true);
-      
-      console.log("[AdminLayout] Verifying admin access", {
-        isLoading,
-        user: user ? "exists" : "null",
-        profile: profile ? "exists" : "null",
-        isAdmin,
-        adminVerificationState
-      });
-      
-      // If auth is still loading, wait for it
-      if (isLoading) {
-        console.log("[AdminLayout] Auth still loading, waiting...");
-        setVerificationInProgress(false);
-        return;
-      }
-      
-      // If no user, we'll redirect (handled in render)
-      if (!user) {
-        console.log("[AdminLayout] No user found, will redirect");
-        setVerificationInProgress(false);
-        return;
-      }
-
+    const verifyAdminStatus = async () => {
       try {
-        // First try the force verification through AuthContext
-        console.log("[AdminLayout] Performing force admin verification");
+        console.log("[AdminLayout] Verifying admin status");
         const isAdminUser = await forceAdminVerification();
         
-        if (isAdminUser) {
-          console.log("[AdminLayout] Force verification confirmed admin status");
-          setLocalVerified(true);
-          setVerificationInProgress(false);
-          return;
-        }
-        
-        // Try direct database check as backup
-        console.log("[AdminLayout] Force verification failed, trying direct check");
-        const directCheck = await verifyAdminStatus(user.id);
-        
-        if (directCheck) {
-          console.log("[AdminLayout] Direct admin check confirmed admin status");
-          setLocalVerified(true);
-        } else {
-          console.log("[AdminLayout] Direct admin check denied admin status");
-          setLocalVerified(false);
-          
-          // Force client-side navigation to home
+        if (!isAdminUser) {
+          console.log("[AdminLayout] Admin verification failed");
           toast.error("You don't have permission to access the admin area");
           navigate("/", { replace: true });
+        } else {
+          console.log("[AdminLayout] Admin verification succeeded");
         }
       } catch (error) {
-        console.error("[AdminLayout] Error in admin verification:", error);
-        setLocalVerified(false);
-        
-        // Force client-side navigation on error
+        console.error("[AdminLayout] Error verifying admin status:", error);
+        toast.error("Error verifying permissions");
         navigate("/", { replace: true });
-      } finally {
-        setVerificationInProgress(false);
       }
     };
-    
-    // Add a small delay before verification to let other processes complete
-    const timeoutId = setTimeout(verifyAdminAccess, 100);
+
+    // Add a small delay before verification to let auth initialize
+    const timeoutId = setTimeout(verifyAdminStatus, 100);
     return () => clearTimeout(timeoutId);
-  }, [
-    isLoading, 
-    user, 
-    profile, 
-    isAdmin, 
-    adminVerificationState, 
-    isAdminVerified, 
-    navigate, 
-    localVerified, 
-    verificationInProgress,
-    forceAdminVerification
-  ]);
+  }, [user, isAdminVerified, navigate, forceAdminVerification]);
   
-  // Show loading while verification is in progress
-  if (isLoading || verificationInProgress) {
+  // Show loading while auth or admin verification is in progress
+  if (isLoading || (adminVerificationState === 'pending')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
@@ -125,19 +55,17 @@ const AdminLayout = () => {
     );
   }
 
-  // If we've verified admin status
-  if (isAdminVerified || localVerified || isAdmin) {
+  // If admin verification is successful, render admin layout
+  if (isAdminVerified || isAdmin) {
     return (
       <div className="min-h-screen flex flex-col">
         <AdminHeader />
         
         <div className="flex-1 flex flex-col md:flex-row">
-          {/* Sidebar - hidden on mobile, shown on larger screens */}
           <div className="hidden md:block">
             <AdminSidebar />
           </div>
           
-          {/* Main content area */}
           <main className="flex-1 p-4 md:p-6 overflow-auto">
             <Outlet />
           </main>
@@ -146,7 +74,7 @@ const AdminLayout = () => {
     );
   }
 
-  // Double-check user
+  // If no user, redirect to auth
   if (!user) {
     console.log("[AdminLayout] No user found, redirecting");
     toast.error("Authentication required to access admin area");
