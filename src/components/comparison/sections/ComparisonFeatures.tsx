@@ -12,18 +12,22 @@ interface ComparisonFeaturesProps {
 }
 
 export default function ComparisonFeatures({ 
-  models,
+  models = [],
   getSelectedYear,
   getSelectedConfig,
-  motorcycles
+  motorcycles = []
 }: ComparisonFeaturesProps) {
   // This component will be fully implemented in a future update
+  const hasMotorcycles = motorcycles && motorcycles.length > 0;
+  const hasModels = models && models.length > 0;
+
   return (
-    <div className="text-center py-8">
+    <div>
       <ComparisonSectionHeader title="Features & Characteristics" />
-      <p className="text-muted-foreground mt-4">
+      
+      <div className="text-center py-8 text-muted-foreground">
         Detailed feature comparison will be implemented in the next update.
-      </p>
+      </div>
     </div>
   );
 }
