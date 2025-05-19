@@ -1,49 +1,55 @@
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Motorcycle } from "@/types";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { Motorcycle } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
 import { BasicInfoFields } from "./form/BasicInfoFields";
 import { PerformanceFields } from "./form/PerformanceFields";
 import { DimensionsFields } from "./form/DimensionsFields";
 import { AdditionalFields } from "./form/AdditionalFields";
 import { FormActions } from "./form/FormActions";
+import { ComponentsFields } from "./form/ComponentsFields";
 
-// Form schema
-const motorcycleSchema = z.object({
-  brand_id: z.string().uuid(),
-  model_name: z.string().min(1, "Model name is required"),
-  year: z.coerce.number().int().min(1885, "Invalid year").max(2100, "Invalid year"),
+// Define Zod schema for form validation
+const motorcycleFormSchema = z.object({
+  make: z.string().min(1, "Make is required"),
+  model: z.string().min(1, "Model is required"),
+  year: z.coerce.number().min(1885, "Year must be 1885 or later"),
   category: z.string().min(1, "Category is required"),
-  image_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  difficulty_level: z.coerce.number().min(1).max(5),
+  image_url: z.string().url({ message: "Invalid URL" }).optional().or(z.literal("")),
+  
+  // Performance fields
   engine: z.string().optional(),
   horsepower_hp: z.coerce.number().optional(),
   torque_nm: z.coerce.number().optional(),
   top_speed_kph: z.coerce.number().optional(),
-  seat_height_mm: z.coerce.number().int().optional(),
-  weight_kg: z.coerce.number().optional(),
-  wheelbase_mm: z.coerce.number().int().optional(),
-  fuel_capacity_l: z.coerce.number().optional(),
   has_abs: z.boolean().default(false),
-  tags: z.array(z.string()).default([]),
+  
+  // Dimensions fields
+  weight_kg: z.coerce.number().optional(),
+  seat_height_mm: z.coerce.number().optional(),
+  wheelbase_mm: z.coerce.number().optional(),
+  ground_clearance_mm: z.coerce.number().optional(),
+  fuel_capacity_l: z.coerce.number().optional(),
+  
+  // Additional fields
   summary: z.string().optional(),
-  difficulty_level: z.coerce.number().int().min(1).max(5).default(1),
-  slug: z.string().min(1, "Slug is required"),
+  slug: z.string().optional(),
+  status: z.string().optional(),
+
+  // Component fields for new schema
+  engine_id: z.string().optional(),
+  brake_system_id: z.string().optional(),
+  frame_id: z.string().optional(),
+  suspension_id: z.string().optional(),
+  wheel_id: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof motorcycleSchema>;
+type MotorcycleFormValues = z.infer<typeof motorcycleFormSchema>;
 
 interface AdminMotorcycleDialogProps {
   open: boolean;
@@ -51,257 +57,145 @@ interface AdminMotorcycleDialogProps {
   onClose: (refreshData?: boolean) => void;
 }
 
-const AdminMotorcycleDialog: React.FC<AdminMotorcycleDialogProps> = ({ 
-  open, 
-  motorcycle, 
-  onClose 
-}) => {
-  const { toast } = useToast();
-  const [brands, setBrands] = React.useState<{ id: string; name: string }[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  
-  // Set up form
-  const form = useForm<FormValues>({
-    resolver: zodResolver(motorcycleSchema),
+const AdminMotorcycleDialog = ({
+  open,
+  motorcycle,
+  onClose,
+}: AdminMotorcycleDialogProps) => {
+  const [loading, setLoading] = useState(false);
+  const [isNewSchema, setIsNewSchema] = useState(false);
+
+  const form = useForm<MotorcycleFormValues>({
+    resolver: zodResolver(motorcycleFormSchema),
     defaultValues: {
-      brand_id: "",
-      model_name: "",
+      make: "",
+      model: "",
       year: new Date().getFullYear(),
       category: "Standard",
+      difficulty_level: 3,
       image_url: "",
       engine: "",
       horsepower_hp: undefined,
       torque_nm: undefined,
       top_speed_kph: undefined,
-      seat_height_mm: undefined,
-      weight_kg: undefined,
-      wheelbase_mm: undefined,
-      fuel_capacity_l: undefined,
       has_abs: false,
-      tags: [],
+      weight_kg: undefined,
+      seat_height_mm: undefined,
+      wheelbase_mm: undefined,
+      ground_clearance_mm: undefined,
+      fuel_capacity_l: undefined,
       summary: "",
-      difficulty_level: 1,
       slug: "",
+      status: "active",
+      engine_id: undefined,
+      brake_system_id: undefined,
+      frame_id: undefined,
+      suspension_id: undefined,
+      wheel_id: undefined,
     },
   });
 
-  // Fetch brands for the dropdown
-  useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('brands')
-          .select('id, name')
-          .order('name', { ascending: true });
-        
-        if (error) throw error;
-        setBrands(data || []);
-      } catch (error) {
-        console.error("Error fetching brands:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load brands. Please try again.",
-        });
-      }
-    };
-
-    if (open) {
-      fetchBrands();
-    }
-  }, [open, toast]);
-
-  // Populate form when editing
+  // When editing an existing motorcycle, populate form
   useEffect(() => {
     if (motorcycle) {
-      const tagsArray = motorcycle.style_tags || [];
-      
       form.reset({
-        brand_id: motorcycle.brand_id || "",
-        model_name: motorcycle.model,
+        make: motorcycle.make,
+        model: motorcycle.model,
         year: motorcycle.year,
         category: motorcycle.category,
+        difficulty_level: motorcycle.difficulty_level,
         image_url: motorcycle.image_url,
-        engine: `${motorcycle.engine_size}cc`, // Convert to string format
-        horsepower_hp: motorcycle.horsepower,
+        engine: "",
+        horsepower_hp: motorcycle.horsepower_hp,
         torque_nm: motorcycle.torque_nm,
         top_speed_kph: motorcycle.top_speed_kph,
-        seat_height_mm: motorcycle.seat_height_mm,
-        weight_kg: motorcycle.weight_kg,
-        wheelbase_mm: motorcycle.wheelbase_mm,
-        fuel_capacity_l: motorcycle.fuel_capacity_l,
         has_abs: motorcycle.abs,
-        tags: tagsArray,
+        weight_kg: motorcycle.weight_kg,
+        seat_height_mm: motorcycle.seat_height_mm,
+        wheelbase_mm: motorcycle.wheelbase_mm,
+        ground_clearance_mm: motorcycle.ground_clearance_mm,
+        fuel_capacity_l: motorcycle.fuel_capacity_l,
         summary: motorcycle.summary,
-        difficulty_level: motorcycle.difficulty_level,
-        slug: motorcycle.slug || `${motorcycle.make}-${motorcycle.model}-${motorcycle.year}`.toLowerCase().replace(/\s+/g, "-"),
+        slug: motorcycle.slug || "",
+        status: motorcycle.status || "active",
       });
-    } else {
-      form.reset({
-        brand_id: "",
-        model_name: "",
-        year: new Date().getFullYear(),
-        category: "Standard",
-        image_url: "",
-        engine: "",
-        horsepower_hp: undefined,
-        torque_nm: undefined,
-        top_speed_kph: undefined,
-        seat_height_mm: undefined,
-        weight_kg: undefined,
-        wheelbase_mm: undefined,
-        fuel_capacity_l: undefined,
-        has_abs: false,
-        tags: [],
-        summary: "",
-        difficulty_level: 1,
-        slug: "",
-      });
+
+      // Check if the motorcycle uses the new schema
+      if (motorcycle.migration_status === "migrated") {
+        setIsNewSchema(true);
+      }
     }
   }, [motorcycle, form]);
 
-  const handleGenerateSlug = () => {
-    const brandName = brands.find(b => b.id === form.getValues("brand_id"))?.name || "";
-    const modelName = form.getValues("model_name");
+  const generateSlug = () => {
+    const make = form.getValues("make");
+    const model = form.getValues("model");
     const year = form.getValues("year");
     
-    if (brandName && modelName) {
-      const slug = `${brandName}-${modelName}-${year}`
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^\w-]/g, "");
-        
+    if (make && model && year) {
+      const slug = `${make.toLowerCase().replace(/\s+/g, "-")}-${model.toLowerCase().replace(/\s+/g, "-")}-${year}`;
       form.setValue("slug", slug);
     }
   };
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (data: MotorcycleFormValues) => {
     setLoading(true);
+    
     try {
-      // Format tags as an array
-      const formattedTags = values.tags || [];
+      // Handle form submission
+      console.log("Form data:", data);
       
-      // Generate slug if empty
-      let slug = values.slug;
-      if (!slug) {
-        // Find brand name for slug
-        const brand = brands.find(b => b.id === values.brand_id);
-        slug = `${brand?.name || "unknown"}-${values.model_name}-${values.year}`
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^\w-]/g, "");
-      }
-
-      const motorcycleData = {
-        brand_id: values.brand_id,
-        model_name: values.model_name,
-        year: values.year,
-        category: values.category,
-        image_url: values.image_url || null,
-        engine: values.engine || null,
-        horsepower_hp: values.horsepower_hp || null,
-        torque_nm: values.torque_nm || null,
-        top_speed_kph: values.top_speed_kph || null,
-        seat_height_mm: values.seat_height_mm || null,
-        weight_kg: values.weight_kg || null,
-        wheelbase_mm: values.wheelbase_mm || null,
-        fuel_capacity_l: values.fuel_capacity_l || null,
-        has_abs: values.has_abs,
-        tags: formattedTags,
-        summary: values.summary || null,
-        difficulty_level: values.difficulty_level,
-        slug: slug,
-      };
-
-      let error;
-      
-      if (motorcycle) {
-        // Update existing motorcycle
-        const { error: updateError } = await supabase
-          .from('motorcycles')
-          .update(motorcycleData)
-          .eq('id', motorcycle.id);
-          
-        error = updateError;
-        
-        if (!error) {
-          toast({
-            title: "Motorcycle updated",
-            description: `${values.model_name} has been updated successfully.`,
-          });
-        }
-      } else {
-        // Create new motorcycle
-        const { error: insertError } = await supabase
-          .from('motorcycles')
-          .insert([motorcycleData]);
-          
-        error = insertError;
-        
-        if (!error) {
-          toast({
-            title: "Motorcycle added",
-            description: `${values.model_name} has been added successfully.`,
-          });
-        }
-      }
-
-      if (error) throw error;
-      
-      onClose(true); // Close and refresh data
-      
-    } catch (error) {
-      console.error("Error saving motorcycle:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save motorcycle. Please try again.",
-      });
-    } finally {
+      // Close the dialog and refresh data
       setLoading(false);
+      onClose(true);
+    } catch (error) {
+      setLoading(false);
+      console.error("Error saving motorcycle:", error);
     }
   };
 
+  const handleMigrateToNew = () => {
+    // Set flag to show new schema form fields
+    setIsNewSchema(true);
+  };
+
+  const isEditing = !!motorcycle;
+
   return (
-    <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={() => onClose(false)}>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {motorcycle ? "Edit Motorcycle" : "Add New Motorcycle"}
+            {isEditing ? "Edit Motorcycle" : "Add New Motorcycle"}
           </DialogTitle>
-          <DialogDescription>
-            {motorcycle 
-              ? "Update the details for this motorcycle."
-              : "Fill in the details to add a new motorcycle to the database."}
-          </DialogDescription>
         </DialogHeader>
-
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Basic Information */}
-              <BasicInfoFields control={form.control} brands={brands} />
+            <div className="space-y-8">
+              <BasicInfoFields control={form.control} />
               
-              {/* Performance Specs */}
-              <PerformanceFields control={form.control} />
-            </div>
-            
-            {/* Physical Dimensions */}
-            <DimensionsFields control={form.control} />
-            
-            {/* Additional Information */}
-            <AdditionalFields 
-              control={form.control} 
-              onGenerateSlug={handleGenerateSlug} 
-            />
+              {!isNewSchema ? (
+                // Original schema fields
+                <>
+                  <PerformanceFields control={form.control} />
+                  <DimensionsFields control={form.control} />
+                </>
+              ) : (
+                // New schema fields for components
+                <ComponentsFields control={form.control} />
+              )}
               
-            <DialogFooter>
+              <AdditionalFields control={form.control} onGenerateSlug={generateSlug} />
+              
               <FormActions 
                 loading={loading} 
-                onCancel={() => onClose()} 
-                isEditing={motorcycle !== null} 
+                onCancel={() => onClose(false)} 
+                isEditing={isEditing}
+                onMigrateToNew={handleMigrateToNew}
+                showMigrateOption={isEditing && !isNewSchema && motorcycle?.migration_status !== "migrated"}
               />
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>

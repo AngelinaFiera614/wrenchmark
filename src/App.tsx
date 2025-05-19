@@ -15,6 +15,7 @@ import AdminMotorcycles from './pages/admin/AdminMotorcycles';
 import AdminBrands from './pages/admin/AdminBrands';
 import AdminManuals from './pages/admin/AdminManuals';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminComponents from './pages/admin/AdminComponents';
 
 function App() {
   const { isAdminVerified } = useAuth();
@@ -39,6 +40,7 @@ function App() {
         >
           <Route path="/admin/motorcycles" element={<AdminMotorcycles />} />
           <Route path="/admin/brands" element={<AdminBrands />} />
+          <Route path="/admin/components" element={<AdminComponents />} />
           <Route path="/admin/manuals" element={<AdminManuals />} />
           <Route path="/admin/users" element={<AdminUsers />} />
         </Route>
