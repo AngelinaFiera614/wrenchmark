@@ -113,13 +113,31 @@ export async function fetchCurrentSession() {
   }
 }
 
-// Function to refresh auth session
+// Function to refresh auth session with rate limiting protection
+let lastRefreshTime = 0;
+const REFRESH_COOLDOWN = 5000; // 5 seconds minimum between refreshes
+
 export async function refreshSession() {
   try {
+    // Check if we're refreshing too frequently to avoid rate limits
+    const now = Date.now();
+    if (now - lastRefreshTime < REFRESH_COOLDOWN) {
+      console.log("[authService] Skipping refresh - too soon after last refresh");
+      return await fetchCurrentSession();
+    }
+    
+    lastRefreshTime = now;
     console.log("[authService] Refreshing session");
+    
     const { data, error } = await supabase.auth.refreshSession();
     
     if (error) {
+      // Special handling for "Auth session missing" which isn't necessarily an error
+      if (error.message === "Auth session missing!") {
+        console.log("[authService] No active session to refresh");
+        return null;
+      }
+      
       console.error("[authService] Error refreshing session:", error);
       
       // Try to get current session to see status
@@ -128,7 +146,7 @@ export async function refreshSession() {
         console.log("[authService] No current session found during refresh failure");
       }
       
-      return null;
+      return currentSession;
     }
     
     if (data.session) {
@@ -140,30 +158,31 @@ export async function refreshSession() {
     }
   } catch (error) {
     console.error("[authService] Error in refreshSession:", error);
-    return null;
+    return await fetchCurrentSession(); // Fallback to current session
   }
 }
 
 // Function to verify if the current user is admin
-export async function verifyAdminStatus() {
+export async function verifyAdminStatus(userId?: string) {
   try {
     console.log("[authService] Verifying admin status");
     
-    // First check if we have a session
-    const currentSession = await fetchCurrentSession();
-    if (!currentSession || !currentSession.user) {
-      console.log("[authService] No active session found during admin verification");
+    // First check if we have a user ID
+    const userIdToCheck = userId || (await fetchCurrentSession())?.user?.id;
+    
+    if (!userIdToCheck) {
+      console.log("[authService] No user ID available for admin verification");
       return false;
     }
     
     // Get user profile
-    const profile = await getProfileById(currentSession.user.id);
+    const profile = await getProfileById(userIdToCheck);
     if (!profile) {
       console.log("[authService] No profile found during admin verification");
       return false;
     }
     
-    console.log(`[authService] Admin status verified: ${profile.is_admin}`);
+    console.log(`[authService] Admin status for user ${userIdToCheck}: ${profile.is_admin}`);
     return profile.is_admin;
   } catch (error) {
     console.error("[authService] Error verifying admin status:", error);

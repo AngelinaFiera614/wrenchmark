@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { refreshSession } from "@/services/authService";
 
 interface AuthInitializationProps {
   setSession: (session: Session | null) => void;
@@ -23,38 +24,66 @@ export function useAuthInitialization({
     let isMounted = true;
     console.log("[useAuthInitialization] Setting up auth state listener");
     
+    let authStateEventQueue: Array<{event: string, session: Session | null}> = [];
+    let isProcessingAuthEvents = false;
+    
+    // Process auth events one at a time to prevent race conditions
+    const processAuthEventQueue = async () => {
+      if (!isMounted || isProcessingAuthEvents || authStateEventQueue.length === 0) {
+        return;
+      }
+      
+      isProcessingAuthEvents = true;
+      const { event, session } = authStateEventQueue.shift()!;
+      
+      console.log(`[useAuthInitialization] Processing auth event: ${event}`);
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        console.log(`[useAuthInitialization] Auth event processed, fetching profile for: ${session.user.id}`);
+        setIsProfileLoading(true);
+        
+        try {
+          await fetchProfile(session.user.id);
+        } catch (err) {
+          console.error("[useAuthInitialization] Error in fetchProfile during queue processing:", err);
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      } else {
+        setIsLoading(false);
+      }
+      
+      isProcessingAuthEvents = false;
+      
+      // Process next event if available
+      if (authStateEventQueue.length > 0) {
+        setTimeout(processAuthEventQueue, 0);
+      }
+    };
+    
     // Create a function to handle auth state changes to prevent race conditions
     const handleAuthStateChange = (event: string, currentSession: Session | null) => {
       if (!isMounted) return;
       
-      console.log(`[useAuthInitialization] Auth state changed: ${event}`);
+      console.log(`[useAuthInitialization] Auth event: ${event}, user: ${currentSession?.user?.email || "none"}`);
       
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      // Add event to queue
+      authStateEventQueue.push({ event, session: currentSession });
       
-      if (currentSession?.user) {
-        // Set a flag to avoid double fetching and schedule profile fetch
-        console.log(`[useAuthInitialization] Auth state changed, scheduling profile fetch for user: ${currentSession.user.id}`);
-        setIsProfileLoading(true);
-        
-        // Use setTimeout to prevent deadlock
-        setTimeout(() => {
-          if (isMounted) {
-            fetchProfile(currentSession.user.id).catch(err => {
-              console.error("[useAuthInitialization] Error in fetchProfile during auth state change:", err);
-              setIsLoading(false);
-            });
-          }
-        }, 0);
-      } else {
-        setIsLoading(false);
+      // Start processing if not already processing
+      if (!isProcessingAuthEvents) {
+        processAuthEventQueue();
       }
     };
 
     // Set up auth state listener FIRST to prevent missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log(`[useAuthInitialization] Auth event: ${event}, user: ${currentSession?.user?.email || "none"}`);
         handleAuthStateChange(event, currentSession);
       }
     );
@@ -81,15 +110,14 @@ export function useAuthInitialization({
           
           if (expiresAt && expiresAt < now + 300) { // Less than 5 minutes until expiry
             console.log("[useAuthInitialization] Session close to expiry, refreshing");
-            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+            const refreshedSession = await refreshSession();
             
-            if (refreshError) {
-              console.error("[useAuthInitialization] Error refreshing session:", refreshError);
-              // Continue with existing session
-            } else if (refreshData?.session) {
+            if (refreshedSession) {
               console.log("[useAuthInitialization] Session refreshed successfully");
-              handleAuthStateChange("REFRESHED", refreshData.session);
+              handleAuthStateChange("REFRESHED", refreshedSession);
               return; // handleAuthStateChange will take care of the rest
+            } else {
+              console.log("[useAuthInitialization] Session refresh failed or returned null");
             }
           }
         }

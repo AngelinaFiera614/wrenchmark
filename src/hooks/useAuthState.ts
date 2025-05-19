@@ -16,6 +16,7 @@ export function useAuthState() {
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(0);
   const [profileError, setProfileError] = useState<Error | null>(null);
+  const [adminStatus, setAdminStatus] = useState(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -38,6 +39,7 @@ export function useAuthState() {
               console.log("[useAuthState] Created new profile for user");
               console.log("[useAuthState] Admin status:", createdProfile.is_admin);
               setProfile(createdProfile);
+              setAdminStatus(createdProfile.is_admin || false);
               toast.success("Profile created successfully");
             } else {
               const error = new Error("Failed to create profile");
@@ -45,29 +47,34 @@ export function useAuthState() {
               setProfileError(error);
               toast.error("Failed to create user profile. Please try refreshing the page.");
               setProfile(null);
+              setAdminStatus(false);
             }
           } catch (error: any) {
             console.error("[useAuthState] Error creating profile:", error);
             setProfileError(error);
             toast.error("Failed to create user profile. Please try refreshing the page.");
             setProfile(null);
+            setAdminStatus(false);
           }
         }
       } else {
         console.log("[useAuthState] Found existing profile, admin status:", profileData.is_admin);
         setProfile(profileData);
+        setAdminStatus(profileData.is_admin || false);
       }
     } catch (error: any) {
       console.error("[useAuthState] Error fetching profile:", error);
       setProfileError(error);
       toast.error("Failed to load user profile. Please try refreshing the page.");
       setProfile(null);
+      setAdminStatus(false);
     } finally {
       setIsProfileLoading(false);
       setIsLoading(false);
     }
   }, [profileCreationAttempted]);
 
+  // Add debounce functionality to avoid too frequent refreshes
   const refreshProfile = useCallback(async () => {
     if (!user) {
       console.log("[useAuthState] Cannot refresh profile: no user");
@@ -104,15 +111,15 @@ export function useAuthState() {
     fetchProfile,
     setIsProfileLoading
   });
-
-  const adminStatus = profile?.is_admin || false;
   
   // Add explicit logging for admin status
   useEffect(() => {
     if (user && profile !== null) {
-      console.log(`[useAuthState] User ${user.id} admin status: ${adminStatus}`);
+      const isAdmin = profile?.is_admin || false;
+      console.log(`[useAuthState] User ${user.id} admin status: ${isAdmin}`);
+      setAdminStatus(isAdmin);
     }
-  }, [user, profile, adminStatus]);
+  }, [user, profile]);
 
   return {
     session,

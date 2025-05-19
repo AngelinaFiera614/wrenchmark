@@ -31,6 +31,7 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authComplete, setAuthComplete] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { signIn, signUp, session, user, isLoading, profile, refreshProfile } = useAuth();
@@ -46,13 +47,13 @@ const Auth = () => {
   // Effect to handle successful authentication
   useEffect(() => {
     // Check if we have all the pieces of a successful auth
-    if (session && user && profile && authComplete) {
+    if (session && user && authComplete) {
       console.log("Auth: User has complete authentication, redirecting");
       // Get the intended destination or default to home
       const from = location.state?.from?.pathname || "/";
       navigate(from, { replace: true });
     }
-  }, [session, user, profile, authComplete, location.state, navigate]);
+  }, [session, user, authComplete, location.state, navigate]);
 
   // If we're still loading auth state, show a loading spinner
   if (isLoading) {
@@ -87,27 +88,56 @@ const Auth = () => {
         console.log("Auth: Attempting sign in");
         await signIn(values.email, values.password);
         
-        // Wait a moment for auth state to update
-        setTimeout(async () => {
-          console.log("Auth: Sign in completed, refreshing session");
-          await refreshSession();
-          
-          // Wait another moment then refresh profile
-          setTimeout(async () => {
-            console.log("Auth: Refreshing profile after sign in");
-            await refreshProfile();
-            setAuthComplete(true);
-          }, 500);
-        }, 500);
+        setLoginAttempts(prev => prev + 1);
         
+        // Ensure we have a session and user before proceeding
+        const authCheckInterval = setInterval(async () => {
+          console.log("Auth: Checking auth status after login");
+          
+          // First refresh the session to ensure we have the latest
+          try {
+            await refreshSession();
+          } catch (error) {
+            console.error("Auth: Error refreshing session after login:", error);
+          }
+          
+          // Give browser a moment to update auth state
+          setTimeout(async () => {
+            if (user && session) {
+              console.log("Auth: User and session available, refreshing profile");
+              clearInterval(authCheckInterval);
+              
+              try {
+                await refreshProfile();
+                setAuthComplete(true);
+              } catch (error) {
+                console.error("Auth: Error refreshing profile after login:", error);
+              }
+            } else {
+              console.log("Auth: Still waiting for user/session after login");
+            }
+          }, 500);
+        }, 1000);
+        
+        // Clear interval after 10 seconds maximum
+        setTimeout(() => {
+          clearInterval(authCheckInterval);
+          if (!authComplete) {
+            console.log("Auth: Timeout waiting for auth completion");
+            toast.error("Login successful but session initialization timed out. Please try again.");
+            setIsSubmitting(false);
+          }
+        }, 10000);
       } else {
         console.log("Auth: Attempting sign up");
         await signUp(values.email, values.password);
         // Show success message but stay on page
         toast.success("Please check your email to verify your account!");
+        setIsSubmitting(false);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Authentication error:", error);
+      toast.error(error.message || "Authentication failed. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -171,6 +201,15 @@ const Auth = () => {
               </Button>
             </form>
           </Form>
+          
+          {loginAttempts > 0 && isLogin && (
+            <div className="mt-4 p-2 border border-yellow-500/20 rounded bg-yellow-500/10">
+              <p className="text-xs text-yellow-500">
+                Tip: If you're having trouble accessing admin pages after login, try clearing your browser cache 
+                and cookies, then log in again.
+              </p>
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-muted-foreground text-center">
@@ -183,6 +222,6 @@ const Auth = () => {
       </Card>
     </div>
   );
-};
+}
 
 export default Auth;
