@@ -14,6 +14,7 @@ export function useAuthState() {
   const [isLoading, setIsLoading] = useState(true);
   const [profileCreationAttempted, setProfileCreationAttempted] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(0);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -32,6 +33,7 @@ export function useAuthState() {
             
             if (createdProfile) {
               console.log("Created new profile for user");
+              console.log("Admin status:", createdProfile.is_admin);
               setProfile(createdProfile);
               toast.success("Profile created successfully");
             } else {
@@ -46,7 +48,7 @@ export function useAuthState() {
           }
         }
       } else {
-        console.log("Admin status:", profileData.is_admin);
+        console.log("Found existing profile, admin status:", profileData.is_admin);
         setProfile(profileData);
       }
     } catch (error) {
@@ -61,10 +63,20 @@ export function useAuthState() {
 
   const refreshProfile = useCallback(async () => {
     if (!user) return;
+    
+    // Prevent too frequent refreshes (e.g., within 2 seconds)
+    const now = Date.now();
+    if (now - lastRefreshTime < 2000) {
+      console.log("Skipping refresh profile - too soon after last refresh");
+      return;
+    }
+    
+    setLastRefreshTime(now);
+    console.log("Refreshing profile for user:", user.id);
     setIsProfileLoading(true);
     setProfileCreationAttempted(false); // Reset this flag to allow re-creation attempt
     await fetchProfile(user.id);
-  }, [user, fetchProfile]);
+  }, [user, fetchProfile, lastRefreshTime]);
 
   // Use the extracted authentication initialization logic
   useAuthInitialization({
@@ -80,7 +92,7 @@ export function useAuthState() {
     user,
     profile,
     isAdmin: profile?.is_admin || false,
-    isLoading,
+    isLoading: isLoading || isProfileLoading,
     isProfileLoading,
     setProfile,
     refreshProfile,

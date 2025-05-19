@@ -32,6 +32,7 @@ export function useAuthInitialization({
       
       if (currentSession?.user) {
         // Use setTimeout to prevent deadlock and set a flag to avoid double fetching
+        console.log("Auth state changed, scheduling profile fetch for user:", currentSession.user.id);
         setIsProfileLoading(true);
         setTimeout(() => {
           if (isMounted) {

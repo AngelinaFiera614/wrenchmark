@@ -14,16 +14,20 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
   const { user, isAdmin, profile, isLoading } = useAuth();
   const location = useLocation();
   
-  // Add logging to help diagnose issues
+  // Enhanced logging to diagnose issues
   useEffect(() => {
     console.log("ProtectedRoute - Auth state:", { 
       isLoading, 
-      user: user ? "exists" : "null",
-      profile: profile ? "exists" : "null",
+      user: user ? user.id : "null",
+      profile: profile ? `exists (admin: ${profile.is_admin})` : "null",
       isAdmin,
       requireAdmin,
       path: location.pathname 
     });
+    
+    if (requireAdmin && !isAdmin && user) {
+      console.warn("User is authenticated but doesn't have admin privileges");
+    }
   }, [isLoading, user, profile, isAdmin, requireAdmin, location.pathname]);
 
   // Try to create profile if user exists but profile doesn't
@@ -35,8 +39,6 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
           const createdProfile = await createProfileIfNotExists(user.id);
           if (createdProfile) {
             console.log("ProtectedRoute: Successfully created profile");
-            // The auth context will update the profile state via onAuthStateChange
-            // so we don't need to do anything else here
           } else {
             console.error("ProtectedRoute: Failed to create profile");
             toast.error("Failed to create user profile. Please try refreshing the page.");
@@ -62,22 +64,21 @@ const ProtectedRoute = ({ requireAdmin = false }: ProtectedRouteProps) => {
     );
   }
 
+  // If not logged in at all, redirect to auth
   if (!user) {
     console.log("ProtectedRoute: User not authenticated, redirecting to auth page");
-    // Save the location they tried to access for redirecting after login
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // Try to proceed even if profile doesn't exist yet, as we're attempting to create it
+  // If admin access is required but user is not an admin
   if (requireAdmin && !isAdmin) {
-    // If admin access is required but user is not an admin
     console.log("ProtectedRoute: User not admin, access denied");
     toast.error("You don't have permission to access this area");
     return <Navigate to="/" replace />;
   }
 
   // If user is authenticated (and is admin if required), render the protected content
-  console.log("ProtectedRoute: Access granted");
+  console.log("ProtectedRoute: Access granted to path:", location.pathname);
   return <Outlet />;
 };
 

@@ -5,34 +5,59 @@ import { AdminHeader } from "./AdminHeader";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createProfileIfNotExists } from "@/services/profileService";
 
 const AdminLayout = () => {
-  const { isLoading, user, profile, isAdmin } = useAuth();
+  const { isLoading, user, profile, isAdmin, refreshProfile } = useAuth();
+  const [isVerifying, setIsVerifying] = useState(true);
   
-  // Try to create profile if user exists but profile doesn't
+  // Enhanced verification for admin access
   useEffect(() => {
-    const ensureProfile = async () => {
-      if (user && !profile && !isLoading) {
-        console.log("AdminLayout: User exists but profile doesn't, attempting to create profile");
+    const verifyAdminAccess = async () => {
+      console.log("AdminLayout: Verifying admin access", {
+        isLoading,
+        user: user ? "exists" : "null",
+        profile: profile ? "exists" : "null",
+        isAdmin,
+      });
+      
+      // If auth is still loading, wait for it
+      if (isLoading) return;
+      
+      // If no user, we'll redirect (handled below)
+      if (!user) {
+        setIsVerifying(false);
+        return;
+      }
+      
+      // If no profile, try to create one
+      if (!profile) {
         try {
+          console.log("AdminLayout: Creating profile for user");
           const createdProfile = await createProfileIfNotExists(user.id);
-          if (!createdProfile) {
+          if (createdProfile) {
+            console.log("AdminLayout: Profile created, refreshing profile data");
+            await refreshProfile();
+          } else {
             console.error("AdminLayout: Failed to create profile");
-            toast.error("Failed to create user profile. Please try refreshing the page.");
           }
         } catch (error) {
-          console.error("AdminLayout: Error creating profile:", error);
+          console.error("AdminLayout: Error in profile creation:", error);
         }
+      } else {
+        // We have a profile, verify it has admin flag
+        console.log("AdminLayout: User has profile, admin status:", profile.is_admin);
       }
+      
+      setIsVerifying(false);
     };
-
-    ensureProfile();
-  }, [user, profile, isLoading]);
+    
+    verifyAdminAccess();
+  }, [isLoading, user, profile, isAdmin, refreshProfile]);
   
-  // Only show loading state if auth is still loading
-  if (isLoading) {
+  // Show loading while either auth is loading or we're verifying admin
+  if (isLoading || isVerifying) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
@@ -43,7 +68,7 @@ const AdminLayout = () => {
     );
   }
 
-  // Double-check admin status even though ProtectedRoute should have handled this
+  // Double-check user and admin status
   if (!user) {
     console.log("AdminLayout: No user found, redirecting");
     toast.error("Authentication required to access admin area");

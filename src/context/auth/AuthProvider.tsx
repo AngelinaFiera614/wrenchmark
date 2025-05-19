@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import { useAuthState } from "@/hooks/useAuthState";
-import { signIn, signUp, signOut, updateProfileData } from "@/services/authService";
+import { signIn, signUp, signOut, updateProfileData, refreshSession } from "@/services/authService";
 import type { Profile } from "@/services/profileService";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -15,6 +15,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile,
     refreshProfile,
   } = useAuthState();
+
+  // Periodically refresh session to prevent expiration
+  useEffect(() => {
+    if (!session) return;
+    
+    const intervalId = setInterval(async () => {
+      console.log("Refreshing auth session");
+      try {
+        await refreshSession();
+      } catch (error) {
+        console.error("Error refreshing session:", error);
+      }
+    }, 10 * 60 * 1000); // Refresh every 10 minutes
+    
+    return () => clearInterval(intervalId);
+  }, [session]);
 
   const handleSignIn = async (email: string, password: string) => {
     try {

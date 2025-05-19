@@ -99,3 +99,19 @@ export async function fetchCurrentSession() {
     return null;
   }
 }
+
+// Add a function to refresh auth session
+export async function refreshSession() {
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.error("Error refreshing session:", error);
+      return null;
+    }
+    console.log("Session refreshed successfully");
+    return data.session;
+  } catch (error) {
+    console.error("Error in refreshSession:", error);
+    return null;
+  }
+}
