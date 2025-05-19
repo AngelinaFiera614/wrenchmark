@@ -30,10 +30,10 @@ export default function ComparisonPerformance({
             <div key={motorcycle.id} className="bg-muted/30 border border-border rounded-lg p-4">
               <h3 className="text-lg font-medium">{motorcycle.model || motorcycle.id}</h3>
               <div className="mt-2 text-sm">
-                <p>Power: {motorcycle.details?.power || 'N/A'}</p>
-                <p>Torque: {motorcycle.details?.torque || 'N/A'}</p>
-                <p>Top Speed: {motorcycle.details?.topSpeed || 'N/A'}</p>
-                <p>0-60 mph: {motorcycle.details?.acceleration || 'N/A'}</p>
+                <p>Power: {(motorcycle as any)?.details?.power || 'N/A'}</p>
+                <p>Torque: {(motorcycle as any)?.details?.torque || 'N/A'}</p>
+                <p>Top Speed: {(motorcycle as any)?.details?.topSpeed || 'N/A'}</p>
+                <p>0-60 mph: {(motorcycle as any)?.details?.acceleration || 'N/A'}</p>
               </div>
             </div>
           ))}

@@ -34,7 +34,7 @@ export default function ComparisonOverview({
             <div key={motorcycle.id} className="bg-muted/30 border border-border rounded-lg p-4">
               <h3 className="text-lg font-medium">{motorcycle.model || motorcycle.id}</h3>
               <div className="mt-2 text-sm text-muted-foreground">
-                <p>{motorcycle.details?.description || 'No description available'}</p>
+                <p>{(motorcycle as any)?.details?.description || 'No description available'}</p>
               </div>
             </div>
           ))}
@@ -51,7 +51,7 @@ export default function ComparisonOverview({
               <div key={model.id} className="bg-muted/30 border border-border rounded-lg p-4">
                 <h3 className="text-lg font-medium">{model.name}</h3>
                 <div className="mt-2 text-sm text-muted-foreground">
-                  <p>{selectedYear?.description || model.description || 'No description available'}</p>
+                  <p>{selectedYear?.description || (model as any)?.description || 'No description available'}</p>
                   {selectedConfig && (
                     <p className="mt-2 text-xs text-accent-teal">
                       {selectedConfig.name} configuration
