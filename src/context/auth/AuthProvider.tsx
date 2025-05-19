@@ -7,7 +7,6 @@ import {
   signUp, 
   signOut, 
   updateProfileData, 
-  refreshSession, 
   verifyAdminStatus, 
   forceAdminVerification 
 } from "@/services/auth";
@@ -29,85 +28,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     forceVerifyAdmin
   } = useAuthState();
 
-  // Immediately refresh session on initial render with a debounce mechanism
+  // Only verify admin status separately from profile if we have a user and
+  // haven't verified admin status yet
   useEffect(() => {
-    let didCancel = false;
-    let refreshAttempts = 0;
-    const MAX_REFRESH_ATTEMPTS = 2;
+    if (!user || isAdminVerified || adminVerificationState !== 'pending') return;
     
-    const initialRefresh = async () => {
-      if (didCancel || refreshAttempts >= MAX_REFRESH_ATTEMPTS) return;
-      
-      refreshAttempts++;
-      console.log(`[AuthProvider] Performing session refresh (attempt ${refreshAttempts}/${MAX_REFRESH_ATTEMPTS})`);
-      
-      try {
-        await refreshSession();
-      } catch (error) {
-        console.error("[AuthProvider] Error refreshing session on init:", error);
-      }
-    };
-    
-    const timeoutId = setTimeout(initialRefresh, 500); // Small delay to let auth initialize first
-    
-    return () => {
-      didCancel = true;
-      clearTimeout(timeoutId);
-    };
-  }, []);
-
-  // Periodically refresh session to prevent expiration using an adaptive interval
-  useEffect(() => {
-    if (!session) return;
-    
-    console.log("[AuthProvider] Setting up session refresh interval");
-    
-    // Calculate when the session will expire
-    const expiresAt = session.expires_at;
-    const now = Math.floor(Date.now() / 1000);
-    const timeUntilExpiry = expiresAt - now;
-    
-    // Refresh at least 5 minutes before expiry, but not more than every 10 minutes
-    // This prevents refreshing too often but ensures we refresh before expiry
-    const refreshInterval = Math.min(
-      Math.max(timeUntilExpiry - 300, 300), // At least 5 min before expiry but min 5 min interval
-      600 // Max 10 minutes
-    ) * 1000;
-    
-    console.log(`[AuthProvider] Session refresh interval set to ${refreshInterval/1000} seconds`);
-    
-    const intervalId = setInterval(async () => {
-      console.log("[AuthProvider] Refreshing auth session");
-      try {
-        await refreshSession();
-      } catch (error) {
-        console.error("[AuthProvider] Error refreshing session:", error);
-      }
-    }, refreshInterval);
-    
-    return () => {
-      console.log("[AuthProvider] Clearing session refresh interval");
-      clearInterval(intervalId);
-    };
-  }, [session]);
-
-  // Verify admin status separately from profile, with improved stability
-  useEffect(() => {
-    // Only run admin verification if we have a user and haven't verified admin status yet
-    if (!user || isAdminVerified) return;
-    
-    // Avoid race conditions by using a deterministic source of admin status
+    // Use profile as source of truth when available
     if (profile?.is_admin === true) {
       console.log("[AuthProvider] Admin status verified from profile");
       setIsAdminVerified(true);
       return;
     }
 
-    // Only proceed with direct admin check if profile exists but doesn't have admin
-    // or if we haven't verified status yet
+    // Verify admin status if profile doesn't indicate admin status
     const checkAdminStatus = async () => {
       try {
         console.log("[AuthProvider] Performing direct admin verification");
+        // Avoid race conditions by adding a small delay
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
         const isUserAdmin = await verifyAdminStatus(user.id);
         
         if (isUserAdmin) {
@@ -122,17 +61,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     
-    const timeoutId = setTimeout(checkAdminStatus, 300);
+    // Add a delay before verification to reduce race conditions
+    const timeoutId = setTimeout(checkAdminStatus, 600);
     return () => clearTimeout(timeoutId);
   }, [user, profile, isAdminVerified, setIsAdminVerified, adminVerificationState]);
-
-  // Force profile refresh when user or session changes, with debouncing
-  useEffect(() => {
-    if (user && session) {
-      console.log("[AuthProvider] User or session changed, refreshing profile");
-      refreshProfile();
-    }
-  }, [user?.id, session?.access_token, refreshProfile]);
 
   const handleSignIn = async (email: string, password: string) => {
     try {

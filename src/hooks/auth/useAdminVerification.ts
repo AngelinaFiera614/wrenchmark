@@ -15,8 +15,10 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
   
   // Track admin verification attempts to prevent infinite loops
   const adminVerificationAttempts = useRef(0);
+  const lastVerificationTime = useRef(0);
+  const verificationTimeoutId = useRef<NodeJS.Timeout | null>(null);
 
-  // Update admin status based on profile
+  // Update admin status based on profile with debouncing
   useEffect(() => {
     if (user && profile !== null) {
       const isAdmin = profile?.is_admin || false;
@@ -32,55 +34,42 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
     }
   }, [user, profile, isAdminVerified]);
   
-  // Verify admin status separately from profile, with improved stability
+  // Reset verification state when user changes
   useEffect(() => {
-    // Only run admin verification if we have a user and haven't verified admin status yet
-    if (!user || isAdminVerified) return;
-    
-    // Avoid race conditions by using a deterministic source of admin status
-    if (profile?.is_admin === true) {
-      console.log("[useAdminVerification] Admin status verified from profile");
-      setIsAdminVerified(true);
-      return;
+    if (user === null) {
+      setAdminVerificationState('unknown');
+      setIsAdminVerified(false);
+      setAdminStatus(false);
+      adminVerificationAttempts.current = 0;
+    } else if (adminVerificationState === 'unknown') {
+      setAdminVerificationState('pending');
+      adminVerificationAttempts.current = 0;
     }
-
-    // Only proceed with direct admin check if profile exists but doesn't have admin
-    // or if we haven't verified status yet
-    const checkAdminStatus = async () => {
-      try {
-        console.log("[useAdminVerification] Performing direct admin verification");
-        const isUserAdmin = await verifyAdminStatus(user.id);
-        
-        if (isUserAdmin) {
-          console.log("[useAdminVerification] User confirmed as admin via direct check");
-          setIsAdminVerified(true);
-          setAdminStatus(true);
-          setAdminVerificationState('verified');
-        } else {
-          console.log("[useAdminVerification] User is not admin via direct check");
-          setIsAdminVerified(false);
-          setAdminStatus(false);
-          setAdminVerificationState('failed');
-        }
-      } catch (error) {
-        console.error("[useAdminVerification] Error during admin verification:", error);
-        setAdminVerificationState('failed');
-      }
-    };
-    
-    const timeoutId = setTimeout(checkAdminStatus, 300);
-    return () => clearTimeout(timeoutId);
-  }, [user, profile, isAdminVerified, adminVerificationState]);
+  }, [user, adminVerificationState]);
   
-  // Function to force admin verification
+  // Function to force admin verification with rate limiting
   const forceVerifyAdmin = useCallback(async () => {
     if (!user) {
       console.log("[useAdminVerification] Cannot verify admin status: no user");
       return false;
     }
     
+    const now = Date.now();
+    
+    // Rate limit: don't allow verification more than once every 2 seconds
+    if (now - lastVerificationTime.current < 2000) {
+      console.log("[useAdminVerification] Verification throttled, try again later");
+      return isAdminVerified; // Return current state
+    }
+    
+    lastVerificationTime.current = now;
     console.log("[useAdminVerification] Forcing admin verification");
     setAdminVerificationState('pending');
+    
+    // Clear any pending verification
+    if (verificationTimeoutId.current) {
+      clearTimeout(verificationTimeoutId.current);
+    }
     
     try {
       const isAdmin = await forceAdminVerification(user.id);
@@ -95,7 +84,7 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
       setAdminVerificationState('failed');
       return false;
     }
-  }, [user]);
+  }, [user, isAdminVerified]);
 
   return {
     adminStatus,

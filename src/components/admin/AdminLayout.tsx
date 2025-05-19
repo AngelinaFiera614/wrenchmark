@@ -8,48 +8,25 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 
 const AdminLayout = () => {
-  const { isLoading, user, isAdmin, isAdminVerified, adminVerificationState, forceAdminVerification } = useAuth();
+  const { user, isAdmin, isAdminVerified, adminVerificationState, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  // Verify admin status once when component mounts
+  // If auth state indicates a problem with admin access, redirect to home
   useEffect(() => {
-    // Skip if already verified or no user
-    if (isAdminVerified || !user) return;
-    
-    const verifyAdminStatus = async () => {
-      try {
-        console.log("[AdminLayout] Verifying admin status");
-        const isAdminUser = await forceAdminVerification();
-        
-        if (!isAdminUser) {
-          console.log("[AdminLayout] Admin verification failed");
-          toast.error("You don't have permission to access the admin area");
-          navigate("/", { replace: true });
-        } else {
-          console.log("[AdminLayout] Admin verification succeeded");
-        }
-      } catch (error) {
-        console.error("[AdminLayout] Error verifying admin status:", error);
-        toast.error("Error verifying permissions");
-        navigate("/", { replace: true });
-      }
-    };
-
-    // Add a small delay before verification to let auth initialize
-    const timeoutId = setTimeout(verifyAdminStatus, 100);
-    return () => clearTimeout(timeoutId);
-  }, [user, isAdminVerified, navigate, forceAdminVerification]);
+    if (!isLoading && user && adminVerificationState === 'failed') {
+      console.log("[AdminLayout] Admin verification failed, redirecting");
+      toast.error("You don't have permission to access the admin area");
+      navigate("/", { replace: true });
+    }
+  }, [adminVerificationState, isLoading, user, navigate]);
   
-  // Show loading while auth or admin verification is in progress
-  if (isLoading || (adminVerificationState === 'pending')) {
+  // Show loading while auth verification is in progress
+  if (isLoading || adminVerificationState === 'pending') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
           <Loader className="h-10 w-10 animate-spin text-accent-teal" />
           <p className="text-muted-foreground">Loading admin portal...</p>
-          <p className="text-xs text-muted-foreground">
-            Verifying admin permissions...
-          </p>
         </div>
       </div>
     );

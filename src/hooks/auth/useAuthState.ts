@@ -14,6 +14,7 @@ export function useAuthState() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionRefreshAttempts, setSessionRefreshAttempts] = useState(0);
 
   // Use the extracted profile management hook
   const {
@@ -46,17 +47,16 @@ export function useAuthState() {
     setAdminVerificationState
   });
 
-  // Immediately refresh session on initial render with a debounce mechanism
+  // Refresh session only once on initial render with improved debouncing
   useEffect(() => {
-    let didCancel = false;
-    let refreshAttempts = 0;
-    const MAX_REFRESH_ATTEMPTS = 2;
+    if (sessionRefreshAttempts > 0) return;
     
+    let didCancel = false;
     const initialRefresh = async () => {
-      if (didCancel || refreshAttempts >= MAX_REFRESH_ATTEMPTS) return;
+      if (didCancel) return;
       
-      refreshAttempts++;
-      console.log(`[useAuthState] Performing session refresh (attempt ${refreshAttempts}/${MAX_REFRESH_ATTEMPTS})`);
+      setSessionRefreshAttempts(prev => prev + 1);
+      console.log(`[useAuthState] Performing initial session refresh`);
       
       try {
         await refreshSession();
@@ -65,15 +65,16 @@ export function useAuthState() {
       }
     };
     
-    const timeoutId = setTimeout(initialRefresh, 500); // Small delay to let auth initialize first
+    // Add a longer delay to let auth initialize first
+    const timeoutId = setTimeout(initialRefresh, 800);
     
     return () => {
       didCancel = true;
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [sessionRefreshAttempts]);
 
-  // Periodically refresh session to prevent expiration using an adaptive interval
+  // Use a more conservative approach for session refresh interval
   useEffect(() => {
     if (!session) return;
     
@@ -84,11 +85,11 @@ export function useAuthState() {
     const now = Math.floor(Date.now() / 1000);
     const timeUntilExpiry = expiresAt - now;
     
-    // Refresh at least 5 minutes before expiry, but not more than every 10 minutes
-    // This prevents refreshing too often but ensures we refresh before expiry
+    // Set refresh interval to be more conservative
+    // At least 10 minutes before expiry, but not more than every 20 minutes
     const refreshInterval = Math.min(
-      Math.max(timeUntilExpiry - 300, 300), // At least 5 min before expiry but min 5 min interval
-      600 // Max 10 minutes
+      Math.max(timeUntilExpiry - 600, 600), // At least 10 min before expiry but min 10 min interval
+      1200 // Max 20 minutes
     ) * 1000;
     
     console.log(`[useAuthState] Session refresh interval set to ${refreshInterval/1000} seconds`);
@@ -108,12 +109,24 @@ export function useAuthState() {
     };
   }, [session]);
 
-  // Force profile refresh when user or session changes, with debouncing
+  // Refresh profile when user or session changes, with improved debouncing
   useEffect(() => {
-    if (user && session) {
+    if (!user || !session) return;
+    
+    let isMounted = true;
+    
+    const refreshUserProfile = () => {
       console.log("[useAuthState] User or session changed, refreshing profile");
-      refreshProfile();
-    }
+      if (isMounted) refreshProfile();
+    };
+    
+    // Delay profile refresh to avoid race conditions
+    const timeoutId = setTimeout(refreshUserProfile, 500);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [user?.id, session?.access_token, refreshProfile]);
 
   return {

@@ -18,7 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
-import { refreshSession } from "@/services/authService";
+import { refreshSession } from "@/services/auth";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -31,10 +31,12 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authComplete, setAuthComplete] = useState(false);
-  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [redirectAttempts, setRedirectAttempts] = useState(0);
+  const [lastRedirectTime, setLastRedirectTime] = useState(0);
+  
   const location = useLocation();
   const navigate = useNavigate();
-  const { signIn, signUp, session, user, isLoading, profile, refreshProfile } = useAuth();
+  const { signIn, signUp, session, user, isLoading, profile } = useAuth();
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -44,16 +46,29 @@ const Auth = () => {
     },
   });
 
-  // Effect to handle successful authentication
+  // Effect to handle successful authentication with protection against redirect loops
   useEffect(() => {
-    // Check if we have all the pieces of a successful auth
-    if (session && user && authComplete) {
-      console.log("Auth: User has complete authentication, redirecting");
-      // Get the intended destination or default to home
-      const from = location.state?.from?.pathname || "/";
-      navigate(from, { replace: true });
+    // Skip if we're still loading or authentication is not complete
+    if (isLoading || !session || !user || !authComplete) return;
+    
+    // Get the intended destination or default to home
+    const from = location.state?.from?.pathname || "/";
+    const now = Date.now();
+    
+    // Check if we've redirected too many times in a short period
+    if (redirectAttempts > 5 && now - lastRedirectTime < 3000) {
+      console.log("Auth: Too many redirect attempts, stopping redirect loop");
+      toast.error("Navigation error detected. Please try refreshing the page.");
+      return;
     }
-  }, [session, user, authComplete, location.state, navigate]);
+    
+    // Update redirect tracking
+    setRedirectAttempts(prev => prev + 1);
+    setLastRedirectTime(now);
+    
+    console.log("Auth: User has complete authentication, redirecting to:", from);
+    navigate(from, { replace: true });
+  }, [session, user, authComplete, location.state, navigate, isLoading, redirectAttempts, lastRedirectTime]);
 
   // If we're still loading auth state, show a loading spinner
   if (isLoading) {
@@ -67,10 +82,44 @@ const Auth = () => {
     );
   }
   
-  // If already authenticated (all pieces are present), redirect
+  // If already authenticated (all pieces are present), mark as complete for redirect
   if (session && user && profile && !authComplete) {
     console.log("Auth: Already authenticated, will redirect");
     setAuthComplete(true);
+  }
+
+  const onSubmit = async (values: AuthFormValues) => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      if (isLogin) {
+        console.log("Auth: Attempting sign in");
+        await signIn(values.email, values.password);
+        
+        // Mark as complete to trigger redirect
+        setAuthComplete(true);
+      } else {
+        console.log("Auth: Attempting sign up");
+        await signUp(values.email, values.password);
+        // Show success message but stay on page
+        toast.success("Please check your email to verify your account!");
+      }
+    } catch (error: any) {
+      console.error("Authentication error:", error);
+      toast.error(error.message || "Authentication failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleAuthMode = () => {
+    setIsLogin(!isLogin);
+    form.reset();
+  };
+
+  // Show redirect message when authentication is complete
+  if (authComplete && !isLoading && user && session) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
         <div className="flex flex-col items-center space-y-4">
@@ -80,72 +129,6 @@ const Auth = () => {
       </div>
     );
   }
-
-  const onSubmit = async (values: AuthFormValues) => {
-    setIsSubmitting(true);
-    try {
-      if (isLogin) {
-        console.log("Auth: Attempting sign in");
-        await signIn(values.email, values.password);
-        
-        setLoginAttempts(prev => prev + 1);
-        
-        // Ensure we have a session and user before proceeding
-        const authCheckInterval = setInterval(async () => {
-          console.log("Auth: Checking auth status after login");
-          
-          // First refresh the session to ensure we have the latest
-          try {
-            await refreshSession();
-          } catch (error) {
-            console.error("Auth: Error refreshing session after login:", error);
-          }
-          
-          // Give browser a moment to update auth state
-          setTimeout(async () => {
-            if (user && session) {
-              console.log("Auth: User and session available, refreshing profile");
-              clearInterval(authCheckInterval);
-              
-              try {
-                await refreshProfile();
-                setAuthComplete(true);
-              } catch (error) {
-                console.error("Auth: Error refreshing profile after login:", error);
-              }
-            } else {
-              console.log("Auth: Still waiting for user/session after login");
-            }
-          }, 500);
-        }, 1000);
-        
-        // Clear interval after 10 seconds maximum
-        setTimeout(() => {
-          clearInterval(authCheckInterval);
-          if (!authComplete) {
-            console.log("Auth: Timeout waiting for auth completion");
-            toast.error("Login successful but session initialization timed out. Please try again.");
-            setIsSubmitting(false);
-          }
-        }, 10000);
-      } else {
-        console.log("Auth: Attempting sign up");
-        await signUp(values.email, values.password);
-        // Show success message but stay on page
-        toast.success("Please check your email to verify your account!");
-        setIsSubmitting(false);
-      }
-    } catch (error: any) {
-      console.error("Authentication error:", error);
-      toast.error(error.message || "Authentication failed. Please try again.");
-      setIsSubmitting(false);
-    }
-  };
-
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    form.reset();
-  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background px-4 py-12">
@@ -201,20 +184,11 @@ const Auth = () => {
               </Button>
             </form>
           </Form>
-          
-          {loginAttempts > 0 && isLogin && (
-            <div className="mt-4 p-2 border border-yellow-500/20 rounded bg-yellow-500/10">
-              <p className="text-xs text-yellow-500">
-                Tip: If you're having trouble accessing admin pages after login, try clearing your browser cache 
-                and cookies, then log in again.
-              </p>
-            </div>
-          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-muted-foreground text-center">
             {isLogin ? "Don't have an account?" : "Already have an account?"}
-            <Button variant="link" className="ml-1 p-0" onClick={toggleAuthMode}>
+            <Button variant="link" className="ml-1 p-0" onClick={toggleAuthMode} disabled={isSubmitting || authComplete}>
               {isLogin ? "Sign Up" : "Sign In"}
             </Button>
           </div>

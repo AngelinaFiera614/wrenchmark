@@ -3,14 +3,14 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionRefreshState } from "./types";
 
-// Session refresh state with rate limiting protection
+// Session refresh state with improved rate limiting protection
 const sessionRefreshState: SessionRefreshState = {
   lastRefreshTime: 0,
   refreshPromise: null
 };
 
 // Constants for session refresh
-const REFRESH_COOLDOWN = 5000; // 5 seconds minimum between refreshes
+const REFRESH_COOLDOWN = 10000; // 10 seconds minimum between refreshes
 
 export async function fetchCurrentSession(): Promise<Session | null> {
   try {
@@ -80,10 +80,10 @@ export async function refreshSession(): Promise<Session | null> {
         return await fetchCurrentSession(); // Fallback to current session
       })
       .finally(() => {
-        // Clear the cached promise after 1 second to allow future refreshes
+        // Clear the cached promise after 2 seconds to allow future refreshes
         setTimeout(() => {
           sessionRefreshState.refreshPromise = null;
-        }, 1000);
+        }, 2000);
       });
     
     return await sessionRefreshState.refreshPromise;
