@@ -25,7 +25,7 @@ export function AdminMotorcycleGrid() {
   } = useMotorcycleData();
 
   // Load brands for dropdown
-  const { brands, isBrandsError } = useAdminBrands();
+  const { brands, isBrandsError, isBrandsLoading } = useAdminBrands();
 
   // Handle editable rows state and operations
   const {
@@ -77,6 +77,7 @@ export function AdminMotorcycleGrid() {
         editingRows={editingRows}
         errors={errors}
         brands={brands}
+        isBrandsLoading={isBrandsLoading}
         onEdit={handleEditRow}
         onSave={handleSaveRow}
         onCancel={handleCancelEditWrapper}

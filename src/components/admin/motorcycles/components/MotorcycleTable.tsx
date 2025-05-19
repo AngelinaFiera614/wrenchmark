@@ -1,13 +1,6 @@
 
 import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MotorcycleRow } from "./MotorcycleRow";
 import { MotorcycleTableProps } from "../types";
 
@@ -16,32 +9,33 @@ export const MotorcycleTable: React.FC<MotorcycleTableProps> = ({
   editingRows,
   errors,
   brands,
+  isBrandsLoading,
   onEdit,
   onSave,
   onCancel,
   onDelete,
   onOpenDetailedEditor,
-  onCellChange,
+  onCellChange
 }) => {
   return (
-    <div className="rounded-md border">
+    <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Year Start</TableHead>
-            <TableHead>Year End</TableHead>
             <TableHead>Model Name</TableHead>
             <TableHead>Brand</TableHead>
-            <TableHead>Description</TableHead>
+            <TableHead>Year Start</TableHead>
+            <TableHead>Year End</TableHead>
+            <TableHead className="w-1/4">Description</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {motorcycles.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="h-24 text-center">
-                No motorcycles found.
+                No motorcycles found
               </TableCell>
             </TableRow>
           ) : (
@@ -52,6 +46,7 @@ export const MotorcycleTable: React.FC<MotorcycleTableProps> = ({
                 editingRows={editingRows}
                 errors={errors}
                 brands={brands}
+                isBrandsLoading={isBrandsLoading}
                 onEdit={onEdit}
                 onSave={onSave}
                 onCancel={onCancel}

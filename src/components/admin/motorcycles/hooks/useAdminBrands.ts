@@ -6,7 +6,11 @@ import { getAllBrands } from "@/services/brandService";
 export const useAdminBrands = () => {
   const { toast } = useToast();
 
-  const { data: brands = [], isError: isBrandsError } = useQuery({
+  const { 
+    data: brands = [], 
+    isError: isBrandsError,
+    isLoading: isBrandsLoading 
+  } = useQuery({
     queryKey: ["admin-brands"],
     queryFn: getAllBrands,
     meta: {
@@ -21,5 +25,5 @@ export const useAdminBrands = () => {
     }
   });
 
-  return { brands, isBrandsError };
+  return { brands, isBrandsError, isBrandsLoading };
 };

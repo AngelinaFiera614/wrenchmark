@@ -18,7 +18,8 @@ export interface MotorcycleRowProps {
   motorcycle: MotorcycleGridItem;
   editingRows: Record<string, boolean>;
   errors: Record<string, Record<string, string>>;
-  brands: Brand[];
+  brands: Brand[] | undefined;
+  isBrandsLoading?: boolean; 
   onEdit: (id: string) => void;
   onSave: (id: string) => void;
   onCancel: (id: string) => void;
@@ -31,7 +32,8 @@ export interface MotorcycleTableProps {
   motorcycles: MotorcycleGridItem[];
   editingRows: Record<string, boolean>;
   errors: Record<string, Record<string, string>>;
-  brands: Brand[];
+  brands: Brand[] | undefined;
+  isBrandsLoading?: boolean;
   onEdit: (id: string) => void;
   onSave: (id: string) => void;
   onCancel: (id: string) => void;
