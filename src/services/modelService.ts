@@ -18,7 +18,8 @@ export const getAllMotorcycleModels = async (): Promise<MotorcycleModel[]> => {
       return [];
     }
     
-    return data as MotorcycleModel[];
+    // Use a more specific type assertion to ensure compatibility
+    return (data || []) as unknown as MotorcycleModel[];
   } catch (error) {
     console.error("Error in getAllMotorcycleModels:", error);
     return [];
@@ -54,7 +55,8 @@ export const getMotorcycleModelBySlug = async (slug: string): Promise<Motorcycle
       return null;
     }
     
-    return data as MotorcycleModel;
+    // Use a more specific type assertion to ensure compatibility
+    return data as unknown as MotorcycleModel;
   } catch (error) {
     console.error("Error in getMotorcycleModelBySlug:", error);
     return null;
@@ -87,7 +89,7 @@ export const createModelYear = async (
       return null;
     }
     
-    return data;
+    return data as ModelYear;
   } catch (error) {
     console.error("Error in createModelYear:", error);
     return null;
@@ -140,7 +142,7 @@ export const createConfiguration = async (
       return null;
     }
     
-    return data;
+    return data as Configuration;
   } catch (error) {
     console.error("Error in createConfiguration:", error);
     return null;
@@ -176,7 +178,8 @@ export const getModelsForComparison = async (slugs: string[]): Promise<Motorcycl
       return [];
     }
     
-    return (data || []) as MotorcycleModel[];
+    // Use a more specific type assertion to ensure compatibility
+    return (data || []) as unknown as MotorcycleModel[];
   } catch (error) {
     console.error("Error in getModelsForComparison:", error);
     return [];
