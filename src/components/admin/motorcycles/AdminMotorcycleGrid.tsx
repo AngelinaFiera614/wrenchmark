@@ -18,7 +18,7 @@ import { EditableTextCell } from "./cells/EditableTextCell";
 import { EditableNumberCell } from "./cells/EditableNumberCell";
 import { EditableBrandCell } from "./cells/EditableBrandCell";
 import { EditableStatusCell } from "./cells/EditableStatusCell";
-import { Brand, Motorcycle } from "@/types";
+import { Brand } from "@/types";
 
 type MotorcycleGridItem = {
   id: string;
@@ -149,7 +149,10 @@ export function AdminMotorcycleGrid() {
 
     try {
       // Prepare data for saving
-      const { brand_name, isDirty, is_new, ...saveData } = motorcycle;
+      const { brand_name, isDirty, is_new, year_end, ...saveData } = motorcycle;
+      
+      // Add slug field since it's required
+      const slugText = `${motorcycle.model_name}-${motorcycle.year_start}`.toLowerCase().replace(/\s+/g, '-');
       
       // Update existing or insert new
       let result;
@@ -159,6 +162,7 @@ export function AdminMotorcycleGrid() {
           .from("motorcycles")
           .insert({
             ...saveData,
+            slug: slugText,
             year: motorcycle.year_start, // Map to existing year field
           })
           .select();
@@ -168,6 +172,7 @@ export function AdminMotorcycleGrid() {
           .from("motorcycles")
           .update({
             ...saveData,
+            slug: slugText,
             year: motorcycle.year_start, // Map to existing year field
           })
           .eq("id", id)
