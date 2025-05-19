@@ -15,7 +15,6 @@ import AdminMotorcycles from './pages/admin/AdminMotorcycles';
 import AdminBrands from './pages/admin/AdminBrands';
 import AdminManuals from './pages/admin/AdminManuals';
 import AdminUsers from './pages/admin/AdminUsers';
-import ManualDetail from './pages/ManualDetail';
 import AdminMotorcycleGridPage from "./pages/admin/AdminMotorcycleGrid";
 
 function App() {
@@ -27,8 +26,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/motorcycles/:slug" element={<MotorcycleDetail />} />
         <Route path="/brands/:slug" element={<BrandDetail />} />
-        <Route path="/manuals/:id" element={<ManualDetail />} />
-
+        
         {/* Admin Routes - only accessible if isAdminVerified is true */}
         <Route
           path="/admin"

@@ -385,6 +385,7 @@ export type Database = {
           model_name: string
           seat_height_mm: number | null
           slug: string
+          status: string | null
           summary: string | null
           tags: string[] | null
           top_speed_kph: number | null
@@ -393,6 +394,7 @@ export type Database = {
           weight_kg: number | null
           wheelbase_mm: number | null
           year: number | null
+          year_end: number | null
         }
         Insert: {
           brand_id: string
@@ -409,6 +411,7 @@ export type Database = {
           model_name: string
           seat_height_mm?: number | null
           slug: string
+          status?: string | null
           summary?: string | null
           tags?: string[] | null
           top_speed_kph?: number | null
@@ -417,6 +420,7 @@ export type Database = {
           weight_kg?: number | null
           wheelbase_mm?: number | null
           year?: number | null
+          year_end?: number | null
         }
         Update: {
           brand_id?: string
@@ -433,6 +437,7 @@ export type Database = {
           model_name?: string
           seat_height_mm?: number | null
           slug?: string
+          status?: string | null
           summary?: string | null
           tags?: string[] | null
           top_speed_kph?: number | null
@@ -441,6 +446,7 @@ export type Database = {
           weight_kg?: number | null
           wheelbase_mm?: number | null
           year?: number | null
+          year_end?: number | null
         }
         Relationships: [
           {

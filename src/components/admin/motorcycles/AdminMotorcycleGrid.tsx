@@ -60,6 +60,7 @@ export function AdminMotorcycleGrid() {
           year,
           summary,
           status,
+          year_end,
           brands:brand_id (
             id,
             name
@@ -69,14 +70,24 @@ export function AdminMotorcycleGrid() {
 
       if (error) throw error;
 
+      if (!data) {
+        toast({
+          variant: "destructive",
+          title: "Failed to load motorcycles",
+          description: "No data was returned from the database.",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Transform data for the grid
-      const formattedData = data.map((item) => ({
+      const formattedData = data.map((item: any) => ({
         id: item.id,
         model_name: item.model_name,
         brand_id: item.brand_id,
         brand_name: item.brands?.name || "Unknown",
         year_start: item.year || undefined,
-        year_end: null,
+        year_end: item.year_end || null,
         description: item.summary || "", // Use summary instead of description
         status: item.status || "draft",
         isDirty: false,
@@ -148,35 +159,32 @@ export function AdminMotorcycleGrid() {
     }
 
     try {
-      // Prepare data for saving
-      const { brand_name, isDirty, is_new, year_end, ...saveData } = motorcycle;
-      
-      // Add slug field since it's required
       const slugText = `${motorcycle.model_name}-${motorcycle.year_start}`.toLowerCase().replace(/\s+/g, '-');
+      
+      // Prepare data for saving
+      const saveData = {
+        model_name: motorcycle.model_name,
+        brand_id: motorcycle.brand_id,
+        year: motorcycle.year_start,
+        summary: motorcycle.description,
+        status: motorcycle.status,
+        year_end: motorcycle.year_end,
+        slug: slugText,
+      };
       
       // Update existing or insert new
       let result;
-      if (is_new) {
+      if (motorcycle.is_new) {
         // Insert new motorcycle
         result = await supabase
           .from("motorcycles")
-          .insert({
-            ...saveData,
-            slug: slugText,
-            year: motorcycle.year_start, // Map to existing year field
-            summary: motorcycle.description, // Map description to summary field
-          })
+          .insert(saveData)
           .select();
       } else {
         // Update existing motorcycle
         result = await supabase
           .from("motorcycles")
-          .update({
-            ...saveData,
-            slug: slugText,
-            year: motorcycle.year_start, // Map to existing year field
-            summary: motorcycle.description, // Map description to summary field
-          })
+          .update(saveData)
           .eq("id", id)
           .select();
       }
@@ -184,12 +192,12 @@ export function AdminMotorcycleGrid() {
       if (result.error) throw result.error;
 
       toast({
-        title: is_new ? "Motorcycle Created" : "Changes Saved",
-        description: `${motorcycle.model_name} has been ${is_new ? "added" : "updated"}.`,
+        title: motorcycle.is_new ? "Motorcycle Created" : "Changes Saved",
+        description: `${motorcycle.model_name} has been ${motorcycle.is_new ? "added" : "updated"}.`,
       });
 
       // Update local state
-      if (is_new && result.data && result.data[0]) {
+      if (motorcycle.is_new && result.data && result.data[0]) {
         // Replace temporary ID with real one from database
         setMotorcycles(prev => 
           prev.map(m => m.id === id ? { 
