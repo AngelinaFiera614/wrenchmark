@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -11,10 +12,13 @@ import { getQuizForLesson, isLessonCompleted } from '@/services/lessonService';
 import CompleteLessonButton from '@/components/learning/CompleteLessonButton';
 import { useAuth } from '@/context/auth';
 import LessonGlossaryTerms from '@/components/learning/LessonGlossaryTerms';
+import { useStateByCode } from '@/hooks/useStateRules';
+import StateSelector from '@/components/learning/StateSelector';
 
 const LessonPage: React.FC = () => {
   const { courseSlug, lessonSlug } = useParams<{ courseSlug: string; lessonSlug: string }>();
   const [showQuiz, setShowQuiz] = useState(false);
+  const [selectedState, setSelectedState] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -66,6 +70,9 @@ const LessonPage: React.FC = () => {
     enabled: !!lesson?.id && !!user?.id
   });
 
+  // Get state information if available
+  const { state } = useStateByCode(selectedState || lesson?.state_code);
+
   // Wait for everything to load
   if (isLoadingCourse || isLoadingLesson) {
     return (
@@ -96,6 +103,22 @@ const LessonPage: React.FC = () => {
           <div className="lg:w-2/3">
             <h1 className="text-2xl font-bold mb-4">{lesson.title}</h1>
 
+            {/* State selector - only show for permit course */}
+            {course.slug === 'motorcycle-permit-essentials' && (
+              <div className="mb-6">
+                <StateSelector
+                  selectedState={selectedState || lesson.state_code}
+                  onStateChange={(stateCode) => setSelectedState(stateCode)}
+                  label="Select your state"
+                />
+                {selectedState && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Showing information specific to {state?.state_name || selectedState}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Show course glossary terms if available */}
             {lesson.glossary_terms && lesson.glossary_terms.length > 0 && (
               <LessonGlossaryTerms termSlugs={lesson.glossary_terms} />
@@ -113,6 +136,7 @@ const LessonPage: React.FC = () => {
                 <LessonContent 
                   content={lesson.content || ''} 
                   glossaryTermSlugs={lesson.glossary_terms || []}
+                  lessonId={lesson.id}
                 />
                 
                 {/* Complete lesson button */}

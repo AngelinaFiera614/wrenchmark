@@ -443,6 +443,7 @@ export type Database = {
           order: number
           published: boolean
           slug: string
+          state_code: string | null
           title: string
           updated_at: string
         }
@@ -455,6 +456,7 @@ export type Database = {
           order: number
           published?: boolean
           slug: string
+          state_code?: string | null
           title: string
           updated_at?: string
         }
@@ -467,6 +469,7 @@ export type Database = {
           order?: number
           published?: boolean
           slug?: string
+          state_code?: string | null
           title?: string
           updated_at?: string
         }
@@ -477,6 +480,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "courses"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lessons_state_code_fkey"
+            columns: ["state_code"]
+            isOneToOne: false
+            referencedRelation: "state_rules"
+            referencedColumns: ["state_code"]
           },
         ]
       }
@@ -1018,6 +1028,42 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      state_rules: {
+        Row: {
+          created_at: string
+          helmet_required: boolean
+          link_to_dmv: string | null
+          permit_age_min: number | null
+          road_test_required: boolean
+          special_rules: string | null
+          state_code: string
+          state_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          helmet_required?: boolean
+          link_to_dmv?: string | null
+          permit_age_min?: number | null
+          road_test_required?: boolean
+          special_rules?: string | null
+          state_code: string
+          state_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          helmet_required?: boolean
+          link_to_dmv?: string | null
+          permit_age_min?: number | null
+          road_test_required?: boolean
+          special_rules?: string | null
+          state_code?: string
+          state_name?: string
           updated_at?: string
         }
         Relationships: []

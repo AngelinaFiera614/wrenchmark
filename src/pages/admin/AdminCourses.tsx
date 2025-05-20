@@ -1,65 +1,106 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { getCourses, deleteCourse } from "@/services/courseService";
+import { Link } from "react-router-dom";
+import { getCourses, createCourse, updateCourse, deleteCourse } from "@/services/courseService";
 import { Course } from "@/types/course";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Table, TableBody, TableCell, TableHead, 
-  TableHeader, TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { 
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, 
-  DropdownMenuItem, DropdownMenuSeparator 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { 
-  AlertDialog, AlertDialogAction, AlertDialogCancel, 
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter, 
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, MoreVertical, Pencil, Trash2, ListFilter, Book } from "lucide-react";
+import {
+  Plus,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  ListFilter,
+  FileText,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import CourseFormDialog from "@/components/admin/courses/CourseFormDialog";
+import CourseSetupButton from "@/components/admin/courses/CourseSetupButton";
 
 const AdminCourses: React.FC = () => {
-  const navigate = useNavigate();
-  
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [editCourse, setEditCourse] = useState<Course | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
 
-  // Load courses
+  // Load courses on component mount
   useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        setLoading(true);
-        const data = await getCourses();
-        setCourses(data);
-      } catch (error) {
-        console.error("Error loading courses:", error);
-        toast.error("Failed to load courses");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCourses();
+    fetchCourses();
   }, []);
 
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const coursesData = await getCourses();
+      setCourses(coursesData);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      toast.error("Failed to load courses");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter courses by search query
-  const filteredCourses = courses.filter(
-    (course) =>
-      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (course.description?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+  const filteredCourses = courses.filter((course) =>
+    course.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Delete a course
+  // Handle course creation
+  const handleCourseCreated = async (newCourse: Course) => {
+    try {
+      await createCourse(newCourse);
+      toast.success("Course created successfully");
+      fetchCourses(); // Refresh courses after creation
+    } catch (error) {
+      console.error("Error creating course:", error);
+      toast.error("Failed to create course");
+    } finally {
+      setIsDialogOpen(false);
+    }
+  };
+
+  // Handle course update
+  const handleCourseUpdated = async (id: string, updatedCourse: Course) => {
+    try {
+      await updateCourse(id, updatedCourse);
+      toast.success("Course updated successfully");
+      fetchCourses(); // Refresh courses after update
+    } catch (error) {
+      console.error("Error updating course:", error);
+      toast.error("Failed to update course");
+    }
+  };
+
+  // Handle course deletion
   const handleDelete = async (id: string) => {
     try {
       await deleteCourse(id);
@@ -71,49 +112,27 @@ const AdminCourses: React.FC = () => {
     }
   };
 
-  // Open the edit dialog
-  const handleEdit = (course: Course) => {
-    setEditCourse(course);
-    setIsDialogOpen(true);
-  };
-
-  // Handle course creation/edit
-  const handleCourseFormSuccess = (course: Course, isNew: boolean) => {
-    if (isNew) {
-      setCourses([course, ...courses]);
-    } else {
-      setCourses(courses.map(c => c.id === course.id ? course : c));
-    }
-    setIsDialogOpen(false);
-    setEditCourse(null);
-  };
-  
-  // Navigate to lessons page
-  const handleManageLessons = (courseId: string) => {
-    navigate(`/admin/courses/${courseId}/lessons`);
-  };
-
   return (
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Courses</h1>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              New Course
-            </Button>
-          </DialogTrigger>
-          <CourseFormDialog 
-            course={editCourse}
-            onSuccess={handleCourseFormSuccess}
-            onCancel={() => {
-              setIsDialogOpen(false);
-              setEditCourse(null);
-            }}
-          />
-        </Dialog>
+        <div className="flex items-center gap-2">
+          <CourseSetupButton onSuccess={() => fetchCourses()} />
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Course
+              </Button>
+            </DialogTrigger>
+            <CourseFormDialog
+              open={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+              course={null}
+              onSuccess={handleCourseCreated}
+            />
+          </Dialog>
+        </div>
       </div>
 
       <div className="bg-card border rounded-md">
@@ -134,9 +153,8 @@ const AdminCourses: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
+                <TableHead>Slug</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Last Updated</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -150,13 +168,10 @@ const AdminCourses: React.FC = () => {
                         <Skeleton className="h-5 w-48" />
                       </TableCell>
                       <TableCell>
+                        <Skeleton className="h-5 w-32" />
+                      </TableCell>
+                      <TableCell>
                         <Skeleton className="h-5 w-20" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-24" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-24" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-8 w-8 float-right" />
@@ -165,14 +180,12 @@ const AdminCourses: React.FC = () => {
                   ))
               ) : filteredCourses.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-8">
                     <div className="flex flex-col items-center gap-2">
-                      <Book className="h-12 w-12 text-muted-foreground/50" />
+                      <FileText className="h-12 w-12 text-muted-foreground/50" />
                       <h3 className="font-medium text-lg">No courses found</h3>
                       <p className="text-sm text-muted-foreground">
-                        {courses.length === 0 
-                          ? "Create your first course to get started" 
-                          : "Try adjusting your search query"}
+                        Add your first course to get started
                       </p>
                     </div>
                   </TableCell>
@@ -181,6 +194,7 @@ const AdminCourses: React.FC = () => {
                 filteredCourses.map((course) => (
                   <TableRow key={course.id}>
                     <TableCell className="font-medium">{course.title}</TableCell>
+                    <TableCell>{course.slug}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
@@ -193,12 +207,6 @@ const AdminCourses: React.FC = () => {
                         {course.published ? "Published" : "Draft"}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {new Date(course.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(course.updated_at).toLocaleDateString()}
-                    </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -207,13 +215,17 @@ const AdminCourses: React.FC = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(course)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
+                          <DropdownMenuItem asChild>
+                            <Link to={`/admin/lessons/${course.id}`}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Manage Lessons
+                            </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleManageLessons(course.id)}>
-                            <Book className="mr-2 h-4 w-4" />
-                            Manage Lessons
+                          <DropdownMenuItem asChild>
+                            <Link to={`/admin/courses/edit/${course.id}`}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit Course
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <AlertDialog>
@@ -227,7 +239,8 @@ const AdminCourses: React.FC = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Course</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete "{course.title}"? This action cannot be undone.
+                                  Are you sure you want to delete "{course.title}"?
+                                  This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
