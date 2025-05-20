@@ -17,6 +17,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile,
     isAdmin,
     isLoading,
+    authInitError, // Now including authInitError
     setProfile,
     refreshProfile,
     isAdminVerified,
@@ -83,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdminVerified,
     adminVerificationState,
     isLoading,
+    authInitError, // Added to context value
     signIn: handleSignIn,
     signUp: handleSignUp,
     signOut: handleSignOut,
