@@ -10,7 +10,7 @@ export interface AuthInitializationProps {
   setUser: (user: any) => void;
   setIsLoading: (isLoading: boolean) => void;
   fetchProfile: (userId: string) => Promise<void>;
-  setIsProfileLoading: (isLoading: boolean) => void;
+  setIsProfileLoading: (isLoading: boolean) => void;  // Now this is properly expected
   setAdminVerificationState: (state: AdminVerificationState) => void;
 }
 

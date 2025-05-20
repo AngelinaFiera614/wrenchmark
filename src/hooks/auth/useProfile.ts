@@ -96,6 +96,7 @@ export function useProfile(user: User | null) {
     profile,
     setProfile,
     isProfileLoading,
+    setIsProfileLoading, // Export this function to be used in useAuthState
     profileError,
     fetchProfile,
     refreshProfile,

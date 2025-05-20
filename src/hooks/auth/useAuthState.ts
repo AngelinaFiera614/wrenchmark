@@ -18,6 +18,7 @@ export function useAuthState() {
     profile,
     setProfile,
     isProfileLoading,
+    setIsProfileLoading,  // Now properly available from useProfile
     profileError,
     fetchProfile,
     refreshProfile
