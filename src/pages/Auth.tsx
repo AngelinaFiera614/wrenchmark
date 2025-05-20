@@ -61,7 +61,7 @@ const Auth = () => {
       const timeoutId = setTimeout(() => {
         console.error("Auth: Authentication initialization is taking too long");
         setAuthTimeout(true);
-      }, 3000); // Reduced from 5 to 3 seconds timeout
+      }, 3000); // 3 seconds timeout
       
       return () => clearTimeout(timeoutId);
     }
@@ -70,14 +70,14 @@ const Auth = () => {
   // Automatic fallback if auth is still loading after a longer time
   useEffect(() => {
     const fallbackTimeout = setTimeout(() => {
-      if (isLoading || authTimeout) {
-        console.log("Auth: Showing fallback auth form due to long loading time");
+      if (isLoading || authTimeout || authInitFailed) {
+        console.log("Auth: Showing fallback auth form due to loading issues");
         setShowFallbackAuth(true);
       }
     }, 5000); // Show fallback after 5 seconds
     
     return () => clearTimeout(fallbackTimeout);
-  }, [isLoading, authTimeout]);
+  }, [isLoading, authTimeout, authInitFailed]);
 
   // Auto reset timeout state after it's been shown for a while
   useEffect(() => {
@@ -89,6 +89,19 @@ const Auth = () => {
       return () => clearTimeout(resetTimeout);
     }
   }, [authTimeout]);
+
+  // Force fallback after critical time
+  useEffect(() => {
+    const criticalTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.error("Auth: CRITICAL - Auth initialization stuck in loading state");
+        setShowFallbackAuth(true);
+        setAuthTimeout(true);
+      }
+    }, 8000); // Critical timeout after 8 seconds
+    
+    return () => clearTimeout(criticalTimeout);
+  }, [isLoading]);
 
   // If user is already authenticated, redirect to desired location or home
   useEffect(() => {
@@ -102,6 +115,7 @@ const Auth = () => {
 
   const handleContinueAnyway = () => {
     setAuthTimeout(false);
+    setAuthInitFailed(false);
     setShowFallbackAuth(true);
   };
 

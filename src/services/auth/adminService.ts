@@ -29,14 +29,25 @@ export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
       // Continue to the profile check as fallback
     }
     
-    // Fall back to direct profile check
+    // Fall back to direct profile check with timeout
     try {
       console.log("[adminService] Function not available, checking profile table directly");
-      const { data: profileData, error: profileError } = await supabase
+      
+      // Add a timeout to the query
+      const timeoutPromise = new Promise<{ data: null, error: Error }>((_, reject) => 
+        setTimeout(() => reject(new Error("Profile check timeout")), 3000)
+      );
+      
+      const queryPromise = supabase
         .from('profiles')
         .select('is_admin')
         .eq('id', userId)
-        .maybeSingle(); // Changed from single() to maybeSingle() to prevent errors
+        .maybeSingle();
+        
+      const { data: profileData, error: profileError } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any;
 
       if (profileError) {
         console.error("[adminService] Error verifying admin status:", profileError);
@@ -88,7 +99,7 @@ export const setUserAdminStatus = async (targetUserId: string, isAdmin: boolean)
 
 // Simple in-memory cache for admin status to reduce database queries
 const adminCache = new Map<string, {isAdmin: boolean, timestamp: number}>();
-const CACHE_TTL = 2 * 60 * 1000; // Reduced from 5 minutes to 2 minutes for fresher data
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache TTL for fresher data
 
 /**
  * Clears the admin status cache
