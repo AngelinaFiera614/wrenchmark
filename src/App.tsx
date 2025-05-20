@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -58,7 +57,7 @@ function App() {
       <ComparisonProvider>
         <div className="flex flex-col min-h-screen dark:bg-background text-foreground">
           <Routes>
-            <Route path="/" element={<Layout children={null} />}>
+            <Route path="/" element={<Layout />}>
               <Route index element={<IndexPage />} />
               <Route path="/about" element={<About />} />
               <Route path="/motorcycles" element={<Motorcycles />} />
