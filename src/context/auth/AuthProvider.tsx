@@ -50,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Auth state listener will handle session update
     } catch (error) {
       // Error handled in service
+      console.error("[AuthProvider] Error during sign out:", error);
     }
   };
 
@@ -63,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(updatedProfile);
     } catch (error) {
       // Error handled in service
+      console.error("[AuthProvider] Error updating profile:", error);
     }
   };
   

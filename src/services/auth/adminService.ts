@@ -9,16 +9,20 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
   try {
-    // First check if the is_admin function exists by running a simple query
-    const { data: functionCheck, error: functionError } = await supabase.rpc('is_admin');
-    
-    if (!functionError) {
-      // If the function exists, use it to check admin status
-      console.log("[adminService] Using is_admin() function to verify admin status");
-      return functionCheck === true;
+    if (!userId) {
+      console.log("[adminService] No user ID provided for admin verification");
+      return false;
     }
     
-    // Fallback to direct profile check if function doesn't exist
+    // First check if the is_admin function exists by running a simple query
+    const { data: functionExists, error: functionCheckError } = await supabase.rpc('current_user_is_admin');
+    
+    if (!functionCheckError) {
+      console.log("[adminService] Using current_user_is_admin() function to verify admin status");
+      return functionExists === true;
+    }
+    
+    // Fall back to direct profile check
     console.log("[adminService] Function not available, checking profile table directly");
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
