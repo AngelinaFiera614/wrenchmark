@@ -68,15 +68,15 @@ export const signOut = async () => {
  */
 export const verifyAdminStatus = async (userId: string): Promise<boolean> => {
   try {
-    // Try to use the is_admin_user function
+    // Try to use the is_admin function
     try {
-      const { data, error } = await supabase.rpc('is_admin_user');
+      const { data, error } = await supabase.rpc('is_admin');
       
       if (!error) {
         return data === true;
       }
     } catch (funcError) {
-      console.warn('[auth] is_admin_user function not available, falling back to direct query');
+      console.warn('[auth] is_admin function not available, falling back to direct query');
     }
     
     // Fallback to direct query
