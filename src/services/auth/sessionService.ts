@@ -1,20 +1,13 @@
 
-import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { SessionRefreshState } from "./types";
+import { Session } from "@supabase/supabase-js";
 
-// Session refresh state with improved rate limiting protection
-const sessionRefreshState: SessionRefreshState = {
-  lastRefreshTime: 0,
-  refreshPromise: null
-};
-
-// Constants for session refresh
-const REFRESH_COOLDOWN = 10000; // 10 seconds minimum between refreshes
-
-export async function fetchCurrentSession(): Promise<Session | null> {
+/**
+ * Fetch the current user session
+ * @returns The current session or null if not authenticated
+ */
+export const fetchCurrentSession = async (): Promise<Session | null> => {
   try {
-    console.log("[sessionService] Fetching current session");
     const { data, error } = await supabase.auth.getSession();
     
     if (error) {
@@ -24,60 +17,7 @@ export async function fetchCurrentSession(): Promise<Session | null> {
     
     return data.session;
   } catch (error) {
-    console.error("[sessionService] Error fetching session:", error);
+    console.error("[sessionService] Unexpected error in fetchCurrentSession:", error);
     return null;
   }
-}
-
-export async function refreshSession(): Promise<Session | null> {
-  try {
-    // Check if we're refreshing too frequently to avoid rate limits
-    const now = Date.now();
-    if (now - sessionRefreshState.lastRefreshTime < REFRESH_COOLDOWN) {
-      console.log("[sessionService] Skipping refresh - too soon after last refresh");
-      return await fetchCurrentSession();
-    }
-    
-    // If a refresh is already in progress, return that promise
-    if (sessionRefreshState.refreshPromise) {
-      console.log("[sessionService] Refresh already in progress, reusing promise");
-      return sessionRefreshState.refreshPromise;
-    }
-    
-    sessionRefreshState.lastRefreshTime = now;
-    console.log("[sessionService] Refreshing session");
-    
-    // Create a new promise and store it
-    sessionRefreshState.refreshPromise = supabase.auth.refreshSession()
-      .then(({ data, error }) => {
-        if (error) {
-          // Special handling for "Auth session missing" which isn't necessarily an error
-          if (error.message === "Auth session missing!") {
-            console.log("[sessionService] No active session to refresh");
-            return null;
-          }
-          
-          console.error("[sessionService] Error refreshing session:", error);
-          throw error;
-        }
-        
-        return data.session;
-      })
-      .catch(async (error) => {
-        console.error("[sessionService] Error in refreshSession:", error);
-        return await fetchCurrentSession(); // Fallback to current session
-      })
-      .finally(() => {
-        // Clear the cached promise after 2 seconds to allow future refreshes
-        setTimeout(() => {
-          sessionRefreshState.refreshPromise = null;
-        }, 2000);
-      });
-    
-    return await sessionRefreshState.refreshPromise;
-  } catch (error) {
-    console.error("[sessionService] Error in refreshSession:", error);
-    sessionRefreshState.refreshPromise = null;
-    return await fetchCurrentSession(); // Fallback to current session
-  }
-}
+};
