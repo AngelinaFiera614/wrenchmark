@@ -25,6 +25,8 @@ export function useSessionInit(
       onSessionLoaded("INITIAL_SESSION", session);
     } catch (error: any) {
       console.error("[useSessionInit] Error initializing session:", error);
+      // Still call the handler with null session to complete initialization process
+      onSessionLoaded("INITIAL_SESSION_ERROR", null);
     }
   }, [onSessionLoaded]);
 
@@ -32,7 +34,17 @@ export function useSessionInit(
     if (isLoading) {
       // Initialize session with a small delay
       const timeoutId = setTimeout(initializeSession, 50);
-      return () => clearTimeout(timeoutId);
+      
+      // Add a safety timeout in case the first initialization fails
+      const backupTimeoutId = setTimeout(() => {
+        console.warn("[useSessionInit] Backup initialization triggered");
+        initializeSession();
+      }, 3000);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        clearTimeout(backupTimeoutId);
+      };
     }
   }, [initializeSession, isLoading]);
 }

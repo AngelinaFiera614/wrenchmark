@@ -11,6 +11,7 @@ export function useAuthState() {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authInitError, setAuthInitError] = useState<Error | null>(null);
 
   // Use the extracted profile management hook
   const {
@@ -31,22 +32,42 @@ export function useAuthState() {
     setAdminVerificationState,
     forceVerifyAdmin
   } = useAdminVerification(user, profile);
+
+  // Add a safety timeout to prevent infinite loading
+  useEffect(() => {
+    if (isLoading) {
+      const timeoutId = setTimeout(() => {
+        console.warn("[useAuthState] Loading state timeout reached, forcing completion");
+        setIsLoading(false);
+      }, 10000); // 10 second maximum loading time
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoading]);
   
   // Use the extracted authentication initialization hook
-  useAuthInitialization({
-    setSession,
-    setUser,
-    setIsLoading,
-    fetchProfile,
-    setIsProfileLoading: setIsLoading,
-    setAdminVerificationState
-  });
+  try {
+    useAuthInitialization({
+      setSession,
+      setUser,
+      setIsLoading,
+      fetchProfile,
+      setIsProfileLoading: setIsLoading, 
+      setAdminVerificationState
+    });
+  } catch (error) {
+    console.error("[useAuthState] Error in auth initialization:", error);
+    setAuthInitError(error as Error);
+    setIsLoading(false); // Ensure we don't get stuck in loading state
+  }
 
   // Refresh profile when user changes but is not null
   const handleProfileRefresh = useCallback(() => {
     if (user) {
       console.log("[useAuthState] User changed, refreshing profile");
-      refreshProfile();
+      refreshProfile().catch(error => {
+        console.error("[useAuthState] Error refreshing profile:", error);
+      });
     }
   }, [user, refreshProfile]);
 
@@ -68,6 +89,7 @@ export function useAuthState() {
     isLoading: isLoading || isProfileLoading,
     isProfileLoading,
     profileError,
+    authInitError,
     setProfile,
     refreshProfile,
     setIsAdminVerified,

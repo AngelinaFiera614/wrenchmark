@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Session } from "@supabase/supabase-js";
 import { useAuthListener } from "./useAuthListener";
 import { useSessionInit } from "./useSessionInit";
@@ -42,10 +42,14 @@ export function useAuthInitialization({
       
       // Fetch profile with slight delay to avoid race conditions
       setTimeout(() => {
-        fetchProfile(currentSession.user.id).finally(() => {
-          setIsLoading(false);
-          setIsInitializing(false);
-        });
+        fetchProfile(currentSession.user.id)
+          .catch(error => {
+            console.error("[useAuthInitialization] Error fetching profile:", error);
+          })
+          .finally(() => {
+            setIsLoading(false);
+            setIsInitializing(false);
+          });
       }, 100);
     } else {
       // No user session
@@ -67,4 +71,18 @@ export function useAuthInitialization({
   
   // Initialize session
   useSessionInit(handleAuthStateChange, isInitializing);
+
+  // Add a safety timeout to prevent infinite loading state
+  useEffect(() => {
+    if (isInitializing) {
+      const timeoutId = setTimeout(() => {
+        console.log("[useAuthInitialization] Auth initialization timeout reached, forcing completion");
+        setIsLoading(false);
+        setIsInitializing(false);
+        setAdminVerificationState('unknown');
+      }, 5000); // 5 second maximum wait time
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isInitializing, setIsLoading, setAdminVerificationState]);
 }

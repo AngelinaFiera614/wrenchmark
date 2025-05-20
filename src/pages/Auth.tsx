@@ -16,8 +16,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from "@/context/auth";
-import { Loader } from "lucide-react";
+import { Loader, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -29,6 +30,8 @@ type AuthFormValues = z.infer<typeof authSchema>;
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authTimeout, setAuthTimeout] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { signIn, signUp, user, isLoading } = useAuth();
@@ -41,6 +44,18 @@ const Auth = () => {
     },
   });
 
+  // Add a timeout to detect auth initialization issues
+  useEffect(() => {
+    if (isLoading) {
+      const timeoutId = setTimeout(() => {
+        console.error("Auth: Authentication initialization is taking too long");
+        setAuthTimeout(true);
+      }, 5000); // 5 seconds timeout
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoading]);
+
   // If user is already authenticated, redirect to desired location or home
   useEffect(() => {
     if (user && !isLoading) {
@@ -52,7 +67,7 @@ const Auth = () => {
   }, [user, isLoading, navigate, location.state]);
 
   // Show loading while auth is initializing
-  if (isLoading) {
+  if (isLoading && !authTimeout) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
         <div className="flex flex-col items-center space-y-4">
@@ -62,11 +77,53 @@ const Auth = () => {
       </div>
     );
   }
+  
+  // Show error if auth is taking too long
+  if (authTimeout) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-background px-4">
+        <Card className="w-full max-w-md shadow-lg border-border/60">
+          <CardHeader className="space-y-2">
+            <CardTitle className="flex items-center text-xl text-red-500">
+              <AlertTriangle className="mr-2 h-5 w-5" />
+              Authentication Issue
+            </CardTitle>
+            <CardDescription>
+              Authentication is taking longer than expected. You can try to continue anyway.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert variant="destructive" className="bg-red-900/20">
+              <AlertDescription>
+                The application may be experiencing connectivity issues with the authentication service.
+              </AlertDescription>
+            </Alert>
+            <div className="flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.reload()}
+              >
+                Reload Page
+              </Button>
+              <Button 
+                onClick={() => setAuthTimeout(false)}
+                className="bg-accent-teal text-black hover:bg-accent-teal/80"
+              >
+                Continue to Login Form
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const onSubmit = async (values: AuthFormValues) => {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
+    setAuthError(null);
+    
     try {
       if (isLogin) {
         console.log("Auth: Attempting sign in");
@@ -78,6 +135,7 @@ const Auth = () => {
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
+      setAuthError(error.message || "Authentication failed. Please try again.");
       toast.error(error.message || "Authentication failed. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -86,6 +144,7 @@ const Auth = () => {
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
+    setAuthError(null);
     form.reset();
   };
 
@@ -103,6 +162,12 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {authError && (
+            <Alert variant="destructive" className="mb-4 bg-red-900/20">
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
+          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
