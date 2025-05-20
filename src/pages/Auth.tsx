@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAuth } from "@/context/auth";
-import { Loader, AlertTriangle } from "lucide-react";
+import { Loader, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -32,9 +32,12 @@ const Auth = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authTimeout, setAuthTimeout] = useState(false);
+  const [authInitFailed, setAuthInitFailed] = useState(false);
+  const [showFallbackAuth, setShowFallbackAuth] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signIn, signUp, user, isLoading } = useAuth();
+  const auth = useAuth();
+  const { user, isLoading, authInitError } = auth;
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -44,17 +47,48 @@ const Auth = () => {
     },
   });
 
+  // Check for auth initialization errors
+  useEffect(() => {
+    if (authInitError) {
+      console.error("Auth initialization error:", authInitError);
+      setAuthInitFailed(true);
+    }
+  }, [authInitError]);
+
   // Add a timeout to detect auth initialization issues
   useEffect(() => {
     if (isLoading) {
       const timeoutId = setTimeout(() => {
         console.error("Auth: Authentication initialization is taking too long");
         setAuthTimeout(true);
-      }, 5000); // 5 seconds timeout
+      }, 3000); // Reduced from 5 to 3 seconds timeout
       
       return () => clearTimeout(timeoutId);
     }
   }, [isLoading]);
+
+  // Automatic fallback if auth is still loading after a longer time
+  useEffect(() => {
+    const fallbackTimeout = setTimeout(() => {
+      if (isLoading || authTimeout) {
+        console.log("Auth: Showing fallback auth form due to long loading time");
+        setShowFallbackAuth(true);
+      }
+    }, 5000); // Show fallback after 5 seconds
+    
+    return () => clearTimeout(fallbackTimeout);
+  }, [isLoading, authTimeout]);
+
+  // Auto reset timeout state after it's been shown for a while
+  useEffect(() => {
+    if (authTimeout) {
+      const resetTimeout = setTimeout(() => {
+        setAuthTimeout(false);
+      }, 10000); // Reset after 10 seconds
+      
+      return () => clearTimeout(resetTimeout);
+    }
+  }, [authTimeout]);
 
   // If user is already authenticated, redirect to desired location or home
   useEffect(() => {
@@ -66,20 +100,37 @@ const Auth = () => {
     }
   }, [user, isLoading, navigate, location.state]);
 
-  // Show loading while auth is initializing
-  if (isLoading && !authTimeout) {
+  const handleContinueAnyway = () => {
+    setAuthTimeout(false);
+    setShowFallbackAuth(true);
+  };
+
+  const handleRefreshPage = () => {
+    window.location.reload();
+  };
+
+  // Show loading while auth is initializing (unless we've hit a timeout)
+  if (isLoading && !authTimeout && !showFallbackAuth) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
         <div className="flex flex-col items-center space-y-4">
           <Loader className="h-8 w-8 animate-spin text-accent-teal" />
           <p className="text-muted-foreground">Checking authentication...</p>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleContinueAnyway}
+            className="mt-4"
+          >
+            Continue to login form
+          </Button>
         </div>
       </div>
     );
   }
   
-  // Show error if auth is taking too long
-  if (authTimeout) {
+  // Show error if auth is taking too long or failed
+  if ((authTimeout || authInitFailed) && !showFallbackAuth) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background px-4">
         <Card className="w-full max-w-md shadow-lg border-border/60">
@@ -89,24 +140,31 @@ const Auth = () => {
               Authentication Issue
             </CardTitle>
             <CardDescription>
-              Authentication is taking longer than expected. You can try to continue anyway.
+              {authInitFailed 
+                ? "There was an error initializing authentication."
+                : "Authentication is taking longer than expected."}
+              You can try to reload or continue anyway.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert variant="destructive" className="bg-red-900/20">
               <AlertDescription>
-                The application may be experiencing connectivity issues with the authentication service.
+                {authInitError 
+                  ? `Error details: ${authInitError.message || 'Unknown error'}`
+                  : "The application may be experiencing connectivity issues with the authentication service."}
               </AlertDescription>
             </Alert>
             <div className="flex justify-between">
               <Button 
                 variant="outline" 
-                onClick={() => window.location.reload()}
+                onClick={handleRefreshPage}
+                className="flex items-center"
               >
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Reload Page
               </Button>
               <Button 
-                onClick={() => setAuthTimeout(false)}
+                onClick={handleContinueAnyway}
                 className="bg-accent-teal text-black hover:bg-accent-teal/80"
               >
                 Continue to Login Form
@@ -127,10 +185,10 @@ const Auth = () => {
     try {
       if (isLogin) {
         console.log("Auth: Attempting sign in");
-        await signIn(values.email, values.password);
+        await auth.signIn(values.email, values.password);
       } else {
         console.log("Auth: Attempting sign up");
-        await signUp(values.email, values.password);
+        await auth.signUp(values.email, values.password);
         toast.success("Please check your email to verify your account!");
       }
     } catch (error: any) {
@@ -216,6 +274,17 @@ const Auth = () => {
               {isLogin ? "Sign Up" : "Sign In"}
             </Button>
           </div>
+          
+          {/* Add debug action */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs text-muted-foreground hover:text-foreground mt-4"
+            onClick={handleRefreshPage}
+          >
+            <RefreshCw className="mr-1 h-3 w-3" />
+            Refresh page
+          </Button>
         </CardFooter>
       </Card>
     </div>

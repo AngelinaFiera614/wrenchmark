@@ -28,8 +28,12 @@ export function useAuthInitialization({
   const handleAuthStateChange = useCallback((event: string, currentSession: Session | null) => {
     console.log(`[useAuthInitialization] Auth event: ${event}, user: ${currentSession?.user?.email || "none"}`);
     
-    setSession(currentSession);
-    setUser(currentSession?.user ?? null);
+    try {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+    } catch (error) {
+      console.error("[useAuthInitialization] Error updating session state:", error);
+    }
     
     if (currentSession?.user) {
       console.log(`[useAuthInitialization] Auth event processed, fetching profile for: ${currentSession.user.id}`);
@@ -37,7 +41,11 @@ export function useAuthInitialization({
       
       // Need to reset admin verification state for most events
       if (event !== 'TOKEN_REFRESHED') {
-        setAdminVerificationState('pending');
+        try {
+          setAdminVerificationState('pending');
+        } catch (error) {
+          console.error("[useAuthInitialization] Error setting admin verification state:", error);
+        }
       }
       
       // Fetch profile with slight delay to avoid race conditions
@@ -47,15 +55,28 @@ export function useAuthInitialization({
             console.error("[useAuthInitialization] Error fetching profile:", error);
           })
           .finally(() => {
-            setIsLoading(false);
-            setIsInitializing(false);
+            try {
+              setIsLoading(false);
+              setIsInitializing(false);
+            } catch (error) {
+              console.error("[useAuthInitialization] Error finalizing auth state:", error);
+              // Force recovery
+              setTimeout(() => {
+                setIsLoading(false);
+                setIsInitializing(false);
+              }, 100);
+            }
           });
       }, 100);
     } else {
       // No user session
-      setIsLoading(false);
-      setIsInitializing(false);
-      setAdminVerificationState('unknown');
+      try {
+        setIsLoading(false);
+        setIsInitializing(false);
+        setAdminVerificationState('unknown');
+      } catch (error) {
+        console.error("[useAuthInitialization] Error finalizing no-user state:", error);
+      }
     }
   }, [
     setSession, 
@@ -74,15 +95,15 @@ export function useAuthInitialization({
 
   // Add a safety timeout to prevent infinite loading state
   useEffect(() => {
-    if (isInitializing) {
-      const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
+      if (isInitializing) {
         console.log("[useAuthInitialization] Auth initialization timeout reached, forcing completion");
         setIsLoading(false);
         setIsInitializing(false);
         setAdminVerificationState('unknown');
-      }, 5000); // 5 second maximum wait time
-      
-      return () => clearTimeout(timeoutId);
-    }
+      }
+    }, 3000); // Reduced from 5 seconds to 3 seconds for faster recovery
+    
+    return () => clearTimeout(timeoutId);
   }, [isInitializing, setIsLoading, setAdminVerificationState]);
 }

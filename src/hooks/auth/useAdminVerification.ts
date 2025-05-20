@@ -48,7 +48,7 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
 
   // Add a timeout effect to prevent infinite pending state
   useEffect(() => {
-    if (adminVerificationState === 'pending' && verificationAttempts < 3) {
+    if (adminVerificationState === 'pending' && verificationAttempts < 2) { // Reduced from 3 to 2 attempts
       const timeoutId = setTimeout(() => {
         console.log("[useAdminVerification] Attempting admin verification automatically");
         setVerificationAttempts(prev => prev + 1);
@@ -65,11 +65,11 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
               setAdminVerificationState('failed');
             });
         }
-      }, 2000); // Try after 2 seconds
+      }, 1500); // Reduced from 2000ms to 1500ms for faster verification
       
       return () => clearTimeout(timeoutId);
-    } else if (adminVerificationState === 'pending' && verificationAttempts >= 3) {
-      // If we've tried 3 times and still pending, mark as failed
+    } else if (adminVerificationState === 'pending' && verificationAttempts >= 2) {
+      // If we've tried 2 times and still pending, mark as failed
       console.log("[useAdminVerification] Maximum verification attempts reached, marking as failed");
       setAdminVerificationState('failed');
     }
