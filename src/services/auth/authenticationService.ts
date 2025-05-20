@@ -3,8 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getProfileById, createProfileIfNotExists } from "@/services/profileService";
 import type { Profile } from "@/services/profileService";
-import { clearAdminCache } from "./adminService";
-import { fetchCurrentSession } from "./sessionService";
 
 export async function signIn(email: string, password: string) {
   console.log("Signing in user:", email);
@@ -55,8 +53,6 @@ export async function signUp(email: string, password: string) {
 
 export async function signOut() {
   try {
-    // Clear admin cache before signing out
-    clearAdminCache();
     await supabase.auth.signOut();
     toast.success("You have been signed out");
   } catch (error: any) {

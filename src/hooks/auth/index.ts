@@ -1,7 +1,4 @@
 
-export * from "./useAuthState";
-export * from "./useAuthInitialization";
-export * from "./useProfile";
-export * from "./useAdminVerification";
+// Export the authentication hooks
 export * from "./useAuthListener";
 export * from "./useSessionInit";

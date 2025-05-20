@@ -31,13 +31,9 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [authTimeout, setAuthTimeout] = useState(false);
-  const [authInitFailed, setAuthInitFailed] = useState(false);
-  const [showFallbackAuth, setShowFallbackAuth] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const auth = useAuth();
-  const { user, isLoading, authInitError } = auth;
+  const { user, isLoading, authError: contextAuthError } = useAuth();
   
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -46,64 +42,6 @@ const Auth = () => {
       password: "",
     },
   });
-
-  // Check for auth initialization errors
-  useEffect(() => {
-    if (authInitError) {
-      console.error("Auth initialization error:", authInitError);
-      setAuthInitFailed(true);
-      // Always show the form when there's an initialization error
-      setShowFallbackAuth(true);
-    }
-  }, [authInitError]);
-
-  // Add a timeout to detect auth initialization issues - trigger sooner (1.5s)
-  useEffect(() => {
-    if (isLoading) {
-      const timeoutId = setTimeout(() => {
-        console.error("Auth: Authentication initialization is taking too long");
-        setAuthTimeout(true);
-      }, 1500); // 1.5 seconds timeout (faster response for better UX)
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isLoading]);
-
-  // Automatic fallback if auth is still loading after a longer time (3s)
-  useEffect(() => {
-    const fallbackTimeout = setTimeout(() => {
-      if (isLoading || authTimeout || authInitFailed) {
-        console.log("Auth: Showing fallback auth form due to loading issues");
-        setShowFallbackAuth(true);
-      }
-    }, 3000); // Show fallback after 3 seconds (reduced from 5s)
-    
-    return () => clearTimeout(fallbackTimeout);
-  }, [isLoading, authTimeout, authInitFailed]);
-
-  // Auto reset timeout state after it's been shown for a while
-  useEffect(() => {
-    if (authTimeout) {
-      const resetTimeout = setTimeout(() => {
-        setAuthTimeout(false);
-      }, 10000); // Reset after 10 seconds
-      
-      return () => clearTimeout(resetTimeout);
-    }
-  }, [authTimeout]);
-
-  // Force fallback after critical time - faster (5s)
-  useEffect(() => {
-    const criticalTimeout = setTimeout(() => {
-      if (isLoading) {
-        console.error("Auth: CRITICAL - Auth initialization stuck in loading state");
-        setShowFallbackAuth(true);
-        setAuthTimeout(true);
-      }
-    }, 5000); // Critical timeout after 5 seconds (reduced from 8s)
-    
-    return () => clearTimeout(criticalTimeout);
-  }, [isLoading]);
 
   // If user is already authenticated, redirect to desired location or home
   useEffect(() => {
@@ -115,82 +53,18 @@ const Auth = () => {
     }
   }, [user, isLoading, navigate, location.state]);
 
-  const handleContinueAnyway = () => {
-    setAuthTimeout(false);
-    setAuthInitFailed(false);
-    setShowFallbackAuth(true);
-  };
+  // Set error from context if available
+  useEffect(() => {
+    if (contextAuthError) {
+      setAuthError(contextAuthError.message);
+    }
+  }, [contextAuthError]);
 
   const handleRefreshPage = () => {
     window.location.reload();
   };
 
-  // Show loading while auth is initializing (unless we've hit a timeout)
-  if (isLoading && !authTimeout && !showFallbackAuth) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader className="h-8 w-8 animate-spin text-accent-teal" />
-          <p className="text-muted-foreground">Checking authentication...</p>
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={handleContinueAnyway}
-            className="mt-4"
-          >
-            Continue to login form
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
-  // Show error if auth is taking too long or failed
-  if ((authTimeout || authInitFailed) && !showFallbackAuth) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-background px-4">
-        <Card className="w-full max-w-md shadow-lg border-border/60">
-          <CardHeader className="space-y-2">
-            <CardTitle className="flex items-center text-xl text-red-500">
-              <AlertTriangle className="mr-2 h-5 w-5" />
-              Authentication Issue
-            </CardTitle>
-            <CardDescription>
-              {authInitFailed 
-                ? "There was an error initializing authentication."
-                : "Authentication is taking longer than expected."}
-              You can try to reload or continue anyway.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert variant="destructive" className="bg-red-900/20">
-              <AlertDescription>
-                {authInitError 
-                  ? `Error details: ${authInitError.message || 'Unknown error'}`
-                  : "The application may be experiencing connectivity issues with the authentication service."}
-              </AlertDescription>
-            </Alert>
-            <div className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={handleRefreshPage}
-                className="flex items-center"
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Reload Page
-              </Button>
-              <Button 
-                onClick={handleContinueAnyway}
-                className="bg-accent-teal text-black hover:bg-accent-teal/80"
-              >
-                Continue to Login Form
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const { signIn, signUp } = useAuth();
 
   const onSubmit = async (values: AuthFormValues) => {
     if (isSubmitting) return;
@@ -201,10 +75,10 @@ const Auth = () => {
     try {
       if (isLogin) {
         console.log("Auth: Attempting sign in");
-        await auth.signIn(values.email, values.password);
+        await signIn(values.email, values.password);
       } else {
         console.log("Auth: Attempting sign up");
-        await auth.signUp(values.email, values.password);
+        await signUp(values.email, values.password);
         toast.success("Please check your email to verify your account!");
       }
     } catch (error: any) {
@@ -221,6 +95,26 @@ const Auth = () => {
     setAuthError(null);
     form.reset();
   };
+
+  // Show loading while auth is initializing
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader className="h-8 w-8 animate-spin text-accent-teal" />
+          <p className="text-muted-foreground">Checking authentication...</p>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshPage}
+            className="mt-4"
+          >
+            Refresh page
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background px-4 py-12">
@@ -291,7 +185,6 @@ const Auth = () => {
             </Button>
           </div>
           
-          {/* Add debug action */}
           <Button 
             variant="ghost" 
             size="sm" 

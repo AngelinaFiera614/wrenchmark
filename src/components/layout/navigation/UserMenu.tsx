@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { User, LogOut, ShieldCheck, ChevronDown } from "lucide-react";
@@ -11,12 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/auth";
 
-type UserMenuProps = {
-  handleSignOut: () => Promise<void>;
-};
-
-const UserMenu = ({ handleSignOut }: UserMenuProps) => {
-  const { user, profile, isAdmin } = useAuth();
+const UserMenu = () => {
+  const { user, profile, isAdmin, signOut } = useAuth();
 
   if (!user) {
     return (
@@ -27,6 +24,10 @@ const UserMenu = ({ handleSignOut }: UserMenuProps) => {
       </Link>
     );
   }
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <DropdownMenu>
