@@ -5,12 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { Profile, getProfileById, createProfileIfNotExists } from "@/services/profileService";
 import { toast } from "sonner";
+import type { AdminVerificationState } from "./types";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminVerified, setIsAdminVerified] = useState(false);
+  const [adminVerificationState, setAdminVerificationState] = useState<AdminVerificationState>('unknown');
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -25,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log("[AuthProvider] Profile found:", profileData.username);
         setProfile(profileData);
         setIsAdmin(profileData.is_admin || false);
+        setIsAdminVerified(profileData.is_admin || false);
       } else {
         console.log("[AuthProvider] No profile found, creating one");
         try {
@@ -32,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (newProfile) {
             setProfile(newProfile);
             setIsAdmin(newProfile.is_admin || false);
+            setIsAdminVerified(newProfile.is_admin || false);
           }
         } catch (error) {
           console.error("[AuthProvider] Error creating profile:", error);
@@ -73,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
               setProfile(null);
               setIsAdmin(false);
+              setIsAdminVerified(false);
             }
           }
         );
@@ -180,6 +186,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     profile,
     isAdmin,
+    isAdminVerified,
+    adminVerificationState,
     isLoading,
     authError,
     signIn: handleSignIn,

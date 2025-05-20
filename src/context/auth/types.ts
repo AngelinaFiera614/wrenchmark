@@ -9,6 +9,8 @@ export interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isAdmin: boolean;
+  isAdminVerified: boolean;  // Add this missing property
+  adminVerificationState?: AdminVerificationState; // Add this as optional
   isLoading: boolean;
   authError: Error | null;
   signIn: (email: string, password: string) => Promise<void>;

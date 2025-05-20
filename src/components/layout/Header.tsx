@@ -62,7 +62,7 @@ const Header = () => {
             </div>
           )}
           
-          <UserMenu handleSignOut={handleSignOut} />
+          <UserMenu />
 
           <button
             className="md:hidden p-1 bg-background/80 rounded-md"

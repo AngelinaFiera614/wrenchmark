@@ -13,12 +13,12 @@ const AdminLayout = () => {
   
   // If user is not admin after loading completes, redirect
   useEffect(() => {
-    if (!isLoading && user && !isAdmin && !isAdminVerified) {
+    if (!isLoading && user && !isAdmin) {
       console.log("[AdminLayout] User is not admin, redirecting");
       toast.error("You don't have permission to access the admin area");
       navigate("/", { replace: true });
     }
-  }, [isAdmin, isAdminVerified, isLoading, user, navigate]);
+  }, [isAdmin, isLoading, user, navigate]);
   
   // Show loading while auth verification is in progress
   if (isLoading) {
