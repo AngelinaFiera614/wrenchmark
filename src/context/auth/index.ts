@@ -1,4 +1,5 @@
 
-export { AuthProvider } from "./AuthProvider";
-export { useAuth } from "./useAuth";
-export type { AuthContextType } from "./types";
+// Re-export all auth-related objects from the context
+export * from './AuthContext';
+export * from './useAuth';
+export * from './types';

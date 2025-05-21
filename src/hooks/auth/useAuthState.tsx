@@ -1,155 +1,128 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { useProfile } from "./useProfile";
-import { useAdminVerification } from "./useAdminVerification";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { AdminVerificationState } from "@/context/auth/types";
+import { Session, User } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { AuthError } from "@supabase/supabase-js";
 
-export function useAuthState() {
+// Type definition for admin verification state
+type AdminVerificationState = boolean | "loading" | "error";
+
+export const useAuthState = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [authInitError, setAuthInitError] = useState<Error | null>(null);
-  
-  // Use the extracted profile management hook
-  const {
-    profile,
-    setProfile,
-    isProfileLoading,
-    profileError,
-    fetchProfile,
-    refreshProfile
-  } = useProfile(user);
-  
-  // Use the extracted admin verification hook
-  const {
-    isAdmin,
-    isAdminVerified,
-    adminVerificationState,
-    setIsAdminVerified,
-    setAdminVerificationState,
-    verifyAdminStatus
-  } = useAdminVerification(user, profile);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [adminVerified, setAdminVerified] = useState<AdminVerificationState>("loading");
 
-  // Initialize authentication
-  useEffect(() => {
-    let isMounted = true;
-    console.log("[useAuthState] Starting authentication initialization");
-    
-    const initializeAuth = async () => {
-      try {
-        // Set up auth state listener
-        console.log("[useAuthState] Setting up auth state listener");
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, currentSession) => {
-            if (!isMounted) return;
-            
-            console.log(`[useAuthState] Auth event: ${event}`);
-            setSession(currentSession);
-            setUser(currentSession?.user ?? null);
-            
-            if (currentSession?.user) {
-              console.log(`[useAuthState] User authenticated: ${currentSession.user.email}`);
-              
-              // Reset admin verification state on new auth events except token refresh
-              if (event !== 'TOKEN_REFRESHED') {
-                setAdminVerificationState('pending');
-              }
-              
-              // Fetch profile with slight delay to avoid race conditions
-              setTimeout(() => {
-                if (isMounted) {
-                  fetchProfile(currentSession.user.id);
-                }
-              }, 100);
-            } else {
-              // No user session
-              console.log("[useAuthState] No user session detected");
-              setIsLoading(false);
-              setAdminVerificationState('unknown');
-            }
-          }
-        );
-
-        // Initial session check
-        console.log("[useAuthState] Checking for existing session");
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("[useAuthState] Session check error:", error);
-          throw error;
-        }
-        
-        const initialSession = data.session;
-        console.log(`[useAuthState] Initial session check: ${initialSession ? 'Session found' : 'No session'}`);
-        
-        // Process initial session if exists
-        if (initialSession?.user && isMounted) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          setAdminVerificationState('pending');
+  // Initialize the auth state from Supabase
+  const initializeAuth = useCallback(async () => {
+    console.info("[useAuthState] Starting authentication initialization");
+    try {
+      console.info("[useAuthState] Setting up auth state listener");
+      
+      // Set up the auth state change listener
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          console.info(`[useAuthState] Auth event: ${event}`);
           
-          // Fetch profile for initial session
-          setTimeout(() => {
-            if (isMounted) {
-              fetchProfile(initialSession.user.id)
-                .finally(() => {
-                  if (isMounted) {
-                    setIsLoading(false);
-                  }
-                });
-            }
-          }, 100);
-        } else if (isMounted) {
-          // No initial session
-          setIsLoading(false);
+          if (session?.user) {
+            console.info(`[useAuthState] User authenticated: ${session.user.email}`);
+            setSession(session);
+            setUser(session.user);
+            checkAdminStatus(session.user.id);
+          } else {
+            console.info("[useAuthState] No user in session");
+            setSession(null);
+            setUser(null);
+            setIsAdmin(false);
+            setAdminVerified(false);
+          }
         }
+      );
 
-        // Cleanup function
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error: any) {
-        console.error("[useAuthState] Error in auth initialization:", error);
-        if (isMounted) {
-          setAuthInitError(error);
-          setIsLoading(false);
-        }
+      // Check for existing session
+      console.info("[useAuthState] Checking for existing session");
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.info("[useAuthState] Initial session check: Session found");
+        setSession(session);
+        setUser(session.user);
+        await checkAdminStatus(session.user.id);
+      } else {
+        console.info("[useAuthState] Initial session check: No session found");
+        setSession(null);
+        setUser(null);
+        setIsAdmin(false);
+        setAdminVerified(false);
       }
-    };
-    
-    // Start initialization
-    initializeAuth();
-    
-    // Add a safety timeout to prevent infinite loading state
-    const timeoutId = setTimeout(() => {
-      if (isMounted && isLoading) {
-        console.warn("[useAuthState] Loading state timeout reached, forcing completion");
-        setIsLoading(false);
+      
+      setIsLoading(false);
+      
+      return () => {
+        subscription.unsubscribe();
+      };
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("[useAuthState] Auth initialization error:", authError);
+      toast.error("Authentication error. Please try again.");
+      setIsLoading(false);
+      setSession(null);
+      setUser(null);
+      setIsAdmin(false);
+      setAdminVerified(false);
+    }
+  }, []);
+
+  // Check if the user has admin permissions
+  const checkAdminStatus = async (userId: string) => {
+    try {
+      // Fetch the admin status from profiles table
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("[useAuthState] Admin check error:", error);
+        setIsAdmin(false);
+        setAdminVerified("error");
+        return;
       }
-    }, 5000);
-    
+
+      const isAdminUser = data?.is_admin || false;
+      setIsAdmin(isAdminUser);
+      setAdminVerified(true);
+      
+      console.info(`[useAuthState] Admin status: ${isAdminUser}`);
+    } catch (error) {
+      console.error("[useAuthState] Admin check exception:", error);
+      setIsAdmin(false);
+      setAdminVerified("error");
+    }
+  };
+
+  useEffect(() => {
+    const cleanup = initializeAuth();
     return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
+      cleanup.then(unsubscribe => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      });
     };
-  }, []); // Empty dependency array since this should only run once
+  }, [initializeAuth]);
 
   return {
     session,
     user,
-    profile,
+    isLoading,
     isAdmin,
-    isAdminVerified,
-    adminVerificationState,
-    isLoading: isLoading || isProfileLoading,
-    profileError,
-    authInitError,
-    setProfile,
-    refreshProfile,
-    setIsAdminVerified,
-    setAdminVerificationState,
-    verifyAdminStatus
+    isAdminVerified: adminVerified === true,
+    adminVerificationState: adminVerified,
   };
-}
+};
+
+export default useAuthState;
