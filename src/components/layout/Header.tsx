@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -11,20 +12,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useProfile } from '@/hooks/auth/useProfile';
+import { useProfile } from '@/context/profile/ProfileProvider';
 import { useAdminVerification } from '@/hooks/auth/useAdminVerification';
 import { signOut } from '@/services/auth/authenticationService';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  Home, GraduationCap, BookOpen, Gear, LogOut, User,
+  Home, GraduationCap, BookOpen, Settings, LogOut, User,
   LayoutDashboard, MapPin
 } from 'lucide-react';
 
 const Header: React.FC = () => {
-  const { user, profile } = useAuth();
-  const { isAdmin, isAdminVerified, verifyAdminStatus } = useAdminVerification(user, profile);
-  const { refreshProfile } = useProfile(user);
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const { isAdmin } = useAdminVerification();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -121,10 +122,10 @@ const Header: React.FC = () => {
           ) : (
             <>
               <Button variant="outline" asChild>
-                <Link to="/sign-in">Sign In</Link>
+                <Link to="/login">Sign In</Link>
               </Button>
               <Button asChild>
-                <Link to="/sign-up">Sign Up</Link>
+                <Link to="/register">Sign Up</Link>
               </Button>
             </>
           )}

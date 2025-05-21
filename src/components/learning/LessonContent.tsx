@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { marked } from 'marked';
 import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
@@ -9,6 +10,11 @@ interface LessonContentProps {
   content: string;
   glossaryTermSlugs?: string[];
   lessonId?: string;
+}
+
+interface GlossaryTermTooltipProps {
+  term: any;
+  selector: string;
 }
 
 const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -24,7 +30,7 @@ const LessonContent: React.FC<LessonContentProps> = ({
     if (!content) return;
 
     // Process markdown content
-    let processedContent = marked.parse(content);
+    let processedContent = marked(content);
     
     // Enhance with glossary terms if available
     if (terms && terms.length > 0) {

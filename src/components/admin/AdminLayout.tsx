@@ -1,6 +1,6 @@
 
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
-import { AdminSidebar } from "./AdminSidebar";
+import AdminSidebar from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
@@ -55,7 +55,7 @@ const AdminLayout = () => {
   if (!user) {
     console.log("[AdminLayout] No user found, redirecting");
     toast.error("Authentication required to access admin area");
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Default fallback - redirect to home

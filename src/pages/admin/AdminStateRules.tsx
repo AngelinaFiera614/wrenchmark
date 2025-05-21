@@ -1,9 +1,6 @@
 
-import React, { useState, useEffect } from "react";
-import { getAllStateRules } from "@/services/stateRulesService";
-import { StateRule } from "@/types/state";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   Table,
   TableBody,
@@ -12,250 +9,167 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Dialog } from "@/components/ui/dialog";
-import { Pencil, Trash2, MoreVertical, Plus, Search, CheckCircle, XCircle } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import StateRuleFormDialog from "@/admin/courses/StateRuleFormDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { getAllStateRules, upsertStateRule } from '@/services/stateRulesService';
+import { StateRule } from '@/types/state';
+import { Loader2, Plus, Edit, ExternalLink } from "lucide-react";
 
-const AdminStateRules: React.FC = () => {
+const AdminStateRules = () => {
   const [stateRules, setStateRules] = useState<StateRule[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedStateRule, setSelectedStateRule] = useState<StateRule | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentStateRule, setCurrentStateRule] = useState<Partial<StateRule>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load state rules
+  // Fetch all state rules
+  const fetchStateRules = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getAllStateRules();
+      setStateRules(data);
+    } catch (error) {
+      console.error('Error fetching state rules:', error);
+      toast.error('Failed to load state rules');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initial data load
   useEffect(() => {
-    loadStateRules();
+    fetchStateRules();
   }, []);
 
-  const loadStateRules = async () => {
-    try {
-      setLoading(true);
-      const rules = await getAllStateRules();
-      setStateRules(rules);
-    } catch (error) {
-      console.error("Error loading state rules:", error);
-      toast.error("Failed to load state rules");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Filter state rules by search query
-  const filteredStateRules = stateRules.filter((rule) =>
-    rule.state_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    rule.state_code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Delete a state rule
-  const handleDelete = async (stateCode: string) => {
-    try {
-      const { error } = await supabase
-        .from("state_rules")
-        .delete()
-        .eq("state_code", stateCode);
-
-      if (error) throw error;
-      
-      setStateRules(stateRules.filter((rule) => rule.state_code !== stateCode));
-      toast.success("State rule deleted successfully");
-    } catch (error: any) {
-      console.error("Error deleting state rule:", error);
-      toast.error("Failed to delete state rule");
-    }
-  };
-
-  // Open the edit dialog
-  const handleEdit = (stateRule: StateRule) => {
-    setSelectedStateRule(stateRule);
+  // Open dialog for creating a new state rule
+  const handleAddNew = () => {
+    setCurrentStateRule({});
     setIsDialogOpen(true);
   };
 
-  // Handle form success
-  const handleFormSuccess = () => {
-    loadStateRules();
+  // Open dialog for editing an existing state rule
+  const handleEdit = (stateRule: StateRule) => {
+    setCurrentStateRule({ ...stateRule });
+    setIsDialogOpen(true);
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!currentStateRule.state_code || !currentStateRule.state_name) {
+      toast.error('State code and name are required');
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      await upsertStateRule(currentStateRule);
+      toast.success('State rule saved successfully');
+      setIsDialogOpen(false);
+      fetchStateRules();
+    } catch (error) {
+      console.error('Error saving state rule:', error);
+      toast.error('Failed to save state rule');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">State Rules</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage motorcycle licensing rules and regulations by state.
-          </p>
-        </div>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setSelectedStateRule(null)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add State Rule
-            </Button>
-          </DialogTrigger>
-          <StateRuleFormDialog
-            open={isDialogOpen}
-            onOpenChange={setIsDialogOpen}
-            stateRule={selectedStateRule}
-            onSuccess={handleFormSuccess}
-          />
-        </Dialog>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">State Rules</h1>
+        <Button onClick={handleAddNew} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add New State Rule
+        </Button>
       </div>
 
-      <div className="bg-card border rounded-md">
-        <div className="p-4 flex justify-between items-center border-b">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder="Search states..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+      {isLoading ? (
+        <div className="flex justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-accent-teal" />
         </div>
-
-        <div className="overflow-x-auto">
+      ) : (
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>State Code</TableHead>
-                <TableHead>State Name</TableHead>
-                <TableHead>Min Age</TableHead>
+                <TableHead>State</TableHead>
+                <TableHead>Permit Age</TableHead>
                 <TableHead>Helmet Required</TableHead>
-                <TableHead>Road Test Required</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Road Test</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                Array(5)
-                  .fill(0)
-                  .map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <Skeleton className="h-5 w-8" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-32" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-8" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-16" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-5 w-16" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-8 w-8 float-right" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-              ) : filteredStateRules.length === 0 ? (
+              {stateRules.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <p className="text-muted-foreground">No state rules found</p>
-                    </div>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    No state rules found. Add your first state rule to get started.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredStateRules.map((stateRule) => (
-                  <TableRow key={stateRule.state_code}>
-                    <TableCell className="font-medium">{stateRule.state_code}</TableCell>
-                    <TableCell>{stateRule.state_name}</TableCell>
-                    <TableCell>{stateRule.permit_age_min || "N/A"}</TableCell>
+                stateRules.map((rule) => (
+                  <TableRow key={rule.state_code}>
                     <TableCell>
-                      {stateRule.helmet_required ? (
-                        <Badge className="bg-green-500/10 text-green-500 border-green-500/20 flex items-center gap-1 w-fit">
-                          <CheckCircle className="h-3 w-3" />
-                          Yes
-                        </Badge>
+                      <div className="font-medium">{rule.state_name}</div>
+                      <div className="text-xs text-muted-foreground">{rule.state_code}</div>
+                    </TableCell>
+                    <TableCell>{rule.permit_age_min ?? 'N/A'}</TableCell>
+                    <TableCell>
+                      {rule.helmet_required ? (
+                        <Badge variant="default">Required</Badge>
                       ) : (
-                        <Badge variant="outline" className="flex items-center gap-1 w-fit">
-                          <XCircle className="h-3 w-3" />
-                          No
-                        </Badge>
+                        <Badge variant="outline">Optional</Badge>
                       )}
                     </TableCell>
                     <TableCell>
-                      {stateRule.road_test_required ? (
-                        <Badge className="bg-green-500/10 text-green-500 border-green-500/20 flex items-center gap-1 w-fit">
-                          <CheckCircle className="h-3 w-3" />
-                          Yes
-                        </Badge>
+                      {rule.road_test_required ? (
+                        <Badge variant="default">Required</Badge>
                       ) : (
-                        <Badge variant="outline" className="flex items-center gap-1 w-fit">
-                          <XCircle className="h-3 w-3" />
-                          No
-                        </Badge>
+                        <Badge variant="outline">Optional</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleEdit(rule)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        {rule.link_to_dmv && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            asChild
+                          >
+                            <a 
+                              href={rule.link_to_dmv} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              title="Visit official DMV website"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(stateRule)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete State Rule</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete the rules for {stateRule.state_name}?
-                                  This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(stateRule.state_code)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -263,7 +177,134 @@ const AdminStateRules: React.FC = () => {
             </TableBody>
           </Table>
         </div>
-      </div>
+      )}
+
+      {/* State Rule Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {currentStateRule.state_code ? `Edit ${currentStateRule.state_name}` : 'Add New State Rule'}
+            </DialogTitle>
+            <DialogDescription>
+              Enter the details for this state's motorcycle rules and requirements.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="state_code">State Code</Label>
+                <Input
+                  id="state_code"
+                  value={currentStateRule.state_code || ''}
+                  onChange={(e) => setCurrentStateRule({...currentStateRule, state_code: e.target.value.toUpperCase()})}
+                  placeholder="CA"
+                  maxLength={2}
+                  disabled={!!currentStateRule.state_code}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state_name">State Name</Label>
+                <Input
+                  id="state_name"
+                  value={currentStateRule.state_name || ''}
+                  onChange={(e) => setCurrentStateRule({...currentStateRule, state_name: e.target.value})}
+                  placeholder="California"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="permit_age_min">Minimum Permit Age</Label>
+                <Input
+                  id="permit_age_min"
+                  type="number"
+                  min={0}
+                  value={currentStateRule.permit_age_min || ''}
+                  onChange={(e) => setCurrentStateRule({
+                    ...currentStateRule, 
+                    permit_age_min: e.target.value ? parseInt(e.target.value) : null
+                  })}
+                  placeholder="16"
+                />
+              </div>
+              <div className="flex items-end space-x-2 pb-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="helmet_required" 
+                    checked={currentStateRule.helmet_required || false}
+                    onCheckedChange={(checked) => setCurrentStateRule({
+                      ...currentStateRule,
+                      helmet_required: checked === true
+                    })}
+                  />
+                  <Label htmlFor="helmet_required">Helmet Required</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="road_test_required" 
+                    checked={currentStateRule.road_test_required !== false}
+                    onCheckedChange={(checked) => setCurrentStateRule({
+                      ...currentStateRule,
+                      road_test_required: checked === true
+                    })}
+                  />
+                  <Label htmlFor="road_test_required">Road Test</Label>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="special_rules">Special Rules</Label>
+              <Textarea
+                id="special_rules"
+                value={currentStateRule.special_rules || ''}
+                onChange={(e) => setCurrentStateRule({...currentStateRule, special_rules: e.target.value})}
+                placeholder="Any special rules or requirements for this state..."
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="link_to_dmv">DMV Website URL</Label>
+              <Input
+                id="link_to_dmv"
+                type="url"
+                value={currentStateRule.link_to_dmv || ''}
+                onChange={(e) => setCurrentStateRule({...currentStateRule, link_to_dmv: e.target.value})}
+                placeholder="https://dmv.ca.gov/motorcycles"
+              />
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Rule'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

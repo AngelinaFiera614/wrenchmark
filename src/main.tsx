@@ -6,7 +6,8 @@ import "./index.css";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "./components/theme/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "./context/auth";
+import { AuthProvider } from "./context/auth/AuthProvider";
+import { ProfileProvider } from "./context/profile/ProfileProvider";
 import { BrowserRouter } from "react-router-dom";
 
 // Create a client
@@ -18,9 +19,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ThemeProvider defaultTheme="dark">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <HelmetProvider>
-              <App />
-            </HelmetProvider>
+            <ProfileProvider>
+              <HelmetProvider>
+                <App />
+              </HelmetProvider>
+            </ProfileProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>

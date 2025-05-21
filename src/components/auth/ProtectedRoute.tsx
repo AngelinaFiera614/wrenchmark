@@ -1,31 +1,35 @@
 
-import { Navigate, useLocation } from "react-router-dom";
+import React from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 
-interface ProtectedRouteProps {
+export interface ProtectedRouteProps {
   children: React.ReactNode;
-  adminOnly?: boolean;
+  requiredRole?: "user" | "admin";
 }
 
-const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  requiredRole = "user" 
+}) => {
   const { user, isAdmin, isLoading } = useAuth();
-  const location = useLocation();
 
+  // If auth is still loading, show nothing or loading indicator
   if (isLoading) {
-    // You could render a loading spinner here
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
+  // If user is not authenticated, redirect to login
   if (!user) {
-    // Redirect to login page if not authenticated
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  if (adminOnly && !isAdmin) {
-    // Redirect to home page if not an admin
+  // If admin role is required but user is not admin
+  if (requiredRole === "admin" && !isAdmin) {
     return <Navigate to="/" replace />;
   }
 
+  // If all checks pass, render children
   return <>{children}</>;
 };
 
