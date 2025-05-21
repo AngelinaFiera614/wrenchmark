@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Home, GraduationCap, BookOpen, Settings, LogOut, User,
-  LayoutDashboard, MapPin
+  LayoutDashboard
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -54,11 +54,6 @@ const Header: React.FC = () => {
       href: '/manuals',
       label: 'Manuals',
       icon: <BookOpen className="w-4 h-4" />,
-    },
-    {
-      href: '/state-laws',
-      label: 'State Laws',
-      icon: <MapPin className="w-4 h-4" />,
     },
   ];
 

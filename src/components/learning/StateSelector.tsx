@@ -18,7 +18,7 @@ interface StateSelectorProps {
   label?: string;
 }
 
-export const StateSelector: React.FC<StateSelectorProps> = ({
+const StateSelector: React.FC<StateSelectorProps> = ({
   selectedState,
   onStateChange,
   label = "Select State",
@@ -30,6 +30,17 @@ export const StateSelector: React.FC<StateSelectorProps> = ({
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         <span>Loading states...</span>
+      </div>
+    );
+  }
+
+  // For a read-only selector when we're just displaying a state
+  if (!onStateChange || typeof onStateChange !== 'function') {
+    const state = states.find(s => s.state_code === selectedState);
+    return (
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <MapPin className="h-4 w-4 text-accent-teal" />
+        <span>{state?.state_name || selectedState}</span>
       </div>
     );
   }

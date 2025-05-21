@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile,
     isAdmin,
     isAdminVerified,
-    adminVerificationState: adminVerificationState as any, // Type assertion to match context type
+    adminVerificationState,
     isLoading,
     authError: null, // We handle errors directly in the methods now
     signIn: handleSignIn,

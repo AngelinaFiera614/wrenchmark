@@ -6,7 +6,7 @@ import {
   Navigate,
 } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
-import { Layout } from '@/components/layout/Layout';
+import { Layout } from '@/components/layout';
 import AdminLayout from '@/components/layout/AdminLayout';
 import {
   HomePage,
@@ -37,7 +37,6 @@ import {
   AdminStateRules,
 } from '@/pages/admin';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import StateLawsPage from './pages/StateLawsPage';
 
 function App() {
   const [isCourseSetup, setIsCourseSetup] = useState(false);
@@ -55,7 +54,7 @@ function App() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route element={<Layout>{/* Layout is a wrapper component */}</Layout>}>
+      <Route element={<Layout>{/* The Layout component needs children */}</Layout>}>
         <Route path="/" element={<HomePage />} />
         <Route path="/courses" element={<CoursesPage />} />
         <Route path="/courses/:courseSlug" element={<CoursePage />} />
@@ -68,7 +67,6 @@ function App() {
         <Route path="/riding-skills/:skillSlug" element={<RidingSkillPage />} />
         <Route path="/manuals" element={<ManualsPage />} />
         <Route path="/manuals/:manualSlug" element={<ManualPage />} />
-        <Route path="/state-laws/:stateCode?" element={<StateLawsPage />} />
         
         {/* Auth Protected Routes */}
         <Route

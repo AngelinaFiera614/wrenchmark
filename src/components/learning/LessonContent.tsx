@@ -4,21 +4,21 @@ import { marked } from 'marked';
 import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
 import GlossaryTermTooltip from './GlossaryTermTooltip';
 import StateRulesSection from './StateRulesSection';
-import { useLessonStateRules } from '@/hooks/useStateRules';
 
 interface LessonContentProps {
   content: string;
   glossaryTermSlugs?: string[];
   lessonId?: string;
+  stateRules?: any[]; // Simplified for now
 }
 
 const LessonContent: React.FC<LessonContentProps> = ({ 
   content, 
   glossaryTermSlugs = [],
-  lessonId
+  lessonId,
+  stateRules = []
 }) => {
   const [htmlContent, setHtmlContent] = useState('');
-  const { stateRules } = useLessonStateRules(lessonId);
   const { terms, isLoading } = useGlossaryTerms(glossaryTermSlugs);
 
   useEffect(() => {
@@ -41,21 +41,13 @@ const LessonContent: React.FC<LessonContentProps> = ({
             const regex = new RegExp(`\\b${term.term}\\b`, 'gi');
             
             // Replace with span that will be enhanced with tooltip
-            if (typeof enhancedContent === 'string') {
-              enhancedContent = enhancedContent.replace(regex, 
-                `<span class="glossary-term" data-term="${term.slug}">${term.term}</span>`
-              );
-            }
+            enhancedContent = enhancedContent.replace(regex, 
+              `<span class="glossary-term" data-term="${term.slug}">${term.term}</span>`
+            );
           });
         }
         
-        // Set the content only if it's a string
-        if (typeof enhancedContent === 'string') {
-          setHtmlContent(enhancedContent);
-        } else {
-          console.error("Markdown processing returned non-string result");
-          setHtmlContent("<p>Error rendering content</p>");
-        }
+        setHtmlContent(enhancedContent);
       } catch (error) {
         console.error("Error processing markdown:", error);
         setHtmlContent("<p>Error rendering content</p>");

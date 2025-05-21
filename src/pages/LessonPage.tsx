@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { useParams, Navigate, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,14 +12,12 @@ import { getQuizForLesson, isLessonCompleted } from '@/services/lessonService';
 import CompleteLessonButton from '@/components/learning/CompleteLessonButton';
 import { useAuth } from '@/context/auth';
 import LessonGlossaryTerms from '@/components/learning/LessonGlossaryTerms';
-import { useStateByCode } from '@/hooks/useStateRules';
+import { useLessonStateRules } from '@/hooks/useStateRules';
 import StateSelector from '@/components/learning/StateSelector';
 
 const LessonPage: React.FC = () => {
   const { courseSlug, lessonSlug } = useParams<{ courseSlug: string; lessonSlug: string }>();
   const [showQuiz, setShowQuiz] = useState(false);
-  const [selectedState, setSelectedState] = useState<string | undefined>(undefined);
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   // Fetch course information
@@ -70,8 +68,8 @@ const LessonPage: React.FC = () => {
     enabled: !!lesson?.id && !!user?.id
   });
 
-  // Get state information if available
-  const { state } = useStateByCode(selectedState || lesson?.state_code);
+  // Get state rules for this lesson if applicable
+  const { stateRules } = useLessonStateRules(lesson?.id);
 
   // Wait for everything to load
   if (isLoadingCourse || isLoadingLesson) {
@@ -103,19 +101,17 @@ const LessonPage: React.FC = () => {
           <div className="lg:w-2/3">
             <h1 className="text-2xl font-bold mb-4">{lesson.title}</h1>
 
-            {/* State selector - only show for permit course */}
-            {course.slug === 'motorcycle-permit-essentials' && (
+            {/* Only show state selector for permit course and only if the lesson has a state_code */}
+            {course.slug === 'motorcycle-permit-essentials' && lesson.state_code && (
               <div className="mb-6">
                 <StateSelector
-                  selectedState={selectedState || lesson.state_code}
-                  onStateChange={(stateCode) => setSelectedState(stateCode)}
-                  label="Select your state"
+                  selectedState={lesson.state_code}
+                  onStateChange={() => {}}
+                  label="This lesson applies to"
                 />
-                {selectedState && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Showing information specific to {state?.state_name || selectedState}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground mt-2">
+                  This lesson contains state-specific information
+                </p>
               </div>
             )}
 
@@ -137,6 +133,7 @@ const LessonPage: React.FC = () => {
                   content={lesson.content || ''} 
                   glossaryTermSlugs={lesson.glossary_terms || []}
                   lessonId={lesson.id}
+                  stateRules={stateRules}
                 />
                 
                 {/* Complete lesson button */}

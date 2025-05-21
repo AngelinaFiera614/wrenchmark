@@ -1,152 +1,99 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { useProfile } from "./useProfile";
-import { useAdminVerification } from "./useAdminVerification";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { User, Session } from "@supabase/supabase-js";
+import { useAuthInitialization } from "./useAuthInitialization";
+import { useAuthListener } from "./useAuthListener";
+import { useAdminVerification, AdminVerificationState } from "./useAdminVerification";
+import { getProfile } from "@/services/profileService";
 import type { Profile } from "@/services/profileService";
-import type { AdminVerificationState } from "@/context/auth/types";
 
-export function useAuthState() {
-  const [session, setSession] = useState<Session | null>(null);
+export interface AuthState {
+  user: User | null;
+  session: Session | null;
+  profile: Profile | null;
+  isAdmin: boolean;
+  isAdminVerified: boolean;
+  adminVerificationState: AdminVerificationState;
+  isLoading: boolean;
+  error: Error | null;
+  setProfile?: (profile: Profile) => void;
+  refreshProfile: () => Promise<void>;
+}
+
+export const useAuthState = (): AuthState => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [authInitError, setAuthInitError] = useState<Error | null>(null);
-  
-  // Use the extracted profile management hook
-  const {
-    profile,
-    setProfile,
-    isProfileLoading,
-    profileError,
-    fetchProfile,
-    refreshProfile
-  } = useProfile(user);
-  
-  // Use the extracted admin verification hook
-  const {
-    isAdmin,
-    isAdminVerified,
-    adminVerificationState,
-    setIsAdminVerified,
-    setAdminVerificationState,
-    verifyAdminStatus
-  } = useAdminVerification(user, profile);
+  const [error, setError] = useState<Error | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
-  // Handle auth state changes
-  const handleAuthStateChange = useCallback((event: string, session: Session | null) => {
-    console.log(`[useAuthState] Auth event: ${event}`);
-    setSession(session);
-    setUser(session?.user ?? null);
-    
-    if (session?.user) {
-      console.log(`[useAuthState] User authenticated: ${session.user.email}`);
-      
-      // Reset admin verification state on new auth events except token refresh
-      if (event !== 'TOKEN_REFRESHED') {
-        setAdminVerificationState('pending');
-      }
-      
-      // Fetch profile with slight delay to avoid race conditions
-      setTimeout(() => {
-        fetchProfile(session.user.id);
-      }, 100);
-    } else {
-      // No user session
-      console.log("[useAuthState] No user session detected");
-      setAdminVerificationState('unknown');
-    }
-  }, [fetchProfile, setAdminVerificationState]);
+  // Initialize auth
+  useAuthInitialization({
+    setUser,
+    setSession,
+    setIsLoading,
+    onError: (err) => setError(err as Error)
+  });
 
-  // Initialize authentication
+  // Listen for auth changes
+  useAuthListener((event, newSession) => {
+    setUser(newSession?.user || null);
+    setSession(newSession);
+  });
+
+  // Admin verification
+  const { isAdmin, isVerified, verificationState, verifyAdminStatus } = useAdminVerification(user);
+
+  // Fetch profile when user changes
   useEffect(() => {
-    let isMounted = true;
-    console.log("[useAuthState] Starting authentication initialization");
-    
-    const initializeAuth = async () => {
+    const fetchProfile = async () => {
+      if (!user) {
+        setProfile(null);
+        return;
+      }
+      
       try {
-        // Set up auth state listener
-        console.log("[useAuthState] Setting up auth state listener");
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-        // Initial session check
-        console.log("[useAuthState] Checking for existing session");
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("[useAuthState] Session check error:", error);
-          throw error;
-        }
-        
-        const initialSession = data.session;
-        console.log(`[useAuthState] Initial session check: ${initialSession ? 'Session found' : 'No session'}`);
-        
-        // Process initial session if exists
-        if (initialSession?.user && isMounted) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          setAdminVerificationState('pending');
-          
-          // Fetch profile for initial session
-          setTimeout(() => {
-            if (isMounted) {
-              fetchProfile(initialSession.user.id)
-                .finally(() => {
-                  if (isMounted) {
-                    setIsLoading(false);
-                  }
-                });
-            }
-          }, 100);
-        } else if (isMounted) {
-          // No initial session
-          setIsLoading(false);
-        }
-
-        // Cleanup function
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error: any) {
-        console.error("[useAuthState] Error in auth initialization:", error);
-        if (isMounted) {
-          setAuthInitError(error);
-          setIsLoading(false);
-        }
+        setProfileLoading(true);
+        const userProfile = await getProfile(user.id);
+        setProfile(userProfile);
+      } catch (err) {
+        console.error("[useAuthState] Error fetching profile:", err);
+        setError(err as Error);
+      } finally {
+        setProfileLoading(false);
       }
     };
+
+    fetchProfile();
+  }, [user]);
+
+  // Refresh profile
+  const refreshProfile = async () => {
+    if (!user) return;
     
-    // Start initialization
-    initializeAuth();
-    
-    // Add a safety timeout to prevent infinite loading state
-    const timeoutId = setTimeout(() => {
-      if (isMounted && isLoading) {
-        console.warn("[useAuthState] Loading state timeout reached, forcing completion");
-        setIsLoading(false);
-      }
-    }, 5000);
-    
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [handleAuthStateChange, setAdminVerificationState, fetchProfile, isLoading]); 
+    try {
+      setProfileLoading(true);
+      const userProfile = await getProfile(user.id);
+      setProfile(userProfile);
+    } catch (err) {
+      console.error("[useAuthState] Error refreshing profile:", err);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   return {
-    session,
     user,
+    session,
     profile,
     isAdmin,
-    isAdminVerified,
-    adminVerificationState,
-    isLoading: isLoading || isProfileLoading,
-    profileError,
-    authInitError,
+    isAdminVerified: isVerified,
+    adminVerificationState: verificationState,
+    isLoading: isLoading || profileLoading,
+    error,
     setProfile,
-    refreshProfile,
-    setIsAdminVerified,
-    setAdminVerificationState,
-    verifyAdminStatus
+    refreshProfile
   };
-}
+};

@@ -3,7 +3,7 @@ import React, { ReactNode } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 
-type LayoutProps = {
+export type LayoutProps = {
   children: ReactNode;
 };
 
