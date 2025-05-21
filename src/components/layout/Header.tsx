@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Home, GraduationCap, BookOpen, Settings, LogOut, User,
-  LayoutDashboard, Bike, BookText
+  LayoutDashboard, Bike, BookText, ShieldCheck
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -75,21 +75,45 @@ const Header: React.FC = () => {
         </Link>
 
         <nav className="flex items-center space-x-4">
-          {navigationLinks.map((link) => (
-            <NavLink
-              key={link.href}
-              to={link.href}
-              className={({ isActive }) =>
-                `flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-secondary ${
-                  isActive ? 'text-accent-teal' : ''
-                }`
-              }
-            >
-              {link.icon}
-              <span>{link.label}</span>
-            </NavLink>
-          ))}
+          {/* Main navigation links */}
+          <div className="hidden md:flex items-center space-x-1">
+            {navigationLinks.map((link) => (
+              <NavLink
+                key={link.href}
+                to={link.href}
+                className={({ isActive }) =>
+                  `flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-secondary ${
+                    isActive ? 'text-accent-teal' : ''
+                  }`
+                }
+              >
+                {link.icon}
+                <span>{link.label}</span>
+              </NavLink>
+            ))}
+            
+            {/* Admin Dashboard Link - Only visible for admin users */}
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `flex items-center space-x-1 px-3 py-2 rounded-md bg-accent-teal/10 hover:bg-accent-teal/20 ${
+                    isActive ? 'text-accent-teal' : ''
+                  }`
+                }
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Admin</span>
+              </NavLink>
+            )}
+          </div>
 
+          {/* Mobile navigation is hidden here */}
+          <div className="md:hidden">
+            {/* If needed, implement a mobile menu button here */}
+          </div>
+
+          {/* User menu */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
