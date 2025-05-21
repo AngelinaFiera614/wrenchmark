@@ -12,11 +12,6 @@ interface LessonContentProps {
   lessonId?: string;
 }
 
-interface GlossaryTermTooltipProps {
-  term: any;
-  selector: string;
-}
-
 const LessonContent: React.FC<LessonContentProps> = ({ 
   content, 
   glossaryTermSlugs = [],
@@ -30,24 +25,35 @@ const LessonContent: React.FC<LessonContentProps> = ({
     if (!content) return;
 
     // Process markdown content
-    let processedContent = marked(content);
-    
-    // Enhance with glossary terms if available
-    if (terms && terms.length > 0) {
-      terms.forEach(term => {
-        if (!term.term) return;
+    const processMarkdown = async () => {
+      try {
+        const processedContent = marked(content);
         
-        // Create regex to find the term in the content (case insensitive, whole word)
-        const regex = new RegExp(`\\b${term.term}\\b`, 'gi');
+        // Enhance with glossary terms if available
+        let enhancedContent = processedContent;
         
-        // Replace with span that will be enhanced with tooltip
-        processedContent = processedContent.replace(regex, 
-          `<span class="glossary-term" data-term="${term.slug}">${term.term}</span>`
-        );
-      });
-    }
+        if (terms && terms.length > 0) {
+          terms.forEach(term => {
+            if (!term.term) return;
+            
+            // Create regex to find the term in the content (case insensitive, whole word)
+            const regex = new RegExp(`\\b${term.term}\\b`, 'gi');
+            
+            // Replace with span that will be enhanced with tooltip
+            enhancedContent = enhancedContent.replace(regex, 
+              `<span class="glossary-term" data-term="${term.slug}">${term.term}</span>`
+            );
+          });
+        }
+        
+        setHtmlContent(enhancedContent);
+      } catch (error) {
+        console.error("Error processing markdown:", error);
+        setHtmlContent("<p>Error rendering content</p>");
+      }
+    };
     
-    setHtmlContent(processedContent);
+    processMarkdown();
   }, [content, terms]);
 
   if (isLoading) {
@@ -70,8 +76,8 @@ const LessonContent: React.FC<LessonContentProps> = ({
       {terms && terms.map(term => (
         <GlossaryTermTooltip 
           key={term.slug} 
-          term={term} 
-          selector={`[data-term="${term.slug}"]`}
+          term={term}
+          termSelector={`[data-term="${term.slug}"]`}
         />
       ))}
     </div>

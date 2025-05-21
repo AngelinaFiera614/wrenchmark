@@ -1,41 +1,42 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Link } from 'react-router-dom';
 import { GlossaryTerm } from '@/types/glossary';
+import { Link } from 'react-router-dom';
 
-interface GlossaryTermTooltipProps {
+export interface GlossaryTermTooltipProps {
   term: GlossaryTerm;
-  children: React.ReactNode;
+  termSelector: string;
 }
 
-export default function GlossaryTermTooltip({ term, children }: GlossaryTermTooltipProps) {
-  // Truncate the definition if it's too long
-  const truncatedDefinition = term.definition.length > 150
-    ? `${term.definition.substring(0, 150)}...`
-    : term.definition;
+const GlossaryTermTooltip: React.FC<GlossaryTermTooltipProps> = ({ term, termSelector }) => {
+  useEffect(() => {
+    // This effect finds all matching elements and applies tooltip behavior
+    const elements = document.querySelectorAll(termSelector);
+    
+    // No elements found, nothing to do
+    if (elements.length === 0) return;
+    
+    // Add a visual indicator to show this is a glossary term
+    elements.forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.style.borderBottom = '1px dotted #00D2B4';
+        el.style.cursor = 'help';
+      }
+    });
+    
+    return () => {
+      // Clean up styles when component unmounts
+      elements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.style.borderBottom = '';
+          el.style.cursor = '';
+        }
+      });
+    };
+  }, [termSelector]);
 
-  return (
-    <TooltipProvider>
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <span className="cursor-help border-b border-dotted border-accent-teal text-accent-teal">
-            {children}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-sm bg-background border-border">
-          <div className="space-y-2">
-            <p className="font-medium">{term.term}</p>
-            <p className="text-sm text-muted-foreground">{truncatedDefinition}</p>
-            <Link 
-              to={`/glossary/${term.slug}`}
-              className="text-xs text-accent-teal hover:underline block text-right"
-            >
-              View full definition
-            </Link>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
+  return null; // This component doesn't render anything directly, it enhances existing DOM elements
+};
+
+export default GlossaryTermTooltip;

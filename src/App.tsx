@@ -5,12 +5,9 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
 import { useAuth } from '@/context/auth';
-import { AuthProvider } from '@/context/auth/AuthProvider';
-import { ProfileProvider } from '@/context/profile/ProfileProvider';
-import AdminLayout from '@/components/admin/AdminLayout';
 import { Layout } from '@/components/layout';
+import AdminLayout from '@/components/layout/AdminLayout';
 import {
   HomePage,
   LoginPage,
@@ -58,125 +55,48 @@ function App() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Layout><HomePage /></Layout>} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/courses" element={<CoursesPage />} />
+        <Route path="/courses/:courseSlug" element={<CoursePage />} />
+        <Route path="/lessons/:courseSlug/:lessonSlug" element={<LessonPage />} />
+        <Route path="/glossary" element={<GlossaryPage />} />
+        <Route path="/glossary/:termSlug" element={<GlossaryTermPage />} />
+        <Route path="/motorcycles" element={<MotorcyclesPage />} />
+        <Route path="/motorcycles/:motorcycleSlug" element={<MotorcyclePage />} />
+        <Route path="/riding-skills" element={<RidingSkillsPage />} />
+        <Route path="/riding-skills/:skillSlug" element={<RidingSkillPage />} />
+        <Route path="/manuals" element={<ManualsPage />} />
+        <Route path="/manuals/:manualSlug" element={<ManualPage />} />
+        <Route path="/state-laws/:stateCode?" element={<StateLawsPage />} />
+        
+        {/* Auth Protected Routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+
+      {/* Auth Routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/courses" element={<Layout><CoursesPage /></Layout>} />
-      <Route path="/courses/:courseSlug" element={<Layout><CoursePage /></Layout>} />
-      <Route path="/lessons/:courseSlug/:lessonSlug" element={<Layout><LessonPage /></Layout>} />
-      <Route path="/glossary" element={<Layout><GlossaryPage /></Layout>} />
-      <Route path="/glossary/:termSlug" element={<Layout><GlossaryTermPage /></Layout>} />
-      <Route path="/motorcycles" element={<Layout><MotorcyclesPage /></Layout>} />
-      <Route path="/motorcycles/:motorcycleSlug" element={<Layout><MotorcyclePage /></Layout>} />
-      <Route path="/riding-skills" element={<Layout><RidingSkillsPage /></Layout>} />
-      <Route path="/riding-skills/:skillSlug" element={<Layout><RidingSkillPage /></Layout>} />
-      <Route path="/manuals" element={<Layout><ManualsPage /></Layout>} />
-      <Route path="/manuals/:manualSlug" element={<Layout><ManualPage /></Layout>} />
-      <Route path="/state-laws/:stateCode?" element={<Layout><StateLawsPage /></Layout>} />
-
-      {/* Auth Protected Routes */}
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <ProfilePage />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
 
       {/* Admin Routes */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminDashboard />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/courses"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminCourses />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/lessons/:courseId?"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminLessons />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/motorcycles"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminMotorcycles />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/brands"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminBrands />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/riding-skills"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminRidingSkills />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/manuals"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminManuals />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/glossary"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminGlossary />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/state-rules"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminLayout>
-              <AdminStateRules />
-            </AdminLayout>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="courses" element={<AdminCourses />} />
+        <Route path="lessons/:courseId?" element={<AdminLessons />} />
+        <Route path="motorcycles" element={<AdminMotorcycles />} />
+        <Route path="brands" element={<AdminBrands />} />
+        <Route path="riding-skills" element={<AdminRidingSkills />} />
+        <Route path="manuals" element={<AdminManuals />} />
+        <Route path="glossary" element={<AdminGlossary />} />
+        <Route path="state-rules" element={<AdminStateRules />} />
+      </Route>
 
       {/* Catch-all route for 404 Not Found */}
       <Route path="*" element={<Navigate to="/" replace />} />

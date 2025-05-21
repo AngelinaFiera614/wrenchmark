@@ -1,81 +1,65 @@
 
-import React from "react";
-import { StateRule } from "@/types/state";
-import { ExternalLink, MapPin, ShieldAlert, HelpCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+interface StateRule {
+  state_code: string;
+  state_name: string;
+  special_rules?: string;
+  helmet_required?: boolean;
+  permit_age_min?: number;
+}
 
 interface StateRulesSectionProps {
   stateRules: StateRule[];
 }
 
-export const StateRulesSection: React.FC<StateRulesSectionProps> = ({ stateRules }) => {
-  if (!stateRules.length) return null;
-
-  const state = stateRules[0]; // We usually display rules for one state at a time
+const StateRulesSection: React.FC<StateRulesSectionProps> = ({ stateRules }) => {
+  if (!stateRules || stateRules.length === 0) return null;
 
   return (
-    <div className="mt-6 p-4 rounded-md bg-accent-teal/10 border border-accent-teal/20">
-      <div className="flex items-center mb-3">
-        <MapPin className="h-5 w-5 text-accent-teal mr-2" />
-        <h3 className="font-semibold text-lg">State Requirements: {state.state_name}</h3>
-      </div>
+    <div className="mt-8 border-t border-border pt-6">
+      <h2 className="text-2xl font-bold mb-4">State-Specific Rules</h2>
       
-      <div className="grid gap-3">
-        <div className="flex items-start">
-          <Badge variant="outline" className="mt-1 shrink-0 bg-accent-teal/10">
-            Age
-          </Badge>
-          <p className="ml-3">
-            Minimum age for permit: {state.permit_age_min || 'Not specified'}
-          </p>
-        </div>
-        
-        <div className="flex items-start">
-          <Badge variant="outline" className="mt-1 shrink-0 bg-accent-teal/10">
-            Helmet
-          </Badge>
-          <p className="ml-3">
-            {state.helmet_required 
-              ? <span className="flex items-center"><ShieldAlert className="inline h-4 w-4 mr-1 text-red-500" /> Required by law</span> 
-              : 'Not mandated by state law'}
-          </p>
-        </div>
-        
-        {state.special_rules && (
-          <div className="flex items-start">
-            <Badge variant="outline" className="mt-1 shrink-0 bg-accent-teal/10">
-              Special Rules
-            </Badge>
-            <p className="ml-3">{state.special_rules}</p>
+      <div className="space-y-4">
+        {stateRules.map((rule) => (
+          <div 
+            key={rule.state_code} 
+            className="bg-card/50 border border-border rounded-lg p-4"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-medium">{rule.state_name}</h3>
+              <Link 
+                to={`/state-laws/${rule.state_code}`}
+                className="text-accent-teal text-sm hover:underline"
+              >
+                View all {rule.state_name} laws
+              </Link>
+            </div>
+
+            {rule.special_rules && (
+              <p className="text-sm text-muted-foreground mb-2">{rule.special_rules}</p>
+            )}
+            
+            <div className="flex flex-wrap gap-2 mt-2">
+              {rule.helmet_required !== undefined && (
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  rule.helmet_required 
+                    ? "bg-accent-teal/20 text-accent-teal" 
+                    : "bg-yellow-500/20 text-yellow-500"
+                }`}>
+                  Helmet: {rule.helmet_required ? "Required" : "Optional"}
+                </span>
+              )}
+              
+              {rule.permit_age_min && (
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400">
+                  Min. Age: {rule.permit_age_min}
+                </span>
+              )}
+            </div>
           </div>
-        )}
-        
-        <div className="flex items-start">
-          <Badge variant="outline" className="mt-1 shrink-0 bg-accent-teal/10">
-            Road Test
-          </Badge>
-          <p className="ml-3">
-            {state.road_test_required 
-              ? 'Required for license' 
-              : 'May be waived in certain circumstances'}
-          </p>
-        </div>
-      </div>
-      
-      {state.link_to_dmv && (
-        <a 
-          href={state.link_to_dmv} 
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center mt-4 text-sm text-accent-teal hover:underline"
-        >
-          Visit official DMV website <ExternalLink className="ml-1 h-3 w-3" />
-        </a>
-      )}
-      
-      <div className="mt-4 flex items-center text-xs text-muted-foreground">
-        <HelpCircle className="h-3 w-3 mr-1" />
-        <span>Rules may change. Always verify with your local DMV.</span>
+        ))}
       </div>
     </div>
   );
