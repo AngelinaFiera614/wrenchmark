@@ -12,6 +12,9 @@ import Courses from './pages/CoursesPage';
 import CourseDetails from './pages/CourseDetailsPage';
 import LessonDetails from './pages/LessonDetailsPage';
 import NotFound from './pages/NotFoundPage';
+import Motorcycles from './pages/Motorcycles';
+import ManualsPage from './pages/ManualsPage';
+import GlossaryPage from './pages/GlossaryPage';
 
 function App() {
   const { isLoading } = useAuth();
@@ -48,9 +51,12 @@ function App() {
       <Route path="/" element={<Layout children={<Outlet />} />}>
         <Route index element={<Index />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/motorcycles" element={<Motorcycles />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:courseId" element={<CourseDetails />} />
         <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonDetails />} />
+        <Route path="/manuals" element={<ManualsPage />} />
+        <Route path="/glossary" element={<GlossaryPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

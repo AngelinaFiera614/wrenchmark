@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Home, GraduationCap, BookOpen, Settings, LogOut, User,
-  LayoutDashboard
+  LayoutDashboard, Bike, BookText
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -46,6 +46,11 @@ const Header: React.FC = () => {
       icon: <Home className="w-4 h-4" />,
     },
     {
+      href: '/motorcycles',
+      label: 'Motorcycles',
+      icon: <Bike className="w-4 h-4" />,
+    },
+    {
       href: '/courses',
       label: 'Courses',
       icon: <GraduationCap className="w-4 h-4" />,
@@ -53,6 +58,11 @@ const Header: React.FC = () => {
     {
       href: '/manuals',
       label: 'Manuals',
+      icon: <BookText className="w-4 h-4" />,
+    },
+    {
+      href: '/glossary',
+      label: 'Glossary',
       icon: <BookOpen className="w-4 h-4" />,
     },
   ];
@@ -117,10 +127,10 @@ const Header: React.FC = () => {
           ) : (
             <>
               <Button variant="outline" asChild>
-                <Link to="/login">Sign In</Link>
+                <Link to="/auth">Sign In</Link>
               </Button>
               <Button asChild>
-                <Link to="/register">Sign Up</Link>
+                <Link to="/auth">Sign Up</Link>
               </Button>
             </>
           )}
