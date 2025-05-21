@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getProfileById, createProfileIfNotExists } from "@/services/profileService";
+import { getProfile, createProfileIfNotExists } from "@/services/profileService";
 import type { Profile } from "@/services/profileService";
 
 export async function signIn(email: string, password: string) {
@@ -13,7 +13,7 @@ export async function signIn(email: string, password: string) {
 
     if (data.user) {
       // Ensure profile exists after login
-      const profile = await getProfileById(data.user.id);
+      const profile = await getProfile(data.user.id);
       if (!profile) {
         console.log("Creating profile after login");
         const createdProfile = await createProfileIfNotExists(data.user.id);

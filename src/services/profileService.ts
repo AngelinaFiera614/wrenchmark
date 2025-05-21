@@ -27,6 +27,42 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return data;
 }
 
+// Alias for getProfile to maintain compatibility with existing code
+export const getProfileById = getProfile;
+
+export async function createProfileIfNotExists(userId: string): Promise<Profile | null> {
+  // First check if profile already exists
+  const existingProfile = await getProfile(userId);
+  if (existingProfile) {
+    return existingProfile;
+  }
+
+  // Create new profile if it doesn't exist
+  const newProfile = {
+    id: userId,
+    username: null,
+    full_name: null,
+    avatar_url: null,
+    bio: null,
+    is_admin: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .insert([newProfile])
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating profile:", error);
+    return null;
+  }
+
+  return data;
+}
+
 export async function updateProfile(
   userId: string,
   profileData: Partial<Profile>

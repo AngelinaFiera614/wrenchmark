@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { User } from "@supabase/supabase-js";
-import { getProfileById, createProfileIfNotExists, Profile } from "@/services/profileService";
+import { getProfile, createProfileIfNotExists, Profile } from "@/services/profileService";
 import { toast } from "sonner";
 
 /**
@@ -20,7 +20,7 @@ export function useProfile(user: User | null) {
       setIsProfileLoading(true);
       setProfileError(null);
       
-      const profileData = await getProfileById(userId);
+      const profileData = await getProfile(userId);
       
       if (!profileData) {
         console.log("[useProfile] No profile found, creating one");

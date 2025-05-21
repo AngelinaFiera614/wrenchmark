@@ -1,92 +1,70 @@
 
-import { useState, useEffect } from 'react';
-import { StateRule } from '@/types/state';
-import { getAllStateRules, getStateRuleByCode, getStateRulesForLesson } from '@/services/stateRulesService';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-// Hook to fetch all state rules
+export interface StateRule {
+  state_code: string;
+  state_name: string;
+  helmet_required: boolean;
+  road_test_required: boolean;
+  permit_age_min: number | null;
+  special_rules: string | null;
+  link_to_dmv: string | null;
+}
+
+// Hook to get all state rules
 export const useAllStateRules = () => {
-  const [states, setStates] = useState<StateRule[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["state-rules"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("state_rules")
+        .select("*")
+        .order("state_name", { ascending: true });
 
-  useEffect(() => {
-    const fetchStates = async () => {
-      setIsLoading(true);
-      try {
-        const stateRules = await getAllStateRules();
-        setStates(stateRules);
-      } catch (err) {
-        console.error("Error fetching state rules:", err);
-        setError("Failed to load states");
-      } finally {
-        setIsLoading(false);
+      if (error) {
+        throw error;
       }
-    };
+      
+      return data as StateRule[];
+    },
+  });
 
-    fetchStates();
-  }, []);
-
-  return { states, isLoading, error };
+  return {
+    states: data || [],
+    isLoading,
+    error,
+  };
 };
 
-// Hook to fetch state rule by code
+// Hook to get state rules for a specific state code
 export const useStateByCode = (stateCode?: string) => {
-  const [state, setState] = useState<StateRule | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["state-rules", stateCode],
+    queryFn: async () => {
+      if (!stateCode) return null;
+      
+      const { data, error } = await supabase
+        .from("state_rules")
+        .select("*")
+        .eq("state_code", stateCode)
+        .single();
 
-  useEffect(() => {
-    if (!stateCode) {
-      setState(null);
-      return;
-    }
-
-    const fetchState = async () => {
-      setIsLoading(true);
-      try {
-        const stateRule = await getStateRuleByCode(stateCode);
-        setState(stateRule);
-      } catch (err) {
-        console.error(`Error fetching state with code ${stateCode}:`, err);
-        setError("Failed to load state information");
-      } finally {
-        setIsLoading(false);
+      if (error) {
+        if (error.code === "PGRST116") {
+          return null; // No state found, return null instead of throwing
+        }
+        throw error;
       }
-    };
+      
+      return data as StateRule;
+    },
+    enabled: !!stateCode,
+  });
 
-    fetchState();
-  }, [stateCode]);
-
-  return { state, isLoading, error };
-};
-
-// Hook to fetch lesson-specific state rules
-export const useLessonStateRules = (lessonId?: string) => {
-  const [stateRules, setStateRules] = useState<StateRule[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!lessonId) {
-      setStateRules([]);
-      return;
-    }
-
-    const fetchStateRules = async () => {
-      setIsLoading(true);
-      try {
-        const rules = await getStateRulesForLesson(lessonId);
-        setStateRules(rules);
-      } catch (err) {
-        console.error("Error fetching state rules for lesson:", err);
-        setError("Failed to load state rules");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStateRules();
-  }, [lessonId]);
-
-  return { stateRules, isLoading, error };
+  return {
+    state: data,
+    isLoading,
+    error,
+  };
 };
