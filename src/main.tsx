@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./context/auth/AuthProvider";
 import { ProfileProvider } from "./context/profile/ProfileProvider";
 import { BrowserRouter } from "react-router-dom";
+import { ComparisonProvider } from "./context/ComparisonContext";
 
 // Create a client
 export const queryClient = new QueryClient();
@@ -20,9 +21,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <ProfileProvider>
-              <HelmetProvider>
-                <App />
-              </HelmetProvider>
+              <ComparisonProvider>
+                <HelmetProvider>
+                  <App />
+                </HelmetProvider>
+              </ComparisonProvider>
             </ProfileProvider>
           </AuthProvider>
         </QueryClientProvider>
