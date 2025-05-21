@@ -1,16 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-export interface StateRule {
-  state_code: string;
-  state_name: string;
-  helmet_required: boolean;
-  road_test_required: boolean;
-  permit_age_min: number | null;
-  special_rules: string | null;
-  link_to_dmv: string | null;
-}
+import { StateRule } from "@/types/state";
 
 // Hook to get all state rules
 export const useAllStateRules = () => {
@@ -71,5 +62,36 @@ export const useStateByCode = (stateCode?: string) => {
 
 // Hook to get state rules for a specific lesson
 export const useLessonStateRules = (lessonStateCode?: string) => {
-  return useStateByCode(lessonStateCode);
+  const { data: state, isLoading, error } = useQuery({
+    queryKey: ["state-rules", lessonStateCode],
+    queryFn: async () => {
+      if (!lessonStateCode) return null;
+      
+      const { data, error } = await supabase
+        .from("state_rules")
+        .select("*")
+        .eq("state_code", lessonStateCode)
+        .single();
+
+      if (error) {
+        if (error.code === "PGRST116") {
+          return null; // No state found, return null instead of throwing
+        }
+        throw error;
+      }
+      
+      return data as StateRule;
+    },
+    enabled: !!lessonStateCode,
+  });
+
+  // Return state as stateRules array for consistency
+  const stateRules = state ? [state] : [];
+  
+  return {
+    state,
+    stateRules,
+    isLoading,
+    error,
+  };
 };

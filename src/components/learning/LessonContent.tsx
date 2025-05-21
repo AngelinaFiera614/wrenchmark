@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
-import { GlossaryTermTooltip } from './GlossaryTermTooltip';
+import GlossaryTermTooltip from './GlossaryTermTooltip';
 import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
 import { Card, CardContent } from '@/components/ui/card';
-import { StateRule } from '@/hooks/useStateRules';
+import { StateRule } from '@/types/state';
 import StateRulesSection from './StateRulesSection';
 
 interface LessonContentProps {
@@ -25,15 +25,15 @@ export const LessonContent = ({ content, stateRules = [] }: LessonContentProps) 
       // Process glossary term highlights
       if (terms && terms.length > 0) {
         terms.forEach(term => {
-          // Skip if term title is empty
-          if (!term.title) return;
+          // Skip if term name is empty
+          if (!term.term) return;
           
           // Create regex to find the term with word boundaries
-          const regex = new RegExp(`\\b${term.title}\\b`, 'gi');
+          const regex = new RegExp(`\\b${term.term}\\b`, 'gi');
           
           // Replace with tooltip component
           processedContent = processedContent.replace(regex, 
-            `<span class="glossary-term" data-term-id="${term.id}">${term.title}</span>`
+            `<span class="glossary-term" data-term-id="${term.id}">${term.term}</span>`
           );
         });
       }

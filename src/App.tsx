@@ -7,11 +7,11 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
 import ProfilePage from './pages/ProfilePage';
-import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import Courses from './pages/CoursesPage';
-import CourseDetails from './pages/CourseDetailPage';
-import LessonDetails from './pages/LessonPage';
-import NotFound from './pages/NotFound';
+import CourseDetails from './pages/CourseDetailsPage';
+import LessonDetails from './pages/LessonDetailsPage';
+import NotFound from './pages/NotFoundPage';
 
 function App() {
   const { isLoading } = useAuth();

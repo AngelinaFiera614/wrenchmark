@@ -69,7 +69,7 @@ const LessonPage: React.FC = () => {
   });
 
   // Get state rules for this lesson if applicable
-  const { stateRules } = useLessonStateRules(lesson?.id);
+  const { stateRules } = useLessonStateRules(lesson?.state_code);
 
   // Wait for everything to load
   if (isLoadingCourse || isLoadingLesson) {
@@ -131,8 +131,6 @@ const LessonPage: React.FC = () => {
               <>
                 <LessonContent 
                   content={lesson.content || ''} 
-                  glossaryTermSlugs={lesson.glossary_terms || []}
-                  lessonId={lesson.id}
                   stateRules={stateRules}
                 />
                 
