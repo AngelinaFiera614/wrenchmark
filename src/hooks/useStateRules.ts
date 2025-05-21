@@ -68,3 +68,8 @@ export const useStateByCode = (stateCode?: string) => {
     error,
   };
 };
+
+// Hook to get state rules for a specific lesson
+export const useLessonStateRules = (lessonStateCode?: string) => {
+  return useStateByCode(lessonStateCode);
+};

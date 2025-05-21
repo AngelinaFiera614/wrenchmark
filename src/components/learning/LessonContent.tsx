@@ -1,86 +1,75 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { marked } from 'marked';
+import { GlossaryTermTooltip } from './GlossaryTermTooltip';
 import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
-import GlossaryTermTooltip from './GlossaryTermTooltip';
+import { Card, CardContent } from '@/components/ui/card';
+import { StateRule } from '@/hooks/useStateRules';
 import StateRulesSection from './StateRulesSection';
 
 interface LessonContentProps {
   content: string;
-  glossaryTermSlugs?: string[];
-  lessonId?: string;
-  stateRules?: any[]; // Simplified for now
+  stateRules?: StateRule[];
 }
 
-const LessonContent: React.FC<LessonContentProps> = ({ 
-  content, 
-  glossaryTermSlugs = [],
-  lessonId,
-  stateRules = []
-}) => {
-  const [htmlContent, setHtmlContent] = useState('');
-  const { terms, isLoading } = useGlossaryTerms(glossaryTermSlugs);
+export const LessonContent = ({ content, stateRules = [] }: LessonContentProps) => {
+  const [renderedContent, setRenderedContent] = useState('');
+  const { terms, isLoading } = useGlossaryTerms();
 
   useEffect(() => {
-    if (!content) return;
+    if (!content || isLoading || terms.length === 0) return;
+    
+    const processContent = async () => {
+      let processedContent = content;
 
-    // Process markdown content
-    const processMarkdown = async () => {
+      // Process glossary term highlights
+      if (terms && terms.length > 0) {
+        terms.forEach(term => {
+          // Skip if term title is empty
+          if (!term.title) return;
+          
+          // Create regex to find the term with word boundaries
+          const regex = new RegExp(`\\b${term.title}\\b`, 'gi');
+          
+          // Replace with tooltip component
+          processedContent = processedContent.replace(regex, 
+            `<span class="glossary-term" data-term-id="${term.id}">${term.title}</span>`
+          );
+        });
+      }
+
+      // Convert markdown to HTML
       try {
-        // Use marked to convert markdown to HTML
-        const processedContent = marked.parse(content);
-        
-        // Enhance with glossary terms if available
-        let enhancedContent = processedContent;
-        
-        if (terms && terms.length > 0) {
-          terms.forEach(term => {
-            if (!term.term) return;
-            
-            // Create regex to find the term in the content (case insensitive, whole word)
-            const regex = new RegExp(`\\b${term.term}\\b`, 'gi');
-            
-            // Replace with span that will be enhanced with tooltip
-            enhancedContent = enhancedContent.replace(regex, 
-              `<span class="glossary-term" data-term="${term.slug}">${term.term}</span>`
-            );
-          });
-        }
-        
-        setHtmlContent(enhancedContent);
+        const htmlContent = await marked(processedContent);
+        setRenderedContent(htmlContent);
       } catch (error) {
-        console.error("Error processing markdown:", error);
-        setHtmlContent("<p>Error rendering content</p>");
+        console.error('Error parsing markdown:', error);
+        setRenderedContent(content); // Fallback to raw content
       }
     };
-    
-    processMarkdown();
-  }, [content, terms]);
 
-  if (isLoading) {
-    return <div className="animate-pulse h-64 bg-muted rounded"></div>;
+    processContent();
+  }, [content, terms, isLoading]);
+
+  if (!content) {
+    return <div className="text-muted-foreground">No content available for this lesson.</div>;
   }
 
   return (
-    <div className="lesson-content">
-      <div 
-        className="prose dark:prose-invert prose-headings:text-foreground prose-a:text-accent-teal max-w-none"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
-      
-      {/* Add state rules section if the lesson has associated state rules */}
+    <div className="space-y-6">
+      <Card className="overflow-hidden">
+        <CardContent className="prose prose-invert max-w-none p-6">
+          <div 
+            className="lesson-content"
+            dangerouslySetInnerHTML={{ __html: renderedContent }}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Display state rules if available */}
       {stateRules && stateRules.length > 0 && (
         <StateRulesSection stateRules={stateRules} />
       )}
-      
-      {/* Render tooltips for all glossary terms */}
-      {terms && terms.map(term => (
-        <GlossaryTermTooltip 
-          key={term.slug} 
-          term={term}
-          termSelector={`[data-term="${term.slug}"]`}
-        />
-      ))}
     </div>
   );
 };

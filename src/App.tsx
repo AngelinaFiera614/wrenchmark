@@ -1,17 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import { Layout } from '@/components/layout';
-import { AdminLayout } from '@/components/layout/AdminLayout';
-import Index from './IndexPage';
-import Auth from './AuthPage';
-import ProfilePage from './ProfilePage';
-import AdminDashboard from './AdminDashboard';
-import Courses from './CoursesPage';
-import CourseDetails from './CourseDetailsPage';
-import LessonDetails from './LessonDetailsPage';
-import StateLawsPage from './StateLawsPage';
-import NotFound from './NotFoundPage';
+import AdminLayout from '@/components/admin/AdminLayout';
+import Index from './pages/Index';
+import Auth from './pages/Auth';
+import ProfilePage from './pages/ProfilePage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import Courses from './pages/CoursesPage';
+import CourseDetails from './pages/CourseDetailPage';
+import LessonDetails from './pages/LessonPage';
+import NotFound from './pages/NotFound';
 
 function App() {
   const { isLoading } = useAuth();
@@ -52,7 +52,6 @@ function App() {
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:courseId" element={<CourseDetails />} />
           <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonDetails />} />
-          <Route path="/state-laws" element={<StateLawsPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
