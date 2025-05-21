@@ -4,16 +4,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { AuthError } from "@supabase/supabase-js";
-
-// Type definition for admin verification state
-type AdminVerificationState = boolean | "loading" | "error";
+import { useProfile } from "./useProfile";
+import type { Profile } from "@/services/profileService";
+import { AdminVerificationState } from "@/context/auth/types";
 
 export const useAuthState = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [adminVerified, setAdminVerified] = useState<AdminVerificationState>("loading");
+  const [adminVerified, setAdminVerified] = useState<"unknown" | "pending" | "verified" | "failed" | "idle">("idle");
+
+  // Use the profile hook to manage user profile data
+  const {
+    profile,
+    setProfile,
+    isProfileLoading,
+    profileError,
+    refreshProfile,
+  } = useProfile(user);
 
   // Initialize the auth state from Supabase
   const initializeAuth = useCallback(async () => {
@@ -36,7 +45,7 @@ export const useAuthState = () => {
             setSession(null);
             setUser(null);
             setIsAdmin(false);
-            setAdminVerified(false);
+            setAdminVerified("idle");
           }
         }
       );
@@ -55,7 +64,7 @@ export const useAuthState = () => {
         setSession(null);
         setUser(null);
         setIsAdmin(false);
-        setAdminVerified(false);
+        setAdminVerified("idle");
       }
       
       setIsLoading(false);
@@ -71,13 +80,14 @@ export const useAuthState = () => {
       setSession(null);
       setUser(null);
       setIsAdmin(false);
-      setAdminVerified(false);
+      setAdminVerified("failed");
     }
   }, []);
 
   // Check if the user has admin permissions
   const checkAdminStatus = async (userId: string) => {
     try {
+      setAdminVerified("pending");
       // Fetch the admin status from profiles table
       const { data, error } = await supabase
         .from("profiles")
@@ -88,19 +98,19 @@ export const useAuthState = () => {
       if (error) {
         console.error("[useAuthState] Admin check error:", error);
         setIsAdmin(false);
-        setAdminVerified("error");
+        setAdminVerified("failed");
         return;
       }
 
       const isAdminUser = data?.is_admin || false;
       setIsAdmin(isAdminUser);
-      setAdminVerified(true);
+      setAdminVerified("verified");
       
       console.info(`[useAuthState] Admin status: ${isAdminUser}`);
     } catch (error) {
       console.error("[useAuthState] Admin check exception:", error);
       setIsAdmin(false);
-      setAdminVerified("error");
+      setAdminVerified("failed");
     }
   };
 
@@ -118,10 +128,13 @@ export const useAuthState = () => {
   return {
     session,
     user,
-    isLoading,
+    profile,
+    isLoading: isLoading || isProfileLoading,
     isAdmin,
-    isAdminVerified: adminVerified === true,
+    isAdminVerified: adminVerified === "verified",
     adminVerificationState: adminVerified,
+    refreshProfile,
+    setProfile
   };
 };
 
