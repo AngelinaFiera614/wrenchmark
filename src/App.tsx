@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
 import { Layout } from '@/components/layout';
 import AdminLayout from '@/components/admin/AdminLayout';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
 import ProfilePage from './pages/ProfilePage';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import Courses from './pages/CoursesPage';
 import CourseDetails from './pages/CourseDetailsPage';
 import LessonDetails from './pages/LessonDetailsPage';
@@ -17,7 +17,7 @@ import ManualsPage from './pages/ManualsPage';
 import GlossaryPage from './pages/GlossaryPage';
 
 function App() {
-  const { isLoading } = useAuth();
+  const { isLoading, isAdmin } = useAuth();
   const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
@@ -49,7 +49,8 @@ function App() {
 
       {/* Main app routes */}
       <Route path="/" element={<Layout children={<Outlet />} />}>
-        <Route index element={<Index />} />
+        {/* If user is admin, redirect to admin dashboard, otherwise show Index */}
+        <Route index element={isAdmin ? <Navigate to="/admin" replace /> : <Index />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/motorcycles" element={<Motorcycles />} />
         <Route path="/courses" element={<Courses />} />

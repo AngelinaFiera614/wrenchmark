@@ -39,6 +39,8 @@ const Header: React.FC = () => {
     }
   };
 
+  console.log('Header rendering - User is admin:', isAdmin); // Debug log to check admin status
+
   const navigationLinks = [
     {
       href: '/',
@@ -66,6 +68,15 @@ const Header: React.FC = () => {
       icon: <BookOpen className="w-4 h-4" />,
     },
   ];
+  
+  // Add admin link directly to the navigationLinks array if the user is an admin
+  if (isAdmin) {
+    navigationLinks.push({
+      href: '/admin',
+      label: 'Admin',
+      icon: <ShieldCheck className="w-4 h-4" />,
+    });
+  }
 
   return (
     <header className="bg-background border-b">
@@ -83,7 +94,8 @@ const Header: React.FC = () => {
                 to={link.href}
                 className={({ isActive }) =>
                   `flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-secondary ${
-                    isActive ? 'text-accent-teal' : ''
+                    isActive ? (link.href === '/admin' ? 'text-accent-teal bg-accent-teal/10' : 'text-accent-teal') : 
+                    (link.href === '/admin' ? 'bg-accent-teal/10 hover:bg-accent-teal/20' : '')
                   }`
                 }
               >
@@ -91,21 +103,6 @@ const Header: React.FC = () => {
                 <span>{link.label}</span>
               </NavLink>
             ))}
-            
-            {/* Admin Dashboard Link - Only visible for admin users */}
-            {isAdmin && (
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  `flex items-center space-x-1 px-3 py-2 rounded-md bg-accent-teal/10 hover:bg-accent-teal/20 ${
-                    isActive ? 'text-accent-teal' : ''
-                  }`
-                }
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Admin</span>
-              </NavLink>
-            )}
           </div>
 
           {/* Mobile navigation is hidden here */}

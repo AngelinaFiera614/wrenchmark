@@ -19,6 +19,7 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
     if (user && profile !== null) {
       const profileIsAdmin = profile?.is_admin || false;
       console.log(`[useAdminVerification] User ${user.id} admin status from profile: ${profileIsAdmin}`);
+      console.log(`[useAdminVerification] Profile data:`, profile); // Add detailed profile logging
       setIsAdmin(profileIsAdmin);
       
       // If profile says user is admin, mark as verified
@@ -56,6 +57,7 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
         if (user) {
           verifyAdminStatus(user.id)
             .then(isAdmin => {
+              console.log(`[useAdminVerification] Admin verification result for ${user.id}: ${isAdmin}`);
               setIsAdmin(isAdmin);
               setIsAdminVerified(isAdmin);
               setAdminVerificationState(isAdmin ? 'verified' : 'failed');
