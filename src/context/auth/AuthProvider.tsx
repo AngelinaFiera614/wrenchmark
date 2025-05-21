@@ -2,8 +2,10 @@
 import React, { useCallback } from "react";
 import { AuthContext } from "./AuthContext";
 import { useAuthState } from "@/hooks/auth/useAuthState";
-import { signIn, signUp, signOut, updateProfileData } from "@/services/auth/authenticationService";
+import { signIn, signUp, signOut } from "@/services/auth/authenticationService";
+import { updateProfile as updateProfileService } from "@/services/profileService";
 import { toast } from "sonner";
+import type { Profile } from "@/services/profileService";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -45,15 +47,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const handleUpdateProfile = async (profileData: Partial<typeof profile>) => {
+  const handleUpdateProfile = async (profileData: Partial<Profile>) => {
     if (!user || !profile) {
       toast.error("You must be logged in to update your profile");
       return;
     }
 
     try {
-      const updatedProfile = await updateProfileData(user.id, profileData);
-      if (updatedProfile) {
+      const updatedProfile = await updateProfileService(user.id, profileData);
+      if (updatedProfile && setProfile) {
         setProfile(updatedProfile);
       }
     } catch (error: any) {
@@ -67,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile,
     isAdmin,
     isAdminVerified,
-    adminVerificationState,
+    adminVerificationState: adminVerificationState as any, // Type assertion to match context type
     isLoading,
     authError: null, // We handle errors directly in the methods now
     signIn: handleSignIn,

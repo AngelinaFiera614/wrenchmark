@@ -27,7 +27,8 @@ const LessonContent: React.FC<LessonContentProps> = ({
     // Process markdown content
     const processMarkdown = async () => {
       try {
-        const processedContent = marked(content);
+        // Use marked to convert markdown to HTML
+        const processedContent = marked.parse(content);
         
         // Enhance with glossary terms if available
         let enhancedContent = processedContent;
@@ -40,13 +41,21 @@ const LessonContent: React.FC<LessonContentProps> = ({
             const regex = new RegExp(`\\b${term.term}\\b`, 'gi');
             
             // Replace with span that will be enhanced with tooltip
-            enhancedContent = enhancedContent.replace(regex, 
-              `<span class="glossary-term" data-term="${term.slug}">${term.term}</span>`
-            );
+            if (typeof enhancedContent === 'string') {
+              enhancedContent = enhancedContent.replace(regex, 
+                `<span class="glossary-term" data-term="${term.slug}">${term.term}</span>`
+              );
+            }
           });
         }
         
-        setHtmlContent(enhancedContent);
+        // Set the content only if it's a string
+        if (typeof enhancedContent === 'string') {
+          setHtmlContent(enhancedContent);
+        } else {
+          console.error("Markdown processing returned non-string result");
+          setHtmlContent("<p>Error rendering content</p>");
+        }
       } catch (error) {
         console.error("Error processing markdown:", error);
         setHtmlContent("<p>Error rendering content</p>");

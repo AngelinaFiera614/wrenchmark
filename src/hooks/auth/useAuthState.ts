@@ -1,79 +1,152 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { User, Session, AuthError } from "@supabase/supabase-js";
-import { useAuthInitialization } from "./useAuthInitialization";
-import { useAuthListener } from "./useAuthListener";
-import { useSessionInit } from "./useSessionInit";
+import { Session, User } from "@supabase/supabase-js";
 import { useProfile } from "./useProfile";
 import { useAdminVerification } from "./useAdminVerification";
-import type { Profile } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import type { Profile } from "@/services/profileService";
+import type { AdminVerificationState } from "@/context/auth/types";
 
 export function useAuthState() {
-  // User and session state
-  const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<AuthError | null>(null);
-
-  // Get profile data
-  const { 
-    profile, 
-    isProfileLoading, 
-    refreshProfile 
+  const [authInitError, setAuthInitError] = useState<Error | null>(null);
+  
+  // Use the extracted profile management hook
+  const {
+    profile,
+    setProfile,
+    isProfileLoading,
+    profileError,
+    fetchProfile,
+    refreshProfile
   } = useProfile(user);
-
-  // Admin verification
-  const { 
-    isAdmin, 
+  
+  // Use the extracted admin verification hook
+  const {
+    isAdmin,
     isAdminVerified,
-    adminVerificationState, 
-    setAdminStatus,
+    adminVerificationState,
     setIsAdminVerified,
     setAdminVerificationState,
-    verifyAdminStatus 
+    verifyAdminStatus
   } = useAdminVerification(user, profile);
 
-  // Handle initialization
-  useAuthInitialization({ 
-    setIsLoading, 
-    setUser, 
-    setSession, 
-    setError
-  });
-
-  // Handle session change events
-  useAuthListener({ 
-    setUser, 
-    setSession, 
-    setError,
-    setAdminVerificationState
-  });
-
-  // Initialize auth on page load
-  useSessionInit({ 
-    setUser, 
-    setSession 
-  });
-
-  // Handle user changes to refresh profile
-  useEffect(() => {
-    if (user) {
-      console.info("[useAuthState] User changed, refreshing profile");
-      refreshProfile();
+  // Handle auth state changes
+  const handleAuthStateChange = useCallback((event: string, session: Session | null) => {
+    console.log(`[useAuthState] Auth event: ${event}`);
+    setSession(session);
+    setUser(session?.user ?? null);
+    
+    if (session?.user) {
+      console.log(`[useAuthState] User authenticated: ${session.user.email}`);
+      
+      // Reset admin verification state on new auth events except token refresh
+      if (event !== 'TOKEN_REFRESHED') {
+        setAdminVerificationState('pending');
+      }
+      
+      // Fetch profile with slight delay to avoid race conditions
+      setTimeout(() => {
+        fetchProfile(session.user.id);
+      }, 100);
+    } else {
+      // No user session
+      console.log("[useAuthState] No user session detected");
+      setAdminVerificationState('unknown');
     }
-  }, [user, refreshProfile]);
+  }, [fetchProfile, setAdminVerificationState]);
+
+  // Initialize authentication
+  useEffect(() => {
+    let isMounted = true;
+    console.log("[useAuthState] Starting authentication initialization");
+    
+    const initializeAuth = async () => {
+      try {
+        // Set up auth state listener
+        console.log("[useAuthState] Setting up auth state listener");
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+        // Initial session check
+        console.log("[useAuthState] Checking for existing session");
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("[useAuthState] Session check error:", error);
+          throw error;
+        }
+        
+        const initialSession = data.session;
+        console.log(`[useAuthState] Initial session check: ${initialSession ? 'Session found' : 'No session'}`);
+        
+        // Process initial session if exists
+        if (initialSession?.user && isMounted) {
+          setSession(initialSession);
+          setUser(initialSession.user);
+          setAdminVerificationState('pending');
+          
+          // Fetch profile for initial session
+          setTimeout(() => {
+            if (isMounted) {
+              fetchProfile(initialSession.user.id)
+                .finally(() => {
+                  if (isMounted) {
+                    setIsLoading(false);
+                  }
+                });
+            }
+          }, 100);
+        } else if (isMounted) {
+          // No initial session
+          setIsLoading(false);
+        }
+
+        // Cleanup function
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error: any) {
+        console.error("[useAuthState] Error in auth initialization:", error);
+        if (isMounted) {
+          setAuthInitError(error);
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    // Start initialization
+    initializeAuth();
+    
+    // Add a safety timeout to prevent infinite loading state
+    const timeoutId = setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.warn("[useAuthState] Loading state timeout reached, forcing completion");
+        setIsLoading(false);
+      }
+    }, 5000);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [handleAuthStateChange, setAdminVerificationState, fetchProfile, isLoading]); 
 
   return {
-    user,
     session,
+    user,
     profile,
     isAdmin,
     isAdminVerified,
     adminVerificationState,
     isLoading: isLoading || isProfileLoading,
-    error,
-    setUser,
+    profileError,
+    authInitError,
+    setProfile,
     refreshProfile,
+    setIsAdminVerified,
+    setAdminVerificationState,
     verifyAdminStatus
   };
 }

@@ -1,14 +1,8 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-
-interface StateRule {
-  state_code: string;
-  state_name: string;
-  special_rules?: string;
-  helmet_required?: boolean;
-  permit_age_min?: number;
-}
+import { StateRule } from '@/types/state';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MapPin } from 'lucide-react';
 
 interface StateRulesSectionProps {
   stateRules: StateRule[];
@@ -18,47 +12,47 @@ const StateRulesSection: React.FC<StateRulesSectionProps> = ({ stateRules }) => 
   if (!stateRules || stateRules.length === 0) return null;
 
   return (
-    <div className="mt-8 border-t border-border pt-6">
-      <h2 className="text-2xl font-bold mb-4">State-Specific Rules</h2>
+    <div className="mt-8">
+      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <MapPin className="h-5 w-5 text-accent-teal" />
+        State-Specific Requirements
+      </h2>
       
       <div className="space-y-4">
-        {stateRules.map((rule) => (
-          <div 
-            key={rule.state_code} 
-            className="bg-card/50 border border-border rounded-lg p-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-medium">{rule.state_name}</h3>
-              <Link 
-                to={`/state-laws/${rule.state_code}`}
-                className="text-accent-teal text-sm hover:underline"
-              >
-                View all {rule.state_name} laws
-              </Link>
-            </div>
-
-            {rule.special_rules && (
-              <p className="text-sm text-muted-foreground mb-2">{rule.special_rules}</p>
-            )}
-            
-            <div className="flex flex-wrap gap-2 mt-2">
-              {rule.helmet_required !== undefined && (
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  rule.helmet_required 
-                    ? "bg-accent-teal/20 text-accent-teal" 
-                    : "bg-yellow-500/20 text-yellow-500"
-                }`}>
-                  Helmet: {rule.helmet_required ? "Required" : "Optional"}
-                </span>
-              )}
-              
-              {rule.permit_age_min && (
-                <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400">
-                  Min. Age: {rule.permit_age_min}
-                </span>
-              )}
-            </div>
-          </div>
+        {stateRules.map(rule => (
+          <Card key={rule.state_code} className="bg-muted/30 border">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">{rule.state_name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-2">
+                {rule.helmet_required !== undefined && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <dt className="font-medium">Helmet Required:</dt>
+                    <dd>{rule.helmet_required ? 'Yes' : 'No'}</dd>
+                  </div>
+                )}
+                {rule.permit_age_min !== null && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <dt className="font-medium">Minimum Permit Age:</dt>
+                    <dd>{rule.permit_age_min} years</dd>
+                  </div>
+                )}
+                {rule.road_test_required !== undefined && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <dt className="font-medium">Road Test Required:</dt>
+                    <dd>{rule.road_test_required ? 'Yes' : 'No'}</dd>
+                  </div>
+                )}
+                {rule.special_rules && (
+                  <div className="mt-2">
+                    <dt className="font-medium">Special Rules:</dt>
+                    <dd className="mt-1 text-sm">{rule.special_rules}</dd>
+                  </div>
+                )}
+              </dl>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

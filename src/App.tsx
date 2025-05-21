@@ -6,7 +6,7 @@ import {
   Navigate,
 } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
-import { Layout } from '@/components/layout';
+import { Layout } from '@/components/layout/Layout';
 import AdminLayout from '@/components/layout/AdminLayout';
 import {
   HomePage,
@@ -55,7 +55,7 @@ function App() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route element={<Layout />}>
+      <Route element={<Layout>{/* Layout is a wrapper component */}</Layout>}>
         <Route path="/" element={<HomePage />} />
         <Route path="/courses" element={<CoursesPage />} />
         <Route path="/courses/:courseSlug" element={<CoursePage />} />
