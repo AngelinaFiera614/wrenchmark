@@ -7,7 +7,6 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
 import ProfilePage from './pages/ProfilePage';
-import AdminDashboard from './pages/admin/AdminDashboard';
 import Courses from './pages/CoursesPage';
 import CourseDetails from './pages/CourseDetailsPage';
 import LessonDetails from './pages/LessonDetailsPage';
@@ -15,6 +14,19 @@ import NotFound from './pages/NotFoundPage';
 import Motorcycles from './pages/Motorcycles';
 import ManualsPage from './pages/ManualsPage';
 import GlossaryPage from './pages/GlossaryPage';
+
+// Import all admin page components
+import {
+  AdminDashboard,
+  AdminCourses,
+  AdminLessons,
+  AdminMotorcycles,
+  AdminBrands,
+  AdminRidingSkills,
+  AdminManuals,
+  AdminGlossary,
+  AdminStateRules
+} from './pages/admin';
 
 function App() {
   const { isLoading, isAdmin } = useAuth();
@@ -39,9 +51,15 @@ function App() {
       {/* Admin routes */}
       <Route path="/admin/*" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
-        {/* Example nested admin routes */}
-        {/* <Route path="users" element={<AdminUsers />} /> */}
-        {/* <Route path="settings" element={<AdminSettings />} /> */}
+        {/* Admin nested routes */}
+        <Route path="courses" element={<AdminCourses />} />
+        <Route path="lessons" element={<AdminLessons />} />
+        <Route path="motorcycles" element={<AdminMotorcycles />} />
+        <Route path="brands" element={<AdminBrands />} />
+        <Route path="riding-skills" element={<AdminRidingSkills />} />
+        <Route path="manuals" element={<AdminManuals />} />
+        <Route path="glossary" element={<AdminGlossary />} />
+        <Route path="state-rules" element={<AdminStateRules />} />
       </Route>
 
       {/* Auth routes - without main layout */}
