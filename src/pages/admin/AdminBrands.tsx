@@ -15,14 +15,17 @@ import BrandDeleteDialog from "@/components/admin/brands/BrandDeleteDialog";
 import BrandsEmptyState from "@/components/admin/brands/BrandsEmptyState";
 import BrandsMobileViewToggle from "@/components/admin/brands/BrandsMobileViewToggle";
 import BrandsLoading from "@/components/admin/brands/BrandsLoading";
+import InlineBrandForm from "@/components/admin/brands/InlineBrandForm";
 
 const AdminBrands = () => {
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isInlineFormVisible, setIsInlineFormVisible] = useState(false);
   const [editBrand, setEditBrand] = useState<Brand | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch brands data
   const { data: brands, isLoading, refetch } = useQuery({
@@ -39,11 +42,14 @@ const AdminBrands = () => {
   });
 
   const handleAddBrand = () => {
-    setIsCreateDialogOpen(true);
+    // Use inline form instead of dialog
+    setEditBrand(null);
+    setIsInlineFormVisible(true);
   };
 
   const handleEditBrand = (brand: Brand) => {
     setEditBrand(brand);
+    setIsInlineFormVisible(true);
   };
 
   const handleDeleteClick = (brand: Brand) => {
@@ -82,9 +88,60 @@ const AdminBrands = () => {
 
   const handleDialogClose = (refreshData = false) => {
     setIsCreateDialogOpen(false);
-    setEditBrand(null);
     if (refreshData) {
       refetch();
+    }
+  };
+
+  const handleFormClose = () => {
+    setIsInlineFormVisible(false);
+    setEditBrand(null);
+  };
+
+  const handleFormSubmit = async (values: any) => {
+    setIsSubmitting(true);
+
+    try {
+      if (editBrand) {
+        // Update existing brand
+        const { error } = await supabase
+          .from('brands')
+          .update(values)
+          .eq('id', editBrand.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Brand updated",
+          description: `${values.name} has been updated successfully.`,
+        });
+      } else {
+        // Create new brand
+        const { error } = await supabase
+          .from('brands')
+          .insert(values);
+
+        if (error) throw error;
+
+        toast({
+          title: "Brand created",
+          description: `${values.name} has been added successfully.`,
+        });
+      }
+
+      // Close the form and refresh data
+      setIsInlineFormVisible(false);
+      setEditBrand(null);
+      refetch();
+    } catch (error: any) {
+      console.error("Error saving brand:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to save brand.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -97,7 +154,14 @@ const AdminBrands = () => {
           setViewMode={setViewMode}
         />
         
-        {isLoading ? (
+        {isInlineFormVisible ? (
+          <InlineBrandForm
+            brand={editBrand}
+            loading={isSubmitting}
+            onSubmit={handleFormSubmit}
+            onCancel={handleFormClose}
+          />
+        ) : isLoading ? (
           <BrandsLoading />
         ) : brands && brands.length > 0 ? (
           <div className="space-y-4">
@@ -123,8 +187,8 @@ const AdminBrands = () => {
 
         {/* Create/Edit Dialog */}
         <AdminBrandDialog
-          open={isCreateDialogOpen || editBrand !== null}
-          brand={editBrand}
+          open={isCreateDialogOpen}
+          brand={null}
           onClose={handleDialogClose}
         />
 
