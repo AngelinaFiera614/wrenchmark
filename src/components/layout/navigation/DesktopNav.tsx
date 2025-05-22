@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/button";
-import { UserMenu } from "./UserMenu";
-import { CompareButton } from "./CompareButton";
+import UserMenu from "./UserMenu";
+import CompareButton from "./CompareButton";
 import { MeasurementToggle } from "@/components/theme/MeasurementToggle";
 
 const mainNavLinks = [

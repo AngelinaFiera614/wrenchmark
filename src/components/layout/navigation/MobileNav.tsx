@@ -6,7 +6,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth";
-import { CompareButton } from "./CompareButton";
+import CompareButton from "./CompareButton";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { MeasurementToggle } from "@/components/theme/MeasurementToggle";
 
