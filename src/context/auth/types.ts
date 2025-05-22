@@ -1,8 +1,7 @@
-
 import { User, Session } from "@supabase/supabase-js";
 import type { Profile } from "@/services/profileService";
 
-export type AdminVerificationState = 'unknown' | 'pending' | 'verified' | 'failed' | 'idle';
+export type AdminVerificationState = "unknown" | "pending" | "verified" | "failed" | "idle";
 
 export interface AuthContextType {
   user: User | null;
