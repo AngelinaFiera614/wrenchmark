@@ -13,7 +13,7 @@ export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [adminVerified, setAdminVerified] = useState<"unknown" | "pending" | "verified" | "failed" | "idle">("idle");
+  const [adminVerified, setAdminVerified] = useState<AdminVerificationState>("idle");
 
   // Use the profile hook to manage user profile data
   const {
@@ -46,6 +46,8 @@ export const useAuthState = () => {
             setUser(null);
             setIsAdmin(false);
             setAdminVerified("idle");
+            // Ensure profile state is also cleared
+            setProfile(null);
           }
         }
       );

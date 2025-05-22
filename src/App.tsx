@@ -67,8 +67,8 @@ function App() {
 
       {/* Main app routes */}
       <Route path="/" element={<Layout children={<Outlet />} />}>
-        {/* If user is admin, redirect to admin dashboard, otherwise show Index */}
-        <Route index element={isAdmin ? <Navigate to="/admin" replace /> : <Index />} />
+        {/* Removed the automatic redirect for admin users so they can view the home page */}
+        <Route index element={<Index />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/motorcycles" element={<Motorcycles />} />
         <Route path="/courses" element={<Courses />} />

@@ -31,15 +31,14 @@ const Header: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/');
+      // Explicitly navigate to home page after sign out to ensure redirect works
+      navigate('/', { replace: true });
       toast.success('Signed out successfully.');
     } catch (error: any) {
       console.error('Sign out error:', error);
       toast.error('Failed to sign out.');
     }
   };
-
-  console.log('Header rendering - User is admin:', isAdmin); // Debug log to check admin status
 
   const navigationLinks = [
     {
@@ -124,6 +123,12 @@ const Header: React.FC = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/">
+                    <Home className="mr-2 h-4 w-4" />
+                    <span>Home</span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/profile">
                     <User className="mr-2 h-4 w-4" />
