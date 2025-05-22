@@ -20,18 +20,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile
   } = useAuthState();
 
-  // Authentication methods
+  // Authentication methods with proper error handling
   const handleSignIn = async (email: string, password: string) => {
     try {
+      if (!email || !password) {
+        toast.error("Email and password are required");
+        throw new Error("Email and password are required");
+      }
+      
       await signIn(email, password);
     } catch (error: any) {
       console.error("[AuthProvider] Sign in error:", error);
-      throw error;
+      throw error; // Allow calling code to handle the error
     }
   };
 
   const handleSignUp = async (email: string, password: string) => {
     try {
+      if (!email || !password) {
+        toast.error("Email and password are required");
+        throw new Error("Email and password are required");
+      }
+      
+      if (password.length < 6) {
+        toast.error("Password must be at least 6 characters");
+        throw new Error("Password must be at least 6 characters");
+      }
+      
       await signUp(email, password);
     } catch (error: any) {
       console.error("[AuthProvider] Sign up error:", error);
@@ -44,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signOut();
     } catch (error: any) {
       console.error("[AuthProvider] Sign out error:", error);
+      toast.error("Sign out failed. Please try again.");
     }
   };
 
@@ -60,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       console.error("[AuthProvider] Update profile error:", error);
+      toast.error(error.message || "Failed to update profile");
     }
   };
 

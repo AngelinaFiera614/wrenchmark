@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
- * Verifies if a user has admin status by checking their profile
+ * Securely verifies if a user has admin status by checking their profile
  * @param userId The user ID to check
  * @returns boolean indicating if the user is an admin
  */
@@ -16,12 +16,12 @@ export async function verifyAdminStatus(userId: string): Promise<boolean> {
     
     console.log("[adminService] Verifying admin status for user:", userId);
     
-    // Get the user's profile from the database
+    // Use maybeSingle instead of single to avoid errors with missing profiles
     const { data, error } = await supabase
       .from("profiles")
       .select("is_admin")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error("[adminService] Error checking admin status:", error);

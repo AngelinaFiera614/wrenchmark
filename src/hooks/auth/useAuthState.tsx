@@ -24,43 +24,83 @@ export const useAuthState = () => {
     refreshProfile,
   } = useProfile(user);
 
-  // Initialize the auth state from Supabase
+  // Check admin status securely
+  const checkAdminStatus = useCallback(async (userId: string) => {
+    try {
+      setAdminVerified("pending");
+      
+      // Fetch the admin status from profiles table
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", userId)
+        .maybeSingle(); // Using maybeSingle instead of single to avoid errors
+
+      if (error) {
+        console.error("[useAuthState] Admin check error:", error);
+        setIsAdmin(false);
+        setAdminVerified("failed");
+        return;
+      }
+
+      const isAdminUser = data?.is_admin || false;
+      setIsAdmin(isAdminUser);
+      setAdminVerified("verified");
+      
+      console.info(`[useAuthState] Admin status: ${isAdminUser}`);
+    } catch (error) {
+      console.error("[useAuthState] Admin check exception:", error);
+      setIsAdmin(false);
+      setAdminVerified("failed");
+    }
+  }, []);
+
+  // Initialize the auth state from Supabase - securing the process
   const initializeAuth = useCallback(async () => {
     console.info("[useAuthState] Starting authentication initialization");
     try {
-      console.info("[useAuthState] Setting up auth state listener");
-      
-      // Set up the auth state change listener
+      // First set up the auth state change listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, session) => {
+        async (event, currentSession) => {
           console.info(`[useAuthState] Auth event: ${event}`);
           
-          if (session?.user) {
-            console.info(`[useAuthState] User authenticated: ${session.user.email}`);
-            setSession(session);
-            setUser(session.user);
-            checkAdminStatus(session.user.id);
-          } else {
-            console.info("[useAuthState] No user in session");
+          // Handle auth events securely
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            if (currentSession?.user) {
+              console.info(`[useAuthState] User authenticated: ${currentSession.user.email}`);
+              setSession(currentSession);
+              setUser(currentSession.user);
+              
+              // Never call other Supabase functions directly in the callback
+              // Use timeout to prevent potential deadlock or recursion
+              setTimeout(() => {
+                checkAdminStatus(currentSession.user.id);
+              }, 0);
+            }
+          } else if (event === 'SIGNED_OUT') {
+            console.info("[useAuthState] User signed out");
             setSession(null);
             setUser(null);
             setIsAdmin(false);
             setAdminVerified("idle");
-            // Ensure profile state is also cleared
             setProfile(null);
           }
         }
       );
 
-      // Check for existing session
-      console.info("[useAuthState] Checking for existing session");
-      const { data: { session } } = await supabase.auth.getSession();
+      // Then check for existing session
+      const { data: { session: currentSession }, error: sessionError } = 
+        await supabase.auth.getSession();
       
-      if (session) {
+      if (sessionError) {
+        throw sessionError;
+      }
+      
+      if (currentSession) {
         console.info("[useAuthState] Initial session check: Session found");
-        setSession(session);
-        setUser(session.user);
-        await checkAdminStatus(session.user.id);
+        setSession(currentSession);
+        setUser(currentSession.user);
+        await checkAdminStatus(currentSession.user.id);
       } else {
         console.info("[useAuthState] Initial session check: No session found");
         setSession(null);
@@ -84,37 +124,7 @@ export const useAuthState = () => {
       setIsAdmin(false);
       setAdminVerified("failed");
     }
-  }, []);
-
-  // Check if the user has admin permissions
-  const checkAdminStatus = async (userId: string) => {
-    try {
-      setAdminVerified("pending");
-      // Fetch the admin status from profiles table
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", userId)
-        .single();
-
-      if (error) {
-        console.error("[useAuthState] Admin check error:", error);
-        setIsAdmin(false);
-        setAdminVerified("failed");
-        return;
-      }
-
-      const isAdminUser = data?.is_admin || false;
-      setIsAdmin(isAdminUser);
-      setAdminVerified("verified");
-      
-      console.info(`[useAuthState] Admin status: ${isAdminUser}`);
-    } catch (error) {
-      console.error("[useAuthState] Admin check exception:", error);
-      setIsAdmin(false);
-      setAdminVerified("failed");
-    }
-  };
+  }, [checkAdminStatus, setProfile]);
 
   useEffect(() => {
     const cleanup = initializeAuth();

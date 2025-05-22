@@ -13,13 +13,12 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
   const [isAdminVerified, setIsAdminVerified] = useState(false);
   const [adminVerificationState, setAdminVerificationState] = useState<AdminVerificationState>('unknown');
   const [verificationAttempts, setVerificationAttempts] = useState(0);
-
-  // Update admin status based on profile
+  
+  // Update admin status based on profile - safely
   useEffect(() => {
     if (user && profile !== null) {
       const profileIsAdmin = profile?.is_admin || false;
-      console.log(`[useAdminVerification] User ${user.id} admin status from profile: ${profileIsAdmin}`);
-      console.log(`[useAdminVerification] Profile data:`, profile); // Add detailed profile logging
+      console.log(`[useAdminVerification] User admin status from profile: ${profileIsAdmin}`);
       setIsAdmin(profileIsAdmin);
       
       // If profile says user is admin, mark as verified
@@ -28,14 +27,13 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
         setIsAdminVerified(true);
         setAdminVerificationState('verified');
       } else if (!profileIsAdmin && adminVerificationState === 'pending') {
-        // If profile says user is not admin, and we're still pending, update state
         console.log("[useAdminVerification] User is not an admin according to profile data");
         setAdminVerificationState('failed');
       }
     }
   }, [user, profile, isAdminVerified, adminVerificationState]);
   
-  // Reset verification state when user changes
+  // Reset verification state when user changes - for security
   useEffect(() => {
     if (user === null) {
       setAdminVerificationState('unknown');
@@ -47,26 +45,25 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
     }
   }, [user, adminVerificationState]);
 
-  // Add a timeout effect to prevent infinite pending state
+  // Add a timeout effect with limit to prevent infinite pending state
   useEffect(() => {
-    if (adminVerificationState === 'pending' && verificationAttempts < 2) {
+    if (adminVerificationState === 'pending' && verificationAttempts < 2 && user) {
       const timeoutId = setTimeout(() => {
         console.log("[useAdminVerification] Attempting admin verification automatically");
         setVerificationAttempts(prev => prev + 1);
         
-        if (user) {
-          verifyAdminStatus(user.id)
-            .then(isAdmin => {
-              console.log(`[useAdminVerification] Admin verification result for ${user.id}: ${isAdmin}`);
-              setIsAdmin(isAdmin);
-              setIsAdminVerified(isAdmin);
-              setAdminVerificationState(isAdmin ? 'verified' : 'failed');
-            })
-            .catch(error => {
-              console.error("[useAdminVerification] Error in auto verification:", error);
-              setAdminVerificationState('failed');
-            });
-        }
+        // Secure verification with error handling
+        verifyAdminStatus(user.id)
+          .then(adminStatus => {
+            console.log(`[useAdminVerification] Admin verification result: ${adminStatus}`);
+            setIsAdmin(adminStatus);
+            setIsAdminVerified(true);
+            setAdminVerificationState(adminStatus ? 'verified' : 'failed');
+          })
+          .catch(error => {
+            console.error("[useAdminVerification] Error in auto verification:", error);
+            setAdminVerificationState('failed');
+          });
       }, 1500);
       
       return () => clearTimeout(timeoutId);
@@ -75,10 +72,12 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
       console.log("[useAdminVerification] Maximum verification attempts reached, marking as failed");
       setAdminVerificationState('failed');
     }
+    
+    return undefined;
   }, [adminVerificationState, user, verificationAttempts]);
   
-  // Force verification function
-  const verifyAdminStatus = useCallback(async () => {
+  // Force verification function with security measures
+  const verifyAdminStatusManually = useCallback(async () => {
     if (!user) {
       console.log("[useAdminVerification] Cannot verify admin status: no user");
       return false;
@@ -88,13 +87,13 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
     setAdminVerificationState('pending');
     
     try {
-      const isAdmin = await verifyAdminStatus(user.id);
+      const adminStatus = await verifyAdminStatus(user.id);
       
-      setIsAdmin(isAdmin);
-      setIsAdminVerified(isAdmin);
-      setAdminVerificationState(isAdmin ? 'verified' : 'failed');
+      setIsAdmin(adminStatus);
+      setIsAdminVerified(true);
+      setAdminVerificationState(adminStatus ? 'verified' : 'failed');
       
-      return isAdmin;
+      return adminStatus;
     } catch (error) {
       console.error("[useAdminVerification] Error in force verification:", error);
       setAdminVerificationState('failed');
@@ -109,6 +108,8 @@ export function useAdminVerification(user: User | null, profile: Profile | null)
     setIsAdmin,
     setIsAdminVerified,
     setAdminVerificationState,
-    verifyAdminStatus
+    verifyAdminStatus: verifyAdminStatusManually
   };
 }
+
+export default useAdminVerification;

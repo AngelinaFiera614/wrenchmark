@@ -1,16 +1,18 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import AdminSidebar from "../admin/AdminSidebar";
 import { AdminHeader } from "../admin/AdminHeader";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
-import { useEffect } from "react";
 import { toast } from "sonner";
 
 const AdminLayout = () => {
-  const { user, isAdmin, isAdminVerified, isLoading } = useAuth();
+  const { user, isAdmin, isAdminVerified, isLoading, session } = useAuth();
   const navigate = useNavigate();
+  
+  // Security check: Do we have a valid session?
+  const hasValidSession = Boolean(session && user);
   
   // If user is not admin after loading completes, redirect
   useEffect(() => {
@@ -33,7 +35,14 @@ const AdminLayout = () => {
     );
   }
 
-  // If admin verification is successful, render admin layout
+  // Check authentication first
+  if (!hasValidSession) {
+    console.log("[AdminLayout] No valid session found, redirecting to login");
+    toast.error("Authentication required to access admin area");
+    return <Navigate to="/login" replace />;
+  }
+
+  // Then check admin status
   if (isAdminVerified || isAdmin) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -50,13 +59,6 @@ const AdminLayout = () => {
         </div>
       </div>
     );
-  }
-
-  // If no user, redirect to auth
-  if (!user) {
-    console.log("[AdminLayout] No user found, redirecting");
-    toast.error("Authentication required to access admin area");
-    return <Navigate to="/login" replace />;
   }
 
   // Default fallback - redirect to home
