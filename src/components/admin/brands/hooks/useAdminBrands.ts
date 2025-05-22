@@ -1,12 +1,12 @@
-
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Brand } from "@/types";
 
 export function useAdminBrands() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isInlineFormVisible, setIsInlineFormVisible] = useState(false);
   const [editBrand, setEditBrand] = useState<Brand | null>(null);
@@ -14,20 +14,35 @@ export function useAdminBrands() {
   const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortField, setSortField] = useState<string>("name");
 
-  // Fetch brands data
-  const { data: brands, isLoading, refetch } = useQuery({
-    queryKey: ["admin-brands"],
+  // Fetch brands data with sorting
+  const { data: brands, isLoading, error, isError } = useQuery({
+    queryKey: ["admin-brands", sortField, sortOrder],
     queryFn: async () => {
+      console.log(`Fetching brands sorted by ${sortField} in ${sortOrder} order`);
       const { data, error } = await supabase
         .from('brands')
         .select('*')
-        .order('name', { ascending: true });
+        .order(sortField, { ascending: sortOrder === "asc" });
         
       if (error) throw error;
       return data as Brand[];
-    }
+    },
+    staleTime: 30000, // 30 seconds before refetching
+    refetchOnWindowFocus: false
   });
+
+  // Handle errors from the query
+  if (isError && error) {
+    console.error("Error fetching brands:", error);
+    toast({
+      variant: "destructive",
+      title: "Failed to load brands",
+      description: error instanceof Error ? error.message : "An unknown error occurred",
+    });
+  }
 
   const handleAddBrand = () => {
     setEditBrand(null);
@@ -48,6 +63,8 @@ export function useAdminBrands() {
     if (!brandToDelete) return;
 
     try {
+      setIsSubmitting(true);
+      
       const { error } = await supabase
         .from('brands')
         .delete()
@@ -60,7 +77,11 @@ export function useAdminBrands() {
         description: `${brandToDelete.name} has been removed.`,
       });
 
-      refetch();
+      // Invalidate the cache to trigger a refetch
+      queryClient.invalidateQueries({
+        queryKey: ["admin-brands"],
+      });
+      
       setIsDeleteConfirmOpen(false);
       setBrandToDelete(null);
     } catch (error: any) {
@@ -70,13 +91,17 @@ export function useAdminBrands() {
         title: "Error",
         description: error.message || "Failed to delete brand. It may have associated motorcycles.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDialogClose = (refreshData = false) => {
     setIsCreateDialogOpen(false);
     if (refreshData) {
-      refetch();
+      queryClient.invalidateQueries({
+        queryKey: ["admin-brands"],
+      });
     }
   };
 
@@ -116,10 +141,14 @@ export function useAdminBrands() {
         });
       }
 
-      // Close the form and refresh data
+      // Invalidate the cache to trigger a refetch
+      queryClient.invalidateQueries({
+        queryKey: ["admin-brands"],
+      });
+
+      // Close the form
       setIsInlineFormVisible(false);
       setEditBrand(null);
-      refetch();
     } catch (error: any) {
       console.error("Error saving brand:", error);
       toast({
@@ -129,6 +158,18 @@ export function useAdminBrands() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle changing the sort order and field
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // If already sorting by this field, toggle the order
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      // Otherwise, set the new field and default to ascending
+      setSortField(field);
+      setSortOrder("asc");
     }
   };
 
@@ -145,6 +186,9 @@ export function useAdminBrands() {
     isDeleteConfirmOpen,
     setIsDeleteConfirmOpen,
     brandToDelete,
+    sortField,
+    sortOrder,
+    handleSort,
     handleAddBrand,
     handleEditBrand,
     handleDeleteClick,

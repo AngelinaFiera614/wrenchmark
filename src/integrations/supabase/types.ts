@@ -122,6 +122,7 @@ export type Database = {
       }
       brands: {
         Row: {
+          brand_history: string | null
           brand_type: string | null
           categories: string[] | null
           country: string | null
@@ -133,8 +134,13 @@ export type Database = {
           id: string
           is_electric: boolean | null
           known_for: string[] | null
+          logo_history: Json | null
           logo_url: string | null
+          manufacturing_facilities: string[] | null
+          media_gallery: Json | null
+          milestones: Json | null
           name: string
+          notable_models: Json | null
           notes: string | null
           slug: string
           status: string | null
@@ -142,6 +148,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          brand_history?: string | null
           brand_type?: string | null
           categories?: string[] | null
           country?: string | null
@@ -153,8 +160,13 @@ export type Database = {
           id?: string
           is_electric?: boolean | null
           known_for?: string[] | null
+          logo_history?: Json | null
           logo_url?: string | null
+          manufacturing_facilities?: string[] | null
+          media_gallery?: Json | null
+          milestones?: Json | null
           name: string
+          notable_models?: Json | null
           notes?: string | null
           slug: string
           status?: string | null
@@ -162,6 +174,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          brand_history?: string | null
           brand_type?: string | null
           categories?: string[] | null
           country?: string | null
@@ -173,8 +186,13 @@ export type Database = {
           id?: string
           is_electric?: boolean | null
           known_for?: string[] | null
+          logo_history?: Json | null
           logo_url?: string | null
+          manufacturing_facilities?: string[] | null
+          media_gallery?: Json | null
+          milestones?: Json | null
           name?: string
+          notable_models?: Json | null
           notes?: string | null
           slug?: string
           status?: string | null

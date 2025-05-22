@@ -49,34 +49,14 @@ export function useAdminBrandSubmit() {
         isAdmin,
       });
       
-      console.log("Submitting brand data:", values);
+      // Clean and prepare data for database
+      const brandData = prepareDataForSubmission(values);
       
-      // Clean data before sending to database
-      const brandData = {
-        name: values.name,
-        country: values.country || null,
-        founded: values.founded || null,
-        logo_url: values.logo_url || null,
-        known_for: values.known_for || [],
-        slug: values.slug,
-        description: values.description || null,
-        founded_city: values.founded_city || null,
-        headquarters: values.headquarters || null,
-        status: values.status || "active",
-        brand_type: values.brand_type || "mass",
-        is_electric: values.is_electric || false,
-        website_url: values.website_url || null,
-        categories: Array.isArray(values.categories) ? values.categories : [],
-        notes: values.notes || null,
-      };
-
-      console.log("Cleaned brand data for database:", brandData);
-
       let response;
       
       if (brand) {
         // Update existing brand
-        console.log("Updating existing brand with ID:", brand.id);
+        console.log(`Updating brand: ${brand.name} (ID: ${brand.id})`);
         const startTime = Date.now();
         
         response = await supabase
@@ -87,11 +67,8 @@ export function useAdminBrandSubmit() {
         console.log(`Update operation took ${Date.now() - startTime}ms`);
         
         if (response.error) {
-          console.error("Supabase update error:", response.error);
           throw response.error;
         }
-        
-        console.log("Brand updated successfully:", response);
         
         toast({
           title: "Brand updated",
@@ -99,7 +76,7 @@ export function useAdminBrandSubmit() {
         });
       } else {
         // Create new brand
-        console.log("Creating new brand");
+        console.log("Creating new brand:", values.name);
         const startTime = Date.now();
         
         response = await supabase
@@ -109,11 +86,8 @@ export function useAdminBrandSubmit() {
         console.log(`Insert operation took ${Date.now() - startTime}ms`);
         
         if (response.error) {
-          console.error("Supabase insert error:", response.error);
           throw response.error;
         }
-        
-        console.log("Brand created successfully:", response);
         
         toast({
           title: "Brand added",
@@ -140,33 +114,72 @@ export function useAdminBrandSubmit() {
       console.error("Error saving brand:", error);
       
       // Provide more specific error messages based on error type
-      if (error.code === "PGRST301") {
-        toast({
-          variant: "destructive",
-          title: "Permission denied",
-          description: "You don't have permission to perform this action. Please verify you're logged in as an admin.",
-        });
-      } else if (error.code === "23505") {
-        toast({
-          variant: "destructive",
-          title: "Duplicate entry",
-          description: "A brand with this slug already exists. Please use a unique slug.",
-        });
-      } else if (error.message && error.message.includes("JWT")) {
-        toast({
-          variant: "destructive",
-          title: "Authentication error",
-          description: "Your session may have expired. Please refresh the page and log in again.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error saving brand",
-          description: error.message || "Failed to save brand. Please try again.",
-        });
-      }
+      handleErrorResponse(error, toast);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helper function to prepare data for submission
+  const prepareDataForSubmission = (values: BrandFormValues) => {
+    return {
+      name: values.name,
+      country: values.country || null,
+      founded: values.founded || null,
+      logo_url: values.logo_url || null,
+      known_for: values.known_for || [],
+      slug: values.slug,
+      description: values.description || null,
+      founded_city: values.founded_city || null,
+      headquarters: values.headquarters || null,
+      status: values.status || "active",
+      brand_type: values.brand_type || "mass",
+      is_electric: values.is_electric || false,
+      website_url: values.website_url || null,
+      categories: Array.isArray(values.categories) ? values.categories : [],
+      notes: values.notes || null,
+      // New expanded fields
+      brand_history: values.brand_history || null,
+      milestones: values.milestones?.length ? values.milestones : null,
+      manufacturing_facilities: values.manufacturing_facilities?.length ? values.manufacturing_facilities : null,
+      logo_history: values.logo_history?.length ? values.logo_history : null,
+      media_gallery: values.media_gallery?.length ? values.media_gallery : null,
+      notable_models: values.notable_models?.length ? values.notable_models : null,
+    };
+  };
+
+  // Helper function to handle different error types
+  const handleErrorResponse = (error: any, toast: any) => {
+    if (error.code === "PGRST301") {
+      toast({
+        variant: "destructive",
+        title: "Permission denied",
+        description: "You don't have permission to perform this action. Please verify you're logged in as an admin.",
+      });
+    } else if (error.code === "23505") {
+      toast({
+        variant: "destructive",
+        title: "Duplicate entry",
+        description: "A brand with this slug already exists. Please use a unique slug.",
+      });
+    } else if (error.message && error.message.includes("JWT")) {
+      toast({
+        variant: "destructive",
+        title: "Authentication error",
+        description: "Your session may have expired. Please refresh the page and log in again.",
+      });
+    } else if (error.message && error.message.includes("invalid input syntax")) {
+      toast({
+        variant: "destructive",
+        title: "Invalid data format",
+        description: "One or more fields contain data in an invalid format. Please check your entries.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error saving brand",
+        description: error.message || "Failed to save brand. Please try again.",
+      });
     }
   };
 
