@@ -6,7 +6,7 @@ export { default as BrandLogoField } from "../BrandLogoField";
 export { default as BrandKnownForField } from "../BrandKnownForField";
 export { default as BrandSlugField } from "../BrandSlugField";
 
-// New field exports
+// Base field exports
 export { default as BrandDescriptionField } from "./BrandDescriptionField";
 export { default as BrandFoundedCityField } from "./BrandFoundedCityField";
 export { default as BrandHeadquartersField } from "./BrandHeadquartersField";
@@ -16,3 +16,7 @@ export { default as BrandIsElectricField } from "./BrandIsElectricField";
 export { default as BrandWebsiteField } from "./BrandWebsiteField";
 export { default as BrandCategoriesField } from "./BrandCategoriesField";
 export { default as BrandNotesField } from "./BrandNotesField";
+
+// New expanded field exports
+export { default as BrandHistoryField } from "./BrandHistoryField";
+export { default as BrandMilestonesField } from "./BrandMilestonesField";

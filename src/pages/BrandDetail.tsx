@@ -6,9 +6,9 @@ import { getAllMotorcycles } from "@/services/motorcycleService";
 import { Brand, Motorcycle } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-import MotorcycleGrid from "@/components/motorcycles/MotorcycleGrid";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import BrandDetailTabs from "@/components/brands/BrandDetailTabs";
+import { Badge } from "@/components/ui/badge";
 
 export default function BrandDetail() {
   const { brandId } = useParams<{ brandId: string }>();
@@ -92,7 +92,7 @@ export default function BrandDetail() {
           </Link>
         </div>
         
-        <div className="flex flex-col md:flex-row md:items-start gap-8 mb-10">
+        <div className="flex flex-col md:flex-row md:items-start gap-8 mb-6">
           {/* Brand logo */}
           <div className="w-32 h-32 md:w-48 md:h-48 bg-muted/30 rounded-lg overflow-hidden flex items-center justify-center">
             {brand.logo_url ? (
@@ -127,22 +127,8 @@ export default function BrandDetail() {
           </div>
         </div>
         
-        {/* Motorcycles from this brand */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-semibold border-b border-border/40 pb-2">
-            {brand.name} Motorcycles
-          </h2>
-          
-          {motorcycles.length > 0 ? (
-            <MotorcycleGrid motorcycles={motorcycles} />
-          ) : (
-            <div className="py-12 text-center">
-              <p className="text-muted-foreground">
-                No motorcycles found for this brand.
-              </p>
-            </div>
-          )}
-        </div>
+        {/* Tabbed content */}
+        <BrandDetailTabs brand={brand} motorcycles={motorcycles} />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Brand } from "@/types";
+import { Brand, BrandMilestone, LogoHistoryItem, MediaItem, NotableModel } from "@/types";
 
 export type SupabaseBrand = {
   id: string;
@@ -12,6 +12,21 @@ export type SupabaseBrand = {
   slug: string;
   created_at: string;
   updated_at: string;
+  description?: string;
+  founded_city?: string;
+  headquarters?: string;
+  status?: "active" | "defunct" | "revived";
+  brand_type?: "mass" | "boutique" | "revived" | "oem";
+  is_electric?: boolean;
+  website_url?: string;
+  categories?: string[];
+  notes?: string;
+  brand_history?: string;
+  milestones?: BrandMilestone[];
+  manufacturing_facilities?: string[];
+  logo_history?: LogoHistoryItem[];
+  media_gallery?: MediaItem[];
+  notable_models?: NotableModel[];
 };
 
 // Transform Supabase brand to our app's brand type
@@ -24,10 +39,24 @@ const transformBrand = (brand: SupabaseBrand): Brand => {
     logo_url: brand.logo_url,
     known_for: brand.known_for,
     slug: brand.slug,
+    description: brand.description,
+    founded_city: brand.founded_city,
+    headquarters: brand.headquarters,
+    status: brand.status,
+    brand_type: brand.brand_type,
+    is_electric: brand.is_electric,
+    website_url: brand.website_url,
+    categories: brand.categories,
+    notes: brand.notes,
+    brand_history: brand.brand_history,
+    milestones: brand.milestones,
+    manufacturing_facilities: brand.manufacturing_facilities,
+    logo_history: brand.logo_history,
+    media_gallery: brand.media_gallery,
+    notable_models: brand.notable_models,
     // Add compatibility aliases
     logo: brand.logo_url,
-    knownFor: brand.known_for,
-    description: `Founded in ${brand.founded} in ${brand.country}`
+    knownFor: brand.known_for
   };
 };
 
@@ -118,4 +147,23 @@ export const getMotorcyclesByBrandId = async (brandId: string): Promise<any[]> =
     console.error("Error in getMotorcyclesByBrandId:", error);
     return [];
   }
+};
+
+// Create new form fields for the enhanced brand data
+export const createMilestonesField = () => {
+  return [
+    { year: 0, description: "", importance: "medium" as const }
+  ];
+};
+
+export const createLogoHistoryItem = () => {
+  return { year: 0, url: "", description: "" };
+};
+
+export const createMediaItem = () => {
+  return { url: "", type: "image" as const, caption: "" };
+};
+
+export const createNotableModel = () => {
+  return { name: "", years: "", category: "", image_url: "", description: "" };
 };
