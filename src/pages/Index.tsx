@@ -202,39 +202,6 @@ const Index: React.FC = () => {
         </div>
       </section>
       
-      {/* Testimonials */}
-      <section className="py-16">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Rider Community</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Join thousands of riders who trust Wrenchmark for their motorcycle needs.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="relative p-6 rounded-lg border border-border bg-card">
-                <div className="flex items-center mb-4">
-                  <div className="flex-shrink-0 mr-3">
-                    <img
-                      className="h-10 w-10 rounded-full object-cover"
-                      src={testimonial.avatar}
-                      alt={testimonial.name}
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">{testimonial.name}</h4>
-                    <p className="text-xs text-muted-foreground">{testimonial.role}</p>
-                  </div>
-                </div>
-                <p className="text-muted-foreground italic">"{testimonial.text}"</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      
       {/* CTA Section */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-background to-background/95 z-0"></div>
@@ -363,28 +330,6 @@ const learningPaths = [
     difficulty: 3,
     rating: 4.7,
     link: '/courses'
-  }
-];
-
-// Testimonials data
-const testimonials = [
-  {
-    name: 'Alex Johnson',
-    role: 'Weekend Rider',
-    avatar: 'https://i.pravatar.cc/150?img=11',
-    text: 'Wrenchmark has been my go-to for motorcycle information. The maintenance guides saved me so much time and money.'
-  },
-  {
-    name: 'Sarah Chen',
-    role: 'Motorcycle Instructor',
-    avatar: 'https://i.pravatar.cc/150?img=5',
-    text: 'I recommend Wrenchmark to all my students. The learning paths are structured perfectly for beginners to build confidence.'
-  },
-  {
-    name: 'Miguel Rodriguez',
-    role: 'DIY Mechanic',
-    avatar: 'https://i.pravatar.cc/150?img=12',
-    text: 'The detailed specs and diagrams have helped me tackle repairs I never thought I could do on my own.'
   }
 ];
 
