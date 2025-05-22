@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import { Profile } from "@/services/profileService";
-import { verifyAdminStatus } from "@/services/auth";
+import { verifyAdminStatus } from "@/services/auth/adminService";
 import type { AdminVerificationState } from "@/context/auth/types";
 
 /**

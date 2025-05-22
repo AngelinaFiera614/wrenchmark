@@ -7,6 +7,7 @@ import { AuthError } from "@supabase/supabase-js";
 import { useProfile } from "./useProfile";
 import type { Profile } from "@/services/profileService";
 import { AdminVerificationState } from "@/context/auth/types";
+import { verifyAdminStatus } from "@/services/auth/adminService";
 
 export const useAuthState = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -29,21 +30,9 @@ export const useAuthState = () => {
     try {
       setAdminVerified("pending");
       
-      // Fetch the admin status from profiles table
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", userId)
-        .maybeSingle(); // Using maybeSingle instead of single to avoid errors
-
-      if (error) {
-        console.error("[useAuthState] Admin check error:", error);
-        setIsAdmin(false);
-        setAdminVerified("failed");
-        return;
-      }
-
-      const isAdminUser = data?.is_admin || false;
+      // Use the dedicated admin check service
+      const isAdminUser = await verifyAdminStatus(userId);
+      
       setIsAdmin(isAdminUser);
       setAdminVerified("verified");
       
