@@ -1,6 +1,8 @@
 
 import { MotorcycleModel } from '@/types/motorcycle';
 import ComparisonSectionHeader from '../ComparisonSectionHeader';
+import { useMeasurement } from '@/context/MeasurementContext';
+import { formatVolume } from '@/utils/unitConverters';
 
 interface ComparisonEngineProps {
   models: MotorcycleModel[];
@@ -13,6 +15,8 @@ export default function ComparisonEngine({
   getSelectedYear,
   getSelectedConfig
 }: ComparisonEngineProps) {
+  const { unit } = useMeasurement();
+  
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
@@ -62,6 +66,14 @@ export default function ComparisonEngine({
                 {getSelectedConfig(model)?.engine?.torque_nm 
                   ? `${getSelectedConfig(model)?.engine?.torque_nm} Nm`
                   : 'N/A'}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-b border-border/20">
+            <td className="py-3 pl-4 font-medium">Fuel Capacity</td>
+            {models.map(model => (
+              <td key={model.id} className="py-3 px-4">
+                {formatVolume(getSelectedConfig(model)?.fuel_capacity_l, unit)}
               </td>
             ))}
           </tr>

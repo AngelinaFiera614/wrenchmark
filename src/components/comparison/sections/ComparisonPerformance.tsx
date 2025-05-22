@@ -3,6 +3,8 @@ import React from 'react';
 import { Motorcycle } from '@/types';
 import { MotorcycleModel } from '@/types/motorcycle';
 import ComparisonSectionHeader from '../ComparisonSectionHeader';
+import { useMeasurement } from '@/context/MeasurementContext';
+import { formatSpeed } from '@/utils/unitConverters';
 
 interface ComparisonPerformanceProps {
   motorcycles?: Motorcycle[];
@@ -19,6 +21,7 @@ export default function ComparisonPerformance({
 }: ComparisonPerformanceProps) {
   const hasMotorcycles = motorcycles && motorcycles.length > 0;
   const hasModels = models && models.length > 0;
+  const { unit } = useMeasurement();
 
   return (
     <div>
@@ -32,7 +35,7 @@ export default function ComparisonPerformance({
               <div className="mt-2 text-sm">
                 <p>Power: {(motorcycle as any)?.details?.power || 'N/A'}</p>
                 <p>Torque: {(motorcycle as any)?.details?.torque || 'N/A'}</p>
-                <p>Top Speed: {(motorcycle as any)?.details?.topSpeed || 'N/A'}</p>
+                <p>Top Speed: {formatSpeed((motorcycle as any)?.details?.topSpeed, unit)}</p>
                 <p>0-60 mph: {(motorcycle as any)?.details?.acceleration || 'N/A'}</p>
               </div>
             </div>
@@ -52,7 +55,7 @@ export default function ComparisonPerformance({
                 <div className="mt-2 text-sm">
                   <p>Power: {selectedConfig?.specs?.power || selectedYear?.specs?.power || 'N/A'}</p>
                   <p>Torque: {selectedConfig?.specs?.torque || selectedYear?.specs?.torque || 'N/A'}</p>
-                  <p>Top Speed: {selectedConfig?.specs?.topSpeed || selectedYear?.specs?.topSpeed || 'N/A'}</p>
+                  <p>Top Speed: {formatSpeed(selectedConfig?.specs?.topSpeed || selectedYear?.specs?.topSpeed, unit)}</p>
                   <p>0-60 mph: {selectedConfig?.specs?.acceleration || selectedYear?.specs?.acceleration || 'N/A'}</p>
                 </div>
               </div>

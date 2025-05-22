@@ -1,101 +1,92 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth";
-import { 
-  Home, 
-  Bike, 
-  Book, 
-  Award, 
-  Layers, 
-  Info, 
-  MessageSquareMore, 
-  User, 
-  LayoutDashboard, 
-  LogOut 
-} from "lucide-react";
+import { CompareButton } from "./CompareButton";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { MeasurementToggle } from "@/components/theme/MeasurementToggle";
 
-type MobileNavProps = {
-  closeMenu: () => void;
-  handleSignOut: () => Promise<void>;
-};
+const mobileNavLinks = [
+  { label: "Motorcycles", href: "/motorcycles" },
+  { label: "Brands", href: "/brands" },
+  { label: "Manuals", href: "/manuals" },
+  { label: "Skills", href: "/riding-skills" },
+  { label: "Courses", href: "/courses" },
+  { label: "Glossary", href: "/glossary" },
+];
 
-const MobileNav = ({ closeMenu, handleSignOut }: MobileNavProps) => {
-  const { user, isAdmin } = useAuth();
-
-  const navItems = [
-    { to: "/", icon: <Home className="w-5 h-5 mr-3" />, label: "Home" },
-    { to: "/motorcycles", icon: <Bike className="w-5 h-5 mr-3" />, label: "Motorcycles" },
-    { to: "/brands", icon: <Award className="w-5 h-5 mr-3" />, label: "Brands" },
-    { to: "/courses", icon: <Book className="w-5 h-5 mr-3" />, label: "Courses" },
-    { to: "/riding-skills", icon: <Layers className="w-5 h-5 mr-3" />, label: "Riding Skills" },
-    { to: "/glossary", icon: <Layers className="w-5 h-5 mr-3" />, label: "Glossary" },
-    { to: "/about", icon: <Info className="w-5 h-5 mr-3" />, label: "About" },
-    { to: "/contact", icon: <MessageSquareMore className="w-5 h-5 mr-3" />, label: "Contact" }
-  ];
-
+export function MobileNav() {
+  const { user, isLoading } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  
+  // Close menu when route changes
+  React.useEffect(() => {
+    setIsOpen(false);
+  }, [location]);
+  
   return (
-    <div className="flex flex-col h-full">
-      <nav className="flex flex-col p-6 space-y-4 overflow-y-auto flex-1">
-        <div className="space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="flex items-center py-3 px-4 text-lg font-medium text-muted-foreground transition-colors hover:text-accent-teal hover:bg-accent-teal/10 rounded-lg"
-              onClick={closeMenu}
+    <div className="lg:hidden flex items-center">
+      <div className="flex-1 flex justify-end items-center space-x-2">
+        <ThemeToggle />
+        <MeasurementToggle className="pr-2" />
+        <CompareButton />
+        
+        {user ? (
+          <Link to="/profile" className="mr-2">
+            <Button variant="ghost" size="icon" className="rounded-full overflow-hidden border">
+              {/* Avatar content */}
+            </Button>
+          </Link>
+        ) : (
+          !isLoading && (
+            <Button 
+              asChild 
+              variant="outline" 
+              size="sm" 
+              className="mr-2 bg-accent-teal/10 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/20"
             >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </div>
-
-        <div className="border-t border-border/40 pt-4 mt-4">
-          {!user ? (
-            <Link
-              to="/auth"
-              className="flex items-center py-3 px-4 text-lg font-medium text-accent-teal bg-accent-teal/10 rounded-lg"
-              onClick={closeMenu}
-            >
-              <User className="w-5 h-5 mr-3" />
-              Sign In / Sign Up
-            </Link>
-          ) : (
-            <div className="space-y-2">
-              <Link
-                to="/profile"
-                className="flex items-center py-3 px-4 text-lg font-medium transition-colors hover:text-accent-teal hover:bg-accent-teal/10 rounded-lg"
-                onClick={closeMenu}
-              >
-                <User className="w-5 h-5 mr-3" />
-                My Profile
-              </Link>
-              
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  className="flex items-center py-3 px-4 text-lg font-medium transition-colors hover:text-accent-teal hover:bg-accent-teal/10 rounded-lg"
-                  onClick={closeMenu}
+              <Link to="/login">Sign In</Link>
+            </Button>
+          )
+        )}
+        
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button size="icon" variant="ghost">
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[80vw] sm:w-[350px]">
+            <SheetHeader>
+              <SheetTitle className="text-left">Menu</SheetTitle>
+            </SheetHeader>
+            <div className="flex flex-col space-y-3 mt-4">
+              {mobileNavLinks.map((link) => (
+                <NavLink
+                  key={link.href}
+                  to={link.href}
+                  className={({ isActive }) =>
+                    cn(
+                      "px-2 py-1 text-lg rounded-md transition-colors",
+                      isActive 
+                        ? "bg-accent-teal/10 text-accent-teal font-medium" 
+                        : "text-foreground hover:bg-muted"
+                    )
+                  }
                 >
-                  <LayoutDashboard className="w-5 h-5 mr-3" />
-                  Admin Dashboard
-                </Link>
-              )}
-              
-              <button
-                onClick={handleSignOut}
-                className="flex items-center py-3 px-4 text-lg font-medium text-red-500 hover:bg-red-500/10 w-full text-left rounded-lg"
-              >
-                <LogOut className="w-5 h-5 mr-3" />
-                Sign Out
-              </button>
+                  {link.label}
+                </NavLink>
+              ))}
             </div>
-          )}
-        </div>
-      </nav>
+          </SheetContent>
+        </Sheet>
+      </div>
     </div>
   );
-};
-
-export default MobileNav;
+}

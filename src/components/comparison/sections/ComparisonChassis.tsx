@@ -1,6 +1,8 @@
 
 import { MotorcycleModel } from '@/types/motorcycle';
 import ComparisonSectionHeader from '../ComparisonSectionHeader';
+import { useMeasurement } from '@/context/MeasurementContext';
+import { formatLength, formatWeight } from '@/utils/unitConverters';
 
 interface ComparisonChassisProps {
   models: MotorcycleModel[];
@@ -13,6 +15,8 @@ export default function ComparisonChassis({
   getSelectedYear,
   getSelectedConfig
 }: ComparisonChassisProps) {
+  const { unit } = useMeasurement();
+  
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
@@ -103,9 +107,7 @@ export default function ComparisonChassis({
             <td className="py-3 pl-4 font-medium">Wheelbase</td>
             {models.map(model => (
               <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.wheelbase_mm
-                  ? `${getSelectedConfig(model)?.wheelbase_mm} mm`
-                  : 'N/A'}
+                {formatLength(getSelectedConfig(model)?.wheelbase_mm, unit)}
               </td>
             ))}
           </tr>
@@ -113,9 +115,15 @@ export default function ComparisonChassis({
             <td className="py-3 pl-4 font-medium">Ground Clearance</td>
             {models.map(model => (
               <td key={model.id} className="py-3 px-4">
-                {getSelectedConfig(model)?.ground_clearance_mm
-                  ? `${getSelectedConfig(model)?.ground_clearance_mm} mm`
-                  : 'N/A'}
+                {formatLength(getSelectedConfig(model)?.ground_clearance_mm, unit)}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-b border-border/20">
+            <td className="py-3 pl-4 font-medium">Weight</td>
+            {models.map(model => (
+              <td key={model.id} className="py-3 px-4">
+                {formatWeight(getSelectedConfig(model)?.weight_kg, unit)}
               </td>
             ))}
           </tr>

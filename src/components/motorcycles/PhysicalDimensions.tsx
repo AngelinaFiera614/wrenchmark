@@ -3,6 +3,8 @@ import { Motorcycle } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, MoveDown, MoveUp } from "lucide-react";
 import { SpecificationItem } from "./SpecificationItem";
+import { useMeasurement } from "@/context/MeasurementContext";
+import { formatLength, formatWeight, formatVolume } from "@/utils/unitConverters";
 
 interface PhysicalDimensionsProps {
   motorcycle: Motorcycle;
@@ -17,31 +19,7 @@ export function PhysicalDimensions({ motorcycle }: PhysicalDimensionsProps) {
     fuel_capacity_l
   } = motorcycle;
   
-  // Format values to handle zero or undefined values gracefully
-  const formatWeight = () => {
-    if (!weight_kg || weight_kg <= 0) return "N/A";
-    return `${weight_kg} kg`;
-  };
-  
-  const formatSeatHeight = () => {
-    if (!seat_height_mm || seat_height_mm <= 0) return "N/A";
-    return `${seat_height_mm} mm`;
-  };
-  
-  const formatWheelbase = () => {
-    if (!wheelbase_mm || wheelbase_mm <= 0) return "N/A";
-    return `${wheelbase_mm} mm`;
-  };
-  
-  const formatGroundClearance = () => {
-    if (!ground_clearance_mm || ground_clearance_mm <= 0) return "N/A";
-    return `${ground_clearance_mm} mm`;
-  };
-  
-  const formatFuelCapacity = () => {
-    if (!fuel_capacity_l || fuel_capacity_l <= 0) return "N/A";
-    return `${fuel_capacity_l} L`;
-  };
+  const { unit } = useMeasurement();
   
   return (
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-150 shadow-md">
@@ -56,33 +34,33 @@ export function PhysicalDimensions({ motorcycle }: PhysicalDimensionsProps) {
         <div className="space-y-4">
           <SpecificationItem 
             label="Weight" 
-            value={formatWeight()} 
+            value={formatWeight(weight_kg, unit)} 
             icon={<MoveDown className="h-4 w-4" />}
-            tooltip="Dry weight without fluids or rider, measured in kilograms"
+            tooltip={`Dry weight without fluids or rider, measured in ${unit === 'metric' ? 'kilograms' : 'pounds'}`}
           />
           <SpecificationItem 
             label="Seat Height" 
-            value={formatSeatHeight()} 
+            value={formatLength(seat_height_mm, unit)} 
             icon={<ArrowUp className="h-4 w-4" />}
-            tooltip="Height of seat from the ground, affects rider comfort and accessibility"
+            tooltip={`Height of seat from the ground, affects rider comfort and accessibility (${unit === 'metric' ? 'mm' : 'inches'})`}
           />
           <SpecificationItem 
             label="Wheelbase" 
-            value={formatWheelbase()} 
+            value={formatLength(wheelbase_mm, unit)} 
             icon={<ChevronUp className="h-4 w-4" />}
-            tooltip="Distance between the centers of the front and rear wheels, affects stability"
+            tooltip={`Distance between the centers of the front and rear wheels, affects stability (${unit === 'metric' ? 'mm' : 'inches'})`}
           />
           <SpecificationItem 
             label="Ground Clearance" 
-            value={formatGroundClearance()} 
+            value={formatLength(ground_clearance_mm, unit)} 
             icon={<ArrowDown className="h-4 w-4" />}
-            tooltip="Distance between the lowest point of the motorcycle and the ground, important for off-road riding"
+            tooltip={`Distance between the lowest point of the motorcycle and the ground, important for off-road riding (${unit === 'metric' ? 'mm' : 'inches'})`}
           />
           <SpecificationItem 
             label="Fuel Capacity" 
-            value={formatFuelCapacity()} 
+            value={formatVolume(fuel_capacity_l, unit)} 
             icon={<ChevronDown className="h-4 w-4" />}
-            tooltip="Total fuel the tank can hold in liters, affects range between refueling"
+            tooltip={`Total fuel the tank can hold in ${unit === 'metric' ? 'liters' : 'gallons'}, affects range between refueling`}
           />
         </div>
       </CardContent>

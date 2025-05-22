@@ -3,6 +3,8 @@ import { Motorcycle } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GaugeCircle, Zap, Gauge, Timer } from "lucide-react";
 import { SpecificationItem } from "./SpecificationItem";
+import { useMeasurement } from "@/context/MeasurementContext";
+import { formatSpeed } from "@/utils/unitConverters";
 
 interface PerformanceSpecificationsProps {
   motorcycle: Motorcycle;
@@ -10,6 +12,7 @@ interface PerformanceSpecificationsProps {
 
 export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificationsProps) {
   const { engine_cc, horsepower_hp, torque_nm, top_speed_kph } = motorcycle;
+  const { unit } = useMeasurement();
   
   // Format values to handle zero or undefined values gracefully
   const formatEngineSize = () => {
@@ -25,11 +28,6 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
   const formatTorque = () => {
     if (!torque_nm || torque_nm <= 0) return "N/A";
     return `${torque_nm} Nm`;
-  };
-  
-  const formatSpeed = () => {
-    if (!top_speed_kph || top_speed_kph <= 0) return "N/A";
-    return `${top_speed_kph} km/h`;
   };
   
   return (
@@ -63,9 +61,9 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
           />
           <SpecificationItem 
             label="Top Speed" 
-            value={formatSpeed()} 
+            value={formatSpeed(top_speed_kph, unit)} 
             icon={<Gauge className="h-4 w-4" />}
-            tooltip="Maximum speed the motorcycle can achieve in kilometers per hour"
+            tooltip={`Maximum speed the motorcycle can achieve in ${unit === 'metric' ? 'kilometers per hour' : 'miles per hour'}`}
           />
         </div>
       </CardContent>
