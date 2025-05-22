@@ -8,6 +8,7 @@ import { Trash2, Plus } from "lucide-react";
 import { BrandFormValues } from "../BrandFormSchema";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createMilestonesField } from "@/services/brandService";
+import { Textarea } from "@/components/ui/textarea";
 
 interface BrandMilestonesFieldProps {
   form: UseFormReturn<BrandFormValues>;
