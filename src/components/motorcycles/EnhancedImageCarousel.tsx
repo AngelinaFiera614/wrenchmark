@@ -22,6 +22,15 @@ interface EnhancedImageCarouselProps {
   category?: string;
 }
 
+interface CombinedImageData {
+  url: string;
+  alt: string;
+  isPrimary: boolean;
+  isFeatured: boolean;
+  angle?: string;
+  color?: string;
+}
+
 export function EnhancedImageCarousel({ 
   motorcycleId, 
   fallbackImages = [], 
@@ -64,13 +73,13 @@ export function EnhancedImageCarousel({
     }
   };
 
-  // Combine managed images with fallback images
-  const allImages = [
+  // Combine managed images with fallback images - properly typed
+  const allImages: CombinedImageData[] = [
     ...images.map(img => ({
       url: img.file_url,
       alt: img.alt_text || `${alt} - ${img.angle || 'view'}`,
-      isPrimary: img.is_primary,
-      isFeatured: img.is_featured,
+      isPrimary: img.is_primary || false,
+      isFeatured: img.is_featured || false,
       angle: img.angle,
       color: img.color
     })),
@@ -78,7 +87,9 @@ export function EnhancedImageCarousel({
       url,
       alt: `${alt} - view ${index + 1}`,
       isPrimary: false,
-      isFeatured: false
+      isFeatured: false,
+      angle: undefined,
+      color: undefined
     }))
   ];
 

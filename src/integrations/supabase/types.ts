@@ -811,83 +811,152 @@ export type Database = {
       }
       motorcycles: {
         Row: {
+          abs: string | null
+          brake_type: string | null
           brand_id: string
           category: string | null
+          compression_ratio: string | null
           created_at: string
           difficulty_level: number | null
+          displacement_cc: number | null
           engine: string | null
+          fuel_capacity_gal: number | null
           fuel_capacity_l: number | null
+          fuel_system: string | null
+          ground_clearance_in: number | null
+          ground_clearance_mm: number | null
           has_abs: boolean | null
           horsepower_hp: number | null
           id: string
           image_url: string | null
+          instrumentation: string | null
           is_placeholder: boolean
           migration_status: string | null
+          model_history: string | null
           model_name: string
+          navigation_system: string | null
+          notes: string | null
+          seat_height_in: number | null
           seat_height_mm: number | null
+          seat_type: string | null
           slug: string
           status: string | null
           summary: string | null
+          suspension_front: string | null
+          suspension_rear: string | null
           tags: string[] | null
           top_speed_kph: number | null
+          top_speed_mph: number | null
           torque_nm: number | null
+          transmission: string | null
+          tyre_front: string | null
+          tyre_rear: string | null
           updated_at: string
           weight_kg: number | null
+          weight_lbs: number | null
+          wheelbase_in: number | null
           wheelbase_mm: number | null
+          wheels: string | null
           year: number | null
           year_end: number | null
         }
         Insert: {
+          abs?: string | null
+          brake_type?: string | null
           brand_id: string
           category?: string | null
+          compression_ratio?: string | null
           created_at?: string
           difficulty_level?: number | null
+          displacement_cc?: number | null
           engine?: string | null
+          fuel_capacity_gal?: number | null
           fuel_capacity_l?: number | null
+          fuel_system?: string | null
+          ground_clearance_in?: number | null
+          ground_clearance_mm?: number | null
           has_abs?: boolean | null
           horsepower_hp?: number | null
           id?: string
           image_url?: string | null
+          instrumentation?: string | null
           is_placeholder?: boolean
           migration_status?: string | null
+          model_history?: string | null
           model_name: string
+          navigation_system?: string | null
+          notes?: string | null
+          seat_height_in?: number | null
           seat_height_mm?: number | null
+          seat_type?: string | null
           slug: string
           status?: string | null
           summary?: string | null
+          suspension_front?: string | null
+          suspension_rear?: string | null
           tags?: string[] | null
           top_speed_kph?: number | null
+          top_speed_mph?: number | null
           torque_nm?: number | null
+          transmission?: string | null
+          tyre_front?: string | null
+          tyre_rear?: string | null
           updated_at?: string
           weight_kg?: number | null
+          weight_lbs?: number | null
+          wheelbase_in?: number | null
           wheelbase_mm?: number | null
+          wheels?: string | null
           year?: number | null
           year_end?: number | null
         }
         Update: {
+          abs?: string | null
+          brake_type?: string | null
           brand_id?: string
           category?: string | null
+          compression_ratio?: string | null
           created_at?: string
           difficulty_level?: number | null
+          displacement_cc?: number | null
           engine?: string | null
+          fuel_capacity_gal?: number | null
           fuel_capacity_l?: number | null
+          fuel_system?: string | null
+          ground_clearance_in?: number | null
+          ground_clearance_mm?: number | null
           has_abs?: boolean | null
           horsepower_hp?: number | null
           id?: string
           image_url?: string | null
+          instrumentation?: string | null
           is_placeholder?: boolean
           migration_status?: string | null
+          model_history?: string | null
           model_name?: string
+          navigation_system?: string | null
+          notes?: string | null
+          seat_height_in?: number | null
           seat_height_mm?: number | null
+          seat_type?: string | null
           slug?: string
           status?: string | null
           summary?: string | null
+          suspension_front?: string | null
+          suspension_rear?: string | null
           tags?: string[] | null
           top_speed_kph?: number | null
+          top_speed_mph?: number | null
           torque_nm?: number | null
+          transmission?: string | null
+          tyre_front?: string | null
+          tyre_rear?: string | null
           updated_at?: string
           weight_kg?: number | null
+          weight_lbs?: number | null
+          wheelbase_in?: number | null
           wheelbase_mm?: number | null
+          wheels?: string | null
           year?: number | null
           year_end?: number | null
         }

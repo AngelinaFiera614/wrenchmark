@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Motorcycle } from "@/types";
 import { MotorcycleImageCarousel } from "./MotorcycleImageCarousel";
+import { EnhancedImageCarousel } from "./EnhancedImageCarousel";
 import { useComparison } from "@/context/ComparisonContext";
 import { useNavigate } from "react-router-dom";
 
