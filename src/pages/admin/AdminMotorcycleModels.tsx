@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ const AdminMotorcycleModels = () => {
   const [editModel, setEditModel] = useState(null);
   const [selectedModelForYear, setSelectedModelForYear] = useState(null);
   const [selectedYearForConfig, setSelectedYearForConfig] = useState(null);
-  const [expandedModels, setExpandedModels] = useState(new Set());
+  const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set<string>());
 
   // Fetch motorcycle models with their years and configurations
   const { data: models, isLoading, refetch } = useQuery({
@@ -27,7 +26,7 @@ const AdminMotorcycleModels = () => {
     queryFn: getAllMotorcycleModels
   });
 
-  const toggleModelExpansion = (modelId) => {
+  const toggleModelExpansion = (modelId: string) => {
     const newExpanded = new Set(expandedModels);
     if (newExpanded.has(modelId)) {
       newExpanded.delete(modelId);
