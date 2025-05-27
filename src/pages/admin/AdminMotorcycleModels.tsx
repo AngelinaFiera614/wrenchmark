@@ -2,23 +2,16 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2, Edit, Trash2 } from "lucide-react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getAllMotorcycleModels } from "@/services/modelService";
 import { supabase } from "@/integrations/supabase/client";
 import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
 import AdminModelYearDialog from "@/components/admin/models/AdminModelYearDialog";
 import AdminConfigurationDialog from "@/components/admin/models/AdminConfigurationDialog";
+import ModelsTable from "@/components/admin/models/ModelsTable";
+import QuickAdd2024Button from "@/components/admin/models/QuickAdd2024Button";
 
 const AdminMotorcycleModels = () => {
   const { toast } = useToast();
@@ -61,7 +54,7 @@ const AdminMotorcycleModels = () => {
   };
 
   const handleDeleteModel = async (model) => {
-    if (!confirm(`Are you sure you want to delete ${model.name}? This will remove all associated years and configurations.`)) {
+    if (!confirm(`Are you sure you want to delete ${model.brand?.name} ${model.name}? This will remove all associated years and configurations.`)) {
       return;
     }
 
@@ -75,7 +68,7 @@ const AdminMotorcycleModels = () => {
 
       toast({
         title: "Model deleted",
-        description: `${model.name} has been removed.`,
+        description: `${model.brand?.name} ${model.name} has been removed.`,
       });
 
       refetch();
@@ -109,137 +102,102 @@ const AdminMotorcycleModels = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">Motorcycle Models</h1>
-          <p className="text-muted-foreground">
-            Manage motorcycle models, years, and configurations in the normalized schema.
+          <p className="text-muted-foreground mt-1">
+            Manage motorcycle models with years, configurations, and detailed specifications.
           </p>
         </div>
-        <Button 
-          className="bg-accent-teal text-black hover:bg-accent-teal/80"
-          onClick={handleCreateModel}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Model
-        </Button>
+        <div className="flex gap-2">
+          <QuickAdd2024Button onSuccess={() => refetch()} />
+          <Button 
+            variant="outline"
+            onClick={handleCreateModel}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Model
+          </Button>
+        </div>
       </div>
 
+      {/* Summary Stats */}
+      {models && models.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Models</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{models.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Active Production</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {models.filter(m => m.production_status === 'active').length}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Years</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {models.reduce((total, model) => total + (model.years?.length || 0), 0)}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">2024 Models</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {models.filter(m => 
+                  m.years?.some(y => y.year === 2024)
+                ).length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Models Table */}
       {models && models.length > 0 ? (
-        <div className="space-y-4">
-          {models.map((model) => (
-            <Card key={model.id} className="border border-border/50">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <CardTitle 
-                        className="cursor-pointer hover:text-accent-teal"
-                        onClick={() => toggleModelExpansion(model.id)}
-                      >
-                        {model.brand?.name} {model.name}
-                      </CardTitle>
-                      <Badge variant="outline">{model.type}</Badge>
-                      <Badge variant={model.production_status === 'active' ? 'default' : 'secondary'}>
-                        {model.production_status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {model.production_start_year}
-                      {model.production_end_year && ` - ${model.production_end_year}`}
-                    </p>
-                    {model.base_description && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {model.base_description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleAddYear(model)}
-                    >
-                      Add Year
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleEditModel(model)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => handleDeleteModel(model)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-
-              {expandedModels.has(model.id) && model.years && (
-                <CardContent className="pt-0">
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-sm">Model Years & Configurations</h4>
-                    {model.years.map((year) => (
-                      <div key={year.id} className="border rounded-lg p-3 bg-muted/50">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{year.year}</span>
-                              {year.msrp_usd && (
-                                <Badge variant="outline">${year.msrp_usd.toLocaleString()}</Badge>
-                              )}
-                            </div>
-                            {year.changes && (
-                              <p className="text-xs text-muted-foreground mt-1">{year.changes}</p>
-                            )}
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleAddConfiguration(year)}
-                          >
-                            Add Config
-                          </Button>
-                        </div>
-
-                        {year.configurations && year.configurations.length > 0 && (
-                          <div className="space-y-2">
-                            {year.configurations.map((config) => (
-                              <div key={config.id} className="flex justify-between items-center p-2 bg-background rounded border">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium">{config.name}</span>
-                                  {config.is_default && (
-                                    <Badge variant="secondary" className="text-xs">Default</Badge>
-                                  )}
-                                  {config.trim_level && (
-                                    <Badge variant="outline" className="text-xs">{config.trim_level}</Badge>
-                                  )}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {config.engine?.displacement_cc}cc | {config.weight_kg}kg
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          ))}
-        </div>
+        <ModelsTable
+          models={models}
+          onEditModel={handleEditModel}
+          onDeleteModel={handleDeleteModel}
+          onAddYear={handleAddYear}
+          onAddConfiguration={handleAddConfiguration}
+          expandedModels={expandedModels}
+          onToggleExpanded={toggleModelExpansion}
+        />
       ) : (
-        <div className="border rounded-md p-8 text-center">
-          <p className="text-muted-foreground">No motorcycle models found. Add your first model to get started.</p>
-        </div>
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="space-y-4">
+              <div className="text-muted-foreground">
+                No motorcycle models found. Start by adding your first model.
+              </div>
+              <div className="flex justify-center gap-2">
+                <QuickAdd2024Button onSuccess={() => refetch()} />
+                <Button variant="outline" onClick={handleCreateModel}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Model Manually
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Dialogs */}
