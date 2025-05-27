@@ -22,7 +22,7 @@ export const formatTorque = (torque_nm?: number): string => {
 export const formatTopSpeed = (
   top_speed_kph?: number,
   top_speed_mph?: number,
-  unit: "metric" | "imperial"
+  unit: "metric" | "imperial" = "metric"
 ): string => {
   if (unit === "metric") {
     if (!top_speed_kph || top_speed_kph <= 0) return "N/A";
