@@ -6,90 +6,90 @@
 @layer base {
   :root {
     /* Light mode (optional) */
-    --background: 255 255 255;
-    --background-alt: 248 250 252;
-    --foreground: 15 17 21;
+    --background: 0 0% 100%;
+    --background-alt: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
     --glass: rgba(0, 0, 0, 0.05);
     
-    --card: 255 255 255;
-    --card-foreground: 15 17 21;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
  
-    --popover: 255 255 255;
-    --popover-foreground: 15 17 21;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
  
-    --primary: 0 179 179;
-    --primary-dark: 0 159 159;
+    --primary: 180 100% 35%;
+    --primary-dark: 180 100% 31%;
     --primary-glow: rgba(0, 179, 179, 0.2);
-    --primary-foreground: 255 255 255;
+    --primary-foreground: 0 0% 100%;
  
-    --secondary: 100 116 139;
-    --secondary-muted: 148 163 184;
-    --secondary-foreground: 15 17 21;
+    --secondary: 210 40% 80%;
+    --secondary-muted: 215 20.2% 65.1%;
+    --secondary-foreground: 222.2 84% 4.9%;
     
     --metallic-glow: rgba(100, 116, 139, 0.1);
  
-    --muted: 241 245 249;
-    --muted-foreground: 100 116 139;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
  
-    --accent: 241 245 249;
-    --accent-foreground: 15 17 21;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
  
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 0 179 179;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 180 100% 35%;
  
     --radius: 0.75rem;
   }
  
   .dark {
     /* Dark mode - Smoked Metal Teal (default) */
-    --background: 15 17 21;
-    --background-alt: 26 28 32;
-    --foreground: 255 255 255;
+    --background: 222.2 84% 4.9%;
+    --background-alt: 217.2 32.6% 17.5%;
+    --foreground: 0 0% 100%;
     --glass: rgba(255, 255, 255, 0.05);
  
-    --card: 26 28 32;
-    --card-foreground: 255 255 255;
+    --card: 217.2 32.6% 17.5%;
+    --card-foreground: 0 0% 100%;
  
-    --popover: 26 28 32;
-    --popover-foreground: 255 255 255;
+    --popover: 217.2 32.6% 17.5%;
+    --popover-foreground: 0 0% 100%;
  
-    --primary: 0 179 179;
-    --primary-dark: 0 159 159;
+    --primary: 180 100% 35%;
+    --primary-dark: 180 100% 31%;
     --primary-glow: rgba(0, 179, 179, 0.3);
-    --primary-foreground: 255 255 255;
+    --primary-foreground: 0 0% 100%;
  
-    --secondary: 209 213 219;
-    --secondary-muted: 156 163 175;
-    --secondary-foreground: 255 255 255;
+    --secondary: 210 40% 80%;
+    --secondary-muted: 217.9 10.6% 64.9%;
+    --secondary-foreground: 0 0% 100%;
     
     --metallic-glow: rgba(209, 213, 219, 0.15);
  
-    --muted: 45 47 54;
-    --muted-foreground: 156 163 175;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
  
-    --accent: 45 47 54;
-    --accent-foreground: 255 255 255;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 0 0% 100%;
  
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
  
-    --border: 45 47 54;
-    --input: 45 47 54;
-    --ring: 0 179 179;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 180 100% 35%;
 
     /* Sidebar colors */
-    --sidebar-background: 26 28 32;
-    --sidebar-foreground: 255 255 255;
-    --sidebar-primary: 0 179 179;
-    --sidebar-primary-foreground: 255 255 255;
-    --sidebar-accent: 45 47 54;
-    --sidebar-accent-foreground: 255 255 255;
-    --sidebar-border: 45 47 54;
-    --sidebar-ring: 0 179 179;
+    --sidebar-background: 217.2 32.6% 17.5%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 180 100% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 180 100% 35%;
   }
 }
  

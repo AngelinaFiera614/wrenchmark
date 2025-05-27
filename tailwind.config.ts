@@ -18,30 +18,30 @@ const config = {
       colors: {
         // Smoked Metal Teal Design System
         background: {
-          DEFAULT: "var(--background)",
-          alt: "var(--background-alt)",
+          DEFAULT: "hsl(var(--background))",
+          alt: "hsl(var(--background-alt))",
         },
-        foreground: "var(--foreground)",
+        foreground: "hsl(var(--foreground))",
         glass: "var(--glass)",
         
         // Border colors
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
         
         // Primary teal system
         primary: {
-          DEFAULT: "var(--primary)",
-          dark: "var(--primary-dark)",
+          DEFAULT: "hsl(var(--primary))",
+          dark: "hsl(var(--primary-dark))",
           glow: "var(--primary-glow)",
-          foreground: "var(--primary-foreground)",
+          foreground: "hsl(var(--primary-foreground))",
         },
         
         // Secondary metallic system
         secondary: {
-          DEFAULT: "var(--secondary)",
-          muted: "var(--secondary-muted)",
-          foreground: "var(--secondary-foreground)",
+          DEFAULT: "hsl(var(--secondary))",
+          muted: "hsl(var(--secondary-muted))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         
         // Metallic effects
@@ -51,36 +51,36 @@ const config = {
         
         // Legacy shadcn compatibility
         muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
-          teal: "var(--primary)",
-          "teal-hover": "var(--primary-dark)",
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+          teal: "hsl(var(--primary))",
+          "teal-hover": "hsl(var(--primary-dark))",
         },
         destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
         popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
         },
         card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
         sidebar: {
-          background: "var(--sidebar-background)",
-          foreground: "var(--sidebar-foreground)",
-          primary: "var(--sidebar-primary)",
-          "primary-foreground": "var(--sidebar-primary-foreground)",
-          accent: "var(--sidebar-accent)",
-          "accent-foreground": "var(--sidebar-accent-foreground)",
-          border: "var(--sidebar-border)",
-          ring: "var(--sidebar-ring)",
+          background: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
         },
       },
       borderRadius: {
