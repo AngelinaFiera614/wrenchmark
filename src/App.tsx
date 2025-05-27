@@ -12,6 +12,9 @@ import CourseDetails from './pages/CourseDetailsPage';
 import LessonDetails from './pages/LessonDetailsPage';
 import NotFound from './pages/NotFoundPage';
 import Motorcycles from './pages/Motorcycles';
+import MotorcycleDetail from './pages/MotorcycleDetail';
+import ModelComparisonPage from './pages/ModelComparisonPage';
+import ComparisonPage from './pages/ComparisonPage';
 import ManualsPage from './pages/ManualsPage';
 import GlossaryPage from './pages/GlossaryPage';
 
@@ -67,10 +70,12 @@ function App() {
 
       {/* Main app routes */}
       <Route path="/" element={<Layout children={<Outlet />} />}>
-        {/* Removed the automatic redirect for admin users so they can view the home page */}
         <Route index element={<Index />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/motorcycles" element={<Motorcycles />} />
+        <Route path="/motorcycles/:slug" element={<MotorcycleDetail />} />
+        <Route path="/compare" element={<ComparisonPage />} />
+        <Route path="/model-comparison" element={<ModelComparisonPage />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:courseId" element={<CourseDetails />} />
         <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonDetails />} />

@@ -14,9 +14,9 @@ export function ComparisonIndicator() {
   }
   
   const handleCompareClick = () => {
-    // Create a comma-separated list of slugs for the URL
-    const slugs = motorcyclesToCompare.map(m => m.slug).join(',');
-    navigate(`/compare?models=${slugs}`);
+    // Create a comma-separated list of slugs or IDs for the URL
+    const identifiers = motorcyclesToCompare.map(m => m.slug || m.id).join(',');
+    navigate(`/compare?bikes=${identifiers}`);
   };
   
   const handleClearClick = (e: React.MouseEvent) => {

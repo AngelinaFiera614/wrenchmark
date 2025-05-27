@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Motorcycle } from "@/types";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -29,7 +28,8 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
     difficulty_level,
     abs,
     image_url,
-    summary
+    summary,
+    slug
   } = motorcycle;
 
   const { addToComparison, removeFromComparison, isInComparison } = useComparison();
@@ -53,12 +53,15 @@ export default function MotorcycleCard({ motorcycle }: MotorcycleCardProps) {
   const formatSeatHeight = () => seat_height_mm && seat_height_mm > 0 ? `${seat_height_mm} mm` : "N/A";
   const formatWeight = () => weight_kg && weight_kg > 0 ? `${weight_kg} kg` : "N/A";
 
+  // Use slug for navigation, fallback to id if slug is missing
+  const motorcycleUrl = slug ? `/motorcycles/${slug}` : `/motorcycles/${id}`;
+
   return (
     <Card className={cn(
       "overflow-hidden transition-all hover:shadow-lg",
       isSelected && "ring-2 ring-accent-teal"
     )}>
-      <Link to={`/motorcycles/${id}`}>
+      <Link to={motorcycleUrl}>
         <div className="relative aspect-[16/9] overflow-hidden">
           {image_url ? (
             <img
