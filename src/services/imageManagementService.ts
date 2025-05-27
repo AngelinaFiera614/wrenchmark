@@ -268,6 +268,22 @@ export const imageManagementService = {
     }
   },
 
+  // Update motorcycle primary image URL
+  async updateMotorcyclePrimaryImage(motorcycleId: string, imageUrl: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('motorcycle_models')
+        .update({ default_image_url: imageUrl })
+        .eq('id', motorcycleId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error updating motorcycle primary image:', error);
+      return false;
+    }
+  },
+
   // Delete image
   async deleteImage(imageId: string): Promise<boolean> {
     try {

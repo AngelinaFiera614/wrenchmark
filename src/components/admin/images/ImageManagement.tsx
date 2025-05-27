@@ -95,7 +95,7 @@ export default function ImageManagement() {
   };
 
   const setPrimaryImage = async (imageId: string, motorcycleId: string) => {
-    const success = await imageManagementService.setPrimaryImage(imageId, motorcycleId);
+    const success = await imageManagementService.setPrimaryImage(imageId, { motorcycleId });
     if (success) {
       toast.success('Primary image updated');
       // Update the motorcycle's primary image URL
