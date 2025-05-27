@@ -20,7 +20,6 @@ export default function BrandsDirectory() {
         const data = await getAllBrands();
         setBrands(data);
       } catch (error) {
-        console.error("Failed to fetch brands:", error);
         toast.error("Failed to load brands data");
       } finally {
         setIsLoading(false);

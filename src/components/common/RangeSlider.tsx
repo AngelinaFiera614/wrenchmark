@@ -5,6 +5,20 @@ import { Badge } from '@/components/ui/badge';
 import FilterSection from './FilterSection';
 import FilterReset from '../motorcycles/filters/FilterReset';
 
+/**
+ * A reusable range slider component for filtering numeric values
+ * Displays current values, active state, and optional reset functionality
+ * 
+ * @param title - The label for the range slider
+ * @param values - Current [min, max] values
+ * @param min - Minimum allowed value
+ * @param max - Maximum allowed value
+ * @param step - Step increment for the slider
+ * @param unit - Unit suffix for display (e.g., 'kg', 'mm')
+ * @param formatValue - Optional custom formatter for values
+ * @param onChange - Callback when values change
+ * @param filterType - Type identifier for reset functionality
+ */
 interface RangeSliderProps {
   title: string;
   values: [number, number];

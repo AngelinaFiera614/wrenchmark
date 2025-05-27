@@ -2,8 +2,16 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 
+/**
+ * A reusable checkbox list component for multi-select filters
+ * Handles selection state and provides consistent styling
+ * 
+ * @param items - Array of checkbox items with id, label, and value
+ * @param selectedValues - Currently selected values
+ * @param onChange - Callback when selection changes
+ * @param idPrefix - Prefix for checkbox IDs to ensure uniqueness
+ */
 interface CheckboxItem {
   id: string;
   label: string;
@@ -24,31 +32,26 @@ export default function CheckboxList({
   idPrefix = 'checkbox'
 }: CheckboxListProps) {
   return (
-    <div className="grid grid-cols-1 gap-2">
+    <div className="space-y-2">
       {items.map((item) => {
         const isChecked = selectedValues.includes(item.value);
-        const itemId = `${idPrefix}-${item.id}`;
+        const checkboxId = `${idPrefix}-${item.id}`;
         
         return (
           <div key={item.id} className="flex items-center space-x-2">
-            <Checkbox 
-              id={itemId}
+            <Checkbox
+              id={checkboxId}
               checked={isChecked}
-              onCheckedChange={(checked) => 
-                onChange(item.value, checked as boolean)
-              }
+              onCheckedChange={(checked) => onChange(item.value, checked as boolean)}
             />
             <Label 
-              htmlFor={itemId}
-              className={isChecked ? "font-medium text-white" : "text-white/80"}
+              htmlFor={checkboxId}
+              className={`text-sm cursor-pointer ${
+                isChecked ? 'font-medium text-white' : 'text-white/80'
+              }`}
             >
               {item.label}
             </Label>
-            {isChecked && (
-              <Badge variant="outline" className="ml-auto text-xs">
-                Active
-              </Badge>
-            )}
           </div>
         );
       })}

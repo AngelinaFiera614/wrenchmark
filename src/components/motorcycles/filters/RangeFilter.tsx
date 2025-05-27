@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Slider } from "@/components/ui/slider";
-import FilterSection from "./FilterSection";
+import FilterSection from "@/components/common/FilterSection";
 import FilterReset from "./FilterReset";
 
 interface RangeFilterProps {

@@ -2,6 +2,14 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
+/**
+ * A reusable loading spinner component with configurable size and text
+ * Provides consistent loading states across the application
+ * 
+ * @param size - Size variant: 'sm', 'md', or 'lg'
+ * @param className - Additional CSS classes
+ * @param text - Optional loading text to display below spinner
+ */
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;

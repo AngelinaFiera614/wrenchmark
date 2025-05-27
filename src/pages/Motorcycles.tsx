@@ -27,7 +27,6 @@ export default function Motorcycles() {
         const data = await getAllMotorcycles();
         setMotorcycles(data);
       } catch (error) {
-        console.error("Failed to fetch motorcycles:", error);
         toast.error("Failed to load motorcycles data");
       } finally {
         setIsLoading(false);

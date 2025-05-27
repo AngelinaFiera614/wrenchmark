@@ -2,6 +2,16 @@
 import React, { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 
+/**
+ * A reusable empty state component for when no data is available
+ * Provides consistent messaging and optional action buttons
+ * 
+ * @param icon - Optional icon element to display
+ * @param title - Main heading text
+ * @param description - Descriptive text explaining the empty state
+ * @param action - Optional action button configuration
+ * @param className - Additional CSS classes
+ */
 interface EmptyStateProps {
   icon?: ReactNode;
   title: string;
