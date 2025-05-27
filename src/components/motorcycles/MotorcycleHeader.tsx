@@ -88,7 +88,12 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="overflow-hidden border border-border/30 bg-card/50 backdrop-blur-sm rounded-lg">
-        <MotorcycleImageCarousel images={getMotorcycleImages()} alt={`${make} ${model}`} />
+        <EnhancedImageCarousel 
+          motorcycleId={motorcycle.id}
+          fallbackImages={getMotorcycleImages()}
+          alt={`${make} ${model}`}
+          category={category}
+        />
       </div>
       
       <div className="space-y-5">

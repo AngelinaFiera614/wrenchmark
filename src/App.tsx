@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -17,6 +16,7 @@ import ModelComparisonPage from './pages/ModelComparisonPage';
 import ComparisonPage from './pages/ComparisonPage';
 import ManualsPage from './pages/ManualsPage';
 import GlossaryPage from './pages/GlossaryPage';
+import AdminImages from './pages/admin/AdminImages';
 
 // Import all admin page components
 import {
@@ -63,6 +63,7 @@ function App() {
         <Route path="manuals" element={<AdminManuals />} />
         <Route path="glossary" element={<AdminGlossary />} />
         <Route path="state-rules" element={<AdminStateRules />} />
+        <Route path="images" element={<AdminImages />} />
       </Route>
 
       {/* Auth routes - without main layout */}
