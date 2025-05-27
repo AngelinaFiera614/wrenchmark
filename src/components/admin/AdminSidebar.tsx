@@ -1,108 +1,87 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  Book,
-  BookOpen,
-  Car,
+  LayoutDashboard,
+  Building2,
+  Bike,
+  Wrench,
   FileText,
-  Pen,
-  Settings,
-  ShieldCheck,
-  Users,
-  BookText
+  BookOpen,
+  Target,
+  GraduationCap,
+  ImageIcon
 } from "lucide-react";
 
-type NavItem = {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-};
+interface SidebarItemProps {
+  to: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}
 
-const NAV_ITEMS: NavItem[] = [
-  {
-    title: "Dashboard",
-    href: "/admin",
-    icon: Settings,
-  },
-  {
-    title: "Courses",
-    href: "/admin/courses",
-    icon: Book,
-  },
-  {
-    title: "Lessons",
-    href: "/admin/lessons",
-    icon: BookOpen,
-  },
-  {
-    title: "Motorcycles",
-    href: "/admin/motorcycles",
-    icon: Car,
-  },
-  {
-    title: "Brands",
-    href: "/admin/brands",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Riding Skills",
-    href: "/admin/riding-skills",
-    icon: Pen,
-  },
-  {
-    title: "Manuals",
-    href: "/admin/manuals",
-    icon: FileText,
-  },
-  {
-    title: "Glossary",
-    href: "/admin/glossary",
-    icon: BookText,
-  },
-  {
-    title: "State Rules",
-    href: "/admin/state-rules",
-    icon: FileText,
-  },
-  {
-    title: "Users",
-    href: "/admin/users",
-    icon: Users,
-  },
-];
-
-const AdminSidebar = () => {
+const SidebarItem = ({ to, icon, children }: SidebarItemProps) => {
   const location = useLocation();
+  const isActive = location.pathname === to;
 
   return (
-    <aside className="w-64 bg-card border-r border-border h-full">
-      <div className="p-4">
-        <nav className="space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const isActive = location.pathname === item.href || 
-              (item.href !== '/admin' && location.pathname.startsWith(item.href));
-            
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={cn(
-                  "flex items-center px-3 py-2 rounded-md text-sm transition-colors",
-                  isActive 
-                    ? "bg-accent-teal/10 text-accent-teal" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <item.icon className={cn("h-4 w-4 mr-2", isActive ? "text-accent-teal" : "text-muted-foreground")} />
-                {item.title}
-              </Link>
-            );
-          })}
+    <li>
+      <Link
+        to={to}
+        className={cn(
+          "flex items-center space-x-2 rounded-md p-2 text-sm font-medium hover:bg-secondary hover:text-accent-teal",
+          isActive ? "bg-secondary text-accent-teal" : "text-muted-foreground"
+        )}
+      >
+        {icon}
+        <span>{children}</span>
+      </Link>
+    </li>
+  );
+};
+
+const AdminSidebar = () => {
+  return (
+    <div className="flex h-full w-64 flex-col border-r border-border/50 bg-secondary">
+      <div className="flex-1 space-y-4 p-4 pt-6">
+        <div className="flex flex-col space-y-1">
+          <h2 className="text-sm font-semibold tracking-widest">
+            Administration
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Manage your store settings and content.
+          </p>
+        </div>
+        <nav className="space-y-2">
+          <SidebarItem to="/admin" icon={<LayoutDashboard className="h-4 w-4" />}>
+            Dashboard
+          </SidebarItem>
+          <SidebarItem to="/admin/brands" icon={<Building2 className="h-4 w-4" />}>
+            Brands
+          </SidebarItem>
+          <SidebarItem to="/admin/motorcycle-models" icon={<Bike className="h-4 w-4" />}>
+            Motorcycle Models
+          </SidebarItem>
+          <SidebarItem to="/admin/motorcycles" icon={<Wrench className="h-4 w-4" />}>
+            Legacy Motorcycles
+          </SidebarItem>
+          <SidebarItem to="/admin/manuals" icon={<FileText className="h-4 w-4" />}>
+            Manuals
+          </SidebarItem>
+          <SidebarItem to="/admin/glossary" icon={<BookOpen className="h-4 w-4" />}>
+            Glossary
+          </SidebarItem>
+          <SidebarItem to="/admin/riding-skills" icon={<Target className="h-4 w-4" />}>
+            Riding Skills
+          </SidebarItem>
+          <SidebarItem to="/admin/courses" icon={<GraduationCap className="h-4 w-4" />}>
+            Courses
+          </SidebarItem>
+          <SidebarItem to="/admin/images" icon={<ImageIcon className="h-4 w-4" />}>
+            Images
+          </SidebarItem>
         </nav>
       </div>
-    </aside>
+    </div>
   );
 };
 

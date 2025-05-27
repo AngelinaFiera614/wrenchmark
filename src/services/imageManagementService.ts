@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 export interface MotorcycleImage {
   id: string;
   motorcycle_id?: string;
+  model_year_id?: string;
+  configuration_id?: string;
   file_url: string;
   file_name: string;
   file_size_bytes?: number;
@@ -79,7 +81,7 @@ export const imageManagementService = {
     }
   },
 
-  // Get images for a motorcycle
+  // Get images for a motorcycle model
   async getMotorcycleImages(motorcycleId: string): Promise<MotorcycleImage[]> {
     try {
       const { data, error } = await supabase
@@ -98,15 +100,61 @@ export const imageManagementService = {
     }
   },
 
+  // Get images for a specific year
+  async getModelYearImages(modelYearId: string): Promise<MotorcycleImage[]> {
+    try {
+      const { data, error } = await supabase
+        .from('motorcycle_images')
+        .select('*')
+        .eq('model_year_id', modelYearId)
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching model year images:', error);
+      return [];
+    }
+  },
+
+  // Get images for a specific configuration
+  async getConfigurationImages(configurationId: string): Promise<MotorcycleImage[]> {
+    try {
+      const { data, error } = await supabase
+        .from('motorcycle_images')
+        .select('*')
+        .eq('configuration_id', configurationId)
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching configuration images:', error);
+      return [];
+    }
+  },
+
   // Search images by tags
   async searchImagesByTags(tags: string[], brand?: string, model?: string): Promise<MotorcycleImage[]> {
     try {
       let query = supabase
         .from('motorcycle_images')
-        .select('*');
+        .select(`
+          *,
+          image_tag_associations!inner(
+            tag_id,
+            image_tags!inner(name)
+          )
+        `);
 
       if (brand) query = query.eq('brand', brand);
       if (model) query = query.ilike('model', `%${model}%`);
+      
+      if (tags.length > 0) {
+        query = query.in('image_tag_associations.image_tags.name', tags);
+      }
 
       const { data, error } = await query;
 
@@ -152,30 +200,59 @@ export const imageManagementService = {
     }
   },
 
-  // Update motorcycle primary image
-  async updateMotorcyclePrimaryImage(motorcycleId: string, imageUrl: string): Promise<boolean> {
+  // Associate tags with image
+  async associateImageTags(imageId: string, tagIds: string[]): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('motorcycles')
-        .update({ image_url: imageUrl })
-        .eq('id', motorcycleId);
+      // First remove existing associations
+      await supabase
+        .from('image_tag_associations')
+        .delete()
+        .eq('image_id', imageId);
 
-      if (error) throw error;
+      // Then add new associations
+      if (tagIds.length > 0) {
+        const associations = tagIds.map(tagId => ({
+          image_id: imageId,
+          tag_id: tagId
+        }));
+
+        const { error } = await supabase
+          .from('image_tag_associations')
+          .insert(associations);
+
+        if (error) throw error;
+      }
+
       return true;
     } catch (error) {
-      console.error('Error updating motorcycle primary image:', error);
+      console.error('Error associating image tags:', error);
       return false;
     }
   },
 
-  // Set image as primary for motorcycle
-  async setPrimaryImage(imageId: string, motorcycleId: string): Promise<boolean> {
+  // Set image as primary for motorcycle/year/configuration
+  async setPrimaryImage(imageId: string, scope: {
+    motorcycleId?: string;
+    modelYearId?: string;
+    configurationId?: string;
+  }): Promise<boolean> {
     try {
-      // First, unset all other primary images for this motorcycle
-      await supabase
+      // First, unset all other primary images for this scope
+      let unsetQuery = supabase
         .from('motorcycle_images')
-        .update({ is_primary: false })
-        .eq('motorcycle_id', motorcycleId);
+        .update({ is_primary: false });
+
+      if (scope.motorcycleId) {
+        unsetQuery = unsetQuery.eq('motorcycle_id', scope.motorcycleId);
+      }
+      if (scope.modelYearId) {
+        unsetQuery = unsetQuery.eq('model_year_id', scope.modelYearId);
+      }
+      if (scope.configurationId) {
+        unsetQuery = unsetQuery.eq('configuration_id', scope.configurationId);
+      }
+
+      await unsetQuery;
 
       // Then set this image as primary
       const { error } = await supabase
@@ -187,6 +264,22 @@ export const imageManagementService = {
       return true;
     } catch (error) {
       console.error('Error setting primary image:', error);
+      return false;
+    }
+  },
+
+  // Delete image
+  async deleteImage(imageId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('motorcycle_images')
+        .delete()
+        .eq('id', imageId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error deleting image:', error);
       return false;
     }
   }

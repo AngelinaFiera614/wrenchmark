@@ -383,6 +383,63 @@ export type Database = {
         }
         Relationships: []
       }
+      image_tag_associations: {
+        Row: {
+          image_id: string
+          tag_id: string
+        }
+        Insert: {
+          image_id: string
+          tag_id: string
+        }
+        Update: {
+          image_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_tag_associations_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "image_tag_associations_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "image_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      image_tags: {
+        Row: {
+          category: string
+          color_hex: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category: string
+          color_hex?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string
+          color_hex?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       lesson_quizzes: {
         Row: {
           created_at: string
@@ -621,6 +678,7 @@ export type Database = {
       model_configurations: {
         Row: {
           brake_system_id: string | null
+          color_id: string | null
           created_at: string
           engine_id: string | null
           frame_id: string | null
@@ -629,10 +687,15 @@ export type Database = {
           id: string
           image_url: string | null
           is_default: boolean | null
+          market_region: string | null
           model_year_id: string
           name: string | null
+          optional_equipment: string[] | null
+          price_premium_usd: number | null
           seat_height_mm: number | null
+          special_features: string[] | null
           suspension_id: string | null
+          trim_level: string | null
           updated_at: string
           weight_kg: number | null
           wheel_id: string | null
@@ -640,6 +703,7 @@ export type Database = {
         }
         Insert: {
           brake_system_id?: string | null
+          color_id?: string | null
           created_at?: string
           engine_id?: string | null
           frame_id?: string | null
@@ -648,10 +712,15 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_default?: boolean | null
+          market_region?: string | null
           model_year_id: string
           name?: string | null
+          optional_equipment?: string[] | null
+          price_premium_usd?: number | null
           seat_height_mm?: number | null
+          special_features?: string[] | null
           suspension_id?: string | null
+          trim_level?: string | null
           updated_at?: string
           weight_kg?: number | null
           wheel_id?: string | null
@@ -659,6 +728,7 @@ export type Database = {
         }
         Update: {
           brake_system_id?: string | null
+          color_id?: string | null
           created_at?: string
           engine_id?: string | null
           frame_id?: string | null
@@ -667,10 +737,15 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_default?: boolean | null
+          market_region?: string | null
           model_year_id?: string
           name?: string | null
+          optional_equipment?: string[] | null
+          price_premium_usd?: number | null
           seat_height_mm?: number | null
+          special_features?: string[] | null
           suspension_id?: string | null
+          trim_level?: string | null
           updated_at?: string
           weight_kg?: number | null
           wheel_id?: string | null
@@ -682,6 +757,13 @@ export type Database = {
             columns: ["brake_system_id"]
             isOneToOne: false
             referencedRelation: "brake_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_configurations_color_id_fkey"
+            columns: ["color_id"]
+            isOneToOne: false
+            referencedRelation: "color_options"
             referencedColumns: ["id"]
           },
           {
@@ -726,7 +808,14 @@ export type Database = {
           changes: string | null
           created_at: string
           id: string
+          image_url: string | null
+          market_regions: string[] | null
+          marketing_tagline: string | null
           motorcycle_id: string
+          msrp_usd: number | null
+          production_numbers: number | null
+          special_editions: string[] | null
+          technical_updates: string | null
           updated_at: string
           year: number
         }
@@ -734,7 +823,14 @@ export type Database = {
           changes?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
+          market_regions?: string[] | null
+          marketing_tagline?: string | null
           motorcycle_id: string
+          msrp_usd?: number | null
+          production_numbers?: number | null
+          special_editions?: string[] | null
+          technical_updates?: string | null
           updated_at?: string
           year: number
         }
@@ -742,7 +838,14 @@ export type Database = {
           changes?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
+          market_regions?: string[] | null
+          marketing_tagline?: string | null
           motorcycle_id?: string
+          msrp_usd?: number | null
+          production_numbers?: number | null
+          special_editions?: string[] | null
+          technical_updates?: string | null
           updated_at?: string
           year?: number
         }
@@ -756,18 +859,135 @@ export type Database = {
           },
         ]
       }
+      motorcycle_images: {
+        Row: {
+          alt_text: string | null
+          angle: string | null
+          brand: string | null
+          caption: string | null
+          color: string | null
+          configuration_id: string | null
+          created_at: string | null
+          file_name: string
+          file_size_bytes: number | null
+          file_url: string
+          height_px: number | null
+          id: string
+          is_featured: boolean | null
+          is_primary: boolean | null
+          mime_type: string | null
+          model: string | null
+          model_year_id: string | null
+          motorcycle_id: string | null
+          replaced_by: string | null
+          style: string | null
+          updated_at: string | null
+          version: number | null
+          width_px: number | null
+          year: number | null
+        }
+        Insert: {
+          alt_text?: string | null
+          angle?: string | null
+          brand?: string | null
+          caption?: string | null
+          color?: string | null
+          configuration_id?: string | null
+          created_at?: string | null
+          file_name: string
+          file_size_bytes?: number | null
+          file_url: string
+          height_px?: number | null
+          id?: string
+          is_featured?: boolean | null
+          is_primary?: boolean | null
+          mime_type?: string | null
+          model?: string | null
+          model_year_id?: string | null
+          motorcycle_id?: string | null
+          replaced_by?: string | null
+          style?: string | null
+          updated_at?: string | null
+          version?: number | null
+          width_px?: number | null
+          year?: number | null
+        }
+        Update: {
+          alt_text?: string | null
+          angle?: string | null
+          brand?: string | null
+          caption?: string | null
+          color?: string | null
+          configuration_id?: string | null
+          created_at?: string | null
+          file_name?: string
+          file_size_bytes?: number | null
+          file_url?: string
+          height_px?: number | null
+          id?: string
+          is_featured?: boolean | null
+          is_primary?: boolean | null
+          mime_type?: string | null
+          model?: string | null
+          model_year_id?: string | null
+          motorcycle_id?: string | null
+          replaced_by?: string | null
+          style?: string | null
+          updated_at?: string | null
+          version?: number | null
+          width_px?: number | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "motorcycle_images_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_images_model_year_id_fkey"
+            columns: ["model_year_id"]
+            isOneToOne: false
+            referencedRelation: "model_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_images_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_images_replaced_by_fkey"
+            columns: ["replaced_by"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_images"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       motorcycle_models: {
         Row: {
           base_description: string | null
           brand_id: string
           created_at: string
           default_image_url: string | null
+          design_philosophy: string | null
+          discontinuation_reason: string | null
           id: string
+          model_history: string | null
           name: string
+          predecessor_model_id: string | null
           production_end_year: number | null
+          production_notes: string | null
           production_start_year: number | null
           production_status: string
           slug: string
+          successor_model_id: string | null
+          target_market: string | null
           type: string
           updated_at: string
         }
@@ -776,12 +996,19 @@ export type Database = {
           brand_id: string
           created_at?: string
           default_image_url?: string | null
+          design_philosophy?: string | null
+          discontinuation_reason?: string | null
           id?: string
+          model_history?: string | null
           name: string
+          predecessor_model_id?: string | null
           production_end_year?: number | null
+          production_notes?: string | null
           production_start_year?: number | null
           production_status?: string
           slug: string
+          successor_model_id?: string | null
+          target_market?: string | null
           type: string
           updated_at?: string
         }
@@ -790,12 +1017,19 @@ export type Database = {
           brand_id?: string
           created_at?: string
           default_image_url?: string | null
+          design_philosophy?: string | null
+          discontinuation_reason?: string | null
           id?: string
+          model_history?: string | null
           name?: string
+          predecessor_model_id?: string | null
           production_end_year?: number | null
+          production_notes?: string | null
           production_start_year?: number | null
           production_status?: string
           slug?: string
+          successor_model_id?: string | null
+          target_market?: string | null
           type?: string
           updated_at?: string
         }
@@ -805,6 +1039,20 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_models_predecessor_model_id_fkey"
+            columns: ["predecessor_model_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_models_successor_model_id_fkey"
+            columns: ["successor_model_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
           },
         ]
@@ -1394,6 +1642,14 @@ export type Database = {
       }
       mark_term_as_unlearned: {
         Args: { term_slug_param: string }
+        Returns: boolean
+      }
+      migrate_all_legacy_motorcycles: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      migrate_legacy_motorcycle: {
+        Args: { legacy_id: string }
         Returns: boolean
       }
     }

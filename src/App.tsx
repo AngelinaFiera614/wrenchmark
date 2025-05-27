@@ -28,7 +28,8 @@ import {
   AdminRidingSkills,
   AdminManuals,
   AdminGlossary,
-  AdminStateRules
+  AdminStateRules,
+  AdminMotorcycleModels
 } from './pages/admin';
 
 function App() {
@@ -52,17 +53,15 @@ function App() {
   return (
     <Routes>
       {/* Admin routes */}
-      <Route path="/admin/*" element={<AdminLayout />}>
+      <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
-        {/* Admin nested routes */}
-        <Route path="courses" element={<AdminCourses />} />
-        <Route path="lessons" element={<AdminLessons />} />
-        <Route path="motorcycles" element={<AdminMotorcycles />} />
         <Route path="brands" element={<AdminBrands />} />
-        <Route path="riding-skills" element={<AdminRidingSkills />} />
+        <Route path="motorcycle-models" element={<AdminMotorcycleModels />} />
+        <Route path="motorcycles" element={<AdminMotorcycles />} />
         <Route path="manuals" element={<AdminManuals />} />
         <Route path="glossary" element={<AdminGlossary />} />
-        <Route path="state-rules" element={<AdminStateRules />} />
+        <Route path="riding-skills" element={<AdminRidingSkills />} />
+        <Route path="courses" element={<AdminCourses />} />
         <Route path="images" element={<AdminImages />} />
       </Route>
 
