@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 
 /**
  * Marks a glossary term as learned by the current user

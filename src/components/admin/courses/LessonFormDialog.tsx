@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { createLesson, updateLesson } from '@/services/lessonService';
-import { queryClient } from '@/main';
+import { queryClient } from '@/lib/queryClient';
 import LessonGlossaryTermsField from './LessonGlossaryTermsField';
 import { cn } from '@/lib/utils';
 

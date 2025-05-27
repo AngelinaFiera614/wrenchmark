@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { GlossaryTerm, GlossaryFormValues } from "@/types/glossary";
 import { toast } from "sonner";
-import { queryClient } from "@/main";
+import { queryClient } from "@/lib/queryClient";
 import { generateUniqueSlug } from "./slugService";
 
 /**
