@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Loader2, ArrowRight, Database } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Loader2, ArrowRight } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -11,7 +11,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
@@ -27,41 +26,11 @@ const AdminMotorcycles = () => {
   const [editMotorcycle, setEditMotorcycle] = useState<Motorcycle | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [motorcycleToDelete, setMotorcycleToDelete] = useState<Motorcycle | null>(null);
-  const [isMigrating, setIsMigrating] = useState(false);
 
-  // Fetch motorcycles data
   const { data: motorcycles, isLoading, refetch } = useQuery({
     queryKey: ["admin-motorcycles"],
     queryFn: getAllMotorcycles
   });
-
-  // Count unmigrated motorcycles
-  const unmigratedCount = motorcycles?.filter(m => m.migration_status !== 'migrated').length || 0;
-
-  const handleMigrateLegacyData = async () => {
-    setIsMigrating(true);
-    try {
-      const { data, error } = await supabase.rpc('migrate_all_legacy_motorcycles');
-      
-      if (error) throw error;
-
-      toast({
-        title: "Migration completed",
-        description: `Successfully migrated ${data} motorcycles to the new schema.`,
-      });
-
-      refetch();
-    } catch (error) {
-      console.error("Migration error:", error);
-      toast({
-        variant: "destructive",
-        title: "Migration failed",
-        description: "Failed to migrate motorcycles. Please try again.",
-      });
-    } finally {
-      setIsMigrating(false);
-    }
-  };
 
   const handleAddMotorcycle = () => {
     setIsCreateDialogOpen(true);
@@ -115,52 +84,11 @@ const AdminMotorcycles = () => {
 
   return (
     <div className="space-y-6">
-      {/* Migration Notice */}
-      {unmigratedCount > 0 && (
-        <Card className="border-accent-teal/20 bg-accent-teal/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-accent-teal">
-              <Database className="h-5 w-5" />
-              Schema Migration Available
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm mb-4">
-              You have {unmigratedCount} motorcycles in the legacy format. 
-              Use the new <strong>Motorcycle Models</strong> interface for better organization with support for multiple years, configurations, and comprehensive image management.
-            </p>
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => navigate('/admin/motorcycle-models')}
-                className="bg-accent-teal text-black hover:bg-accent-teal/80"
-              >
-                <ArrowRight className="mr-2 h-4 w-4" />
-                Go to New Interface
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={handleMigrateLegacyData}
-                disabled={isMigrating}
-              >
-                {isMigrating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Migrating...
-                  </>
-                ) : (
-                  `Migrate ${unmigratedCount} Motorcycles`
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Legacy Motorcycles</h1>
           <p className="text-muted-foreground">
-            Manage individual motorcycle entries in the legacy format. Use the new Motorcycle Models interface for better organization.
+            Manage individual motorcycle entries. For better organization with multiple years and configurations, use the Motorcycle Models interface.
           </p>
         </div>
         <div className="flex gap-2">
@@ -168,14 +96,15 @@ const AdminMotorcycles = () => {
             variant="outline"
             onClick={() => navigate('/admin/motorcycle-models')}
           >
-            New Interface
+            <ArrowRight className="mr-2 h-4 w-4" />
+            Motorcycle Models
           </Button>
           <Button 
             className="bg-accent-teal text-black hover:bg-accent-teal/80"
             onClick={handleAddMotorcycle}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Legacy Entry
+            Add Motorcycle
           </Button>
         </div>
       </div>
@@ -194,7 +123,7 @@ const AdminMotorcycles = () => {
                 <TableHead>Model</TableHead>
                 <TableHead>Year</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Engine</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -204,7 +133,7 @@ const AdminMotorcycles = () => {
                   <TableCell>
                     <div className="h-12 w-16 bg-black rounded overflow-hidden">
                       <img 
-                        src={motorcycle.image_url} 
+                        src={motorcycle.image_url || '/placeholder.svg'} 
                         alt={`${motorcycle.make} ${motorcycle.model}`}
                         className="h-full w-full object-cover"
                         onError={(e) => {
@@ -216,12 +145,10 @@ const AdminMotorcycles = () => {
                   <TableCell>{motorcycle.make}</TableCell>
                   <TableCell>{motorcycle.model}</TableCell>
                   <TableCell>{motorcycle.year}</TableCell>
-                  <TableCell>{motorcycle.category}</TableCell>
                   <TableCell>
-                    <Badge variant={motorcycle.migration_status === 'migrated' ? 'default' : 'secondary'}>
-                      {motorcycle.migration_status === 'migrated' ? 'Migrated' : 'Legacy'}
-                    </Badge>
+                    <Badge variant="outline">{motorcycle.category}</Badge>
                   </TableCell>
+                  <TableCell>{motorcycle.engine_size}cc</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button 
@@ -252,14 +179,12 @@ const AdminMotorcycles = () => {
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
       <AdminMotorcycleDialog 
         open={isCreateDialogOpen || editMotorcycle !== null}
         motorcycle={editMotorcycle}
         onClose={handleDialogClose}
       />
 
-      {/* Delete Confirmation */}
       {isDeleteConfirmOpen && motorcycleToDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border rounded-lg p-6 w-full max-w-md">

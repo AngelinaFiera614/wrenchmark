@@ -38,7 +38,6 @@ export interface ImageTag {
 }
 
 export const imageManagementService = {
-  // Upload image to storage
   async uploadImage(file: File, path: string): Promise<{ url: string; error?: Error }> {
     try {
       const fileExt = file.name.split('.').pop();
@@ -63,7 +62,6 @@ export const imageManagementService = {
     }
   },
 
-  // Create image metadata record
   async createImageRecord(imageData: Omit<MotorcycleImage, 'id' | 'created_at' | 'updated_at'>): Promise<MotorcycleImage | null> {
     try {
       const { data, error } = await supabase
@@ -75,11 +73,11 @@ export const imageManagementService = {
       if (error) throw error;
       return data;
     } catch (error) {
+      console.error('Error creating image record:', error);
       return null;
     }
   },
 
-  // Get images for a motorcycle model
   async getMotorcycleImages(motorcycleId: string): Promise<MotorcycleImage[]> {
     try {
       const { data, error } = await supabase
@@ -93,11 +91,11 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
+      console.error('Error fetching motorcycle images:', error);
       return [];
     }
   },
 
-  // Get images for a specific year
   async getModelYearImages(modelYearId: string): Promise<MotorcycleImage[]> {
     try {
       const { data, error } = await supabase
@@ -110,11 +108,11 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
+      console.error('Error fetching model year images:', error);
       return [];
     }
   },
 
-  // Get images for a specific configuration
   async getConfigurationImages(configurationId: string): Promise<MotorcycleImage[]> {
     try {
       const { data, error } = await supabase
@@ -127,11 +125,11 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
+      console.error('Error fetching configuration images:', error);
       return [];
     }
   },
 
-  // Search images by tags
   async searchImagesByTags(tags: string[], brand?: string, model?: string): Promise<MotorcycleImage[]> {
     try {
       let query = supabase
@@ -156,11 +154,11 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
+      console.error('Error searching images by tags:', error);
       return [];
     }
   },
 
-  // Get all image tags
   async getImageTags(): Promise<ImageTag[]> {
     try {
       const { data, error } = await supabase
@@ -172,11 +170,11 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
+      console.error('Error fetching image tags:', error);
       return [];
     }
   },
 
-  // Create new tag
   async createTag(tag: Omit<ImageTag, 'id' | 'created_at'>): Promise<ImageTag | null> {
     try {
       const { data, error } = await supabase
@@ -188,20 +186,18 @@ export const imageManagementService = {
       if (error) throw error;
       return data;
     } catch (error) {
+      console.error('Error creating tag:', error);
       return null;
     }
   },
 
-  // Associate tags with image
   async associateImageTags(imageId: string, tagIds: string[]): Promise<boolean> {
     try {
-      // Remove existing associations
       await supabase
         .from('image_tag_associations')
         .delete()
         .eq('image_id', imageId);
 
-      // Add new associations
       if (tagIds.length > 0) {
         const associations = tagIds.map(tagId => ({
           image_id: imageId,
@@ -217,18 +213,17 @@ export const imageManagementService = {
 
       return true;
     } catch (error) {
+      console.error('Error associating image tags:', error);
       return false;
     }
   },
 
-  // Set image as primary for motorcycle/year/configuration
   async setPrimaryImage(imageId: string, scope: {
     motorcycleId?: string;
     modelYearId?: string;
     configurationId?: string;
   }): Promise<boolean> {
     try {
-      // Unset all other primary images for this scope
       let unsetQuery = supabase
         .from('motorcycle_images')
         .update({ is_primary: false });
@@ -245,7 +240,6 @@ export const imageManagementService = {
 
       await unsetQuery;
 
-      // Set this image as primary
       const { error } = await supabase
         .from('motorcycle_images')
         .update({ is_primary: true })
@@ -254,11 +248,11 @@ export const imageManagementService = {
       if (error) throw error;
       return true;
     } catch (error) {
+      console.error('Error setting primary image:', error);
       return false;
     }
   },
 
-  // Update motorcycle primary image URL
   async updateMotorcyclePrimaryImage(motorcycleId: string, imageUrl: string): Promise<boolean> {
     try {
       const { error } = await supabase
@@ -269,11 +263,11 @@ export const imageManagementService = {
       if (error) throw error;
       return true;
     } catch (error) {
+      console.error('Error updating motorcycle primary image:', error);
       return false;
     }
   },
 
-  // Delete image
   async deleteImage(imageId: string): Promise<boolean> {
     try {
       const { error } = await supabase
@@ -284,6 +278,7 @@ export const imageManagementService = {
       if (error) throw error;
       return true;
     } catch (error) {
+      console.error('Error deleting image:', error);
       return false;
     }
   }

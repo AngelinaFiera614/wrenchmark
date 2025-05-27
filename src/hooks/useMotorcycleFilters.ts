@@ -16,7 +16,7 @@ import { countActiveFilters } from "@/lib/filter-utils";
 export const initialFilters: MotorcycleFilters = {
   categories: [],
   make: "",
-  yearRange: [1980, 2023],
+  yearRange: [1980, 2025],
   engineSizeRange: [0, 2000],
   difficultyLevel: 5,
   weightRange: [100, 400],
@@ -120,7 +120,7 @@ export function useMotorcycleFilters(
         return false;
       }
 
-      const engineSize = motorcycle.engine_cc || motorcycle.engine_size;
+      const engineSize = motorcycle.engine_size || motorcycle.engine_cc;
       if (engineSize < filters.engineSizeRange[0] || engineSize > filters.engineSizeRange[1]) {
         return false;
       }

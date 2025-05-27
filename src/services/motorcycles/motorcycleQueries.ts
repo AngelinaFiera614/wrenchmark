@@ -10,6 +10,7 @@ export const fetchAllMotorcycles = async () => {
   const { data, error } = await supabase
     .from('motorcycles')
     .select(MOTORCYCLE_SELECT_QUERY)
+    .eq('migration_status', 'migrated')
     .order('model_name', { ascending: true })
     .order('year', { ascending: true });
     
@@ -26,6 +27,7 @@ export const fetchMotorcycleBySlug = async (slug: string) => {
     .from('motorcycles')
     .select(MOTORCYCLE_SELECT_QUERY)
     .eq('slug', slug)
+    .eq('migration_status', 'migrated')
     .maybeSingle();
     
   return { data, error };
@@ -47,7 +49,8 @@ export const fetchMotorcyclesByIds = async (ids: string[]) => {
   const { data, error } = await supabase
     .from('motorcycles')
     .select(MOTORCYCLE_SELECT_QUERY)
-    .in('id', ids);
+    .in('id', ids)
+    .eq('migration_status', 'migrated');
     
   return { data: data || [], error };
 };
@@ -58,6 +61,7 @@ export const fetchMotorcycleByDetails = async (model: string, year: number) => {
     .select(MOTORCYCLE_SELECT_QUERY)
     .eq('model_name', model)
     .eq('year', year)
+    .eq('migration_status', 'migrated')
     .maybeSingle();
     
   return { data, error };

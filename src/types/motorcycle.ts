@@ -46,12 +46,12 @@ export interface Motorcycle {
   status?: string;
   engine?: string;
   
-  // Compatibility aliases
+  // Compatibility aliases for legacy code
   engine_cc?: number;
   displacement_cc?: number;
   horsepower_hp?: number;
   
-  // US Standard fields
+  // US Standard fields (calculated in app, not stored)
   weight_lbs?: number;
   seat_height_in?: number;
   wheelbase_in?: number;
