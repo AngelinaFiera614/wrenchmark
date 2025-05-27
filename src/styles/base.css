@@ -1,0 +1,80 @@
+
+/* Base styles, typography, and global elements */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-gradient-dark text-foreground font-sans antialiased;
+    /* Force dark mode by default */
+    color-scheme: dark;
+  }
+  
+  /* Set dark mode as default */
+  html {
+    @apply dark;
+  }
+  
+  /* Typography hierarchy */
+  h1 {
+    @apply text-4xl font-bold tracking-tight text-white mb-6;
+  }
+  
+  h2 {
+    @apply text-3xl font-semibold tracking-tight text-white mb-4;
+  }
+  
+  h3 {
+    @apply text-2xl font-semibold text-white mb-3;
+  }
+  
+  h4 {
+    @apply text-xl font-medium text-white mb-2;
+  }
+  
+  h5 {
+    @apply text-lg font-medium text-secondary mb-2;
+  }
+  
+  h6 {
+    @apply text-base font-medium text-secondary-muted mb-2;
+  }
+  
+  p {
+    @apply text-secondary leading-relaxed mb-4;
+  }
+  
+  /* Link styling */
+  a {
+    @apply text-primary hover:text-primary-dark transition-colors duration-200;
+  }
+  
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-background-alt;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary;
+  }
+}
+
+/* Wrenchmark specific dark mode styles with Smoked Metal Teal */
+.dark .wrenchmark-header {
+  @apply border-border bg-glass backdrop-blur-md;
+}
+
+.dark .wrenchmark-link {
+  @apply hover:text-primary transition-colors duration-200;
+}

@@ -1,0 +1,45 @@
+
+/* Animation keyframes and classes */
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInBottom {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 179, 179, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(0, 179, 179, 0.6); }
+}
+
+@keyframes glass-shimmer {
+  0% { background: rgba(255, 255, 255, 0.05); }
+  50% { background: rgba(255, 255, 255, 0.1); }
+  100% { background: rgba(255, 255, 255, 0.05); }
+}
+
+/* Animation classes */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.3s ease-in-out;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-glass-shimmer {
+  animation: glass-shimmer 3s ease-in-out infinite;
+}
