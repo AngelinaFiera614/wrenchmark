@@ -4,20 +4,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GaugeCircle, Zap, Gauge, Timer } from "lucide-react";
 import { SpecificationItem } from "./SpecificationItem";
 import { useMeasurement } from "@/context/MeasurementContext";
-import { formatSpeed } from "@/utils/unitConverters";
 
 interface PerformanceSpecificationsProps {
   motorcycle: Motorcycle;
 }
 
 export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificationsProps) {
-  const { engine_cc, horsepower_hp, torque_nm, top_speed_kph } = motorcycle;
+  const { 
+    engine_cc,
+    displacement_cc,
+    horsepower_hp, 
+    torque_nm, 
+    top_speed_kph,
+    top_speed_mph
+  } = motorcycle;
+  
   const { unit } = useMeasurement();
   
   // Format values to handle zero or undefined values gracefully
   const formatEngineSize = () => {
-    if (!engine_cc || engine_cc <= 0) return "N/A";
-    return `${engine_cc} cc`;
+    const displacement = engine_cc || displacement_cc;
+    if (!displacement || displacement <= 0) return "N/A";
+    return `${displacement} cc`;
   };
   
   const formatHorsepower = () => {
@@ -28,6 +36,16 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
   const formatTorque = () => {
     if (!torque_nm || torque_nm <= 0) return "N/A";
     return `${torque_nm} Nm`;
+  };
+
+  const formatTopSpeed = () => {
+    if (unit === "metric") {
+      if (!top_speed_kph || top_speed_kph <= 0) return "N/A";
+      return `${top_speed_kph} km/h`;
+    } else {
+      if (!top_speed_mph || top_speed_mph <= 0) return "N/A";
+      return `${top_speed_mph} mph`;
+    }
   };
   
   return (
@@ -61,7 +79,7 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
           />
           <SpecificationItem 
             label="Top Speed" 
-            value={formatSpeed(top_speed_kph, unit)} 
+            value={formatTopSpeed()} 
             icon={<Gauge className="h-4 w-4" />}
             tooltip={`Maximum speed the motorcycle can achieve in ${unit === 'metric' ? 'kilometers per hour' : 'miles per hour'}`}
           />

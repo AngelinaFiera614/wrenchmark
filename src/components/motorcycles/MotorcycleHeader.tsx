@@ -7,6 +7,7 @@ import { MotorcycleImageCarousel } from "./MotorcycleImageCarousel";
 import { EnhancedImageCarousel } from "./EnhancedImageCarousel";
 import { useComparison } from "@/context/ComparisonContext";
 import { useNavigate } from "react-router-dom";
+import { MeasurementToggle } from "@/components/theme/MeasurementToggle";
 
 interface MotorcycleHeaderProps {
   motorcycle: Motorcycle;
@@ -98,9 +99,12 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
       </div>
       
       <div className="space-y-5">
-        <div className="animate-in slide-in-from-right-5 duration-300 delay-150">
-          <h1 className="text-3xl font-bold tracking-tight">{make} {model}</h1>
-          <p className="text-xl text-muted-foreground">{year}</p>
+        <div className="flex items-center justify-between">
+          <div className="animate-in slide-in-from-right-5 duration-300 delay-150">
+            <h1 className="text-3xl font-bold tracking-tight">{make} {model}</h1>
+            <p className="text-xl text-muted-foreground">{year}</p>
+          </div>
+          <MeasurementToggle className="animate-in slide-in-from-right-5 duration-300 delay-100" />
         </div>
 
         <p className="text-lg animate-in slide-in-from-right-5 duration-300 delay-200">{summary}</p>

@@ -1,4 +1,3 @@
-
 export type MotorcycleCategory = 
   | "Sport" 
   | "Cruiser" 
@@ -45,9 +44,19 @@ export interface Motorcycle {
   migration_status?: string;
   status?: string;
   engine?: string;
+  
   // Compatibility aliases
   engine_cc?: number;
+  displacement_cc?: number;
   horsepower_hp?: number;
+  
+  // US Standard fields
+  weight_lbs?: number;
+  seat_height_in?: number;
+  wheelbase_in?: number;
+  ground_clearance_in?: number;
+  fuel_capacity_gal?: number;
+  top_speed_mph?: number;
 }
 
 export interface MotorcycleFilters {
