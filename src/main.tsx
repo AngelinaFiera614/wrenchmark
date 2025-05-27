@@ -13,7 +13,7 @@ import { ComparisonProvider } from "./context/ComparisonContext";
 import { MeasurementProvider } from "./context/MeasurementContext";
 
 // Create a client
-export const queryClient = new QueryClient();
+const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
