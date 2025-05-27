@@ -2,51 +2,15 @@
 import { Motorcycle } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GaugeCircle, Zap, Gauge, Timer } from "lucide-react";
-import { SpecificationItem } from "./SpecificationItem";
-import { useMeasurement } from "@/context/MeasurementContext";
+import { PerformanceSpecItem } from "./performance/PerformanceSpecItem";
+import { usePerformanceData } from "./performance/usePerformanceData";
 
 interface PerformanceSpecificationsProps {
   motorcycle: Motorcycle;
 }
 
 export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificationsProps) {
-  const { 
-    engine_cc,
-    displacement_cc,
-    horsepower_hp, 
-    torque_nm, 
-    top_speed_kph,
-    top_speed_mph
-  } = motorcycle;
-  
-  const { unit } = useMeasurement();
-  
-  // Format values to handle zero or undefined values gracefully
-  const formatEngineSize = () => {
-    const displacement = engine_cc || displacement_cc;
-    if (!displacement || displacement <= 0) return "N/A";
-    return `${displacement} cc`;
-  };
-  
-  const formatHorsepower = () => {
-    if (!horsepower_hp || horsepower_hp <= 0) return "N/A";
-    return `${horsepower_hp} hp`;
-  };
-  
-  const formatTorque = () => {
-    if (!torque_nm || torque_nm <= 0) return "N/A";
-    return `${torque_nm} Nm`;
-  };
-
-  const formatTopSpeed = () => {
-    if (unit === "metric") {
-      if (!top_speed_kph || top_speed_kph <= 0) return "N/A";
-      return `${top_speed_kph} km/h`;
-    } else {
-      if (!top_speed_mph || top_speed_mph <= 0) return "N/A";
-      return `${top_speed_mph} mph`;
-    }
-  };
+  const { engineSize, horsepower, torque, topSpeed, unit } = usePerformanceData(motorcycle);
   
   return (
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-100 shadow-md">
@@ -59,27 +23,27 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
       
       <CardContent>
         <div className="space-y-4">
-          <SpecificationItem 
+          <PerformanceSpecItem 
             label="Engine" 
-            value={formatEngineSize()} 
+            value={engineSize} 
             icon={<GaugeCircle className="h-4 w-4" />}
             tooltip="Engine displacement in cubic centimeters, indicating the size of the engine"
           />
-          <SpecificationItem 
+          <PerformanceSpecItem 
             label="Horsepower" 
-            value={formatHorsepower()} 
+            value={horsepower} 
             icon={<Zap className="h-4 w-4" />}
             tooltip="Maximum power output of the engine, measured in horsepower (hp)"
           />
-          <SpecificationItem 
+          <PerformanceSpecItem 
             label="Torque" 
-            value={formatTorque()} 
+            value={torque} 
             icon={<Timer className="h-4 w-4" />}
             tooltip="Rotational force produced by the engine, measured in Newton meters (Nm)"
           />
-          <SpecificationItem 
+          <PerformanceSpecItem 
             label="Top Speed" 
-            value={formatTopSpeed()} 
+            value={topSpeed} 
             icon={<Gauge className="h-4 w-4" />}
             tooltip={`Maximum speed the motorcycle can achieve in ${unit === 'metric' ? 'kilometers per hour' : 'miles per hour'}`}
           />
