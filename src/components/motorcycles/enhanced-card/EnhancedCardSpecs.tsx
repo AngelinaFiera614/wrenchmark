@@ -27,35 +27,57 @@ export function EnhancedCardSpecs({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3 text-sm">
-        <div className="glass-medium p-3 rounded-xl text-center border border-white/10">
-          <span className="text-secondary-muted text-xs block mb-1">Engine</span>
-          <span className="font-mono text-white font-semibold">{formatEngineSize()}</span>
+        <div className="glass-medium p-3 rounded-xl text-center border border-white/10 hover:glass-heavy transition-all duration-300 group">
+          <span className="text-secondary-muted text-xs block mb-1 font-medium tracking-wide uppercase">
+            Engine
+          </span>
+          <span className="font-mono text-white font-bold text-sm group-hover:text-primary transition-colors">
+            {formatEngineSize()}
+          </span>
         </div>
-        <div className="glass-medium p-3 rounded-xl text-center border border-white/10">
-          <span className="text-secondary-muted text-xs block mb-1">Power</span>
-          <span className="font-mono text-white font-semibold">{formatHorsepower()}</span>
+        <div className="glass-medium p-3 rounded-xl text-center border border-white/10 hover:glass-heavy transition-all duration-300 group">
+          <span className="text-secondary-muted text-xs block mb-1 font-medium tracking-wide uppercase">
+            Power
+          </span>
+          <span className="font-mono text-white font-bold text-sm group-hover:text-primary transition-colors">
+            {formatHorsepower()}
+          </span>
         </div>
-        <div className="glass-medium p-3 rounded-xl text-center border border-white/10">
-          <span className="text-secondary-muted text-xs block mb-1">Speed</span>
-          <span className="font-mono text-white font-semibold">{formatSpeed()}</span>
+        <div className="glass-medium p-3 rounded-xl text-center border border-white/10 hover:glass-heavy transition-all duration-300 group">
+          <span className="text-secondary-muted text-xs block mb-1 font-medium tracking-wide uppercase">
+            Speed
+          </span>
+          <span className="font-mono text-white font-bold text-sm group-hover:text-primary transition-colors">
+            {formatSpeed()}
+          </span>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3 text-sm">
-        <div className="glass-medium p-3 rounded-xl text-center border border-white/10">
-          <span className="text-secondary-muted text-xs block mb-1">Seat</span>
-          <span className="font-mono text-white font-semibold">{formatSeatHeight()}</span>
+        <div className="glass-medium p-3 rounded-xl text-center border border-white/10 hover:glass-heavy transition-all duration-300 group">
+          <span className="text-secondary-muted text-xs block mb-1 font-medium tracking-wide uppercase">
+            Seat
+          </span>
+          <span className="font-mono text-white font-bold text-sm group-hover:text-primary transition-colors">
+            {formatSeatHeight()}
+          </span>
         </div>
-        <div className="glass-medium p-3 rounded-xl text-center border border-white/10">
-          <span className="text-secondary-muted text-xs block mb-1">Weight</span>
-          <span className="font-mono text-white font-semibold">{formatWeight()}</span>
+        <div className="glass-medium p-3 rounded-xl text-center border border-white/10 hover:glass-heavy transition-all duration-300 group">
+          <span className="text-secondary-muted text-xs block mb-1 font-medium tracking-wide uppercase">
+            Weight
+          </span>
+          <span className="font-mono text-white font-bold text-sm group-hover:text-primary transition-colors">
+            {formatWeight()}
+          </span>
         </div>
-        <div className="glass-medium p-3 rounded-xl text-center flex flex-col items-center border border-white/10">
-          <span className="text-secondary-muted text-xs block mb-1">ABS</span>
+        <div className="glass-medium p-3 rounded-xl text-center flex flex-col items-center border border-white/10 hover:glass-heavy transition-all duration-300 group">
+          <span className="text-secondary-muted text-xs block mb-1 font-medium tracking-wide uppercase">
+            ABS
+          </span>
           {abs ? (
-            <CheckCircle2 className="h-4 w-4 text-primary" />
+            <CheckCircle2 className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
           ) : (
-            <span className="text-secondary-muted">—</span>
+            <span className="text-secondary-muted font-mono">—</span>
           )}
         </div>
       </div>

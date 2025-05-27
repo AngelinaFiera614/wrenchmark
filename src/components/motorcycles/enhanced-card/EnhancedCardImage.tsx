@@ -38,7 +38,7 @@ export function EnhancedCardImage({
   };
 
   return (
-    <div className="relative aspect-[16/9] overflow-hidden rounded-t-3xl">
+    <div className="relative aspect-[16/9] overflow-hidden rounded-t-3xl group">
       {imageUrl ? (
         <img
           src={imageUrl}
@@ -55,25 +55,28 @@ export function EnhancedCardImage({
         </div>
       )}
       
-      {/* Enhanced gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      {/* Enhanced gradient overlay with better depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-500" />
       
-      {/* Title overlay */}
+      {/* Enhanced title overlay with better typography */}
       <div className="absolute bottom-0 left-0 right-0 p-6">
-        <h3 className="text-xl font-bold text-white mb-1 group-hover:text-primary transition-colors">
+        <h3 className="text-2xl md:text-3xl font-black text-white mb-2 group-hover:text-primary transition-all duration-500 leading-tight tracking-tight">
           {make} {model}
         </h3>
-        <p className="text-sm text-white/80">{year}</p>
+        <p className="text-sm font-semibold text-white/90 tracking-wide uppercase">
+          {year}
+        </p>
       </div>
       
-      {/* Compare button with enhanced styling */}
+      {/* Enhanced compare button */}
       <Button 
         onClick={onCompareToggle}
         variant={isSelected ? "teal" : "outline"}
         size="sm"
         className={cn(
-          "absolute top-4 right-4 z-10 backdrop-blur-md border-white/30",
-          isSelected && "shadow-teal-glow"
+          "absolute top-4 right-4 z-10 backdrop-blur-md border-white/30 transition-all duration-300",
+          isSelected && "shadow-teal-glow animate-glow-pulse-enhanced",
+          "hover:scale-105 hover:shadow-teal-glow-lg"
         )}
       >
         <GitCompareArrows className="h-4 w-4 mr-1" />

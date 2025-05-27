@@ -1,30 +1,62 @@
 
-/* Component utility classes and variants */
+/* Enhanced component utility classes and variants */
 
-/* Glass morphism utility class */
+/* Advanced Glass morphism utility classes */
 .glass-morphism {
-  @apply backdrop-blur-md bg-white/5 border border-white/10 shadow-glass;
+  @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-glass;
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Enhanced text gradient utility */
+/* Enhanced text gradient utilities */
 .text-gradient {
   @apply bg-gradient-to-br from-white via-white/90 to-secondary bg-clip-text text-transparent;
 }
 
-/* Frosted glass variants */
+.text-gradient-teal {
+  background: linear-gradient(135deg, #ffffff 0%, #00d2b4 50%, #ffffff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: gradient-shift 3s ease-in-out infinite;
+}
+
+.text-gradient-metallic {
+  background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 50%, #e5e7eb 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Enhanced frosted glass variants */
 .glass-light {
   @apply bg-white/5 backdrop-blur-sm border border-white/10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .glass-medium {
   @apply bg-white/10 backdrop-blur-md border border-white/20;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .glass-heavy {
   @apply bg-white/15 backdrop-blur-lg border border-white/30;
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* Metallic shine effects */
+.glass-ultra {
+  @apply bg-white/20 backdrop-blur-xl border border-white/40;
+  box-shadow: 
+    0 16px 40px rgba(0, 0, 0, 0.25),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced metallic shine effects */
 .metallic-shine {
   position: relative;
   overflow: hidden;
@@ -37,22 +69,79 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  transition: left 0.5s;
+  background: linear-gradient(90deg, transparent, rgba(0, 210, 180, 0.3), transparent);
+  transition: left 0.6s ease-out;
+  z-index: 1;
 }
 
 .metallic-shine:hover::before {
   left: 100%;
 }
 
-/* Enhanced difficulty level background colors with teal accents */
-.difficulty-1 { @apply bg-green-500 shadow-lg; }
-.difficulty-2 { @apply bg-green-400 shadow-lg; }
-.difficulty-3 { @apply bg-yellow-500 shadow-lg; }
-.difficulty-4 { @apply bg-orange-500 shadow-lg; }
-.difficulty-5 { @apply bg-red-500 shadow-lg; }
+/* Enhanced difficulty level colors with better contrast */
+.difficulty-1 { 
+  @apply bg-emerald-500 shadow-lg;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+.difficulty-2 { 
+  @apply bg-green-400 shadow-lg;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+.difficulty-3 { 
+  @apply bg-yellow-500 shadow-lg;
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.4);
+}
+.difficulty-4 { 
+  @apply bg-orange-500 shadow-lg;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+.difficulty-5 { 
+  @apply bg-red-500 shadow-lg;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
 
-/* Card hover states */
+/* Enhanced card interaction states */
 .card-interactive {
-  @apply card hover:bg-metallic-glow hover:border-primary/30 hover:shadow-teal-glow hover-lift cursor-pointer;
+  @apply card hover:bg-metallic-glow hover:border-primary/30 hover:shadow-teal-glow hover-lift cursor-pointer transition-all duration-300;
+}
+
+.card-premium {
+  @apply glass-heavy hover:glass-ultra transition-all duration-300 hover:scale-[1.02];
+}
+
+/* Enhanced button variants */
+.button-glow {
+  @apply shadow-teal-glow hover:shadow-teal-glow-lg transition-all duration-300;
+}
+
+.button-metallic {
+  @apply glass-medium hover:glass-heavy border-white/30 hover:border-primary/50 transition-all duration-300;
+}
+
+/* Enhanced typography effects */
+.text-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(0, 210, 180, 1) 50%, 
+    rgba(255, 255, 255, 0.8) 100%);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Enhanced focus states */
+.focus-teal {
+  @apply focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+}
+
+/* Loading states */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.05) 25%, 
+    rgba(255, 255, 255, 0.1) 50%, 
+    rgba(255, 255, 255, 0.05) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
 }

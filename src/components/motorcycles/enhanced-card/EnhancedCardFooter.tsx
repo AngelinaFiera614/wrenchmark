@@ -15,29 +15,33 @@ export function EnhancedCardFooter({ difficultyLevel }: EnhancedCardFooterProps)
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-secondary-muted">Difficulty:</span>
-              <div className="flex">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-secondary-muted font-medium tracking-wide uppercase">
+                Difficulty:
+              </span>
+              <div className="flex gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
                     className={cn(
-                      "w-2 h-6 mx-0.5 rounded-sm transition-all",
-                      i < difficultyLevel ? difficultyColor : "bg-white/10"
+                      "w-2 h-6 rounded-sm transition-all duration-300 hover:scale-110",
+                      i < difficultyLevel 
+                        ? `${difficultyColor} shadow-lg` 
+                        : "bg-white/10 hover:bg-white/20"
                     )}
                   />
                 ))}
               </div>
             </div>
           </TooltipTrigger>
-          <TooltipContent className="glass-morphism border-white/20">
-            <p>Difficulty level: {difficultyLevel}/5</p>
+          <TooltipContent className="glass-morphism border-white/20 text-white">
+            <p className="font-medium">Difficulty level: {difficultyLevel}/5</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       
-      <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-        <Info className="h-4 w-4 text-secondary-muted" />
+      <div className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
+        <Info className="h-4 w-4 text-secondary-muted group-hover:text-primary transition-colors" />
       </div>
     </div>
   );

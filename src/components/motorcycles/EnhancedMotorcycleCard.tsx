@@ -51,7 +51,7 @@ export default function EnhancedMotorcycleCard({ motorcycle }: EnhancedMotorcycl
       variant={isSelected ? "featured" : "premium"}
       interactive
       glow={isSelected ? "strong" : "subtle"}
-      className="h-full flex flex-col group"
+      className="h-full flex flex-col group hover:shadow-teal-glow-lg transition-all duration-500 animate-scale-in-enhanced"
     >
       <Link to={motorcycleUrl} className="flex-1 flex flex-col">
         <EnhancedCardImage
@@ -64,7 +64,7 @@ export default function EnhancedMotorcycleCard({ motorcycle }: EnhancedMotorcycl
           onCompareToggle={handleCompareToggle}
         />
         
-        <PremiumCardContent className="flex-1 space-y-6">
+        <PremiumCardContent className="flex-1 space-y-6 p-6">
           <EnhancedCardBadges 
             category={category}
             styleTags={style_tags}
@@ -79,12 +79,12 @@ export default function EnhancedMotorcycleCard({ motorcycle }: EnhancedMotorcycl
             abs={abs}
           />
 
-          <p className="text-sm text-secondary-muted line-clamp-2 leading-relaxed">
-            {summary || `${make} ${model} ${year}`}
+          <p className="text-sm text-secondary-muted line-clamp-2 leading-relaxed font-medium">
+            {summary || `${make} ${model} ${year} - Professional motorcycle specifications and details.`}
           </p>
         </PremiumCardContent>
 
-        <PremiumCardFooter>
+        <PremiumCardFooter className="p-6 pt-0">
           <EnhancedCardFooter difficultyLevel={difficulty_level} />
         </PremiumCardFooter>
       </Link>
