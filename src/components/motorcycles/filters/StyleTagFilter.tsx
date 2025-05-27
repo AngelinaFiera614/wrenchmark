@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import FilterSection from "./FilterSection";
+import FilterSection from "@/components/common/FilterSection";
 
 interface StyleTagFilterProps {
   tags: string[];
