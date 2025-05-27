@@ -1,27 +1,23 @@
 
 import React from "react";
-import RangeFilter from "./RangeFilter";
+import RangeSlider from "@/components/common/RangeSlider";
 
 interface WeightFilterProps {
   weightRange: [number, number];
   onChange: (values: number[]) => void;
 }
 
-export default function WeightFilter({ 
-  weightRange, 
-  onChange 
-}: WeightFilterProps) {
+export default function WeightFilter({ weightRange, onChange }: WeightFilterProps) {
   return (
-    <RangeFilter
+    <RangeSlider
       title="Weight"
-      filterType="weight"
+      values={weightRange}
       min={100}
       max={400}
-      step={10}
-      value={weightRange}
-      defaultValue={[100, 400]}
+      step={5}
+      unit="kg"
       onChange={onChange}
-      valueFormatter={(v) => `${v} kg`}
+      filterType="weight"
     />
   );
 }

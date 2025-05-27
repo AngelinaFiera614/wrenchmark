@@ -1,27 +1,23 @@
 
 import React from "react";
-import RangeFilter from "./RangeFilter";
+import RangeSlider from "@/components/common/RangeSlider";
 
 interface EngineFilterProps {
   engineSizeRange: [number, number];
   onChange: (values: number[]) => void;
 }
 
-export default function EngineFilter({ 
-  engineSizeRange, 
-  onChange 
-}: EngineFilterProps) {
+export default function EngineFilter({ engineSizeRange, onChange }: EngineFilterProps) {
   return (
-    <RangeFilter
+    <RangeSlider
       title="Engine Size"
-      filterType="engineSize"
+      values={engineSizeRange}
       min={0}
       max={2000}
-      step={50}
-      value={engineSizeRange}
-      defaultValue={[0, 2000]}
+      step={25}
+      unit="cc"
       onChange={onChange}
-      valueFormatter={(v) => `${v} cc`}
+      filterType="engineSize"
     />
   );
 }

@@ -1,27 +1,23 @@
 
 import React from "react";
-import RangeFilter from "./RangeFilter";
+import RangeSlider from "@/components/common/RangeSlider";
 
 interface SeatHeightFilterProps {
   seatHeightRange: [number, number];
   onChange: (values: number[]) => void;
 }
 
-export default function SeatHeightFilter({ 
-  seatHeightRange, 
-  onChange 
-}: SeatHeightFilterProps) {
+export default function SeatHeightFilter({ seatHeightRange, onChange }: SeatHeightFilterProps) {
   return (
-    <RangeFilter
+    <RangeSlider
       title="Seat Height"
-      filterType="seatHeight"
+      values={seatHeightRange}
       min={650}
       max={950}
-      step={10}
-      value={seatHeightRange}
-      defaultValue={[650, 950]}
+      step={5}
+      unit="mm"
       onChange={onChange}
-      valueFormatter={(v) => `${v} mm`}
+      filterType="seatHeight"
     />
   );
 }

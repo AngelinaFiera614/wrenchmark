@@ -109,13 +109,10 @@ export default function Motorcycles() {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="h-10 w-10 border-4 border-t-accent-teal border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : (
-            <MotorcycleGrid motorcycles={filteredMotorcycles} />
-          )}
+          <MotorcycleGrid 
+            motorcycles={filteredMotorcycles} 
+            isLoading={isLoading}
+          />
         </div>
       </div>
       

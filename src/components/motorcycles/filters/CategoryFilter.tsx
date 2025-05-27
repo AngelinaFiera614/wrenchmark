@@ -1,10 +1,8 @@
 
 import React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import type { MotorcycleCategory } from "@/types";
-import FilterSection from "./FilterSection";
+import FilterSection from "@/components/common/FilterSection";
+import CheckboxList from "@/components/common/CheckboxList";
 import FilterReset from "./FilterReset";
 
 interface CategoryFilterProps {
@@ -20,8 +18,13 @@ export default function CategoryFilter({
   onChange,
   isMobile = false
 }: CategoryFilterProps) {
-  const idPrefix = isMobile ? "category-" : "category-desktop-";
   const hasActiveFilters = selectedCategories.length > 0;
+  
+  const checkboxItems = categories.map(category => ({
+    id: category.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+    label: category,
+    value: category
+  }));
 
   return (
     <FilterSection 
@@ -31,34 +34,12 @@ export default function CategoryFilter({
         undefined
       }
     >
-      <div className="grid grid-cols-1 gap-2">
-        {categories.map((category) => {
-          const isChecked = selectedCategories.includes(category);
-          
-          return (
-            <div key={category} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`${idPrefix}${category}`} 
-                checked={isChecked}
-                onCheckedChange={(checked) => 
-                  onChange(category, checked as boolean)
-                }
-              />
-              <Label 
-                htmlFor={`${idPrefix}${category}`}
-                className={isChecked ? "font-medium text-white" : "text-white/80"}
-              >
-                {category}
-              </Label>
-              {isChecked && (
-                <Badge variant="outline" className="ml-auto text-xs">
-                  Active
-                </Badge>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      <CheckboxList
+        items={checkboxItems}
+        selectedValues={selectedCategories}
+        onChange={onChange}
+        idPrefix={isMobile ? "category-mobile" : "category-desktop"}
+      />
     </FilterSection>
   );
 }
