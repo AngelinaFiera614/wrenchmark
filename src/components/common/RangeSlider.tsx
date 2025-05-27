@@ -14,7 +14,8 @@ interface RangeSliderProps {
   unit?: string;
   formatValue?: (value: number) => string;
   onChange: (values: number[]) => void;
-  filterType?: string;
+  filterType?: "all" | "categories" | "make" | "engineSize" | "difficulty" | 
+                "weight" | "seatHeight" | "year" | "abs" | "search";
 }
 
 export default function RangeSlider({
