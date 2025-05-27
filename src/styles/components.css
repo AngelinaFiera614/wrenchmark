@@ -3,7 +3,7 @@
 
 /* Glass morphism utility class */
 .glass-morphism {
-  @apply backdrop-blur-md bg-glass border border-border shadow-glass;
+  @apply backdrop-blur-md bg-white/5 border border-white/10 shadow-glass;
 }
 
 /* Enhanced text gradient utility */
