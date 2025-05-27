@@ -5,82 +5,91 @@
  
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Light mode (optional) */
+    --background: 255 255 255;
+    --background-alt: 248 250 252;
+    --foreground: 15 17 21;
+    --glass: rgba(0, 0, 0, 0.05);
+    
+    --card: 255 255 255;
+    --card-foreground: 15 17 21;
+ 
+    --popover: 255 255 255;
+    --popover-foreground: 15 17 21;
+ 
+    --primary: 0 179 179;
+    --primary-dark: 0 159 159;
+    --primary-glow: rgba(0, 179, 179, 0.2);
+    --primary-foreground: 255 255 255;
+ 
+    --secondary: 100 116 139;
+    --secondary-muted: 148 163 184;
+    --secondary-foreground: 15 17 21;
+    
+    --metallic-glow: rgba(100, 116, 139, 0.1);
+ 
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+ 
+    --accent: 241 245 249;
+    --accent-foreground: 15 17 21;
+ 
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 0 179 179;
  
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
- 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
- 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
- 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
  
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode - Smoked Metal Teal (default) */
+    --background: 15 17 21;
+    --background-alt: 26 28 32;
+    --foreground: 255 255 255;
+    --glass: rgba(255, 255, 255, 0.05);
  
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 26 28 32;
+    --card-foreground: 255 255 255;
  
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 26 28 32;
+    --popover-foreground: 255 255 255;
  
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 179 179;
+    --primary-dark: 0 159 159;
+    --primary-glow: rgba(0, 179, 179, 0.3);
+    --primary-foreground: 255 255 255;
  
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 209 213 219;
+    --secondary-muted: 156 163 175;
+    --secondary-foreground: 255 255 255;
+    
+    --metallic-glow: rgba(209, 213, 219, 0.15);
  
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 45 47 54;
+    --muted-foreground: 156 163 175;
  
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 45 47 54;
+    --accent-foreground: 255 255 255;
  
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
  
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
+    --border: 45 47 54;
+    --input: 45 47 54;
+    --ring: 0 179 179;
 
-  /* Wrenchmark custom colors */
-  :root {
-    --accent-teal: 172 100% 41%;
-  }
-
-  /* Dark mode specific styles for our custom app */
-  .dark {
-    --app-background: 240 10% 3.9%; /* #090C0E */
-    --app-teal: 172 100% 41%; /* #00D2B4 */
-    --app-teal-hover: 172 100% 36%; /* #00B89D */
-  }
-
-  /* Add a dark background for body in dark mode */
-  .dark body {
-    background-color: #090C0E;
+    /* Sidebar colors */
+    --sidebar-background: 26 28 32;
+    --sidebar-foreground: 255 255 255;
+    --sidebar-primary: 0 179 179;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 45 47 54;
+    --sidebar-accent-foreground: 255 255 255;
+    --sidebar-border: 45 47 54;
+    --sidebar-ring: 0 179 179;
   }
 }
  
@@ -88,12 +97,72 @@
   * {
     @apply border-border;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-dark text-foreground font-sans antialiased;
+    /* Force dark mode by default */
+    color-scheme: dark;
+  }
+  
+  /* Set dark mode as default */
+  html {
+    @apply dark;
+  }
+  
+  /* Typography hierarchy */
+  h1 {
+    @apply text-4xl font-bold tracking-tight text-white mb-6;
+  }
+  
+  h2 {
+    @apply text-3xl font-semibold tracking-tight text-white mb-4;
+  }
+  
+  h3 {
+    @apply text-2xl font-semibold text-white mb-3;
+  }
+  
+  h4 {
+    @apply text-xl font-medium text-white mb-2;
+  }
+  
+  h5 {
+    @apply text-lg font-medium text-secondary mb-2;
+  }
+  
+  h6 {
+    @apply text-base font-medium text-secondary-muted mb-2;
+  }
+  
+  p {
+    @apply text-secondary leading-relaxed mb-4;
+  }
+  
+  /* Link styling */
+  a {
+    @apply text-primary hover:text-primary-dark transition-colors duration-200;
+  }
+  
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-background-alt;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary;
   }
 }
 
-/* Animation classes */
+/* Enhanced animation classes */
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-in-out;
 }
@@ -104,6 +173,14 @@
 
 .animate-slide-in-bottom {
   animation: slideInBottom 0.3s ease-in-out;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-glass-shimmer {
+  animation: glass-shimmer 3s ease-in-out infinite;
 }
 
 @keyframes fadeIn {
@@ -118,21 +195,21 @@
 
 /* Glass morphism utility class */
 .glass-morphism {
-  @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-lg;
+  @apply backdrop-blur-md bg-glass border border-border shadow-glass;
 }
 
-/* Text gradient utility */
+/* Enhanced text gradient utility */
 .text-gradient {
-  @apply bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent;
+  @apply bg-gradient-to-br from-white via-white/90 to-secondary bg-clip-text text-transparent;
 }
 
-/* Wrenchmark specific dark mode styles */
+/* Wrenchmark specific dark mode styles with Smoked Metal Teal */
 .dark .wrenchmark-header {
-  @apply border-zinc-800;
+  @apply border-border bg-glass backdrop-blur-md;
 }
 
 .dark .wrenchmark-link {
-  @apply hover:text-accent-teal;
+  @apply hover:text-primary transition-colors duration-200;
 }
 
 /* Mobile-specific utility classes */
@@ -155,9 +232,57 @@
   }
 }
 
-/* Difficulty level background colors */
-.difficulty-1 { @apply bg-green-500; }
-.difficulty-2 { @apply bg-green-400; }
-.difficulty-3 { @apply bg-yellow-500; }
-.difficulty-4 { @apply bg-orange-500; }
-.difficulty-5 { @apply bg-red-500; }
+/* Enhanced difficulty level background colors with teal accents */
+.difficulty-1 { @apply bg-green-500 shadow-lg; }
+.difficulty-2 { @apply bg-green-400 shadow-lg; }
+.difficulty-3 { @apply bg-yellow-500 shadow-lg; }
+.difficulty-4 { @apply bg-orange-500 shadow-lg; }
+.difficulty-5 { @apply bg-red-500 shadow-lg; }
+
+/* Frosted glass variants */
+.glass-light {
+  @apply bg-white/5 backdrop-blur-sm border border-white/10;
+}
+
+.glass-medium {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
+
+.glass-heavy {
+  @apply bg-white/15 backdrop-blur-lg border border-white/30;
+}
+
+/* Metallic shine effects */
+.metallic-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.metallic-shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s;
+}
+
+.metallic-shine:hover::before {
+  left: 100%;
+}
+
+/* Teal glow states */
+.glow-idle {
+  @apply shadow-teal-glow/50;
+}
+
+.glow-active {
+  @apply shadow-teal-glow-lg animate-glow-pulse;
+}
+
+/* Card hover states */
+.card-interactive {
+  @apply card hover:bg-metallic-glow hover:border-primary/30 hover:shadow-teal-glow hover-lift cursor-pointer;
+}
