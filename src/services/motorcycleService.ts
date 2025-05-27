@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Motorcycle } from "@/types";
 
@@ -26,7 +25,7 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
       horsepower: motorcycle.horsepower_hp || 0,
       engine_cc: motorcycle.engine_cc || motorcycle.horsepower_hp || 0,
       horsepower_hp: motorcycle.horsepower_hp || 0,
-      abs: motorcycle.has_abs || false,
+      abs: motorcycle.has_abs || false, // Fixed: properly map has_abs to abs
       style_tags: motorcycle.tags || [],
       smart_features: motorcycle.smart_features || [],
       // Ensure we have a slug for routing
@@ -76,7 +75,7 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
           horsepower: fallbackData.horsepower_hp || 0,
           engine_cc: fallbackData.engine_cc || fallbackData.horsepower_hp || 0,
           horsepower_hp: fallbackData.horsepower_hp || 0,
-          abs: fallbackData.has_abs || false,
+          abs: fallbackData.has_abs || false, // Fixed: properly map has_abs to abs
           style_tags: fallbackData.tags || [],
           smart_features: fallbackData.smart_features || [],
           slug: fallbackData.slug || `${fallbackData.brand?.name || 'unknown'}-${fallbackData.model_name || 'unknown'}-${fallbackData.year || ''}`.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
@@ -98,7 +97,7 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
       horsepower: data.horsepower_hp || 0,
       engine_cc: data.engine_cc || data.horsepower_hp || 0,
       horsepower_hp: data.horsepower_hp || 0,
-      abs: data.has_abs || false,
+      abs: data.has_abs || false, // Fixed: properly map has_abs to abs
       style_tags: data.tags || [],
       smart_features: data.smart_features || [],
       slug: data.slug || `${data.brand?.name || 'unknown'}-${data.model_name || 'unknown'}-${data.year || ''}`.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
@@ -134,7 +133,7 @@ export const getMotorcyclesByIds = async (ids: string[]): Promise<Motorcycle[]> 
       horsepower: motorcycle.horsepower_hp || 0,
       engine_cc: motorcycle.engine_cc || motorcycle.horsepower_hp || 0,
       horsepower_hp: motorcycle.horsepower_hp || 0,
-      abs: motorcycle.has_abs || false,
+      abs: motorcycle.has_abs || false, // Fixed: properly map has_abs to abs
       style_tags: motorcycle.tags || [],
       smart_features: motorcycle.smart_features || [],
       slug: motorcycle.slug || `${motorcycle.brand?.name || 'unknown'}-${motorcycle.model_name || 'unknown'}-${motorcycle.year || ''}`.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
@@ -174,7 +173,7 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       horsepower: data.horsepower_hp || 0,
       engine_cc: data.engine_cc || data.horsepower_hp || 0,
       horsepower_hp: data.horsepower_hp || 0,
-      abs: data.has_abs || false,
+      abs: data.has_abs || false, // Fixed: properly map has_abs to abs
       style_tags: data.tags || [],
       smart_features: data.smart_features || [],
       slug: data.slug || `${data.brand?.name || 'unknown'}-${data.model_name || 'unknown'}-${data.year || ''}`.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
@@ -233,7 +232,7 @@ export const createPlaceholderMotorcycle = async (motorcycleData: {
       engine_size: data.engine_cc || data.horsepower_hp || 0,
       horsepower: data.horsepower_hp || 0,
       engine_cc: data.engine_cc || data.horsepower_hp || 0,
-      abs: data.has_abs || false,
+      abs: data.has_abs || false, // Fixed: properly map has_abs to abs
       style_tags: data.tags || [],
       smart_features: data.smart_features || []
     };
