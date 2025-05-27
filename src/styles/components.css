@@ -20,6 +20,7 @@
   -webkit-background-clip: text;
   color: transparent;
   animation: gradient-shift 3s ease-in-out infinite;
+  background-size: 200% 200%;
 }
 
 .text-gradient-metallic {
@@ -111,7 +112,7 @@
 
 /* Enhanced button variants */
 .button-glow {
-  @apply shadow-teal-glow hover:shadow-teal-glow-lg transition-all duration-300;
+  @apply shadow-teal-glow hover:shadow-teal-glow-lg transition-all duration-300 hover:scale-105;
 }
 
 .button-metallic {
@@ -144,4 +145,45 @@
     rgba(255, 255, 255, 0.05) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Interactive element enhancements */
+.interactive-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(0, 210, 180, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.interactive-glow:hover::after {
+  opacity: 1;
+}
+
+/* Premium shadow effects */
+.shadow-teal-glow {
+  box-shadow: 0 0 20px rgba(0, 210, 180, 0.3);
+}
+
+.shadow-teal-glow-lg {
+  box-shadow: 
+    0 0 30px rgba(0, 210, 180, 0.4),
+    0 0 60px rgba(0, 210, 180, 0.2);
+}
+
+.shadow-glass {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }

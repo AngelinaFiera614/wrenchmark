@@ -11,11 +11,17 @@ import {
   Shield, 
   BookText, 
   ArrowRight, 
-  Star
+  Star,
+  Users,
+  Award,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { HeroSection, HeroContent, HeroTitle, HeroSubtitle, HeroActions } from '@/components/ui/hero-section';
+import { PremiumCard, PremiumCardContent, PremiumCardHeader, PremiumCardTitle, PremiumCardDescription } from '@/components/ui/premium-card';
+import { StatsCard } from '@/components/ui/stats-card';
 
 const Index: React.FC = () => {
   const { user } = useAuth();
@@ -27,186 +33,237 @@ const Index: React.FC = () => {
         <meta name="description" content="The ultimate motorcycle reference app built for riders, wrenchers, and learners." />
       </Helmet>
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-28">
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background z-0"></div>
-        <div 
-          className="absolute inset-0 z-[-1] opacity-20"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1558981285-6f0c94958bb6?q=80&w=1740&auto=format&fit=crop')", 
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        ></div>
-        <div className="container max-w-6xl mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="w-full md:w-1/2 space-y-6 text-center md:text-left mb-10 md:mb-0">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-                <span className="text-gradient">Ride Farther.</span>
-                <br />
-                <span className="text-accent-teal">Build Smarter.</span>
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-lg">
-                The ultimate motorcycle reference app built for riders, wrenchers, and learners. Access specs, manuals, and skills all in one place.
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-                {!user ? (
-                  <>
-                    <Button asChild size="lg" variant="teal">
-                      <Link to="/auth">Get Started</Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline">
-                      <Link to="/motorcycles">Browse Motorcycles</Link>
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button asChild size="lg" variant="teal">
-                      <Link to="/motorcycles">Browse Motorcycles</Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline">
-                      <Link to="/courses">Explore Courses</Link>
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="w-full md:w-1/2 flex justify-center md:justify-end animate-fade-in">
-              <div className="w-full max-w-md glass-morphism rounded-lg overflow-hidden shadow-xl">
-                <img 
-                  src="https://images.unsplash.com/photo-1622185135505-2d795003994a?q=80&w=1740&auto=format&fit=crop" 
-                  alt="Motorcycle"
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
+      {/* Enhanced Hero Section */}
+      <HeroSection 
+        variant="image" 
+        overlay="heavy"
+        backgroundImage="https://images.unsplash.com/photo-1558981285-6f0c94958bb6?q=80&w=1740&auto=format&fit=crop"
+        className="relative overflow-hidden"
+      >
+        <HeroContent className="animate-fade-in">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <HeroTitle className="text-display animate-scale-in-enhanced">
+              WRENCHMARK
+            </HeroTitle>
+            <HeroSubtitle className="text-hero animate-slide-up">
+              Ride Farther. Build Smarter.
+            </HeroSubtitle>
+            <p className="text-xl md:text-2xl text-secondary max-w-3xl mx-auto leading-relaxed animate-slide-up">
+              The ultimate motorcycle reference app built for riders, wrenchers, and learners. 
+              Access specs, manuals, and skills all in one place.
+            </p>
+            <HeroActions className="animate-slide-up">
+              {!user ? (
+                <>
+                  <Button asChild size="lg" variant="teal" className="button-glow hover-scale-enhanced">
+                    <Link to="/auth">Get Started</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="glass-morphism hover-scale-enhanced">
+                    <Link to="/motorcycles">Browse Motorcycles</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button asChild size="lg" variant="teal" className="button-glow hover-scale-enhanced">
+                    <Link to="/motorcycles">Browse Motorcycles</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="glass-morphism hover-scale-enhanced">
+                    <Link to="/courses">Explore Courses</Link>
+                  </Button>
+                </>
+              )}
+            </HeroActions>
           </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-secondary/30">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Everything for Your Ride</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+          {/* Floating Stats Cards */}
+          <div className="absolute top-20 right-8 hidden lg:block animate-float">
+            <StatsCard
+              variant="premium"
+              icon={Users}
+              title="Active Riders"
+              value="25K+"
+              className="w-48"
+            />
+          </div>
+          <div className="absolute bottom-32 left-8 hidden lg:block animate-float" style={{animationDelay: '1s'}}>
+            <StatsCard
+              variant="premium"
+              icon={Bike}
+              title="Motorcycles"
+              value="1,200+"
+              className="w-48"
+            />
+          </div>
+        </HeroContent>
+      </HeroSection>
+
+      {/* Enhanced Features Section */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background-alt to-background"></div>
+        <div className="container max-w-7xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-16 space-y-6">
+            <h2 className="text-4xl md:text-5xl font-black text-gradient-teal mb-6">
+              Everything for Your Ride
+            </h2>
+            <p className="text-xl text-secondary-muted max-w-3xl mx-auto leading-relaxed">
               Wrenchmark helps riders, DIY mechanics, and motorcycle enthusiasts find the information they need.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-border bg-card shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="rounded-full bg-accent-teal/10 w-12 h-12 flex items-center justify-center mb-4">
-                    <feature.icon className="w-6 h-6 text-accent-teal" />
+              <PremiumCard 
+                key={index} 
+                variant="premium" 
+                interactive 
+                glow="subtle"
+                className="group hover:shadow-teal-glow-lg transition-all duration-500 animate-scale-in-enhanced"
+                style={{animationDelay: `${index * 0.1}s`}}
+              >
+                <PremiumCardHeader>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 rounded-xl bg-primary/20 border border-primary/30 group-hover:bg-primary/30 transition-colors">
+                      <feature.icon className="w-6 h-6 text-primary" />
+                    </div>
+                    <PremiumCardTitle className="text-xl group-hover:text-gradient-teal transition-all duration-300">
+                      {feature.title}
+                    </PremiumCardTitle>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="ghost" asChild className="p-0 text-accent-teal hover:text-accent-teal group gap-1">
+                  <PremiumCardDescription className="text-secondary-muted leading-relaxed">
+                    {feature.description}
+                  </PremiumCardDescription>
+                </PremiumCardHeader>
+                <PremiumCardContent className="pt-0">
+                  <Button variant="ghost" asChild className="p-0 text-primary hover:text-primary-dark group gap-2 font-semibold">
                     <Link to={feature.link}>
                       <span>Learn more</span>
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </Button>
-                </CardFooter>
-              </Card>
+                </PremiumCardContent>
+              </PremiumCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Category Showcase */}
-      <section className="py-16">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Explore Categories</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+      {/* Enhanced Category Showcase */}
+      <section className="py-20 relative">
+        <div className="container max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16 space-y-6">
+            <h2 className="text-4xl md:text-5xl font-black text-gradient mb-6">
+              Explore Categories
+            </h2>
+            <p className="text-xl text-secondary-muted max-w-3xl mx-auto leading-relaxed">
               Find the information you need across our comprehensive motorcycle database.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {categories.map((category, index) => (
-              <Link to={category.link} key={index} className="group">
-                <div className="relative overflow-hidden rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300">
-                  <AspectRatio ratio={4/3}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10"></div>
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                      style={{ backgroundImage: `url(${category.image})` }}
-                    ></div>
-                  </AspectRatio>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
-                    <h3 className="text-xl font-semibold text-white flex items-center">
-                      <category.icon className="w-5 h-5 mr-2" />
-                      {category.title}
-                    </h3>
+              <Link to={category.link} key={index} className="group animate-scale-in-enhanced" style={{animationDelay: `${index * 0.1}s`}}>
+                <PremiumCard 
+                  variant="floating" 
+                  interactive 
+                  glow="subtle"
+                  className="overflow-hidden hover:shadow-teal-glow-lg transition-all duration-500"
+                >
+                  <div className="relative">
+                    <AspectRatio ratio={4/3}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                        style={{ backgroundImage: `url(${category.image})` }}
+                      ></div>
+                    </AspectRatio>
+                    <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
+                      <h3 className="text-xl md:text-2xl font-bold text-white flex items-center group-hover:text-primary transition-colors duration-300">
+                        <category.icon className="w-5 h-5 mr-3" />
+                        {category.title}
+                      </h3>
+                    </div>
                   </div>
-                </div>
+                </PremiumCard>
               </Link>
             ))}
           </div>
         </div>
       </section>
       
-      {/* Learning Paths */}
-      <section className="py-16 bg-accent-teal/5">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Learning Paths</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+      {/* Enhanced Learning Paths */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5"></div>
+        <div className="container max-w-7xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-16 space-y-6">
+            <h2 className="text-4xl md:text-5xl font-black text-gradient-teal mb-6">
+              Learning Paths
+            </h2>
+            <p className="text-xl text-secondary-muted max-w-3xl mx-auto leading-relaxed">
               Build your skills from beginner to expert with structured learning paths.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {learningPaths.map((path, index) => (
-              <Card key={index} className="flex flex-col md:flex-row overflow-hidden border-border hover:border-accent-teal/50 transition-colors">
+              <PremiumCard 
+                key={index} 
+                variant="featured" 
+                interactive 
+                glow="medium"
+                className="flex flex-col lg:flex-row overflow-hidden hover:shadow-teal-glow-lg transition-all duration-500 animate-scale-in-enhanced"
+                style={{animationDelay: `${index * 0.2}s`}}
+              >
                 <div 
-                  className="w-full md:w-1/3 bg-cover bg-center"
+                  className="w-full lg:w-2/5 bg-cover bg-center relative overflow-hidden"
                   style={{ backgroundImage: `url(${path.image})` }}
                 >
-                  <div className="h-40 md:h-full"></div>
-                </div>
-                <div className="w-full md:w-2/3 p-6">
-                  <div className="flex items-center mb-2">
-                    <div className={`px-2 py-0.5 text-xs font-medium rounded difficulty-${path.difficulty}`}>
-                      Level {path.difficulty}
-                    </div>
-                    <div className="ml-auto flex items-center">
-                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                      <span className="ml-1 text-sm">{path.rating}</span>
-                    </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
+                  <div className="h-48 lg:h-full flex items-center justify-center relative z-10">
+                    <Award className="w-12 h-12 text-primary opacity-80" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{path.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{path.description}</p>
-                  <Button asChild variant="outline" size="sm" className="mt-auto">
+                </div>
+                <div className="w-full lg:w-3/5 p-8 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`px-3 py-1 text-xs font-bold rounded-full difficulty-${path.difficulty} tracking-wide uppercase`}>
+                        Level {path.difficulty}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                        <span className="text-sm font-semibold text-white">{path.rating}</span>
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-gradient-teal transition-all duration-300">
+                      {path.title}
+                    </h3>
+                    <p className="text-secondary-muted leading-relaxed mb-6">
+                      {path.description}
+                    </p>
+                  </div>
+                  <Button asChild variant="teal" size="sm" className="self-start button-glow hover-scale-enhanced">
                     <Link to={path.link}>
                       View Path
-                      <ArrowRight className="ml-1 h-4 w-4" />
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
-              </Card>
+              </PremiumCard>
             ))}
           </div>
           
-          <div className="text-center mt-10">
-            <Button asChild variant="teal">
+          <div className="text-center mt-12">
+            <Button asChild variant="teal" size="lg" className="button-glow hover-scale-enhanced">
               <Link to="/courses">View All Courses</Link>
             </Button>
           </div>
         </div>
       </section>
       
-      {/* CTA Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-background to-background/95 z-0"></div>
+      {/* Enhanced CTA Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background-alt to-background z-0"></div>
         <div 
-          className="absolute inset-0 z-[-1] opacity-20"
+          className="absolute inset-0 z-[-1] opacity-30"
           style={{
             backgroundImage: "url('https://images.unsplash.com/photo-1525013066836-c6090f0ad9d8?q=80&w=1740&auto=format&fit=crop')", 
             backgroundSize: 'cover',
@@ -214,31 +271,40 @@ const Index: React.FC = () => {
           }}
         ></div>
         <div className="container max-w-6xl mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Improve Your Ride?</h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Join Wrenchmark today for access to comprehensive motorcycle data, repair guides, and community knowledge.
-            </p>
-            {!user ? (
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Button asChild size="lg" variant="teal">
-                  <Link to="/auth">Sign Up Now</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/motorcycles">Explore Motorcycles</Link>
-                </Button>
+          <PremiumCard variant="featured" glow="strong" className="text-center p-12 lg:p-16">
+            <div className="max-w-4xl mx-auto space-y-8">
+              <div className="flex justify-center mb-6">
+                <div className="p-4 rounded-full bg-primary/20 border border-primary/30">
+                  <Zap className="w-12 h-12 text-primary" />
+                </div>
               </div>
-            ) : (
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Button asChild size="lg" variant="teal">
-                  <Link to="/profile">Go to Profile</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/motorcycles">Explore Motorcycles</Link>
-                </Button>
-              </div>
-            )}
-          </div>
+              <h2 className="text-4xl md:text-6xl font-black text-gradient-teal mb-8 leading-tight">
+                Ready to Improve Your Ride?
+              </h2>
+              <p className="text-xl md:text-2xl text-secondary leading-relaxed max-w-3xl mx-auto">
+                Join Wrenchmark today for access to comprehensive motorcycle data, repair guides, and community knowledge.
+              </p>
+              {!user ? (
+                <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
+                  <Button asChild size="lg" variant="teal" className="button-glow hover-scale-enhanced text-lg px-8 py-4">
+                    <Link to="/auth">Sign Up Now</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="glass-morphism hover-scale-enhanced text-lg px-8 py-4">
+                    <Link to="/motorcycles">Explore Motorcycles</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
+                  <Button asChild size="lg" variant="teal" className="button-glow hover-scale-enhanced text-lg px-8 py-4">
+                    <Link to="/profile">Go to Profile</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="glass-morphism hover-scale-enhanced text-lg px-8 py-4">
+                    <Link to="/motorcycles">Explore Motorcycles</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </PremiumCard>
         </div>
       </section>
     </>
