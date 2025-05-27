@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
-import MotorcycleGrid from "@/components/motorcycles/MotorcycleGrid";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useMotorcycleFilters, initialFilters } from "@/hooks/useMotorcycleFilters";
@@ -13,6 +12,10 @@ import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator
 import { getAllMotorcycles } from "@/services/motorcycleService";
 import { Motorcycle } from "@/types";
 import { toast } from "sonner";
+import EnhancedMotorcycleCard from "@/components/motorcycles/EnhancedMotorcycleCard";
+import { PremiumCard, PremiumCardContent } from "@/components/ui/premium-card";
+import { StatsCard } from "@/components/ui/stats-card";
+import { Bike } from "lucide-react";
 
 export default function Motorcycles() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,7 +39,6 @@ export default function Motorcycles() {
     fetchMotorcycles();
   }, []);
   
-  // Initialize filters from URL if available
   const parsedFilters = parseFiltersFromUrl(searchParams, initialFilters);
   
   const {
@@ -48,14 +50,12 @@ export default function Motorcycles() {
     isFiltering
   } = useMotorcycleFilters(motorcycles, parsedFilters);
 
-  // Sync filters to URL when they change
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams);
     syncFiltersToUrl(filters, newParams);
     setSearchParams(newParams);
   }, [filters, setSearchParams]);
 
-  // Update search when user types and sync with URL params
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
     handleSearchChange(searchTerm);
@@ -66,30 +66,53 @@ export default function Motorcycles() {
   };
 
   return (
-    <div className="flex-1 min-h-screen bg-gradient-dark">
+    <div className="flex-1 min-h-screen bg-gradient-dark pt-20">
       <div className="container px-4 md:px-6 py-8 grid grid-cols-1 md:grid-cols-[280px_1fr] lg:grid-cols-[320px_1fr] gap-8">
-        {/* Sidebar with filters */}
+        {/* Enhanced sidebar with filters */}
         <aside className="w-full">
-          <div className="glass-morphism rounded-2xl p-6 border border-white/10 backdrop-blur-md sticky top-8">
+          <PremiumCard variant="premium" className="p-6 sticky top-28">
             <MotorcycleFilters
               filters={filters}
               onFilterChange={handleFilterChange}
             />
-          </div>
+          </PremiumCard>
         </aside>
 
-        {/* Main content */}
-        <div className="space-y-6">
-          <div className="flex flex-col gap-6">
-            <div className="glass-morphism rounded-2xl p-6 border border-white/10 backdrop-blur-md">
-              <h1 className="text-4xl font-bold text-white mb-6">Motorcycles</h1>
+        {/* Enhanced main content */}
+        <div className="space-y-8">
+          {/* Header section with stats */}
+          <div className="space-y-6">
+            <PremiumCard variant="premium" className="p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div>
+                  <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-br from-white via-white/90 to-secondary bg-clip-text text-transparent">
+                    Motorcycles
+                  </h1>
+                  <p className="text-lg text-secondary-muted">
+                    Explore our comprehensive database of motorcycles
+                  </p>
+                </div>
+                
+                <StatsCard
+                  icon={Bike}
+                  title="Total Models"
+                  value={filteredMotorcycles.length}
+                  description={isFiltering ? "Filtered results" : "Available motorcycles"}
+                  variant="premium"
+                  className="lg:w-64"
+                />
+              </div>
+            </PremiumCard>
+
+            {/* Enhanced search section */}
+            <PremiumCard variant="premium" className="p-6">
               <div className="flex items-center gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-secondary-muted" />
+                  <Search className="absolute left-4 top-4 h-5 w-5 text-secondary-muted" />
                   <Input
                     type="search"
                     placeholder="Search motorcycles..."
-                    className="pl-10 pr-12 h-12 text-lg"
+                    className="pl-12 pr-12 h-14 text-lg bg-white/5 border-white/20 focus:border-primary/50"
                     value={filters.searchTerm}
                     onChange={handleSearch}
                   />
@@ -97,27 +120,45 @@ export default function Motorcycles() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute right-2 top-2 h-8 w-8 p-0 hover:bg-white/10"
+                      className="absolute right-2 top-2 h-10 w-10 p-0 hover:bg-white/10 rounded-full"
                       onClick={clearSearch}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-5 w-5" />
                     </Button>
                   )}
                 </div>
-                <div className="glass-morphism px-4 py-3 rounded-lg border border-white/10">
-                  <span className="text-sm text-secondary-muted">
-                    {filteredMotorcycles.length} {filteredMotorcycles.length === 1 ? 'result' : 'results'}
-                    {isFiltering && ' (filtered)'}
-                  </span>
-                </div>
               </div>
-            </div>
+            </PremiumCard>
           </div>
 
-          <MotorcycleGrid 
-            motorcycles={filteredMotorcycles} 
-            isLoading={isLoading}
-          />
+          {/* Enhanced motorcycle grid */}
+          <div className="space-y-6">
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <PremiumCard key={i} className="h-96 animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredMotorcycles.map((motorcycle) => (
+                  <EnhancedMotorcycleCard key={motorcycle.id} motorcycle={motorcycle} />
+                ))}
+              </div>
+            )}
+            
+            {!isLoading && filteredMotorcycles.length === 0 && (
+              <PremiumCard variant="premium" className="p-12 text-center">
+                <h3 className="text-2xl font-semibold text-white mb-4">No motorcycles found</h3>
+                <p className="text-secondary-muted mb-6">
+                  Try adjusting your filters or search terms.
+                </p>
+                <Button onClick={resetFilters} variant="teal">
+                  Clear All Filters
+                </Button>
+              </PremiumCard>
+            )}
+          </div>
         </div>
       </div>
       
