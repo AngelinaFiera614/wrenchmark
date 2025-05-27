@@ -86,7 +86,6 @@ export interface MotorcycleFilterUpdates {
   styleTags?: string[];
 }
 
-// New schema types for the normalized database
 export interface MotorcycleModel {
   id: string;
   brand_id: string;
@@ -144,7 +143,6 @@ export interface Configuration {
   accessories?: any[];
 }
 
-// Add types for model comparison
 export interface ModelComparison {
   models: (MotorcycleModel & {
     selectedYear: ModelYear;

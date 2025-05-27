@@ -26,7 +26,6 @@ const AdminModelYearDialog = ({ open, model, onClose }) => {
 
   useEffect(() => {
     if (open && !model) {
-      // Reset form when opening without a model
       setFormData({
         year: new Date().getFullYear(),
         changes: '',
@@ -74,7 +73,6 @@ const AdminModelYearDialog = ({ open, model, onClose }) => {
 
       onClose(true);
     } catch (error) {
-      console.error("Error creating model year:", error);
       toast({
         variant: "destructive",
         title: "Error",

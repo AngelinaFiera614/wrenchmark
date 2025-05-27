@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -17,11 +18,9 @@ export function useAdminBrands() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [sortField, setSortField] = useState<string>("name");
 
-  // Fetch brands data with sorting
   const { data: brands, isLoading, error, isError } = useQuery({
     queryKey: ["admin-brands", sortField, sortOrder],
     queryFn: async () => {
-      console.log(`Fetching brands sorted by ${sortField} in ${sortOrder} order`);
       const { data, error } = await supabase
         .from('brands')
         .select('*')
@@ -30,13 +29,11 @@ export function useAdminBrands() {
       if (error) throw error;
       return data as Brand[];
     },
-    staleTime: 30000, // 30 seconds before refetching
+    staleTime: 30000,
     refetchOnWindowFocus: false
   });
 
-  // Handle errors from the query
   if (isError && error) {
-    console.error("Error fetching brands:", error);
     toast({
       variant: "destructive",
       title: "Failed to load brands",
@@ -77,7 +74,6 @@ export function useAdminBrands() {
         description: `${brandToDelete.name} has been removed.`,
       });
 
-      // Invalidate the cache to trigger a refetch
       queryClient.invalidateQueries({
         queryKey: ["admin-brands"],
       });
@@ -85,7 +81,6 @@ export function useAdminBrands() {
       setIsDeleteConfirmOpen(false);
       setBrandToDelete(null);
     } catch (error: any) {
-      console.error("Error deleting brand:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -115,7 +110,6 @@ export function useAdminBrands() {
 
     try {
       if (editBrand) {
-        // Update existing brand
         const { error } = await supabase
           .from('brands')
           .update(values)
@@ -128,7 +122,6 @@ export function useAdminBrands() {
           description: `${values.name} has been updated successfully.`,
         });
       } else {
-        // Create new brand
         const { error } = await supabase
           .from('brands')
           .insert(values);
@@ -141,16 +134,13 @@ export function useAdminBrands() {
         });
       }
 
-      // Invalidate the cache to trigger a refetch
       queryClient.invalidateQueries({
         queryKey: ["admin-brands"],
       });
 
-      // Close the form
       setIsInlineFormVisible(false);
       setEditBrand(null);
     } catch (error: any) {
-      console.error("Error saving brand:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -161,13 +151,10 @@ export function useAdminBrands() {
     }
   };
 
-  // Handle changing the sort order and field
   const handleSort = (field: string) => {
     if (sortField === field) {
-      // If already sorting by this field, toggle the order
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
-      // Otherwise, set the new field and default to ascending
       setSortField(field);
       setSortOrder("asc");
     }

@@ -49,12 +49,10 @@ export default function ImageManagement() {
     
     for (const file of Array.from(files)) {
       try {
-        // Generate path based on file name or current selection
         const timestamp = Date.now();
         const baseName = file.name.split('.')[0];
         const path = `uploads/${timestamp}-${baseName}`;
         
-        // Upload to storage
         const { url, error } = await imageManagementService.uploadImage(file, path);
         
         if (error) {
@@ -62,7 +60,6 @@ export default function ImageManagement() {
           continue;
         }
 
-        // Create metadata record
         const imageData: Omit<MotorcycleImage, 'id' | 'created_at' | 'updated_at'> = {
           file_url: url,
           file_name: file.name,
@@ -73,7 +70,7 @@ export default function ImageManagement() {
           model: extractModelFromFileName(file.name),
           year: extractYearFromFileName(file.name),
           color: extractColorFromFileName(file.name),
-          angle: 'side', // default
+          angle: 'side',
           is_primary: false,
           is_featured: false
         };
@@ -84,13 +81,11 @@ export default function ImageManagement() {
           toast.success(`Uploaded ${file.name} successfully`);
         }
       } catch (error) {
-        console.error('Upload error:', error);
         toast.error(`Failed to upload ${file.name}`);
       }
     }
     
     setIsUploading(false);
-    // Clear the input
     event.target.value = '';
   };
 
@@ -98,7 +93,6 @@ export default function ImageManagement() {
     const success = await imageManagementService.setPrimaryImage(imageId, { motorcycleId });
     if (success) {
       toast.success('Primary image updated');
-      // Update the motorcycle's primary image URL
       const image = images.find(img => img.id === imageId);
       if (image) {
         await imageManagementService.updateMotorcyclePrimaryImage(motorcycleId, image.file_url);
@@ -114,7 +108,6 @@ export default function ImageManagement() {
     setImages(motorcycleImages);
   };
 
-  // Helper functions to extract metadata from file names
   const extractBrandFromFileName = (fileName: string): string => {
     const brands = ['honda', 'ducati', 'bmw', 'kawasaki', 'yamaha', 'royal-enfield', 'harley-davidson'];
     const lowerName = fileName.toLowerCase();
@@ -122,7 +115,6 @@ export default function ImageManagement() {
   };
 
   const extractModelFromFileName = (fileName: string): string => {
-    // Extract model from filename patterns like "honda-cbr600rr-2023-red.jpg"
     const parts = fileName.toLowerCase().split('-');
     if (parts.length >= 2) return parts[1];
     return '';

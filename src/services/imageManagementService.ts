@@ -59,7 +59,6 @@ export const imageManagementService = {
 
       return { url: publicUrl };
     } catch (error) {
-      console.error('Error uploading image:', error);
       return { url: '', error: error instanceof Error ? error : new Error('Upload failed') };
     }
   },
@@ -76,7 +75,6 @@ export const imageManagementService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error creating image record:', error);
       return null;
     }
   },
@@ -95,7 +93,6 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching motorcycle images:', error);
       return [];
     }
   },
@@ -113,7 +110,6 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching model year images:', error);
       return [];
     }
   },
@@ -131,7 +127,6 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching configuration images:', error);
       return [];
     }
   },
@@ -161,7 +156,6 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error searching images:', error);
       return [];
     }
   },
@@ -178,7 +172,6 @@ export const imageManagementService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching image tags:', error);
       return [];
     }
   },
@@ -195,7 +188,6 @@ export const imageManagementService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error creating tag:', error);
       return null;
     }
   },
@@ -203,13 +195,13 @@ export const imageManagementService = {
   // Associate tags with image
   async associateImageTags(imageId: string, tagIds: string[]): Promise<boolean> {
     try {
-      // First remove existing associations
+      // Remove existing associations
       await supabase
         .from('image_tag_associations')
         .delete()
         .eq('image_id', imageId);
 
-      // Then add new associations
+      // Add new associations
       if (tagIds.length > 0) {
         const associations = tagIds.map(tagId => ({
           image_id: imageId,
@@ -225,7 +217,6 @@ export const imageManagementService = {
 
       return true;
     } catch (error) {
-      console.error('Error associating image tags:', error);
       return false;
     }
   },
@@ -237,7 +228,7 @@ export const imageManagementService = {
     configurationId?: string;
   }): Promise<boolean> {
     try {
-      // First, unset all other primary images for this scope
+      // Unset all other primary images for this scope
       let unsetQuery = supabase
         .from('motorcycle_images')
         .update({ is_primary: false });
@@ -254,7 +245,7 @@ export const imageManagementService = {
 
       await unsetQuery;
 
-      // Then set this image as primary
+      // Set this image as primary
       const { error } = await supabase
         .from('motorcycle_images')
         .update({ is_primary: true })
@@ -263,7 +254,6 @@ export const imageManagementService = {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error setting primary image:', error);
       return false;
     }
   },
@@ -279,7 +269,6 @@ export const imageManagementService = {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error updating motorcycle primary image:', error);
       return false;
     }
   },
@@ -295,7 +284,6 @@ export const imageManagementService = {
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error deleting image:', error);
       return false;
     }
   }
