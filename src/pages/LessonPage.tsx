@@ -131,6 +131,7 @@ const LessonPage: React.FC = () => {
               <>
                 <LessonContent 
                   content={lesson.content || ''} 
+                  contentBlocks={lesson.content_blocks || []}
                   stateRules={stateRules}
                 />
                 

@@ -6,18 +6,25 @@ import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
 import { Card, CardContent } from '@/components/ui/card';
 import { StateRule } from '@/types/state';
 import StateRulesSection from './StateRulesSection';
+import LessonBlockContent from './LessonBlockContent';
+import { ContentBlock } from '@/types/course';
 
 interface LessonContentProps {
-  content: string;
+  content?: string;
+  contentBlocks?: ContentBlock[];
   stateRules?: StateRule[];
 }
 
-export const LessonContent = ({ content, stateRules = [] }: LessonContentProps) => {
+export const LessonContent = ({ content, contentBlocks = [], stateRules = [] }: LessonContentProps) => {
   const [renderedContent, setRenderedContent] = useState('');
   const { terms, isLoading } = useGlossaryTerms();
 
+  // Determine if we should show legacy content or new content blocks
+  const hasContentBlocks = contentBlocks && contentBlocks.length > 0;
+  const hasLegacyContent = content && content.trim().length > 0;
+
   useEffect(() => {
-    if (!content || isLoading || terms.length === 0) return;
+    if (!hasLegacyContent || isLoading || terms.length === 0) return;
     
     const processContent = async () => {
       let processedContent = content;
@@ -49,9 +56,24 @@ export const LessonContent = ({ content, stateRules = [] }: LessonContentProps) 
     };
 
     processContent();
-  }, [content, terms, isLoading]);
+  }, [content, terms, isLoading, hasLegacyContent]);
 
-  if (!content) {
+  // If we have content blocks, use the new system
+  if (hasContentBlocks) {
+    return (
+      <div className="space-y-6">
+        <LessonBlockContent contentBlocks={contentBlocks} />
+        
+        {/* Display state rules if available */}
+        {stateRules && stateRules.length > 0 && (
+          <StateRulesSection stateRules={stateRules} />
+        )}
+      </div>
+    );
+  }
+
+  // Fallback to legacy content rendering
+  if (!hasLegacyContent) {
     return <div className="text-muted-foreground">No content available for this lesson.</div>;
   }
 
