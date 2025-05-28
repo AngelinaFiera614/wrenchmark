@@ -9,12 +9,14 @@ import { ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import BrandDetailTabs from "@/components/brands/BrandDetailTabs";
 import { Badge } from "@/components/ui/badge";
+import { getBrandLogoUrl, getBrandFallbackImage } from "@/utils/brandLogoUtils";
 
 export default function BrandDetail() {
   const { brandId } = useParams<{ brandId: string }>();
   const [brand, setBrand] = useState<Brand | null>(null);
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
     const fetchBrandData = async () => {
@@ -80,6 +82,21 @@ export default function BrandDetail() {
     );
   }
 
+  // Get the best logo URL with proper fallback handling
+  const logoData = getBrandLogoUrl(brand.logo_url, brand.slug);
+  
+  const getDisplayLogo = () => {
+    if (logoError) {
+      return getBrandFallbackImage(brand.name);
+    }
+    return logoData.url;
+  };
+
+  const handleLogoError = () => {
+    console.log("Logo failed to load, using fallback for:", brand.name);
+    setLogoError(true);
+  };
+
   return (
     <div className="flex-1">
       <div className="container px-4 md:px-6 py-8">
@@ -93,17 +110,15 @@ export default function BrandDetail() {
         </div>
         
         <div className="flex flex-col md:flex-row md:items-start gap-8 mb-6">
-          {/* Brand logo */}
-          <div className="w-32 h-32 md:w-48 md:h-48 bg-muted/30 rounded-lg overflow-hidden flex items-center justify-center">
-            {brand.logo_url ? (
-              <img 
-                src={brand.logo_url} 
-                alt={`${brand.name} logo`}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-3xl font-bold text-muted-foreground">{brand.name.charAt(0)}</span>
-            )}
+          {/* Brand logo with improved error handling */}
+          <div className="w-32 h-32 md:w-48 md:h-48 bg-muted/30 rounded-lg overflow-hidden flex items-center justify-center p-4">
+            <img 
+              src={getDisplayLogo()} 
+              alt={`${brand.name} logo`}
+              className="w-full h-full object-contain transition-opacity duration-200"
+              onError={handleLogoError}
+              onLoad={() => console.log("Logo loaded successfully for:", brand.name)}
+            />
           </div>
           
           {/* Brand details */}

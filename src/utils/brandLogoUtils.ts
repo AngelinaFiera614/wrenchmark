@@ -10,16 +10,19 @@ export const getBrandLogoUrl = (logoUrl: string | null | undefined, slug: string
   url: string;
   sourceType: LogoSourceType;
 } => {
-  // If we have a direct logo URL, validate and use it
-  if (logoUrl && logoUrl.trim()) {
-    console.log("Using custom logo URL:", logoUrl);
+  // Normalize and validate the logo URL
+  const normalizedUrl = normalizeLogoUrl(logoUrl);
+  
+  // If we have a valid direct logo URL, use it
+  if (normalizedUrl && isValidUrl(normalizedUrl)) {
+    console.log("Using custom logo URL:", normalizedUrl);
     return { 
-      url: logoUrl, 
+      url: normalizedUrl, 
       sourceType: "custom" 
     };
   }
   
-  // If we have a slug but no logo_url, construct from storage bucket
+  // If we have a slug but no valid logo_url, construct from storage bucket
   if (slug && slug.trim()) {
     // Check for different possible filename patterns
     const possibleFilenames = [
@@ -98,13 +101,34 @@ export const getBrandFallbackImage = (brandName: string): string => {
 };
 
 /**
- * Normalizes logo URLs to ensure consistency
+ * Normalizes logo URLs to ensure consistency and removes whitespace
  */
 export const normalizeLogoUrl = (url: string | null | undefined): string | null => {
   if (!url || !url.trim()) return null;
   
-  // Return URL as-is for now
-  return url.trim();
+  // Trim whitespace and normalize
+  const trimmedUrl = url.trim();
+  
+  // Basic validation - check if it looks like a URL
+  if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://') && !trimmedUrl.startsWith('/')) {
+    console.warn("Invalid URL format:", trimmedUrl);
+    return null;
+  }
+  
+  return trimmedUrl;
+};
+
+/**
+ * Validates if a string is a valid URL
+ */
+export const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    // If it's a relative URL, consider it valid
+    return url.startsWith('/');
+  }
 };
 
 /**
