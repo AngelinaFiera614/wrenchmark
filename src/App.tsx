@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -20,8 +19,6 @@ import GlossaryPage from './pages/GlossaryPage';
 import AdminImages from './pages/admin/AdminImages';
 import BrandsDirectory from './pages/BrandsDirectory';
 import BrandDetail from './pages/BrandDetail';
-import BrandExplorer from './pages/BrandExplorer';
-
 // Import all admin page components
 import {
   AdminDashboard,
@@ -88,7 +85,6 @@ function App() {
         <Route path="/glossary" element={<GlossaryPage />} />
         <Route path="/brands" element={<BrandsDirectory />} />
         <Route path="/brands/:brandId" element={<BrandDetail />} />
-        <Route path="/brand-explorer" element={<BrandExplorer />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

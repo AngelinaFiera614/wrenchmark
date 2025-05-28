@@ -2,15 +2,18 @@
 import { useState, useEffect } from "react";
 import BrandCard from "@/components/brands/BrandCard";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Play, Grid3X3 } from "lucide-react";
 import { getAllBrands } from "@/services/brandService";
 import { Brand } from "@/types";
 import { toast } from "sonner";
+import BrandExplorer from "./BrandExplorer";
 
 export default function BrandsDirectory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'directory' | 'explorer'>('directory');
   
   // Fetch brands from Supabase
   useEffect(() => {
@@ -35,12 +38,42 @@ export default function BrandsDirectory() {
     brand.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
     brand.known_for.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // If in explorer mode, render the explorer component
+  if (viewMode === 'explorer') {
+    return <BrandExplorer onBackToDirectory={() => setViewMode('directory')} />;
+  }
   
   return (
     <main className="flex-1 container px-4 md:px-6 py-8">
       <div className="mb-8 space-y-4">
-        <h1 className="text-3xl font-bold text-foreground">Motorcycle Brand Directory</h1>
-        <p className="text-muted-foreground">Discover the legacy and offerings of leading motorcycle manufacturers.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Motorcycle Brand Directory</h1>
+            <p className="text-muted-foreground">Discover the legacy and offerings of leading motorcycle manufacturers.</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setViewMode('directory')}
+              variant={viewMode === 'directory' ? 'default' : 'outline'}
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Grid3X3 className="h-4 w-4" />
+              Directory
+            </Button>
+            <Button
+              onClick={() => setViewMode('explorer')}
+              variant={viewMode === 'explorer' ? 'default' : 'outline'}
+              size="sm"
+              className="flex items-center gap-2 bg-accent-teal/10 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/20"
+            >
+              <Play className="h-4 w-4" />
+              Explorer Mode
+            </Button>
+          </div>
+        </div>
         
         <div className="relative max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

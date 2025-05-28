@@ -1,20 +1,22 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Clock, Shuffle } from 'lucide-react';
+import { Play, Clock, ArrowLeft } from 'lucide-react';
 
 interface BrandExplorerHeaderProps {
   currentMode: 'slideshow' | 'timeline';
   onModeChange: (mode: 'slideshow' | 'timeline') => void;
   totalBrands: number;
   currentIndex: number;
+  onBackToDirectory?: () => void;
 }
 
 export default function BrandExplorerHeader({
   currentMode,
   onModeChange,
   totalBrands,
-  currentIndex
+  currentIndex,
+  onBackToDirectory
 }: BrandExplorerHeaderProps) {
   return (
     <div className="absolute top-0 left-0 right-0 z-50 bg-explorer-dark/80 backdrop-blur-xl border-b border-explorer-chrome/30">
@@ -22,6 +24,17 @@ export default function BrandExplorerHeader({
         <div className="flex items-center justify-between">
           {/* Logo and title */}
           <div className="flex items-center gap-4">
+            {onBackToDirectory && (
+              <Button
+                onClick={onBackToDirectory}
+                variant="ghost"
+                size="sm"
+                className="text-explorer-text hover:text-explorer-teal hover:bg-explorer-card/50"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Directory
+              </Button>
+            )}
             <h1 className="text-2xl font-bold text-explorer-text">
               BRAND <span className="text-explorer-teal">EXPLORER</span>
             </h1>
