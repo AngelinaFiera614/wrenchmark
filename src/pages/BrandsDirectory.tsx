@@ -9,11 +9,13 @@ import { Brand } from "@/types";
 import { toast } from "sonner";
 import BrandExplorer from "./BrandExplorer";
 
+type ViewMode = 'directory' | 'explorer';
+
 export default function BrandsDirectory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'directory' | 'explorer'>('directory');
+  const [viewMode, setViewMode] = useState<ViewMode>('directory');
   
   // Fetch brands from Supabase
   useEffect(() => {
