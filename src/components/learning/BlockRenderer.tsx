@@ -41,17 +41,6 @@ export default function BlockRenderer({ block }: BlockRendererProps) {
     );
   }
 
-  // Prepare data based on the component that will be used
-  let blockData = block.data;
-  
-  // If we're using TextBlock (either directly or as fallback), ensure content property exists
-  if (BlockComponent === TextBlock) {
-    blockData = {
-      content: String(blockData?.content || ''),
-      title: blockData?.title,
-      ...blockData
-    };
-  }
-
-  return <BlockComponent data={blockData} />;
+  // Pass data directly - let each component handle its own validation
+  return <BlockComponent data={block.data || {}} />;
 }

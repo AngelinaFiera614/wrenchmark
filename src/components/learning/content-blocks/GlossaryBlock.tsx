@@ -8,17 +8,24 @@ import { Link } from 'react-router-dom';
 interface GlossaryBlockProps {
   data: {
     title?: string;
-    terms: Array<{
+    terms?: Array<{
       slug: string;
       term: string;
       definition: string;
     }>;
+    [key: string]: any;
   };
 }
 
 export default function GlossaryBlock({ data }: GlossaryBlockProps) {
-  if (!data.terms || data.terms.length === 0) {
-    return null;
+  if (!data?.terms || data.terms.length === 0) {
+    return (
+      <Card className="overflow-hidden animate-fade-in">
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">No glossary terms available</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

@@ -6,8 +6,9 @@ import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
 
 interface TextBlockProps {
   data: {
-    content: string;
+    content?: string;
     title?: string;
+    [key: string]: any;
   };
 }
 
@@ -15,11 +16,17 @@ export default function TextBlock({ data }: TextBlockProps) {
   const [renderedContent, setRenderedContent] = useState('');
   const { terms, isLoading } = useGlossaryTerms();
 
+  // Get content from data, fallback to empty string
+  const content = data?.content || '';
+
   useEffect(() => {
-    if (!data.content || isLoading || terms.length === 0) return;
+    if (!content || isLoading || terms.length === 0) {
+      setRenderedContent(content);
+      return;
+    }
     
     const processContent = async () => {
-      let processedContent = data.content;
+      let processedContent = content;
 
       // Process glossary term highlights
       if (terms && terms.length > 0) {
@@ -38,15 +45,21 @@ export default function TextBlock({ data }: TextBlockProps) {
         setRenderedContent(htmlContent);
       } catch (error) {
         console.error('Error parsing markdown:', error);
-        setRenderedContent(data.content);
+        setRenderedContent(content);
       }
     };
 
     processContent();
-  }, [data.content, terms, isLoading]);
+  }, [content, terms, isLoading]);
 
-  if (!data.content) {
-    return null;
+  if (!content) {
+    return (
+      <Card className="overflow-hidden animate-fade-in">
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">No content available</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

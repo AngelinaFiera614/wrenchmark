@@ -126,7 +126,6 @@ export type Database = {
       brands: {
         Row: {
           brand_history: string | null
-          brand_type: string | null
           categories: string[] | null
           country: string | null
           created_at: string
@@ -135,12 +134,9 @@ export type Database = {
           founded_city: string | null
           headquarters: string | null
           id: string
-          is_electric: boolean | null
           known_for: string[] | null
-          logo_history: Json | null
           logo_url: string | null
           manufacturing_facilities: string[] | null
-          media_gallery: Json | null
           milestones: Json | null
           name: string
           notable_models: Json | null
@@ -152,7 +148,6 @@ export type Database = {
         }
         Insert: {
           brand_history?: string | null
-          brand_type?: string | null
           categories?: string[] | null
           country?: string | null
           created_at?: string
@@ -161,12 +156,9 @@ export type Database = {
           founded_city?: string | null
           headquarters?: string | null
           id?: string
-          is_electric?: boolean | null
           known_for?: string[] | null
-          logo_history?: Json | null
           logo_url?: string | null
           manufacturing_facilities?: string[] | null
-          media_gallery?: Json | null
           milestones?: Json | null
           name: string
           notable_models?: Json | null
@@ -178,7 +170,6 @@ export type Database = {
         }
         Update: {
           brand_history?: string | null
-          brand_type?: string | null
           categories?: string[] | null
           country?: string | null
           created_at?: string
@@ -187,12 +178,9 @@ export type Database = {
           founded_city?: string | null
           headquarters?: string | null
           id?: string
-          is_electric?: boolean | null
           known_for?: string[] | null
-          logo_history?: Json | null
           logo_url?: string | null
           manufacturing_facilities?: string[] | null
-          media_gallery?: Json | null
           milestones?: Json | null
           name?: string
           notable_models?: Json | null
@@ -895,13 +883,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "model_configurations_suspension_id_fkey"
-            columns: ["suspension_id"]
-            isOneToOne: false
-            referencedRelation: "suspensions"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "model_configurations_wheel_id_fkey"
             columns: ["wheel_id"]
             isOneToOne: false
@@ -1425,36 +1406,6 @@ export type Database = {
           special_rules?: string | null
           state_code?: string
           state_name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      suspensions: {
-        Row: {
-          adjustability: string | null
-          brand: string | null
-          created_at: string
-          front_type: string | null
-          id: string
-          rear_type: string | null
-          updated_at: string
-        }
-        Insert: {
-          adjustability?: string | null
-          brand?: string | null
-          created_at?: string
-          front_type?: string | null
-          id?: string
-          rear_type?: string | null
-          updated_at?: string
-        }
-        Update: {
-          adjustability?: string | null
-          brand?: string | null
-          created_at?: string
-          front_type?: string | null
-          id?: string
-          rear_type?: string | null
           updated_at?: string
         }
         Relationships: []

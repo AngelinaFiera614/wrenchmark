@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 interface ModelBlockProps {
   data: {
     title?: string;
-    models: Array<{
+    models?: Array<{
       id: string;
       name: string;
       brand: string;
@@ -16,12 +16,19 @@ interface ModelBlockProps {
       image?: string;
       slug?: string;
     }>;
+    [key: string]: any;
   };
 }
 
 export default function ModelBlock({ data }: ModelBlockProps) {
-  if (!data.models || data.models.length === 0) {
-    return null;
+  if (!data?.models || data.models.length === 0) {
+    return (
+      <Card className="overflow-hidden animate-fade-in">
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">No motorcycle models available</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

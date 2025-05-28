@@ -6,15 +6,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface TableBlockProps {
   data: {
     title?: string;
-    headers: string[];
-    rows: string[][];
+    headers?: string[];
+    rows?: string[][];
     caption?: string;
+    [key: string]: any;
   };
 }
 
 export default function TableBlock({ data }: TableBlockProps) {
-  if (!data.headers || !data.rows) {
-    return null;
+  if (!data?.headers || !data?.rows) {
+    return (
+      <Card className="overflow-hidden animate-fade-in">
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">Table data not available</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

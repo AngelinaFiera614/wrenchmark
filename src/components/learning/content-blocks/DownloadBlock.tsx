@@ -6,14 +6,15 @@ import { Download, FileText, File } from 'lucide-react';
 
 interface DownloadBlockProps {
   data: {
-    title: string;
+    title?: string;
     description?: string;
-    files: Array<{
+    files?: Array<{
       name: string;
       url: string;
       size?: string;
       type?: string;
     }>;
+    [key: string]: any;
   };
 }
 
@@ -23,14 +24,22 @@ export default function DownloadBlock({ data }: DownloadBlockProps) {
     return File;
   };
 
-  if (!data.files || data.files.length === 0) {
-    return null;
+  if (!data?.files || data.files.length === 0) {
+    return (
+      <Card className="overflow-hidden animate-fade-in">
+        <CardContent className="p-6">
+          <p className="text-muted-foreground">No files available for download</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <Card className="overflow-hidden animate-fade-in">
       <CardContent className="p-6">
-        <h3 className="text-xl font-semibold mb-2 text-accent-teal">{data.title}</h3>
+        <h3 className="text-xl font-semibold mb-2 text-accent-teal">
+          {data.title || 'Downloads'}
+        </h3>
         {data.description && (
           <p className="text-muted-foreground mb-4">{data.description}</p>
         )}
