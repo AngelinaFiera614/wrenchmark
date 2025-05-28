@@ -13,6 +13,7 @@ import { MeasurementToggle } from "@/components/theme/MeasurementToggle";
 const mobileNavLinks = [
   { label: "Motorcycles", href: "/motorcycles" },
   { label: "Brands", href: "/brands" },
+  { label: "Brand Explorer", href: "/brand-explorer" },
   { label: "Manuals", href: "/manuals" },
   { label: "Skills", href: "/riding-skills" },
   { label: "Courses", href: "/courses" },
