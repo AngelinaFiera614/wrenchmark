@@ -9,13 +9,16 @@ import { Brand } from "@/types";
 import { toast } from "sonner";
 import BrandExplorer from "./BrandExplorer";
 
-type ViewMode = 'directory' | 'explorer';
+enum ViewMode {
+  DIRECTORY = 'directory',
+  EXPLORER = 'explorer'
+}
 
 export default function BrandsDirectory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<ViewMode>('directory');
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.DIRECTORY);
   
   // Fetch brands from Supabase
   useEffect(() => {
@@ -42,13 +45,13 @@ export default function BrandsDirectory() {
   );
 
   // If in explorer mode, render the explorer component
-  if (viewMode === 'explorer') {
-    return <BrandExplorer onBackToDirectory={() => setViewMode('directory')} />;
+  if (viewMode === ViewMode.EXPLORER) {
+    return <BrandExplorer onBackToDirectory={() => setViewMode(ViewMode.DIRECTORY)} />;
   }
 
   // Helper functions to determine button variants
-  const isDirectoryMode = viewMode === 'directory';
-  const isExplorerMode = viewMode === 'explorer';
+  const isDirectoryMode = viewMode === ViewMode.DIRECTORY;
+  const isExplorerMode = viewMode === ViewMode.EXPLORER;
   
   return (
     <main className="flex-1 container px-4 md:px-6 py-8">
@@ -61,7 +64,7 @@ export default function BrandsDirectory() {
           
           <div className="flex items-center gap-2">
             <Button
-              onClick={() => setViewMode('directory')}
+              onClick={() => setViewMode(ViewMode.DIRECTORY)}
               variant={isDirectoryMode ? 'default' : 'outline'}
               size="sm"
               className="flex items-center gap-2"
@@ -70,7 +73,7 @@ export default function BrandsDirectory() {
               Directory
             </Button>
             <Button
-              onClick={() => setViewMode('explorer')}
+              onClick={() => setViewMode(ViewMode.EXPLORER)}
               variant={isExplorerMode ? 'default' : 'outline'}
               size="sm"
               className="flex items-center gap-2 bg-accent-teal/10 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/20"
