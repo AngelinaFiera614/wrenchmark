@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import BrandSlideshowMode from '@/components/brand-explorer/BrandSlideshowMode';
 import BrandTimelineMode from '@/components/brand-explorer/BrandTimelineMode';
 import BrandExplorerHeader from '@/components/brand-explorer/BrandExplorerHeader';
-import Header from '@/components/layout/Header';
 
 interface BrandExplorerProps {
   onBackToDirectory?: () => void;
@@ -58,33 +57,28 @@ export default function BrandExplorer({ onBackToDirectory }: BrandExplorerProps)
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Include main site header when accessed from directory */}
-      {onBackToDirectory && <Header />}
+    <div className="min-h-screen bg-explorer-dark overflow-hidden">
+      <BrandExplorerHeader 
+        currentMode={currentMode}
+        onModeChange={setCurrentMode}
+        totalBrands={brands.length}
+        currentIndex={currentBrandIndex}
+        onBackToDirectory={onBackToDirectory}
+      />
       
-      <div className="min-h-screen bg-explorer-dark overflow-hidden">
-        <BrandExplorerHeader 
-          currentMode={currentMode}
-          onModeChange={setCurrentMode}
-          totalBrands={brands.length}
+      {currentMode === 'slideshow' ? (
+        <BrandSlideshowMode 
+          brands={brands}
           currentIndex={currentBrandIndex}
-          onBackToDirectory={onBackToDirectory}
+          onIndexChange={setCurrentBrandIndex}
+          onSwitchToTimeline={() => setCurrentMode('timeline')}
         />
-        
-        {currentMode === 'slideshow' ? (
-          <BrandSlideshowMode 
-            brands={brands}
-            currentIndex={currentBrandIndex}
-            onIndexChange={setCurrentBrandIndex}
-            onSwitchToTimeline={() => setCurrentMode('timeline')}
-          />
-        ) : (
-          <BrandTimelineMode 
-            brand={brands[currentBrandIndex]}
-            onSwitchToSlideshow={() => setCurrentMode('slideshow')}
-          />
-        )}
-      </div>
+      ) : (
+        <BrandTimelineMode 
+          brand={brands[currentBrandIndex]}
+          onSwitchToSlideshow={() => setCurrentMode('slideshow')}
+        />
+      )}
     </div>
   );
 }

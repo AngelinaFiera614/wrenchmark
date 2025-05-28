@@ -19,8 +19,8 @@ export default function BrandExplorerHeader({
   onBackToDirectory
 }: BrandExplorerHeaderProps) {
   return (
-    <div className="absolute top-0 left-0 right-0 z-50 bg-explorer-dark/80 backdrop-blur-xl border-b border-explorer-chrome/30">
-      <div className="container mx-auto px-6 py-4">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-explorer-dark/95 backdrop-blur-xl border-b border-explorer-chrome/30">
+      <div className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo and title */}
           <div className="flex items-center gap-4">
@@ -35,7 +35,7 @@ export default function BrandExplorerHeader({
                 Back to Directory
               </Button>
             )}
-            <h1 className="text-2xl font-bold text-explorer-text">
+            <h1 className="text-xl font-bold text-explorer-text">
               BRAND <span className="text-explorer-teal">EXPLORER</span>
             </h1>
             <div className="text-sm text-explorer-text-muted">

@@ -5,7 +5,7 @@ import { Brand } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Clock, Play } from 'lucide-react';
-import { getBrandLogoUrl } from '@/utils/brandLogoUtils';
+import { getBrandLogoUrl, getBrandFallbackImage } from '@/utils/brandLogoUtils';
 
 interface BrandSlideshowModeProps {
   brands: Brand[];
@@ -33,6 +33,7 @@ export default function BrandSlideshowMode({
 }: BrandSlideshowModeProps) {
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [imageError, setImageError] = useState<Record<number, boolean>>({});
 
   const currentBrand = brands[currentIndex];
   const logoData = getBrandLogoUrl(currentBrand.logo_url, currentBrand.slug);
@@ -67,8 +68,19 @@ export default function BrandSlideshowMode({
     onIndexChange(currentIndex === 0 ? brands.length - 1 : currentIndex - 1);
   };
 
+  const handleImageError = (index: number) => {
+    setImageError(prev => ({ ...prev, [index]: true }));
+  };
+
+  const getDisplayImage = () => {
+    if (imageError[currentIndex]) {
+      return getBrandFallbackImage(currentBrand.name);
+    }
+    return logoData.url;
+  };
+
   return (
-    <div className="relative h-screen w-full overflow-hidden">
+    <div className="relative h-screen w-full overflow-hidden pt-16">
       {/* Background with smoke effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-explorer-dark via-explorer-dark-light to-explorer-dark opacity-90" />
       <div className="absolute inset-0 bg-explorer-smoke opacity-20" />
@@ -98,12 +110,13 @@ export default function BrandSlideshowMode({
                 <div className="relative">
                   <div className="absolute inset-0 bg-explorer-teal rounded-full blur-xl opacity-30 animate-pulse" />
                   <img 
-                    src={logoData.url}
+                    src={getDisplayImage()}
                     alt={`${currentBrand.name} logo`}
                     className="relative w-32 h-32 object-contain filter drop-shadow-2xl"
                     style={{
                       filter: 'drop-shadow(0 0 20px rgba(0, 210, 180, 0.5))'
                     }}
+                    onError={() => handleImageError(currentIndex)}
                   />
                 </div>
               </motion.div>

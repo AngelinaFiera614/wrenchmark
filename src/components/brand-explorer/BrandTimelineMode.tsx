@@ -5,7 +5,7 @@ import { Brand } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Globe, Calendar, Award, Image } from 'lucide-react';
-import { getBrandLogoUrl } from '@/utils/brandLogoUtils';
+import { getBrandLogoUrl, getBrandFallbackImage } from '@/utils/brandLogoUtils';
 
 interface BrandTimelineModeProps {
   brand: Brand;
@@ -14,6 +14,7 @@ interface BrandTimelineModeProps {
 
 export default function BrandTimelineMode({ brand, onSwitchToSlideshow }: BrandTimelineModeProps) {
   const [activeTab, setActiveTab] = useState('story');
+  const [imageError, setImageError] = useState(false);
   const logoData = getBrandLogoUrl(brand.logo_url, brand.slug);
 
   // Use actual milestones from brand data with fallbacks
@@ -35,8 +36,15 @@ export default function BrandTimelineMode({ brand, onSwitchToSlideshow }: BrandT
         { name: 'Modern Legend', years: '2000-present', category: 'Performance', description: 'Cutting-edge technology meets timeless style' }
       ];
 
+  const getDisplayImage = () => {
+    if (imageError) {
+      return getBrandFallbackImage(brand.name);
+    }
+    return logoData.url;
+  };
+
   return (
-    <div className="min-h-screen bg-explorer-dark text-explorer-text">
+    <div className="min-h-screen bg-explorer-dark text-explorer-text pt-16">
       {/* Header */}
       <div className="relative bg-gradient-to-r from-explorer-dark via-explorer-dark-light to-explorer-dark border-b border-explorer-chrome/30">
         <div className="container mx-auto px-6 py-8">
@@ -55,9 +63,10 @@ export default function BrandTimelineMode({ brand, onSwitchToSlideshow }: BrandT
             <div className="relative">
               <div className="absolute inset-0 bg-explorer-teal rounded-full blur-lg opacity-30" />
               <img 
-                src={logoData.url}
+                src={getDisplayImage()}
                 alt={`${brand.name} logo`}
                 className="relative w-20 h-20 object-contain"
+                onError={() => setImageError(true)}
               />
             </div>
             <div>
@@ -173,9 +182,10 @@ export default function BrandTimelineMode({ brand, onSwitchToSlideshow }: BrandT
                 <div className="relative">
                   <div className="absolute inset-0 bg-explorer-teal rounded-lg blur-xl opacity-20" />
                   <img 
-                    src={logoData.url}
+                    src={getDisplayImage()}
                     alt={`${brand.name} current logo`}
                     className="relative w-48 h-48 object-contain bg-explorer-dark-light rounded-lg p-4"
+                    onError={() => setImageError(true)}
                   />
                 </div>
               </div>
