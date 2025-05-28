@@ -59,6 +59,7 @@ function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="brands" element={<AdminBrands />} />
         <Route path="motorcycles" element={<AdminMotorcycleModels />} />
+        <Route path="motorcycle-models" element={<AdminMotorcycleModels />} />
         <Route path="manuals" element={<AdminManuals />} />
         <Route path="glossary" element={<AdminGlossary />} />
         <Route path="riding-skills" element={<AdminRidingSkills />} />

@@ -4,16 +4,16 @@ import { Motorcycle } from "@/types";
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
   return {
     id: rawData.id,
-    make: rawData.make || rawData.brand?.name || "",
+    make: rawData.brands?.name || "Unknown",
     brand_id: rawData.brand_id,
-    model: rawData.model || rawData.name,
-    year: rawData.year || rawData.production_start_year || new Date().getFullYear(),
+    model: rawData.name,
+    year: rawData.production_start_year || new Date().getFullYear(),
     category: rawData.category || rawData.type || "Standard",
     style_tags: [],
     difficulty_level: rawData.difficulty_level || 1,
-    image_url: rawData.image_url || rawData.default_image_url || "",
-    engine_size: rawData.engine_size || rawData.displacement_cc || 0,
-    horsepower: rawData.horsepower || rawData.power_hp || 0,
+    image_url: rawData.default_image_url || "",
+    engine_size: rawData.engine_size || 0,
+    horsepower: rawData.horsepower || 0,
     weight_kg: rawData.weight_kg || 0,
     seat_height_mm: rawData.seat_height_mm || 0,
     abs: rawData.has_abs || false,
@@ -26,15 +26,15 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     summary: rawData.summary || rawData.base_description || "",
     slug: rawData.slug,
     created_at: rawData.created_at,
-    is_placeholder: rawData.is_placeholder || false,
-    migration_status: rawData.migration_status || "migrated",
+    is_placeholder: false,
+    migration_status: "migrated",
     status: rawData.status || rawData.production_status,
-    engine: rawData.engine || `${rawData.engine_size || 0}cc`,
+    engine: rawData.engine_size ? `${rawData.engine_size}cc` : "",
     
     // Compatibility aliases
-    engine_cc: rawData.engine_size || rawData.displacement_cc,
-    displacement_cc: rawData.engine_size || rawData.displacement_cc,
-    horsepower_hp: rawData.horsepower || rawData.power_hp,
+    engine_cc: rawData.engine_size,
+    displacement_cc: rawData.engine_size,
+    horsepower_hp: rawData.horsepower,
   };
 };
 
@@ -51,6 +51,5 @@ export const createPlaceholderMotorcycleData = (motorcycleData: {
     slug: `${motorcycleData.make.toLowerCase()}-${motorcycleData.model.toLowerCase()}-${motorcycleData.year}`.replace(/\s+/g, '-'),
     brand_id: null, // This should be set based on the make
     base_description: `${motorcycleData.make} ${motorcycleData.model} ${motorcycleData.year}`,
-    is_placeholder: true,
   };
 };

@@ -1,16 +1,17 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-const MOTORCYCLE_SELECT_QUERY = `
+const MOTORCYCLE_MODEL_SELECT_QUERY = `
   id,
   brand_id,
-  make,
-  model,
-  year,
-  category,
-  summary,
+  name,
+  type,
+  base_description,
+  production_start_year,
+  production_end_year,
+  production_status,
+  default_image_url,
   slug,
-  image_url,
   engine_size,
   horsepower,
   torque_nm,
@@ -23,21 +24,26 @@ const MOTORCYCLE_SELECT_QUERY = `
   has_abs,
   difficulty_level,
   status,
+  category,
+  summary,
   created_at,
   updated_at,
-  is_placeholder,
-  migration_status
+  brands(
+    id,
+    name,
+    slug
+  )
 `;
 
 export const fetchAllMotorcycles = async () => {
   const { data, error } = await supabase
-    .from('motorcycles')
-    .select(MOTORCYCLE_SELECT_QUERY)
-    .order('model', { ascending: true })
-    .order('year', { ascending: true });
+    .from('motorcycle_models')
+    .select(MOTORCYCLE_MODEL_SELECT_QUERY)
+    .order('name', { ascending: true })
+    .order('production_start_year', { ascending: true });
     
   if (error) {
-    console.error("Error fetching motorcycles:", error);
+    console.error("Error fetching motorcycle models:", error);
     throw error;
   }
   
@@ -46,8 +52,8 @@ export const fetchAllMotorcycles = async () => {
 
 export const fetchMotorcycleBySlug = async (slug: string) => {
   const { data, error } = await supabase
-    .from('motorcycles')
-    .select(MOTORCYCLE_SELECT_QUERY)
+    .from('motorcycle_models')
+    .select(MOTORCYCLE_MODEL_SELECT_QUERY)
     .eq('slug', slug)
     .maybeSingle();
     
@@ -56,8 +62,8 @@ export const fetchMotorcycleBySlug = async (slug: string) => {
 
 export const fetchMotorcycleById = async (id: string) => {
   const { data, error } = await supabase
-    .from('motorcycles')
-    .select(MOTORCYCLE_SELECT_QUERY)
+    .from('motorcycle_models')
+    .select(MOTORCYCLE_MODEL_SELECT_QUERY)
     .eq('id', id)
     .maybeSingle();
     
@@ -68,19 +74,19 @@ export const fetchMotorcyclesByIds = async (ids: string[]) => {
   if (!ids.length) return { data: [], error: null };
   
   const { data, error } = await supabase
-    .from('motorcycles')
-    .select(MOTORCYCLE_SELECT_QUERY)
+    .from('motorcycle_models')
+    .select(MOTORCYCLE_MODEL_SELECT_QUERY)
     .in('id', ids);
     
   return { data: data || [], error };
 };
 
-export const fetchMotorcycleByDetails = async (model: string, year: number) => {
+export const fetchMotorcycleByDetails = async (name: string, year: number) => {
   const { data, error } = await supabase
-    .from('motorcycles')
-    .select(MOTORCYCLE_SELECT_QUERY)
-    .eq('model', model)
-    .eq('year', year)
+    .from('motorcycle_models')
+    .select(MOTORCYCLE_MODEL_SELECT_QUERY)
+    .eq('name', name)
+    .eq('production_start_year', year)
     .maybeSingle();
     
   return { data, error };
