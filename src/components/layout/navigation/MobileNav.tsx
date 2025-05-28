@@ -33,7 +33,7 @@ export function MobileNav() {
     <div className="lg:hidden flex items-center">
       <div className="flex-1 flex justify-end items-center space-x-2">
         <ThemeToggle />
-        <MeasurementToggle className="pr-2" />
+        <MeasurementToggle />
         <CompareButton />
         
         {user ? (
