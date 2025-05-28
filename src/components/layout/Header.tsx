@@ -18,8 +18,7 @@ import { signOut } from '@/services/auth/authenticationService';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  Home, GraduationCap, BookOpen, Settings, LogOut, User,
-  LayoutDashboard, Bike, BookText, ShieldCheck
+  LogOut, User, LayoutDashboard
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -44,27 +43,22 @@ const Header: React.FC = () => {
     {
       href: '/',
       label: 'Home',
-      icon: <Home className="w-4 h-4" />,
     },
     {
       href: '/motorcycles',
       label: 'Motorcycles',
-      icon: <Bike className="w-4 h-4" />,
     },
     {
       href: '/courses',
       label: 'Courses',
-      icon: <GraduationCap className="w-4 h-4" />,
     },
     {
       href: '/manuals',
       label: 'Manuals',
-      icon: <BookText className="w-4 h-4" />,
     },
     {
       href: '/glossary',
       label: 'Glossary',
-      icon: <BookOpen className="w-4 h-4" />,
     },
   ];
   
@@ -73,7 +67,6 @@ const Header: React.FC = () => {
     navigationLinks.push({
       href: '/admin',
       label: 'Admin',
-      icon: <ShieldCheck className="w-4 h-4" />,
     });
   }
 
@@ -86,20 +79,19 @@ const Header: React.FC = () => {
 
         <nav className="flex items-center space-x-4">
           {/* Main navigation links */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-6">
             {navigationLinks.map((link) => (
               <NavLink
                 key={link.href}
                 to={link.href}
                 className={({ isActive }) =>
-                  `flex items-center space-x-1 px-3 py-2 rounded-md hover:bg-secondary ${
+                  `font-bold text-sm px-2 py-1 rounded transition-colors ${
                     isActive ? (link.href === '/admin' ? 'text-accent-teal bg-accent-teal/10' : 'text-accent-teal') : 
-                    (link.href === '/admin' ? 'bg-accent-teal/10 hover:bg-accent-teal/20' : '')
+                    (link.href === '/admin' ? 'text-muted-foreground hover:text-accent-teal hover:bg-accent-teal/10' : 'text-muted-foreground hover:text-foreground')
                   }`
                 }
               >
-                {link.icon}
-                <span>{link.label}</span>
+                {link.label}
               </NavLink>
             ))}
           </div>
@@ -123,12 +115,6 @@ const Header: React.FC = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/">
-                    <Home className="mr-2 h-4 w-4" />
-                    <span>Home</span>
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/profile">
                     <User className="mr-2 h-4 w-4" />
