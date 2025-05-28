@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
 import AdminModelYearDialog from "@/components/admin/models/AdminModelYearDialog";
 import AdminConfigurationDialog from "@/components/admin/models/AdminConfigurationDialog";
 import ModelsTable from "@/components/admin/models/ModelsTable";
-import QuickAdd2024Button from "@/components/admin/models/QuickAdd2024Button";
 
 const AdminMotorcycleModels = () => {
   const { toast } = useToast();
@@ -108,21 +108,18 @@ const AdminMotorcycleModels = () => {
             Manage motorcycle models with years, configurations, and detailed specifications.
           </p>
         </div>
-        <div className="flex gap-2">
-          <QuickAdd2024Button onSuccess={() => refetch()} />
-          <Button 
-            variant="outline"
-            onClick={handleCreateModel}
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Model
-          </Button>
-        </div>
+        <Button 
+          variant="outline"
+          onClick={handleCreateModel}
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Model
+        </Button>
       </div>
 
       {/* Summary Stats */}
       {models && models.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Models</CardTitle>
@@ -153,19 +150,6 @@ const AdminMotorcycleModels = () => {
               </div>
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">2024 Models</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {models.filter(m => 
-                  m.years?.some(y => y.year === 2024)
-                ).length}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       )}
 
@@ -187,13 +171,10 @@ const AdminMotorcycleModels = () => {
               <div className="text-muted-foreground">
                 No motorcycle models found. Start by adding your first model.
               </div>
-              <div className="flex justify-center gap-2">
-                <QuickAdd2024Button onSuccess={() => refetch()} />
-                <Button variant="outline" onClick={handleCreateModel}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Model Manually
-                </Button>
-              </div>
+              <Button variant="outline" onClick={handleCreateModel}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Model
+              </Button>
             </div>
           </CardContent>
         </Card>

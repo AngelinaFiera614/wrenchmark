@@ -763,6 +763,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_model_configurations_year"
+            columns: ["model_year_id"]
+            isOneToOne: false
+            referencedRelation: "model_years"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "model_configurations_brake_system_id_fkey"
             columns: ["brake_system_id"]
             isOneToOne: false
@@ -864,7 +871,21 @@ export type Database = {
             foreignKeyName: "fk_model_years_motorcycle"
             columns: ["motorcycle_id"]
             isOneToOne: false
+            referencedRelation: "legacy_motorcycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_model_years_motorcycle"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
             referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_years_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_motorcycles"
             referencedColumns: ["id"]
           },
           {
@@ -974,6 +995,13 @@ export type Database = {
             foreignKeyName: "fk_motorcycle_images_motorcycle"
             columns: ["motorcycle_id"]
             isOneToOne: false
+            referencedRelation: "legacy_motorcycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_motorcycle_images_motorcycle"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
             referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
           },
@@ -989,6 +1017,13 @@ export type Database = {
             columns: ["model_year_id"]
             isOneToOne: false
             referencedRelation: "model_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_images_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_motorcycles"
             referencedColumns: ["id"]
           },
           {
@@ -1011,10 +1046,17 @@ export type Database = {
         Row: {
           base_description: string | null
           brand_id: string
+          category: string | null
           created_at: string
           default_image_url: string | null
           design_philosophy: string | null
+          difficulty_level: number | null
           discontinuation_reason: string | null
+          engine_size: number | null
+          fuel_capacity_l: number | null
+          ground_clearance_mm: number | null
+          has_abs: boolean | null
+          horsepower: number | null
           id: string
           model_history: string | null
           name: string
@@ -1023,19 +1065,33 @@ export type Database = {
           production_notes: string | null
           production_start_year: number | null
           production_status: string
+          seat_height_mm: number | null
           slug: string
+          status: string | null
           successor_model_id: string | null
+          summary: string | null
           target_market: string | null
+          top_speed_kph: number | null
+          torque_nm: number | null
           type: string
           updated_at: string
+          weight_kg: number | null
+          wheelbase_mm: number | null
         }
         Insert: {
           base_description?: string | null
           brand_id: string
+          category?: string | null
           created_at?: string
           default_image_url?: string | null
           design_philosophy?: string | null
+          difficulty_level?: number | null
           discontinuation_reason?: string | null
+          engine_size?: number | null
+          fuel_capacity_l?: number | null
+          ground_clearance_mm?: number | null
+          has_abs?: boolean | null
+          horsepower?: number | null
           id?: string
           model_history?: string | null
           name: string
@@ -1044,19 +1100,33 @@ export type Database = {
           production_notes?: string | null
           production_start_year?: number | null
           production_status?: string
+          seat_height_mm?: number | null
           slug: string
+          status?: string | null
           successor_model_id?: string | null
+          summary?: string | null
           target_market?: string | null
+          top_speed_kph?: number | null
+          torque_nm?: number | null
           type: string
           updated_at?: string
+          weight_kg?: number | null
+          wheelbase_mm?: number | null
         }
         Update: {
           base_description?: string | null
           brand_id?: string
+          category?: string | null
           created_at?: string
           default_image_url?: string | null
           design_philosophy?: string | null
+          difficulty_level?: number | null
           discontinuation_reason?: string | null
+          engine_size?: number | null
+          fuel_capacity_l?: number | null
+          ground_clearance_mm?: number | null
+          has_abs?: boolean | null
+          horsepower?: number | null
           id?: string
           model_history?: string | null
           name?: string
@@ -1065,11 +1135,18 @@ export type Database = {
           production_notes?: string | null
           production_start_year?: number | null
           production_status?: string
+          seat_height_mm?: number | null
           slug?: string
+          status?: string | null
           successor_model_id?: string | null
+          summary?: string | null
           target_market?: string | null
+          top_speed_kph?: number | null
+          torque_nm?: number | null
           type?: string
           updated_at?: string
+          weight_kg?: number | null
+          wheelbase_mm?: number | null
         }
         Relationships: [
           {
@@ -1090,7 +1167,21 @@ export type Database = {
             foreignKeyName: "motorcycle_models_predecessor_model_id_fkey"
             columns: ["predecessor_model_id"]
             isOneToOne: false
+            referencedRelation: "legacy_motorcycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_models_predecessor_model_id_fkey"
+            columns: ["predecessor_model_id"]
+            isOneToOne: false
             referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_models_successor_model_id_fkey"
+            columns: ["successor_model_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_motorcycles"
             referencedColumns: ["id"]
           },
           {
@@ -1107,6 +1198,7 @@ export type Database = {
           brand_id: string
           category: string | null
           created_at: string
+          deprecated_status: string | null
           difficulty_level: number | null
           engine: string | null
           engine_size: number | null
@@ -1135,6 +1227,7 @@ export type Database = {
           brand_id: string
           category?: string | null
           created_at?: string
+          deprecated_status?: string | null
           difficulty_level?: number | null
           engine?: string | null
           engine_size?: number | null
@@ -1163,6 +1256,7 @@ export type Database = {
           brand_id?: string
           category?: string | null
           created_at?: string
+          deprecated_status?: string | null
           difficulty_level?: number | null
           engine?: string | null
           engine_size?: number | null
@@ -1537,7 +1631,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      legacy_motorcycles: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string | null
+          image_url: string | null
+          make: string | null
+          model_name: string | null
+          slug: string | null
+          status: string | null
+          summary: string | null
+          updated_at: string | null
+          year: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       complete_lesson: {
