@@ -2,8 +2,14 @@
 import { Motorcycle } from "@/types";
 
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
-  // Handle the updated brands relationship structure
+  // Handle the corrected brands relationship structure
   const brandData = rawData.brands || {};
+  
+  console.log("Transforming motorcycle data:", {
+    name: rawData.name,
+    brandName: brandData.name,
+    hasValidBrand: !!brandData.name
+  });
   
   return {
     id: rawData.id,

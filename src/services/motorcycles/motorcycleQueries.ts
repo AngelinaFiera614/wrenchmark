@@ -36,6 +36,7 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
 `;
 
 export const fetchAllMotorcycles = async () => {
+  console.log("Fetching all motorcycles from motorcycle_models table...");
   const { data, error } = await supabase
     .from('motorcycle_models')
     .select(MOTORCYCLE_MODEL_SELECT_QUERY)
@@ -47,6 +48,7 @@ export const fetchAllMotorcycles = async () => {
     throw error;
   }
   
+  console.log(`Successfully fetched ${data?.length || 0} motorcycle models`);
   return data || [];
 };
 
