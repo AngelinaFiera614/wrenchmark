@@ -44,11 +44,11 @@ export default function BlockRenderer({ block }: BlockRendererProps) {
   // Ensure data has the expected structure for each block type
   let blockData = block.data;
   
-  // For text blocks, ensure we have content property
-  if (block.type === 'text' && blockData && typeof blockData === 'object') {
+  // For text blocks, ensure we have content property as string
+  if (block.type === 'text') {
     blockData = {
-      content: blockData.content || '',
-      title: blockData.title,
+      content: String(blockData?.content || ''),
+      title: blockData?.title,
       ...blockData
     };
   }
