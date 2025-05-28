@@ -41,5 +41,17 @@ export default function BlockRenderer({ block }: BlockRendererProps) {
     );
   }
 
-  return <BlockComponent data={block.data} />;
+  // Ensure data has the expected structure for each block type
+  let blockData = block.data;
+  
+  // For text blocks, ensure we have content property
+  if (block.type === 'text' && blockData && typeof blockData === 'object') {
+    blockData = {
+      content: blockData.content || '',
+      title: blockData.title,
+      ...blockData
+    };
+  }
+
+  return <BlockComponent data={blockData} />;
 }
