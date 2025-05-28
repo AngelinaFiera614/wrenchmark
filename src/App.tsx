@@ -18,6 +18,9 @@ import ComparisonPage from './pages/ComparisonPage';
 import ManualsPage from './pages/ManualsPage';
 import GlossaryPage from './pages/GlossaryPage';
 import AdminImages from './pages/admin/AdminImages';
+import BrandsDirectory from './pages/BrandsDirectory';
+import BrandDetail from './pages/BrandDetail';
+import BrandExplorer from './pages/BrandExplorer';
 
 // Import all admin page components
 import {
@@ -83,6 +86,9 @@ function App() {
         <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonDetails />} />
         <Route path="/manuals" element={<ManualsPage />} />
         <Route path="/glossary" element={<GlossaryPage />} />
+        <Route path="/brands" element={<BrandsDirectory />} />
+        <Route path="/brands/:brandId" element={<BrandDetail />} />
+        <Route path="/brand-explorer" element={<BrandExplorer />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

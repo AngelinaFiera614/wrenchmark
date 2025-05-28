@@ -61,6 +61,20 @@ const config = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Brand Explorer dark theme
+        explorer: {
+          dark: "#0a0a0a",
+          "dark-light": "#1a1a1a",
+          card: "rgba(20, 20, 20, 0.8)",
+          teal: "#00D2B4",
+          "teal-hover": "#00b89d",
+          chrome: "#c0c0c0",
+          "chrome-light": "#e8e8e8",
+          "chrome-dark": "#888888",
+          text: "#ffffff",
+          "text-muted": "#a0a0a0",
+          smoke: "radial-gradient(circle at 50% 50%, rgba(0, 210, 180, 0.1) 0%, transparent 70%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -79,13 +93,24 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: '0' },
         },
+        "chrome-flicker": {
+          "0%, 100%": { filter: "brightness(1) contrast(1)" },
+          "50%": { filter: "brightness(1.2) contrast(1.1)" }
+        },
+        "smoke-drift": {
+          "0%": { transform: "translateX(0) translateY(0) rotate(0deg)" },
+          "100%": { transform: "translateX(100px) translateY(-50px) rotate(360deg)" }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "chrome-flicker": "chrome-flicker 2s ease-in-out infinite",
+        "smoke-drift": "smoke-drift 20s linear infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'explorer-smoke': 'radial-gradient(circle at 20% 80%, rgba(0, 210, 180, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(192, 192, 192, 0.05) 0%, transparent 50%)',
       },
     },
   },
