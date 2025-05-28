@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Brand, BrandMilestone, LogoHistoryItem, MediaItem, NotableModel } from "@/types";
 
@@ -29,6 +28,49 @@ export type SupabaseBrand = {
   notable_models?: NotableModel[];
 };
 
+// Helper function to parse milestone data from various formats
+const parseMilestones = (milestones: any): BrandMilestone[] => {
+  if (!milestones) return [];
+  
+  // If it's already a proper array of objects, return it
+  if (Array.isArray(milestones) && milestones.length > 0 && typeof milestones[0] === 'object' && milestones[0].year) {
+    return milestones;
+  }
+  
+  // If it's a string array or malformed data, convert it
+  if (Array.isArray(milestones)) {
+    return milestones.map((item, index) => ({
+      year: 1950 + (index * 10), // Default years
+      description: typeof item === 'string' ? item : item.description || 'Historical event',
+      importance: 'medium' as const
+    }));
+  }
+  
+  return [];
+};
+
+// Helper function to parse notable models data from various formats
+const parseNotableModels = (notableModels: any): NotableModel[] => {
+  if (!notableModels) return [];
+  
+  // If it's already a proper array of objects, return it
+  if (Array.isArray(notableModels) && notableModels.length > 0 && typeof notableModels[0] === 'object' && notableModels[0].name) {
+    return notableModels;
+  }
+  
+  // If it's a string array or malformed data, convert it
+  if (Array.isArray(notableModels)) {
+    return notableModels.map((item) => ({
+      name: typeof item === 'string' ? item : item.name || 'Classic Model',
+      years: '1970-present',
+      category: 'Heritage',
+      description: typeof item === 'string' ? `Classic ${item} model` : item.description || 'Iconic motorcycle'
+    }));
+  }
+  
+  return [];
+};
+
 // Transform Supabase brand to our app's brand type
 const transformBrand = (brand: SupabaseBrand): Brand => {
   return {
@@ -49,11 +91,11 @@ const transformBrand = (brand: SupabaseBrand): Brand => {
     categories: brand.categories,
     notes: brand.notes,
     brand_history: brand.brand_history,
-    milestones: brand.milestones,
+    milestones: parseMilestones(brand.milestones),
     manufacturing_facilities: brand.manufacturing_facilities,
     logo_history: brand.logo_history,
     media_gallery: brand.media_gallery,
-    notable_models: brand.notable_models,
+    notable_models: parseNotableModels(brand.notable_models),
     // Add compatibility aliases
     logo: brand.logo_url,
     knownFor: brand.known_for
