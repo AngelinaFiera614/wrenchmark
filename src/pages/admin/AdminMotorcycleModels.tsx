@@ -103,7 +103,7 @@ const AdminMotorcycleModels = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold">Motorcycle Models</h1>
+          <h1 className="text-3xl font-bold">Motorcycles</h1>
           <p className="text-muted-foreground mt-1">
             Manage motorcycle models with years, configurations, and detailed specifications.
           </p>

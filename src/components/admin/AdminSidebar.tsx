@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -5,7 +6,6 @@ import {
   LayoutDashboard,
   Building2,
   Bike,
-  Wrench,
   FileText,
   BookOpen,
   Target,
@@ -58,11 +58,8 @@ const AdminSidebar = () => {
           <SidebarItem to="/admin/brands" icon={<Building2 className="h-4 w-4" />}>
             Brands
           </SidebarItem>
-          <SidebarItem to="/admin/motorcycle-models" icon={<Bike className="h-4 w-4" />}>
-            Motorcycle Models
-          </SidebarItem>
-          <SidebarItem to="/admin/motorcycles" icon={<Wrench className="h-4 w-4" />}>
-            Legacy Motorcycles
+          <SidebarItem to="/admin/motorcycles" icon={<Bike className="h-4 w-4" />}>
+            Motorcycles
           </SidebarItem>
           <SidebarItem to="/admin/manuals" icon={<FileText className="h-4 w-4" />}>
             Manuals

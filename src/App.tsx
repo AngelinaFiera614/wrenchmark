@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth';
@@ -23,14 +24,15 @@ import {
   AdminDashboard,
   AdminCourses,
   AdminLessons,
-  AdminMotorcycles,
   AdminBrands,
   AdminRidingSkills,
   AdminManuals,
   AdminGlossary,
-  AdminStateRules,
-  AdminMotorcycleModels
+  AdminStateRules
 } from './pages/admin';
+
+// Import and rename the motorcycle models component to be the main motorcycles admin
+import AdminMotorcycleModels from './pages/admin/AdminMotorcycleModels';
 
 function App() {
   const { isLoading, isAdmin } = useAuth();
@@ -56,8 +58,7 @@ function App() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
         <Route path="brands" element={<AdminBrands />} />
-        <Route path="motorcycle-models" element={<AdminMotorcycleModels />} />
-        <Route path="motorcycles" element={<AdminMotorcycles />} />
+        <Route path="motorcycles" element={<AdminMotorcycleModels />} />
         <Route path="manuals" element={<AdminManuals />} />
         <Route path="glossary" element={<AdminGlossary />} />
         <Route path="riding-skills" element={<AdminRidingSkills />} />
