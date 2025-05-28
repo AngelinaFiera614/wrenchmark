@@ -10,16 +10,54 @@ export interface Course {
   updated_at: string;
 }
 
+export interface ContentBlock {
+  id: string;
+  type: string;
+  order: number;
+  data: Record<string, any>;
+  title?: string;
+}
+
 export interface Lesson {
   id: string;
   course_id: string;
   title: string;
   content: string | null;
+  content_blocks?: ContentBlock[];
   slug: string;
   order: number;
   published: boolean;
+  estimated_time_minutes?: number;
+  difficulty_level?: number;
+  skill_tags?: string[];
+  glossary_terms?: string[];
   created_at: string;
   updated_at: string;
+}
+
+export interface ContentBlockType {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  schema: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MediaLibraryItem {
+  id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size_bytes: number | null;
+  mime_type: string | null;
+  alt_text: string | null;
+  caption: string | null;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
 }
 
 export interface LessonQuiz {

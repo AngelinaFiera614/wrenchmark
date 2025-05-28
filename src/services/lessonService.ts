@@ -92,6 +92,10 @@ export async function createLesson(lesson: Partial<Lesson>): Promise<Lesson> {
       course_id: lesson.course_id,
       order: lesson.order,
       content: lesson.content || null,
+      content_blocks: lesson.content_blocks || [],
+      estimated_time_minutes: lesson.estimated_time_minutes,
+      difficulty_level: lesson.difficulty_level,
+      skill_tags: lesson.skill_tags || [],
       published: lesson.published !== undefined ? lesson.published : false
     })
     .select()

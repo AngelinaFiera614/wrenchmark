@@ -245,6 +245,36 @@ export type Database = {
           },
         ]
       }
+      content_block_types: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          schema: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          schema?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          schema?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           created_at: string
@@ -514,12 +544,16 @@ export type Database = {
       lessons: {
         Row: {
           content: string | null
+          content_blocks: Json | null
           course_id: string
           created_at: string
+          difficulty_level: number | null
+          estimated_time_minutes: number | null
           glossary_terms: string[] | null
           id: string
           order: number
           published: boolean
+          skill_tags: string[] | null
           slug: string
           state_code: string | null
           title: string
@@ -527,12 +561,16 @@ export type Database = {
         }
         Insert: {
           content?: string | null
+          content_blocks?: Json | null
           course_id: string
           created_at?: string
+          difficulty_level?: number | null
+          estimated_time_minutes?: number | null
           glossary_terms?: string[] | null
           id?: string
           order: number
           published?: boolean
+          skill_tags?: string[] | null
           slug: string
           state_code?: string | null
           title: string
@@ -540,12 +578,16 @@ export type Database = {
         }
         Update: {
           content?: string | null
+          content_blocks?: Json | null
           course_id?: string
           created_at?: string
+          difficulty_level?: number | null
+          estimated_time_minutes?: number | null
           glossary_terms?: string[] | null
           id?: string
           order?: number
           published?: boolean
+          skill_tags?: string[] | null
           slug?: string
           state_code?: string | null
           title?: string
@@ -687,6 +729,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      media_library: {
+        Row: {
+          alt_text: string | null
+          caption: string | null
+          created_at: string | null
+          created_by: string | null
+          file_name: string
+          file_size_bytes: number | null
+          file_type: string
+          file_url: string
+          id: string
+          mime_type: string | null
+          tags: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          caption?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          file_name: string
+          file_size_bytes?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          caption?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          file_name?: string
+          file_size_bytes?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       model_configurations: {
         Row: {
