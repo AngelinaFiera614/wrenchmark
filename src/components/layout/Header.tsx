@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useProfile } from '@/context/profile/ProfileProvider';
-import { useAdminVerification } from '@/hooks/auth/useAdminVerification';
 import { signOut } from '@/services/auth/authenticationService';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -22,10 +21,13 @@ import {
 } from 'lucide-react';
 
 const Header: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { profile } = useProfile();
-  const { isAdmin } = useAdminVerification();
   const navigate = useNavigate();
+
+  // Add some debugging to see what's happening
+  console.log('[Header] Current user:', user?.email);
+  console.log('[Header] Is admin:', isAdmin);
 
   const handleSignOut = async () => {
     try {
@@ -64,6 +66,7 @@ const Header: React.FC = () => {
   
   // Add admin link directly to the navigationLinks array if the user is an admin
   if (isAdmin) {
+    console.log('[Header] Adding admin link to navigation');
     navigationLinks.push({
       href: '/admin',
       label: 'Admin',
