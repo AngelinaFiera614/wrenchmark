@@ -41,11 +41,11 @@ export default function BlockRenderer({ block }: BlockRendererProps) {
     );
   }
 
-  // Ensure data has the expected structure for each block type
+  // Prepare data based on the component that will be used
   let blockData = block.data;
   
-  // For text blocks or when falling back to TextBlock, ensure we have content property as string
-  if (block.type === 'text' || BlockComponent === TextBlock) {
+  // If we're using TextBlock (either directly or as fallback), ensure content property exists
+  if (BlockComponent === TextBlock) {
     blockData = {
       content: String(blockData?.content || ''),
       title: blockData?.title,

@@ -721,13 +721,6 @@ export type Database = {
             referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "manuals_model_id_fkey"
-            columns: ["model_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       media_library: {
@@ -972,24 +965,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_model_years_motorcycle"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "model_years_motorcycle_id_fkey"
             columns: ["motorcycle_id"]
             isOneToOne: false
             referencedRelation: "motorcycle_models"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "model_years_motorcycle_id_fkey"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycles"
             referencedColumns: ["id"]
           },
         ]
@@ -1096,13 +1075,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_motorcycle_images_motorcycle"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "motorcycle_images_configuration_id_fkey"
             columns: ["configuration_id"]
             isOneToOne: false
@@ -1121,13 +1093,6 @@ export type Database = {
             columns: ["motorcycle_id"]
             isOneToOne: false
             referencedRelation: "motorcycle_models"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motorcycle_images_motorcycle_id_fkey"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycles"
             referencedColumns: ["id"]
           },
           {
@@ -1268,24 +1233,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "motorcycle_models_predecessor_model_id_fkey"
-            columns: ["predecessor_model_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "motorcycle_models_successor_model_id_fkey"
             columns: ["successor_model_id"]
             isOneToOne: false
             referencedRelation: "motorcycle_models"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motorcycle_models_successor_model_id_fkey"
-            columns: ["successor_model_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycles"
             referencedColumns: ["id"]
           },
         ]
@@ -1366,13 +1317,6 @@ export type Database = {
             columns: ["model_id"]
             isOneToOne: false
             referencedRelation: "motorcycle_models"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "repair_skills_model_id_fkey"
-            columns: ["model_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycles"
             referencedColumns: ["id"]
           },
         ]
@@ -1640,51 +1584,7 @@ export type Database = {
       }
     }
     Views: {
-      motorcycles: {
-        Row: {
-          brand_id: string | null
-          category: string | null
-          created_at: string | null
-          difficulty_level: number | null
-          engine_size: number | null
-          fuel_capacity_l: number | null
-          ground_clearance_mm: number | null
-          has_abs: boolean | null
-          horsepower: number | null
-          id: string | null
-          image_url: string | null
-          is_placeholder: boolean | null
-          make: string | null
-          migration_status: string | null
-          model: string | null
-          seat_height_mm: number | null
-          slug: string | null
-          status: string | null
-          summary: string | null
-          top_speed_kph: number | null
-          torque_nm: number | null
-          updated_at: string | null
-          weight_kg: number | null
-          wheelbase_mm: number | null
-          year: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_motorcycle_models_brand"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motorcycle_models_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       complete_lesson: {
@@ -1775,7 +1675,7 @@ export type Database = {
         Returns: number
       }
       migrate_legacy_motorcycle: {
-        Args: { legacy_id: string }
+        Args: Record<PropertyKey, never> | { legacy_id: string }
         Returns: boolean
       }
     }
