@@ -23,6 +23,13 @@ interface BrandStatusFieldProps {
 }
 
 const BrandStatusField = ({ form }: BrandStatusFieldProps) => {
+  // Define valid status options with non-empty values
+  const statusOptions = [
+    { value: "active", label: "Active" },
+    { value: "defunct", label: "Defunct" },
+    { value: "revived", label: "Revived" }
+  ];
+
   return (
     <FormField
       control={form.control}
@@ -40,9 +47,11 @@ const BrandStatusField = ({ form }: BrandStatusFieldProps) => {
                 <SelectValue placeholder="Select brand status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="defunct">Defunct</SelectItem>
-                <SelectItem value="revived">Revived</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </FormControl>

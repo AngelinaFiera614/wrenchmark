@@ -45,6 +45,9 @@ const StateSelector: React.FC<StateSelectorProps> = ({
     );
   }
 
+  // Filter out any states with empty or invalid state codes
+  const validStates = states.filter(state => state.state_code && state.state_code.trim() !== '');
+
   return (
     <div>
       <Select value={selectedState} onValueChange={onStateChange}>
@@ -57,7 +60,7 @@ const StateSelector: React.FC<StateSelectorProps> = ({
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Select your state</SelectLabel>
-            {states.map((state) => (
+            {validStates.map((state) => (
               <SelectItem key={state.state_code} value={state.state_code}>
                 {state.state_name}
               </SelectItem>

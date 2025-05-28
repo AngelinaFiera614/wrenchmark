@@ -23,6 +23,14 @@ interface BrandTypeFieldProps {
 }
 
 const BrandTypeField = ({ form }: BrandTypeFieldProps) => {
+  // Define valid brand type options with non-empty values
+  const brandTypeOptions = [
+    { value: "mass", label: "Mass Production" },
+    { value: "boutique", label: "Boutique" },
+    { value: "revived", label: "Revived" },
+    { value: "oem", label: "OEM" }
+  ];
+
   return (
     <FormField
       control={form.control}
@@ -40,10 +48,11 @@ const BrandTypeField = ({ form }: BrandTypeFieldProps) => {
                 <SelectValue placeholder="Select brand type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="mass">Mass Production</SelectItem>
-                <SelectItem value="boutique">Boutique</SelectItem>
-                <SelectItem value="revived">Revived</SelectItem>
-                <SelectItem value="oem">OEM</SelectItem>
+                {brandTypeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </FormControl>

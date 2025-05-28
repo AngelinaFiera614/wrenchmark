@@ -10,6 +10,9 @@ const ManualTypeField: React.FC<SharedManualTypeFieldProps> = ({
   name = "manual_type", // Default field name
   disabled
 }) => {
+  // Filter out any entries with empty values to prevent the Radix UI error
+  const validManualTypes = manualTypes.filter(type => type.value && type.value.trim() !== '');
+
   return (
     <FormField
       control={control}
@@ -29,7 +32,7 @@ const ManualTypeField: React.FC<SharedManualTypeFieldProps> = ({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {manualTypes.map((type) => (
+              {validManualTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}
                 </SelectItem>
