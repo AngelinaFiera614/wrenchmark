@@ -2,16 +2,38 @@
 import { supabase } from "@/integrations/supabase/client";
 
 const MOTORCYCLE_SELECT_QUERY = `
-  *,
-  brand:brand_id(name)
+  id,
+  brand_id,
+  make,
+  model,
+  year,
+  category,
+  summary,
+  slug,
+  image_url,
+  engine_size,
+  horsepower,
+  torque_nm,
+  weight_kg,
+  seat_height_mm,
+  wheelbase_mm,
+  ground_clearance_mm,
+  fuel_capacity_l,
+  top_speed_kph,
+  has_abs,
+  difficulty_level,
+  status,
+  created_at,
+  updated_at,
+  is_placeholder,
+  migration_status
 `;
 
 export const fetchAllMotorcycles = async () => {
   const { data, error } = await supabase
     .from('motorcycles')
     .select(MOTORCYCLE_SELECT_QUERY)
-    .eq('migration_status', 'migrated')
-    .order('model_name', { ascending: true })
+    .order('model', { ascending: true })
     .order('year', { ascending: true });
     
   if (error) {
@@ -27,7 +49,6 @@ export const fetchMotorcycleBySlug = async (slug: string) => {
     .from('motorcycles')
     .select(MOTORCYCLE_SELECT_QUERY)
     .eq('slug', slug)
-    .eq('migration_status', 'migrated')
     .maybeSingle();
     
   return { data, error };
@@ -49,8 +70,7 @@ export const fetchMotorcyclesByIds = async (ids: string[]) => {
   const { data, error } = await supabase
     .from('motorcycles')
     .select(MOTORCYCLE_SELECT_QUERY)
-    .in('id', ids)
-    .eq('migration_status', 'migrated');
+    .in('id', ids);
     
   return { data: data || [], error };
 };
@@ -59,9 +79,8 @@ export const fetchMotorcycleByDetails = async (model: string, year: number) => {
   const { data, error } = await supabase
     .from('motorcycles')
     .select(MOTORCYCLE_SELECT_QUERY)
-    .eq('model_name', model)
+    .eq('model', model)
     .eq('year', year)
-    .eq('migration_status', 'migrated')
     .maybeSingle();
     
   return { data, error };
@@ -69,7 +88,7 @@ export const fetchMotorcycleByDetails = async (model: string, year: number) => {
 
 export const insertPlaceholderMotorcycle = async (motorcycleInsertData: any) => {
   const { data, error } = await supabase
-    .from('motorcycles')
+    .from('motorcycle_models')
     .insert([motorcycleInsertData])
     .select()
     .single();
