@@ -46,9 +46,9 @@ export default function BrandsDirectory() {
     return <BrandExplorer onBackToDirectory={() => setViewMode('directory')} />;
   }
 
-  // Determine button variants based on current mode
-  const directoryVariant = viewMode === 'directory' ? 'default' as const : 'outline' as const;
-  const explorerVariant = viewMode === 'explorer' ? 'default' as const : 'outline' as const;
+  // Helper functions to determine button variants
+  const isDirectoryMode = viewMode === 'directory';
+  const isExplorerMode = viewMode === 'explorer';
   
   return (
     <main className="flex-1 container px-4 md:px-6 py-8">
@@ -62,7 +62,7 @@ export default function BrandsDirectory() {
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setViewMode('directory')}
-              variant={directoryVariant}
+              variant={isDirectoryMode ? 'default' : 'outline'}
               size="sm"
               className="flex items-center gap-2"
             >
@@ -71,7 +71,7 @@ export default function BrandsDirectory() {
             </Button>
             <Button
               onClick={() => setViewMode('explorer')}
-              variant={explorerVariant}
+              variant={isExplorerMode ? 'default' : 'outline'}
               size="sm"
               className="flex items-center gap-2 bg-accent-teal/10 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/20"
             >
