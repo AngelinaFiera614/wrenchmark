@@ -1,6 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Motorcycle } from "@/types";
+import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/motorcycleQueries";
+import { transformMotorcycleData, createPlaceholderMotorcycleData, createDraftMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
 
 export const publishMotorcycle = async (motorcycleId: string): Promise<boolean> => {
   try {
@@ -119,5 +121,210 @@ export const deleteMotorcycle = async (motorcycleId: string): Promise<boolean> =
   } catch (error) {
     console.error("Failed to delete motorcycle:", error);
     return false;
+  }
+};
+
+// Add back the missing exported functions that other files depend on
+
+export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
+  try {
+    console.log("Fetching all motorcycles");
+    
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(`
+        *,
+        brands (
+          id,
+          name,
+          slug
+        )
+      `)
+      .eq('is_draft', false)
+      .order('name');
+
+    if (error) {
+      console.error("Error fetching motorcycles:", error);
+      throw error;
+    }
+
+    console.log("Raw motorcycle data:", data);
+    
+    // Transform the data to match the Motorcycle interface
+    const transformedData = data.map(transformMotorcycleData);
+    
+    console.log("Transformed motorcycle data:", transformedData);
+    return transformedData;
+  } catch (error) {
+    console.error("Failed to fetch motorcycles:", error);
+    throw error;
+  }
+};
+
+export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | null> => {
+  try {
+    console.log("Fetching motorcycle by slug:", slug);
+    
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(`
+        *,
+        brands (
+          id,
+          name,
+          slug
+        )
+      `)
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        console.log("No motorcycle found with slug:", slug);
+        return null;
+      }
+      console.error("Error fetching motorcycle by slug:", error);
+      throw error;
+    }
+
+    console.log("Raw motorcycle data by slug:", data);
+    
+    // Transform the data to match the Motorcycle interface
+    const transformedData = transformMotorcycleData(data);
+    
+    console.log("Transformed motorcycle data by slug:", transformedData);
+    return transformedData;
+  } catch (error) {
+    console.error("Failed to fetch motorcycle by slug:", error);
+    throw error;
+  }
+};
+
+export const findMotorcycleByDetails = async (make: string, model: string, year: number): Promise<Motorcycle | null> => {
+  try {
+    console.log("Finding motorcycle by details:", { make, model, year });
+    
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(`
+        *,
+        brands (
+          id,
+          name,
+          slug
+        )
+      `)
+      .eq('name', model)
+      .eq('production_start_year', year)
+      .eq('brands.name', make)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        console.log("No motorcycle found with details:", { make, model, year });
+        return null;
+      }
+      console.error("Error finding motorcycle by details:", error);
+      throw error;
+    }
+
+    console.log("Found motorcycle by details:", data);
+    
+    // Transform the data to match the Motorcycle interface
+    const transformedData = transformMotorcycleData(data);
+    
+    console.log("Transformed motorcycle by details:", transformedData);
+    return transformedData;
+  } catch (error) {
+    console.error("Failed to find motorcycle by details:", error);
+    throw error;
+  }
+};
+
+export const createPlaceholderMotorcycle = async (motorcycleData: {
+  make: string;
+  model: string;
+  year: number;
+  isDraft?: boolean;
+}): Promise<Motorcycle> => {
+  try {
+    console.log("Creating placeholder motorcycle:", motorcycleData);
+    
+    // First, find or get the brand ID
+    const { data: brandData, error: brandError } = await supabase
+      .from('brands')
+      .select('id')
+      .eq('name', motorcycleData.make)
+      .single();
+
+    if (brandError && brandError.code !== 'PGRST116') {
+      console.error("Error finding brand:", brandError);
+      throw brandError;
+    }
+
+    let brandId = brandData?.id;
+    
+    // If brand doesn't exist, create it
+    if (!brandId) {
+      console.log("Creating new brand:", motorcycleData.make);
+      const { data: newBrand, error: createBrandError } = await supabase
+        .from('brands')
+        .insert({
+          name: motorcycleData.make,
+          slug: motorcycleData.make.toLowerCase().replace(/\s+/g, '-'),
+        })
+        .select('id')
+        .single();
+        
+      if (createBrandError) {
+        console.error("Error creating brand:", createBrandError);
+        throw createBrandError;
+      }
+      
+      brandId = newBrand.id;
+    }
+
+    // Create the placeholder motorcycle data
+    const placeholderData = createPlaceholderMotorcycleData({
+      ...motorcycleData,
+      isDraft: motorcycleData.isDraft || false,
+    });
+
+    // Add the brand_id to the data
+    const motorcycleDataWithBrand = {
+      ...placeholderData,
+      brand_id: brandId,
+    };
+
+    console.log("Creating motorcycle with data:", motorcycleDataWithBrand);
+    
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .insert(motorcycleDataWithBrand)
+      .select(`
+        *,
+        brands (
+          id,
+          name,
+          slug
+        )
+      `)
+      .single();
+
+    if (error) {
+      console.error("Error creating placeholder motorcycle:", error);
+      throw error;
+    }
+
+    console.log("Created placeholder motorcycle:", data);
+    
+    // Transform the data to match the Motorcycle interface
+    const transformedData = transformMotorcycleData(data);
+    
+    console.log("Transformed placeholder motorcycle:", transformedData);
+    return transformedData;
+  } catch (error) {
+    console.error("Failed to create placeholder motorcycle:", error);
+    throw error;
   }
 };
