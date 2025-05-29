@@ -41,21 +41,29 @@ export function useMotorcycleFiltering(
         return false;
       }
 
-      // Engine size filtering logic
+      // Improved engine size filtering logic
       const engineSize = motorcycle.engine_size || motorcycle.engine_cc || 0;
       const hasEngineData = engineSize > 0;
+      
+      // Check if user has actually changed the engine filter from defaults
       const isEngineFilterActive = filters.engineSizeRange[0] > 0 || filters.engineSizeRange[1] < 2000;
       
+      // Only apply engine filtering if the user has specifically set an engine filter
       if (isEngineFilterActive) {
         if (hasEngineData) {
+          // Apply normal filtering for motorcycles with engine data
           if (engineSize < filters.engineSizeRange[0] || engineSize > filters.engineSizeRange[1]) {
             console.log(`❌ Engine size filter failed: ${engineSize} not in range [${filters.engineSizeRange[0]}, ${filters.engineSizeRange[1]}]`);
             return false;
           }
         } else {
+          // If engine filter is active but motorcycle has no engine data, exclude it
           console.log(`❌ Engine filter active but motorcycle has no engine data`);
           return false;
         }
+      } else {
+        // If no engine filter is set, allow all motorcycles regardless of engine data
+        console.log(`✅ Engine filter not active, allowing motorcycle with or without engine data`);
       }
 
       if (motorcycle.difficulty_level > filters.difficultyLevel) {
@@ -63,7 +71,7 @@ export function useMotorcycleFiltering(
         return false;
       }
 
-      // Weight filtering
+      // Weight filtering - only apply if motorcycle has weight data
       if (motorcycle.weight_kg && motorcycle.weight_kg > 0) {
         if (motorcycle.weight_kg < filters.weightRange[0] || motorcycle.weight_kg > filters.weightRange[1]) {
           console.log(`❌ Weight filter failed: ${motorcycle.weight_kg} not in range [${filters.weightRange[0]}, ${filters.weightRange[1]}]`);
@@ -71,7 +79,7 @@ export function useMotorcycleFiltering(
         }
       }
 
-      // Seat height filtering
+      // Seat height filtering - only apply if motorcycle has seat height data
       if (motorcycle.seat_height_mm && motorcycle.seat_height_mm > 0) {
         if (motorcycle.seat_height_mm < filters.seatHeightRange[0] || motorcycle.seat_height_mm > filters.seatHeightRange[1]) {
           console.log(`❌ Seat height filter failed: ${motorcycle.seat_height_mm} not in range [${filters.seatHeightRange[0]}, ${filters.seatHeightRange[1]}]`);
