@@ -11,7 +11,8 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     hasValidBrand: !!brandData.name,
     engineSize: rawData.engine_size,
     horsepower: rawData.horsepower,
-    hasEngineData: !!(rawData.engine_size || rawData.horsepower)
+    hasEngineData: !!(rawData.engine_size || rawData.horsepower),
+    rawDataKeys: Object.keys(rawData)
   });
   
   // Improved engine size handling - preserve null values for better filtering

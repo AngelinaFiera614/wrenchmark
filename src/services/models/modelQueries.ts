@@ -28,7 +28,7 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
   summary,
   created_at,
   updated_at,
-  brands!motorcycle_models_brand_id_fkey(
+  brands:brand_id(
     id,
     name,
     slug
@@ -74,6 +74,7 @@ export const fetchAllMotorcycleModels = async () => {
     }
     
     console.log(`Successfully fetched ${data?.length || 0} motorcycle models for admin`);
+    console.log("Sample admin motorcycle data:", data?.[0]);
     return data || [];
   } catch (error) {
     console.error("Error in fetchAllMotorcycleModels:", error);

@@ -1,4 +1,3 @@
-
 import { Motorcycle } from "@/types";
 import { 
   fetchAllMotorcycles,
@@ -15,10 +14,22 @@ import {
 
 export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
   try {
+    console.log("Service: Starting getAllMotorcycles...");
     const data = await fetchAllMotorcycles();
-    return data.map(transformMotorcycleData);
+    console.log("Service: Raw data received:", data?.length, "items");
+    
+    if (!data || data.length === 0) {
+      console.warn("Service: No motorcycle data received from database");
+      return [];
+    }
+    
+    const transformedData = data.map(transformMotorcycleData);
+    console.log("Service: Transformed data:", transformedData?.length, "motorcycles");
+    console.log("Service: Sample transformed motorcycle:", transformedData[0]);
+    
+    return transformedData;
   } catch (error) {
-    console.error("Error in getAllMotorcycles:", error);
+    console.error("Service: Error in getAllMotorcycles:", error);
     return [];
   }
 };
