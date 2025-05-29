@@ -19,13 +19,17 @@ const AdminDashboard = () => {
       try {
         const [
           motorcyclesCount,
+          publishedMotorcyclesCount,
+          draftMotorcyclesCount,
           brandsCount,
           repairSkillsCount,
           manualsCount,
           ridingSkillsCount,
           profilesCount,
         ] = await Promise.all([
-          supabase.from("motorcycles").select("*", { count: "exact", head: true }),
+          supabase.from("motorcycle_models").select("*", { count: "exact", head: true }),
+          supabase.from("motorcycle_models").select("*", { count: "exact", head: true }).eq("is_draft", false),
+          supabase.from("motorcycle_models").select("*", { count: "exact", head: true }).eq("is_draft", true),
           supabase.from("brands").select("*", { count: "exact", head: true }),
           supabase.from("repair_skills").select("*", { count: "exact", head: true }),
           supabase.from("manuals").select("*", { count: "exact", head: true }),
@@ -37,6 +41,8 @@ const AdminDashboard = () => {
         
         return {
           motorcycles: motorcyclesCount.count || 0,
+          publishedMotorcycles: publishedMotorcyclesCount.count || 0,
+          draftMotorcycles: draftMotorcyclesCount.count || 0,
           brands: brandsCount.count || 0,
           repairSkills: repairSkillsCount.count || 0,
           manuals: manualsCount.count || 0,
@@ -70,6 +76,7 @@ const AdminDashboard = () => {
       icon: <Bike className="h-8 w-8 text-accent-teal" />,
       count: counts?.motorcycles || 0,
       path: "/admin/motorcycles",
+      subtitle: `${counts?.publishedMotorcycles || 0} published, ${counts?.draftMotorcycles || 0} drafts`,
     },
     {
       title: "Brands",
@@ -139,7 +146,7 @@ const AdminDashboard = () => {
                   {card.count}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Total {card.title.toLowerCase()} in database
+                  {card.subtitle || `Total ${card.title.toLowerCase()} in database`}
                 </p>
               </CardContent>
               <CardFooter>
