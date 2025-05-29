@@ -31,7 +31,7 @@ const BrandsMain = () => {
     handleDeleteConfirm,
     handleDialogClose,
     handleFormClose,
-    handleFormSubmit,
+    handleFormSuccess,
   } = useAdminBrands();
 
   return (
@@ -46,9 +46,8 @@ const BrandsMain = () => {
         {isInlineFormVisible ? (
           <InlineBrandForm
             brand={editBrand}
-            loading={isSubmitting}
-            onSubmit={handleFormSubmit}
             onCancel={handleFormClose}
+            onSuccess={handleFormSuccess}
           />
         ) : isLoading ? (
           <BrandsLoading />

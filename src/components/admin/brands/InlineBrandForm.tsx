@@ -5,15 +5,21 @@ import { ArrowLeft } from "lucide-react";
 import BrandForm from "./BrandForm";
 import { Brand } from "@/types";
 import { BrandFormValues } from "./BrandFormSchema";
+import { useAdminBrandSubmit } from "./hooks/useAdminBrandSubmit";
 
 interface InlineBrandFormProps {
   brand: Brand | null;
-  loading: boolean;
-  onSubmit: (values: BrandFormValues) => Promise<void>;
   onCancel: () => void;
+  onSuccess: () => void;
 }
 
-const InlineBrandForm = ({ brand, loading, onSubmit, onCancel }: InlineBrandFormProps) => {
+const InlineBrandForm = ({ brand, onCancel, onSuccess }: InlineBrandFormProps) => {
+  const { loading, handleSubmit } = useAdminBrandSubmit();
+
+  const handleFormSubmit = async (values: BrandFormValues) => {
+    await handleSubmit(values, brand, onSuccess);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center">
@@ -35,7 +41,7 @@ const InlineBrandForm = ({ brand, loading, onSubmit, onCancel }: InlineBrandForm
         <BrandForm
           brand={brand}
           loading={loading}
-          onSubmit={onSubmit}
+          onSubmit={handleFormSubmit}
           onCancel={onCancel}
         />
       </div>

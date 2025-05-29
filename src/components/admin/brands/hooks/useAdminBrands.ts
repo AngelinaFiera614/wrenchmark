@@ -105,50 +105,12 @@ export function useAdminBrands() {
     setEditBrand(null);
   };
 
-  const handleFormSubmit = async (values: any) => {
-    setIsSubmitting(true);
-
-    try {
-      if (editBrand) {
-        const { error } = await supabase
-          .from('brands')
-          .update(values)
-          .eq('id', editBrand.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Brand updated",
-          description: `${values.name} has been updated successfully.`,
-        });
-      } else {
-        const { error } = await supabase
-          .from('brands')
-          .insert(values);
-
-        if (error) throw error;
-
-        toast({
-          title: "Brand created",
-          description: `${values.name} has been added successfully.`,
-        });
-      }
-
-      queryClient.invalidateQueries({
-        queryKey: ["admin-brands"],
-      });
-
-      setIsInlineFormVisible(false);
-      setEditBrand(null);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to save brand.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleFormSuccess = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["admin-brands"],
+    });
+    setIsInlineFormVisible(false);
+    setEditBrand(null);
   };
 
   const handleSort = (field: string) => {
@@ -182,6 +144,6 @@ export function useAdminBrands() {
     handleDeleteConfirm,
     handleDialogClose,
     handleFormClose,
-    handleFormSubmit,
+    handleFormSuccess,
   };
 }

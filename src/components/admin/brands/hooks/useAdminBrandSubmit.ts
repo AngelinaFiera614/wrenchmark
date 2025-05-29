@@ -26,6 +26,9 @@ export function useAdminBrandSubmit() {
     brand: Brand | null,
     onSuccess: () => void
   ) => {
+    console.log("Starting brand submission with values:", values);
+    console.log("Editing existing brand:", brand ? brand.name : "Creating new brand");
+    
     setLoading(true);
 
     // Create a timeout to detect if the save operation is taking too long
@@ -51,6 +54,7 @@ export function useAdminBrandSubmit() {
       
       // Clean and prepare data for database
       const brandData = prepareDataForSubmission(values);
+      console.log("Prepared brand data for submission:", brandData);
       
       let response;
       
@@ -62,11 +66,14 @@ export function useAdminBrandSubmit() {
         response = await supabase
           .from('brands')
           .update(brandData)
-          .eq('id', brand.id);
+          .eq('id', brand.id)
+          .select();
           
         console.log(`Update operation took ${Date.now() - startTime}ms`);
+        console.log("Update response:", response);
         
         if (response.error) {
+          console.error("Update failed with error:", response.error);
           throw response.error;
         }
         
@@ -81,11 +88,14 @@ export function useAdminBrandSubmit() {
         
         response = await supabase
           .from('brands')
-          .insert([brandData]);
+          .insert([brandData])
+          .select();
           
         console.log(`Insert operation took ${Date.now() - startTime}ms`);
+        console.log("Insert response:", response);
         
         if (response.error) {
+          console.error("Insert failed with error:", response.error);
           throw response.error;
         }
         
@@ -100,6 +110,8 @@ export function useAdminBrandSubmit() {
         clearTimeout(saveTimeout);
         setSaveTimeout(null);
       }
+      
+      console.log("Brand operation completed successfully");
       
       // Trigger success callback
       onSuccess();
@@ -122,12 +134,12 @@ export function useAdminBrandSubmit() {
 
   // Helper function to prepare data for submission
   const prepareDataForSubmission = (values: BrandFormValues) => {
-    return {
+    const preparedData = {
       name: values.name,
       country: values.country || null,
       founded: values.founded || null,
       logo_url: values.logo_url || null,
-      known_for: values.known_for || [],
+      known_for: Array.isArray(values.known_for) ? values.known_for : [],
       slug: values.slug,
       description: values.description || null,
       founded_city: values.founded_city || null,
@@ -146,6 +158,9 @@ export function useAdminBrandSubmit() {
       media_gallery: values.media_gallery?.length ? values.media_gallery : null,
       notable_models: values.notable_models?.length ? values.notable_models : null,
     };
+    
+    console.log("Data preparation complete:", preparedData);
+    return preparedData;
   };
 
   // Helper function to handle different error types
