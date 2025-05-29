@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
@@ -18,15 +17,22 @@ export default function Motorcycles() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
+  const [error, setError] = useState<string | null>(null);
   
   // Fetch motorcycles from Supabase
   useEffect(() => {
     const fetchMotorcycles = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+        console.log("Starting motorcycle fetch...");
+        
         const data = await getAllMotorcycles();
+        console.log("Motorcycles fetched successfully:", data);
         setMotorcycles(data);
       } catch (error) {
+        console.error("Failed to load motorcycles:", error);
+        setError("Failed to load motorcycles data");
         toast.error("Failed to load motorcycles data");
       } finally {
         setIsLoading(false);
@@ -64,6 +70,22 @@ export default function Motorcycles() {
   const clearSearch = () => {
     handleSearchChange("");
   };
+
+  if (error) {
+    return (
+      <div className="flex-1">
+        <div className="container px-4 md:px-6 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Error Loading Motorcycles</h1>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1">

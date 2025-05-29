@@ -28,7 +28,7 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
   summary,
   created_at,
   updated_at,
-  brands!motorcycle_models_brand_id_fkey(
+  brands(
     id,
     name,
     slug
@@ -37,19 +37,31 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
 
 export const fetchAllMotorcycles = async () => {
   console.log("Fetching all motorcycles from motorcycle_models table...");
-  const { data, error } = await supabase
-    .from('motorcycle_models')
-    .select(MOTORCYCLE_MODEL_SELECT_QUERY)
-    .order('name', { ascending: true })
-    .order('production_start_year', { ascending: true });
+  
+  try {
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(MOTORCYCLE_MODEL_SELECT_QUERY)
+      .order('name', { ascending: true })
+      .order('production_start_year', { ascending: true });
+      
+    if (error) {
+      console.error("Error fetching motorcycle models:", error);
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw error;
+    }
     
-  if (error) {
-    console.error("Error fetching motorcycle models:", error);
+    console.log(`Successfully fetched ${data?.length || 0} motorcycle models`);
+    return data || [];
+  } catch (error) {
+    console.error("Unexpected error in fetchAllMotorcycles:", error);
     throw error;
   }
-  
-  console.log(`Successfully fetched ${data?.length || 0} motorcycle models`);
-  return data || [];
 };
 
 export const fetchMotorcycleBySlug = async (slug: string) => {
