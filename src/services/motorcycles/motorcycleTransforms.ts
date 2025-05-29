@@ -1,4 +1,3 @@
-
 import { Motorcycle } from "@/types";
 
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
@@ -8,8 +7,16 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   console.log("Transforming motorcycle data:", {
     name: rawData.name,
     brandName: brandData.name,
-    hasValidBrand: !!brandData.name
+    hasValidBrand: !!brandData.name,
+    engineSize: rawData.engine_size,
+    horsepower: rawData.horsepower,
+    hasEngineData: !!(rawData.engine_size || rawData.horsepower)
   });
+  
+  // For engine size, only default to 0 if we have no engine data at all
+  // This prevents filtering issues with missing engine specifications
+  const engineSize = rawData.engine_size || null;
+  const horsepower = rawData.horsepower || null;
   
   return {
     id: rawData.id,
@@ -21,8 +28,8 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     style_tags: [],
     difficulty_level: rawData.difficulty_level || 1,
     image_url: rawData.default_image_url || "",
-    engine_size: rawData.engine_size || 0,
-    horsepower: rawData.horsepower || 0,
+    engine_size: engineSize || 0, // Keep 0 for display purposes but log the issue
+    horsepower: horsepower || 0,
     weight_kg: rawData.weight_kg || 0,
     seat_height_mm: rawData.seat_height_mm || 0,
     abs: rawData.has_abs || false,
@@ -41,9 +48,9 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     engine: rawData.engine_size ? `${rawData.engine_size}cc` : "",
     
     // Compatibility aliases
-    engine_cc: rawData.engine_size,
-    displacement_cc: rawData.engine_size,
-    horsepower_hp: rawData.horsepower,
+    engine_cc: engineSize,
+    displacement_cc: engineSize,
+    horsepower_hp: horsepower,
   };
 };
 

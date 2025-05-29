@@ -31,7 +31,7 @@ export function syncFiltersToUrl(
   }
 
   if (filters.yearRange && 
-    (filters.yearRange[0] !== 1980 || filters.yearRange[1] !== 2023)) {
+    (filters.yearRange[0] !== 1980 || filters.yearRange[1] !== 2025)) {
     searchParams.set('yearMin', filters.yearRange[0].toString());
     searchParams.set('yearMax', filters.yearRange[1].toString());
   }
@@ -154,7 +154,7 @@ export function countActiveFilters(filters: MotorcycleFilters): number {
   if (filters.categories.length > 0) count += filters.categories.length;
   if (filters.make) count += 1;
   if (filters.searchTerm) count += 1;
-  if (filters.yearRange[0] !== 1980 || filters.yearRange[1] !== 2023) count += 1;
+  if (filters.yearRange[0] !== 1980 || filters.yearRange[1] !== 2025) count += 1;
   if (filters.engineSizeRange[0] !== 0 || filters.engineSizeRange[1] !== 2000) count += 1;
   if (filters.difficultyLevel !== 5) count += 1;
   if (filters.weightRange[0] !== 100 || filters.weightRange[1] !== 400) count += 1;
