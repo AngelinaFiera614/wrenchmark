@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Use the same query pattern as the main motorcycles page for consistency
@@ -29,7 +28,7 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
   summary,
   created_at,
   updated_at,
-  brands(
+  brands!motorcycle_models_brand_id_fkey(
     id,
     name,
     slug
