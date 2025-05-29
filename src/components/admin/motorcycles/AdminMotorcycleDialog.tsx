@@ -1,30 +1,37 @@
 
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
-import { BasicInfoFields } from "./form/BasicInfoFields";
-import { PerformanceFields } from "./form/PerformanceFields";
-import { DimensionsFields } from "./form/DimensionsFields";
-import { AdditionalFields } from "./form/AdditionalFields";
-import { FormActions } from "./form/FormActions";
-import { ComponentsFields } from "./form/ComponentsFields";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Loader } from "lucide-react";
 
 // Define Zod schema for form validation
 const motorcycleFormSchema = z.object({
-  make: z.string().min(1, "Make is required"),
-  model: z.string().min(1, "Model is required"),
-  year: z.coerce.number().min(1885, "Year must be 1885 or later"),
-  category: z.string().min(1, "Category is required"),
-  difficulty_level: z.coerce.number().min(1).max(5),
-  image_url: z.string().url({ message: "Invalid URL" }).optional().or(z.literal("")),
+  name: z.string().min(1, "Model name is required"),
+  brand_id: z.string().min(1, "Brand is required"),
+  type: z.string().min(1, "Type is required"),
+  category: z.string().optional(),
+  production_start_year: z.coerce.number().min(1885, "Year must be 1885 or later"),
+  production_status: z.string().default("active"),
+  base_description: z.string().optional(),
+  summary: z.string().optional(),
+  default_image_url: z.string().url({ message: "Invalid URL" }).optional().or(z.literal("")),
+  slug: z.string().optional(),
   
   // Performance fields
-  engine: z.string().optional(),
-  horsepower_hp: z.coerce.number().optional(),
+  engine_size: z.coerce.number().optional(),
+  horsepower: z.coerce.number().optional(),
   torque_nm: z.coerce.number().optional(),
   top_speed_kph: z.coerce.number().optional(),
   has_abs: z.boolean().default(false),
@@ -35,18 +42,11 @@ const motorcycleFormSchema = z.object({
   wheelbase_mm: z.coerce.number().optional(),
   ground_clearance_mm: z.coerce.number().optional(),
   fuel_capacity_l: z.coerce.number().optional(),
+  difficulty_level: z.coerce.number().min(1).max(5).default(3),
   
-  // Additional fields
-  summary: z.string().optional(),
-  slug: z.string().optional(),
+  // Status
   status: z.string().optional(),
-
-  // Component fields for new schema
-  engine_id: z.string().optional(),
-  brake_system_id: z.string().optional(),
-  frame_id: z.string().optional(),
-  suspension_id: z.string().optional(),
-  wheel_id: z.string().optional(),
+  is_draft: z.boolean().default(true),
 });
 
 type MotorcycleFormValues = z.infer<typeof motorcycleFormSchema>;
@@ -63,19 +63,37 @@ const AdminMotorcycleDialog = ({
   onClose,
 }: AdminMotorcycleDialogProps) => {
   const [loading, setLoading] = useState(false);
-  const [isNewSchema, setIsNewSchema] = useState(false);
+  const { toast } = useToast();
+
+  // Fetch brands for the dropdown
+  const { data: brands } = useQuery({
+    queryKey: ["brands"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('brands')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const form = useForm<MotorcycleFormValues>({
     resolver: zodResolver(motorcycleFormSchema),
     defaultValues: {
-      make: "",
-      model: "",
-      year: new Date().getFullYear(),
-      category: "Standard",
-      difficulty_level: 3,
-      image_url: "",
-      engine: "",
-      horsepower_hp: undefined,
+      name: "",
+      brand_id: "",
+      type: "Standard",
+      category: "",
+      production_start_year: new Date().getFullYear(),
+      production_status: "active",
+      base_description: "",
+      summary: "",
+      default_image_url: "",
+      slug: "",
+      engine_size: undefined,
+      horsepower: undefined,
       torque_nm: undefined,
       top_speed_kph: undefined,
       has_abs: false,
@@ -84,14 +102,9 @@ const AdminMotorcycleDialog = ({
       wheelbase_mm: undefined,
       ground_clearance_mm: undefined,
       fuel_capacity_l: undefined,
-      summary: "",
-      slug: "",
+      difficulty_level: 3,
       status: "active",
-      engine_id: undefined,
-      brake_system_id: undefined,
-      frame_id: undefined,
-      suspension_id: undefined,
-      wheel_id: undefined,
+      is_draft: true,
     },
   });
 
@@ -99,41 +112,67 @@ const AdminMotorcycleDialog = ({
   useEffect(() => {
     if (motorcycle) {
       form.reset({
-        make: motorcycle.make,
-        model: motorcycle.model,
-        year: motorcycle.year,
+        name: motorcycle.model,
+        brand_id: motorcycle.brand_id || "",
+        type: motorcycle.category || "Standard",
         category: motorcycle.category,
-        difficulty_level: motorcycle.difficulty_level,
-        image_url: motorcycle.image_url,
-        engine: "",
-        horsepower_hp: motorcycle.horsepower_hp,
-        torque_nm: motorcycle.torque_nm,
-        top_speed_kph: motorcycle.top_speed_kph,
-        has_abs: motorcycle.abs,
-        weight_kg: motorcycle.weight_kg,
-        seat_height_mm: motorcycle.seat_height_mm,
-        wheelbase_mm: motorcycle.wheelbase_mm,
-        ground_clearance_mm: motorcycle.ground_clearance_mm,
-        fuel_capacity_l: motorcycle.fuel_capacity_l,
+        production_start_year: motorcycle.year,
+        production_status: motorcycle.status || "active",
+        base_description: motorcycle.summary,
         summary: motorcycle.summary,
+        default_image_url: motorcycle.image_url,
         slug: motorcycle.slug || "",
+        engine_size: motorcycle.engine_size || undefined,
+        horsepower: motorcycle.horsepower || undefined,
+        torque_nm: motorcycle.torque_nm || undefined,
+        top_speed_kph: motorcycle.top_speed_kph || undefined,
+        has_abs: motorcycle.abs || false,
+        weight_kg: motorcycle.weight_kg || undefined,
+        seat_height_mm: motorcycle.seat_height_mm || undefined,
+        wheelbase_mm: motorcycle.wheelbase_mm || undefined,
+        ground_clearance_mm: motorcycle.ground_clearance_mm || undefined,
+        fuel_capacity_l: motorcycle.fuel_capacity_l || undefined,
+        difficulty_level: motorcycle.difficulty_level || 3,
         status: motorcycle.status || "active",
+        is_draft: motorcycle.is_draft || false,
       });
-
-      // Check if the motorcycle uses the new schema
-      if (motorcycle.migration_status === "migrated") {
-        setIsNewSchema(true);
-      }
+    } else {
+      // Reset for new motorcycle
+      form.reset({
+        name: "",
+        brand_id: "",
+        type: "Standard",
+        category: "",
+        production_start_year: new Date().getFullYear(),
+        production_status: "active",
+        base_description: "",
+        summary: "",
+        default_image_url: "",
+        slug: "",
+        engine_size: undefined,
+        horsepower: undefined,
+        torque_nm: undefined,
+        top_speed_kph: undefined,
+        has_abs: false,
+        weight_kg: undefined,
+        seat_height_mm: undefined,
+        wheelbase_mm: undefined,
+        ground_clearance_mm: undefined,
+        fuel_capacity_l: undefined,
+        difficulty_level: 3,
+        status: "active",
+        is_draft: true,
+      });
     }
   }, [motorcycle, form]);
 
   const generateSlug = () => {
-    const make = form.getValues("make");
-    const model = form.getValues("model");
-    const year = form.getValues("year");
+    const name = form.getValues("name");
+    const year = form.getValues("production_start_year");
+    const brand = brands?.find(b => b.id === form.getValues("brand_id"));
     
-    if (make && model && year) {
-      const slug = `${make.toLowerCase().replace(/\s+/g, "-")}-${model.toLowerCase().replace(/\s+/g, "-")}-${year}`;
+    if (name && year && brand) {
+      const slug = `${brand.name.toLowerCase().replace(/\s+/g, "-")}-${name.toLowerCase().replace(/\s+/g, "-")}-${year}`;
       form.setValue("slug", slug);
     }
   };
@@ -142,21 +181,93 @@ const AdminMotorcycleDialog = ({
     setLoading(true);
     
     try {
-      // Handle form submission
-      console.log("Form data:", data);
+      if (motorcycle) {
+        // Update existing motorcycle
+        const { error } = await supabase
+          .from('motorcycle_models')
+          .update({
+            name: data.name,
+            brand_id: data.brand_id,
+            type: data.type,
+            category: data.category,
+            production_start_year: data.production_start_year,
+            production_status: data.production_status,
+            base_description: data.base_description,
+            summary: data.summary,
+            default_image_url: data.default_image_url || null,
+            slug: data.slug,
+            engine_size: data.engine_size || null,
+            horsepower: data.horsepower || null,
+            torque_nm: data.torque_nm || null,
+            top_speed_kph: data.top_speed_kph || null,
+            has_abs: data.has_abs,
+            weight_kg: data.weight_kg || null,
+            seat_height_mm: data.seat_height_mm || null,
+            wheelbase_mm: data.wheelbase_mm || null,
+            ground_clearance_mm: data.ground_clearance_mm || null,
+            fuel_capacity_l: data.fuel_capacity_l || null,
+            difficulty_level: data.difficulty_level,
+            status: data.status,
+            is_draft: data.is_draft,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', motorcycle.id);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Motorcycle updated successfully.",
+        });
+      } else {
+        // Create new motorcycle
+        const { error } = await supabase
+          .from('motorcycle_models')
+          .insert({
+            name: data.name,
+            brand_id: data.brand_id,
+            type: data.type,
+            category: data.category,
+            production_start_year: data.production_start_year,
+            production_status: data.production_status,
+            base_description: data.base_description,
+            summary: data.summary,
+            default_image_url: data.default_image_url || null,
+            slug: data.slug,
+            engine_size: data.engine_size || null,
+            horsepower: data.horsepower || null,
+            torque_nm: data.torque_nm || null,
+            top_speed_kph: data.top_speed_kph || null,
+            has_abs: data.has_abs,
+            weight_kg: data.weight_kg || null,
+            seat_height_mm: data.seat_height_mm || null,
+            wheelbase_mm: data.wheelbase_mm || null,
+            ground_clearance_mm: data.ground_clearance_mm || null,
+            fuel_capacity_l: data.fuel_capacity_l || null,
+            difficulty_level: data.difficulty_level,
+            status: data.status,
+            is_draft: data.is_draft,
+          });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Motorcycle created successfully.",
+        });
+      }
       
-      // Close the dialog and refresh data
       setLoading(false);
       onClose(true);
     } catch (error) {
       setLoading(false);
       console.error("Error saving motorcycle:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save motorcycle. Please try again.",
+      });
     }
-  };
-
-  const handleMigrateToNew = () => {
-    // Set flag to show new schema form fields
-    setIsNewSchema(true);
   };
 
   const isEditing = !!motorcycle;
@@ -172,29 +283,202 @@ const AdminMotorcycleDialog = ({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-8">
-              <BasicInfoFields control={form.control} />
-              
-              {!isNewSchema ? (
-                // Original schema fields
-                <>
-                  <PerformanceFields control={form.control} />
-                  <DimensionsFields control={form.control} />
-                </>
-              ) : (
-                // New schema fields for components
-                <ComponentsFields control={form.control} />
-              )}
-              
-              <AdditionalFields control={form.control} onGenerateSlug={generateSlug} />
-              
-              <FormActions 
-                loading={loading} 
-                onCancel={() => onClose(false)} 
-                isEditing={isEditing}
-                onMigrateToNew={handleMigrateToNew}
-                showMigrateOption={isEditing && !isNewSchema && motorcycle?.migration_status !== "migrated"}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Basic Info */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Model Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., Ninja 300" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
+              
+              <FormField
+                control={form.control}
+                name="brand_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a brand" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {brands?.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id}>
+                            {brand.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Sport">Sport</SelectItem>
+                        <SelectItem value="Cruiser">Cruiser</SelectItem>
+                        <SelectItem value="Touring">Touring</SelectItem>
+                        <SelectItem value="Adventure">Adventure</SelectItem>
+                        <SelectItem value="Naked">Naked</SelectItem>
+                        <SelectItem value="Dual-sport">Dual-sport</SelectItem>
+                        <SelectItem value="Standard">Standard</SelectItem>
+                        <SelectItem value="Scooter">Scooter</SelectItem>
+                        <SelectItem value="Off-road">Off-road</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="production_start_year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Production Year</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Performance Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="engine_size"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Engine Size (cc)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="horsepower"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Horsepower</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="top_speed_kph"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Top Speed (kph)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Additional Fields */}
+            <FormField
+              control={form.control}
+              name="summary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Brief description of the motorcycle" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Slug</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input {...field} placeholder="motorcycle-slug" />
+                      </FormControl>
+                      <Button type="button" variant="outline" onClick={generateSlug}>
+                        Generate
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="has_abs"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Has ABS</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => onClose(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : isEditing ? "Update" : "Create"}
+              </Button>
             </div>
           </form>
         </Form>

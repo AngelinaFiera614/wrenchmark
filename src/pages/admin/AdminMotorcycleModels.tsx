@@ -8,17 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getAllMotorcyclesForAdmin, publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycleService";
 import { supabase } from "@/integrations/supabase/client";
-import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
-import AdminModelYearDialog from "@/components/admin/models/AdminModelYearDialog";
-import AdminConfigurationDialog from "@/components/admin/models/AdminConfigurationDialog";
+import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycleDialog";
 import { Motorcycle } from "@/types";
 
 const AdminMotorcycleModels = () => {
   const { toast } = useToast();
   const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
-  const [editModel, setEditModel] = useState(null);
-  const [selectedModelForYear, setSelectedModelForYear] = useState(null);
-  const [selectedYearForConfig, setSelectedYearForConfig] = useState(null);
+  const [editModel, setEditModel] = useState<Motorcycle | null>(null);
   const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set<string>());
 
   // Fetch motorcycle models with improved error handling using admin service
@@ -53,19 +49,13 @@ const AdminMotorcycleModels = () => {
   };
 
   const handleCreateModel = () => {
+    setEditModel(null);
     setIsCreateModelOpen(true);
   };
 
-  const handleEditModel = (model) => {
+  const handleEditModel = (model: Motorcycle) => {
     setEditModel(model);
-  };
-
-  const handleAddYear = (model) => {
-    setSelectedModelForYear(model);
-  };
-
-  const handleAddConfiguration = (year) => {
-    setSelectedYearForConfig(year);
+    setIsCreateModelOpen(true);
   };
 
   const handleTogglePublishStatus = async (motorcycle: Motorcycle) => {
@@ -93,8 +83,8 @@ const AdminMotorcycleModels = () => {
     }
   };
 
-  const handleDeleteModel = async (model) => {
-    if (!confirm(`Are you sure you want to delete ${model.make} ${model.model}? This will remove all associated years and configurations.`)) {
+  const handleDeleteModel = async (model: Motorcycle) => {
+    if (!confirm(`Are you sure you want to delete ${model.make} ${model.model}? This action cannot be undone.`)) {
       return;
     }
 
@@ -125,8 +115,6 @@ const AdminMotorcycleModels = () => {
   const handleDialogClose = (refreshData = false) => {
     setIsCreateModelOpen(false);
     setEditModel(null);
-    setSelectedModelForYear(null);
-    setSelectedYearForConfig(null);
     if (refreshData) {
       refetch();
     }
@@ -147,7 +135,7 @@ const AdminMotorcycleModels = () => {
           <div>
             <h1 className="text-3xl font-bold">Motorcycles</h1>
             <p className="text-muted-foreground mt-1">
-              Manage motorcycle models with years, configurations, and detailed specifications.
+              Manage motorcycle models with detailed specifications.
             </p>
           </div>
         </div>
@@ -180,7 +168,7 @@ const AdminMotorcycleModels = () => {
         <div>
           <h1 className="text-3xl font-bold">Motorcycles</h1>
           <p className="text-muted-foreground mt-1">
-            Manage motorcycle models with years, configurations, and detailed specifications.
+            Manage motorcycle models with detailed specifications.
           </p>
         </div>
         <Button 
@@ -366,22 +354,10 @@ const AdminMotorcycleModels = () => {
         </Card>
       )}
 
-      {/* Dialogs */}
-      <AdminModelDialog 
-        open={isCreateModelOpen || editModel !== null}
-        model={editModel}
-        onClose={handleDialogClose}
-      />
-
-      <AdminModelYearDialog 
-        open={selectedModelForYear !== null}
-        model={selectedModelForYear}
-        onClose={handleDialogClose}
-      />
-
-      <AdminConfigurationDialog 
-        open={selectedYearForConfig !== null}
-        modelYear={selectedYearForConfig}
+      {/* Dialog */}
+      <AdminMotorcycleDialog 
+        open={isCreateModelOpen}
+        motorcycle={editModel}
         onClose={handleDialogClose}
       />
     </div>

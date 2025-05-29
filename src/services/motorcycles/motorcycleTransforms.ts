@@ -23,9 +23,9 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   
   return {
     id: rawData.id,
-    make: brandData.name || "Unknown",
+    make: brandData.name || "Unknown", // Map brand name to make
     brand_id: rawData.brand_id,
-    model: rawData.name,
+    model: rawData.name, // Map name to model
     year: rawData.production_start_year || new Date().getFullYear(),
     category: rawData.category || rawData.type || "Standard",
     style_tags: [],
@@ -49,7 +49,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     migration_status: "migrated",
     status: rawData.status || rawData.production_status,
     engine: rawData.engine_size ? `${rawData.engine_size}cc` : "",
-    is_draft: isDraft, // Add draft status to the transformed data
+    is_draft: isDraft,
     
     // Compatibility aliases - preserve original values for filtering
     engine_cc: engineSize,
@@ -65,7 +65,7 @@ export const createPlaceholderMotorcycleData = (motorcycleData: {
   isDraft?: boolean;
 }) => {
   return {
-    name: motorcycleData.model,
+    name: motorcycleData.model, // Map model to name for database
     type: "Standard",
     production_start_year: motorcycleData.year,
     production_status: "active",
