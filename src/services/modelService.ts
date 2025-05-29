@@ -1,28 +1,68 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
+
+// Use the same query pattern as the main motorcycles page for consistency
+const MOTORCYCLE_MODEL_SELECT_QUERY = `
+  id,
+  brand_id,
+  name,
+  type,
+  base_description,
+  production_start_year,
+  production_end_year,
+  production_status,
+  default_image_url,
+  slug,
+  engine_size,
+  horsepower,
+  torque_nm,
+  weight_kg,
+  seat_height_mm,
+  wheelbase_mm,
+  ground_clearance_mm,
+  fuel_capacity_l,
+  top_speed_kph,
+  has_abs,
+  difficulty_level,
+  status,
+  category,
+  summary,
+  created_at,
+  updated_at,
+  brands(
+    id,
+    name,
+    slug
+  )
+`;
 
 // Fetch all motorcycle models
 export const getAllMotorcycleModels = async (): Promise<MotorcycleModel[]> => {
   try {
+    console.log("Fetching all motorcycle models from motorcycle_models table...");
+    
     const { data, error } = await supabase
       .from('motorcycle_models')
-      .select(`
-        *,
-        brand:brand_id(id, name, country, logo_url)
-      `)
-      .order('name');
+      .select(MOTORCYCLE_MODEL_SELECT_QUERY)
+      .order('name', { ascending: true })
+      .order('production_start_year', { ascending: true });
       
     if (error) {
       console.error("Error fetching motorcycle models:", error);
-      return [];
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw error;
     }
     
-    // Use a more specific type assertion to ensure compatibility
+    console.log(`Successfully fetched ${data?.length || 0} motorcycle models for admin`);
     return (data || []) as unknown as MotorcycleModel[];
   } catch (error) {
     console.error("Error in getAllMotorcycleModels:", error);
-    return [];
+    throw error;
   }
 };
 

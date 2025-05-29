@@ -140,10 +140,20 @@ export function useMotorcycleFilters(
         return false;
       }
 
+      // Improved engine size filtering - only filter if we have valid engine data
       const engineSize = motorcycle.engine_size || motorcycle.engine_cc || 0;
-      console.log(`Engine size check: ${engineSize} vs range [${filters.engineSizeRange[0]}, ${filters.engineSizeRange[1]}]`);
-      if (engineSize < filters.engineSizeRange[0] || engineSize > filters.engineSizeRange[1]) {
-        console.log(`❌ Engine size filter failed: ${engineSize} not in range [${filters.engineSizeRange[0]}, ${filters.engineSizeRange[1]}]`);
+      // Only apply engine filter if the motorcycle actually has engine data or if the filter is not at default
+      const hasEngineData = engineSize > 0;
+      const isEngineFilterActive = filters.engineSizeRange[0] > 0 || filters.engineSizeRange[1] < 2000;
+      
+      if (isEngineFilterActive && hasEngineData) {
+        if (engineSize < filters.engineSizeRange[0] || engineSize > filters.engineSizeRange[1]) {
+          console.log(`❌ Engine size filter failed: ${engineSize} not in range [${filters.engineSizeRange[0]}, ${filters.engineSizeRange[1]}]`);
+          return false;
+        }
+      } else if (isEngineFilterActive && !hasEngineData) {
+        // If engine filter is active but motorcycle has no engine data, exclude it
+        console.log(`❌ Engine filter active but motorcycle has no engine data`);
         return false;
       }
 
@@ -152,14 +162,20 @@ export function useMotorcycleFilters(
         return false;
       }
 
-      if (motorcycle.weight_kg && (motorcycle.weight_kg < filters.weightRange[0] || motorcycle.weight_kg > filters.weightRange[1])) {
-        console.log(`❌ Weight filter failed: ${motorcycle.weight_kg} not in range [${filters.weightRange[0]}, ${filters.weightRange[1]}]`);
-        return false;
+      // Improved weight filtering - only filter if we have valid weight data
+      if (motorcycle.weight_kg && motorcycle.weight_kg > 0) {
+        if (motorcycle.weight_kg < filters.weightRange[0] || motorcycle.weight_kg > filters.weightRange[1]) {
+          console.log(`❌ Weight filter failed: ${motorcycle.weight_kg} not in range [${filters.weightRange[0]}, ${filters.weightRange[1]}]`);
+          return false;
+        }
       }
 
-      if (motorcycle.seat_height_mm && (motorcycle.seat_height_mm < filters.seatHeightRange[0] || motorcycle.seat_height_mm > filters.seatHeightRange[1])) {
-        console.log(`❌ Seat height filter failed: ${motorcycle.seat_height_mm} not in range [${filters.seatHeightRange[0]}, ${filters.seatHeightRange[1]}]`);
-        return false;
+      // Improved seat height filtering - only filter if we have valid seat height data
+      if (motorcycle.seat_height_mm && motorcycle.seat_height_mm > 0) {
+        if (motorcycle.seat_height_mm < filters.seatHeightRange[0] || motorcycle.seat_height_mm > filters.seatHeightRange[1]) {
+          console.log(`❌ Seat height filter failed: ${motorcycle.seat_height_mm} not in range [${filters.seatHeightRange[0]}, ${filters.seatHeightRange[1]}]`);
+          return false;
+        }
       }
 
       if (filters.styleTags && filters.styleTags.length > 0 && 

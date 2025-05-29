@@ -20,10 +20,25 @@ const AdminMotorcycleModels = () => {
   const [selectedYearForConfig, setSelectedYearForConfig] = useState(null);
   const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set<string>());
 
-  // Fetch motorcycle models with their years and configurations
-  const { data: models, isLoading, refetch } = useQuery({
+  // Fetch motorcycle models with improved error handling
+  const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-motorcycle-models"],
-    queryFn: getAllMotorcycleModels
+    queryFn: async () => {
+      try {
+        console.log("Admin: Starting to fetch motorcycle models...");
+        const data = await getAllMotorcycleModels();
+        console.log("Admin: Successfully fetched models:", data?.length);
+        return data;
+      } catch (error) {
+        console.error("Admin: Error fetching motorcycle models:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load motorcycle models. Please try again.",
+        });
+        throw error;
+      }
+    }
   });
 
   const toggleModelExpansion = (modelId: string) => {
@@ -95,6 +110,37 @@ const AdminMotorcycleModels = () => {
     return (
       <div className="flex justify-center py-10">
         <Loader2 className="h-8 w-8 animate-spin text-accent-teal" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold">Motorcycles</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage motorcycle models with years, configurations, and detailed specifications.
+            </p>
+          </div>
+        </div>
+        
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="space-y-4">
+              <div className="text-destructive font-medium">
+                Failed to load motorcycle models
+              </div>
+              <div className="text-muted-foreground">
+                There was an error loading the motorcycle data. Please check the console for details.
+              </div>
+              <Button variant="outline" onClick={() => refetch()}>
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
