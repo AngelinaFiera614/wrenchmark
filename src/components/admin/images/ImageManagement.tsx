@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { imageManagementService, MotorcycleImage, ImageTag } from "@/services/imageManagementService";
 import { getAllMotorcycles } from "@/services/motorcycleService";
 import { Motorcycle } from "@/types";
+import { sanitizeFileName } from "@/services/security/inputSanitizer";
 import {
   Select,
   SelectContent,
@@ -44,12 +46,29 @@ export default function ImageManagement() {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    // Security check: validate file types
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
+
+    for (const file of Array.from(files)) {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`Invalid file type: ${file.name}. Only JPEG, PNG, and WebP are allowed.`);
+        continue;
+      }
+
+      if (file.size > maxFileSize) {
+        toast.error(`File too large: ${file.name}. Maximum size is 10MB.`);
+        continue;
+      }
+    }
+
     setIsUploading(true);
     
     for (const file of Array.from(files)) {
       try {
         const timestamp = Date.now();
-        const baseName = file.name.split('.')[0];
+        const sanitizedName = sanitizeFileName(file.name);
+        const baseName = sanitizedName.split('.')[0];
         const path = `uploads/${timestamp}-${baseName}`;
         
         const { url, error } = await imageManagementService.uploadImage(file, path);
@@ -61,14 +80,14 @@ export default function ImageManagement() {
 
         const imageData: Omit<MotorcycleImage, 'id' | 'created_at' | 'updated_at'> = {
           file_url: url,
-          file_name: file.name,
+          file_name: sanitizedName,
           file_size_bytes: file.size,
           mime_type: file.type,
           motorcycle_id: selectedMotorcycle !== 'all' ? selectedMotorcycle : undefined,
-          brand: extractBrandFromFileName(file.name),
-          model: extractModelFromFileName(file.name),
-          year: extractYearFromFileName(file.name),
-          color: extractColorFromFileName(file.name),
+          brand: extractBrandFromFileName(sanitizedName),
+          model: extractModelFromFileName(sanitizedName),
+          year: extractYearFromFileName(sanitizedName),
+          color: extractColorFromFileName(sanitizedName),
           angle: 'side',
           is_primary: false,
           is_featured: false
@@ -175,6 +194,7 @@ export default function ImageManagement() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
+                  maxLength={100}
                 />
               </div>
             </div>
@@ -289,7 +309,7 @@ export default function ImageManagement() {
                     <input
                       type="file"
                       multiple
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp"
                       onChange={handleFileUpload}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />

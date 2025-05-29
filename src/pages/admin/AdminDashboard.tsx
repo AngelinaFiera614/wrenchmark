@@ -15,7 +15,6 @@ const AdminDashboard = () => {
   const { data: counts, isLoading, error } = useQuery({
     queryKey: ["admin-dashboard-counts"],
     queryFn: async () => {
-      console.log("Fetching admin dashboard counts");
       try {
         const [
           motorcyclesCount,
@@ -36,8 +35,6 @@ const AdminDashboard = () => {
           supabase.from("riding_skills").select("*", { count: "exact", head: true }),
           supabase.from("profiles").select("*", { count: "exact", head: true }),
         ]);
-
-        console.log("Dashboard counts fetched successfully");
         
         return {
           motorcycles: motorcyclesCount.count || 0,
@@ -50,7 +47,6 @@ const AdminDashboard = () => {
           users: profilesCount.count || 0,
         };
       } catch (err) {
-        console.error("Error fetching admin dashboard counts:", err);
         throw err;
       }
     },
@@ -59,7 +55,6 @@ const AdminDashboard = () => {
 
   // If there's an error fetching the data
   if (error) {
-    console.error("Admin dashboard query error:", error);
     return (
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>

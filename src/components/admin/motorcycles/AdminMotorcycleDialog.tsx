@@ -15,33 +15,45 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
+import { sanitizeHtml, validateSlug } from "@/services/security/inputSanitizer";
+import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
 
-// Define Zod schema for form validation
+// Enhanced validation schema with security checks
 const motorcycleFormSchema = z.object({
-  name: z.string().min(1, "Model name is required"),
+  name: z.string()
+    .min(1, "Model name is required")
+    .max(100, "Model name too long")
+    .refine((val) => val.trim().length > 0, "Model name cannot be empty"),
   brand_id: z.string().min(1, "Brand is required"),
   type: z.string().min(1, "Type is required"),
   category: z.string().optional(),
-  production_start_year: z.coerce.number().min(1885, "Year must be 1885 or later"),
+  production_start_year: z.coerce.number()
+    .min(1885, "Year must be 1885 or later")
+    .max(new Date().getFullYear() + 5, "Year cannot be too far in the future"),
   production_status: z.string().default("active"),
   base_description: z.string().optional(),
   summary: z.string().optional(),
-  default_image_url: z.string().url({ message: "Invalid URL" }).optional().or(z.literal("")),
-  slug: z.string().optional(),
+  default_image_url: z.string()
+    .url({ message: "Invalid URL" })
+    .optional()
+    .or(z.literal("")),
+  slug: z.string()
+    .optional()
+    .refine((val) => !val || validateSlug(val), "Invalid slug format"),
   
-  // Performance fields
-  engine_size: z.coerce.number().optional(),
-  horsepower: z.coerce.number().optional(),
-  torque_nm: z.coerce.number().optional(),
-  top_speed_kph: z.coerce.number().optional(),
+  // Performance fields with bounds
+  engine_size: z.coerce.number().min(0).max(10000).optional(),
+  horsepower: z.coerce.number().min(0).max(2000).optional(),
+  torque_nm: z.coerce.number().min(0).max(2000).optional(),
+  top_speed_kph: z.coerce.number().min(0).max(500).optional(),
   has_abs: z.boolean().default(false),
   
-  // Dimensions fields
-  weight_kg: z.coerce.number().optional(),
-  seat_height_mm: z.coerce.number().optional(),
-  wheelbase_mm: z.coerce.number().optional(),
-  ground_clearance_mm: z.coerce.number().optional(),
-  fuel_capacity_l: z.coerce.number().optional(),
+  // Dimensions fields with realistic bounds
+  weight_kg: z.coerce.number().min(0).max(1000).optional(),
+  seat_height_mm: z.coerce.number().min(500).max(1200).optional(),
+  wheelbase_mm: z.coerce.number().min(1000).max(2500).optional(),
+  ground_clearance_mm: z.coerce.number().min(50).max(500).optional(),
+  fuel_capacity_l: z.coerce.number().min(0).max(50).optional(),
   difficulty_level: z.coerce.number().min(1).max(5).default(3),
   
   // Status
@@ -181,38 +193,43 @@ const AdminMotorcycleDialog = ({
     setLoading(true);
     
     try {
-      console.log("Submitting motorcycle data:", data);
-      
+      // Sanitize text inputs
+      const sanitizedData = {
+        ...data,
+        name: sanitizeHtml(data.name),
+        base_description: data.base_description ? sanitizeHtml(data.base_description) : null,
+        summary: data.summary ? sanitizeHtml(data.summary) : null,
+      };
+
       // Prepare the data for insertion/update
       const motorcycleData = {
-        name: data.name,
-        brand_id: data.brand_id,
-        type: data.type,
-        category: data.category,
-        production_start_year: data.production_start_year,
-        production_status: data.production_status,
-        base_description: data.base_description,
-        summary: data.summary,
-        default_image_url: data.default_image_url || null,
-        slug: data.slug || `${data.name.toLowerCase().replace(/\s+/g, '-')}-${data.production_start_year}`,
-        engine_size: data.engine_size || null,
-        horsepower: data.horsepower || null,
-        torque_nm: data.torque_nm || null,
-        top_speed_kph: data.top_speed_kph || null,
-        has_abs: data.has_abs,
-        weight_kg: data.weight_kg || null,
-        seat_height_mm: data.seat_height_mm || null,
-        wheelbase_mm: data.wheelbase_mm || null,
-        ground_clearance_mm: data.ground_clearance_mm || null,
-        fuel_capacity_l: data.fuel_capacity_l || null,
-        difficulty_level: data.difficulty_level,
-        status: data.status,
-        is_draft: data.is_draft,
+        name: sanitizedData.name,
+        brand_id: sanitizedData.brand_id,
+        type: sanitizedData.type,
+        category: sanitizedData.category,
+        production_start_year: sanitizedData.production_start_year,
+        production_status: sanitizedData.production_status,
+        base_description: sanitizedData.base_description,
+        summary: sanitizedData.summary,
+        default_image_url: sanitizedData.default_image_url || null,
+        slug: sanitizedData.slug || `${sanitizedData.name.toLowerCase().replace(/\s+/g, '-')}-${sanitizedData.production_start_year}`,
+        engine_size: sanitizedData.engine_size || null,
+        horsepower: sanitizedData.horsepower || null,
+        torque_nm: sanitizedData.torque_nm || null,
+        top_speed_kph: sanitizedData.top_speed_kph || null,
+        has_abs: sanitizedData.has_abs,
+        weight_kg: sanitizedData.weight_kg || null,
+        seat_height_mm: sanitizedData.seat_height_mm || null,
+        wheelbase_mm: sanitizedData.wheelbase_mm || null,
+        ground_clearance_mm: sanitizedData.ground_clearance_mm || null,
+        fuel_capacity_l: sanitizedData.fuel_capacity_l || null,
+        difficulty_level: sanitizedData.difficulty_level,
+        status: sanitizedData.status,
+        is_draft: sanitizedData.is_draft,
       };
       
       if (motorcycle) {
         // Update existing motorcycle
-        console.log("Updating motorcycle with ID:", motorcycle.id);
         const { error } = await supabase
           .from('motorcycle_models')
           .update({
@@ -222,9 +239,16 @@ const AdminMotorcycleDialog = ({
           .eq('id', motorcycle.id);
         
         if (error) {
-          console.error("Update error:", error);
           throw error;
         }
+
+        // Log admin action
+        await logAdminAction({
+          action: auditActions.MOTORCYCLE_UPDATE,
+          tableName: 'motorcycle_models',
+          recordId: motorcycle.id,
+          newValues: motorcycleData,
+        });
         
         toast({
           title: "Success",
@@ -232,15 +256,20 @@ const AdminMotorcycleDialog = ({
         });
       } else {
         // Create new motorcycle
-        console.log("Creating new motorcycle");
         const { error } = await supabase
           .from('motorcycle_models')
           .insert(motorcycleData);
         
         if (error) {
-          console.error("Insert error:", error);
           throw error;
         }
+
+        // Log admin action
+        await logAdminAction({
+          action: auditActions.MOTORCYCLE_CREATE,
+          tableName: 'motorcycle_models',
+          newValues: motorcycleData,
+        });
         
         toast({
           title: "Success",
@@ -252,11 +281,10 @@ const AdminMotorcycleDialog = ({
       onClose(true);
     } catch (error: any) {
       setLoading(false);
-      console.error("Error saving motorcycle:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to save motorcycle. Please try again.",
+        description: "Failed to save motorcycle. Please check your input and try again.",
       });
     }
   };
@@ -283,7 +311,7 @@ const AdminMotorcycleDialog = ({
                   <FormItem>
                     <FormLabel>Model Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., Ninja 300" />
+                      <Input {...field} placeholder="e.g., Ninja 300" maxLength={100} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -351,7 +379,7 @@ const AdminMotorcycleDialog = ({
                   <FormItem>
                     <FormLabel>Production Year</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} min={1885} max={new Date().getFullYear() + 5} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -368,7 +396,7 @@ const AdminMotorcycleDialog = ({
                   <FormItem>
                     <FormLabel>Engine Size (cc)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} min={0} max={10000} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -382,7 +410,7 @@ const AdminMotorcycleDialog = ({
                   <FormItem>
                     <FormLabel>Horsepower</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} min={0} max={2000} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -396,7 +424,7 @@ const AdminMotorcycleDialog = ({
                   <FormItem>
                     <FormLabel>Top Speed (kph)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} min={0} max={500} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -412,7 +440,7 @@ const AdminMotorcycleDialog = ({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Brief description of the motorcycle" />
+                    <Textarea {...field} placeholder="Brief description of the motorcycle" maxLength={1000} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -428,7 +456,7 @@ const AdminMotorcycleDialog = ({
                     <FormLabel>Slug</FormLabel>
                     <div className="flex gap-2">
                       <FormControl>
-                        <Input {...field} placeholder="motorcycle-slug" />
+                        <Input {...field} placeholder="motorcycle-slug" maxLength={100} />
                       </FormControl>
                       <Button type="button" variant="outline" onClick={generateSlug}>
                         Generate

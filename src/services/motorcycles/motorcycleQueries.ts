@@ -37,8 +37,6 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
 `;
 
 export const fetchAllMotorcycles = async () => {
-  console.log("Fetching all published motorcycles from motorcycle_models table...");
-  
   try {
     const { data, error } = await supabase
       .from('motorcycle_models')
@@ -48,21 +46,16 @@ export const fetchAllMotorcycles = async () => {
       .order('production_start_year', { ascending: true });
       
     if (error) {
-      console.error("Error fetching motorcycle models:", error);
       throw error;
     }
     
-    console.log(`Successfully fetched ${data?.length || 0} published motorcycle models`);
     return data || [];
   } catch (error) {
-    console.error("Unexpected error in fetchAllMotorcycles:", error);
     throw error;
   }
 };
 
 export const fetchAllMotorcyclesForAdmin = async () => {
-  console.log("Fetching all motorcycles (including drafts) for admin...");
-  
   try {
     const { data, error } = await supabase
       .from('motorcycle_models')
@@ -72,21 +65,11 @@ export const fetchAllMotorcyclesForAdmin = async () => {
       .order('production_start_year', { ascending: true });
       
     if (error) {
-      console.error("Error fetching admin motorcycle models:", error);
-      console.error("Error details:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
       throw error;
     }
     
-    console.log(`Successfully fetched ${data?.length || 0} motorcycle models for admin`);
-    console.log("Sample admin motorcycle data:", data?.[0]);
     return data || [];
   } catch (error) {
-    console.error("Unexpected error in fetchAllMotorcyclesForAdmin:", error);
     throw error;
   }
 };

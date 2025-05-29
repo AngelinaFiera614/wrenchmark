@@ -12,6 +12,7 @@ import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycl
 import { Motorcycle } from "@/types";
 import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/motorcycleQueries";
 import { transformMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
+import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
 
 const AdminMotorcycleModels = () => {
   const { toast } = useToast();
@@ -23,17 +24,13 @@ const AdminMotorcycleModels = () => {
     queryKey: ["admin-motorcycle-models"],
     queryFn: async () => {
       try {
-        console.log("Admin: Starting to fetch motorcycle models...");
         const rawData = await fetchAllMotorcyclesForAdmin();
-        console.log("Admin: Raw data received:", rawData?.length);
         
         // Transform the raw data to match the Motorcycle interface
         const transformedData = rawData.map(transformMotorcycleData);
-        console.log("Admin: Successfully transformed models:", transformedData?.length);
         
         return transformedData;
       } catch (error) {
-        console.error("Admin: Error fetching motorcycle models:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -61,6 +58,14 @@ const AdminMotorcycleModels = () => {
         : await unpublishMotorcycle(motorcycle.id);
 
       if (success) {
+        // Log admin action
+        await logAdminAction({
+          action: motorcycle.is_draft ? auditActions.MOTORCYCLE_PUBLISH : auditActions.MOTORCYCLE_UNPUBLISH,
+          tableName: 'motorcycle_models',
+          recordId: motorcycle.id,
+          newValues: { is_draft: !motorcycle.is_draft },
+        });
+
         toast({
           title: motorcycle.is_draft ? "Motorcycle Published" : "Motorcycle Unpublished",
           description: `${motorcycle.make} ${motorcycle.model} has been ${motorcycle.is_draft ? 'published' : 'moved to drafts'}.`,
@@ -70,7 +75,6 @@ const AdminMotorcycleModels = () => {
         throw new Error("Failed to update status");
       }
     } catch (error) {
-      console.error("Error toggling publish status:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -92,6 +96,14 @@ const AdminMotorcycleModels = () => {
 
       if (error) throw error;
 
+      // Log admin action
+      await logAdminAction({
+        action: auditActions.MOTORCYCLE_DELETE,
+        tableName: 'motorcycle_models',
+        recordId: model.id,
+        oldValues: model,
+      });
+
       toast({
         title: "Model deleted",
         description: `${model.make} ${model.model} has been removed.`,
@@ -99,7 +111,6 @@ const AdminMotorcycleModels = () => {
 
       refetch();
     } catch (error) {
-      console.error("Error deleting model:", error);
       toast({
         variant: "destructive",
         title: "Error",
