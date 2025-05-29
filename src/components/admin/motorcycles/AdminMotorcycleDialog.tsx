@@ -181,39 +181,50 @@ const AdminMotorcycleDialog = ({
     setLoading(true);
     
     try {
+      console.log("Submitting motorcycle data:", data);
+      
+      // Prepare the data for insertion/update
+      const motorcycleData = {
+        name: data.name,
+        brand_id: data.brand_id,
+        type: data.type,
+        category: data.category,
+        production_start_year: data.production_start_year,
+        production_status: data.production_status,
+        base_description: data.base_description,
+        summary: data.summary,
+        default_image_url: data.default_image_url || null,
+        slug: data.slug || `${data.name.toLowerCase().replace(/\s+/g, '-')}-${data.production_start_year}`,
+        engine_size: data.engine_size || null,
+        horsepower: data.horsepower || null,
+        torque_nm: data.torque_nm || null,
+        top_speed_kph: data.top_speed_kph || null,
+        has_abs: data.has_abs,
+        weight_kg: data.weight_kg || null,
+        seat_height_mm: data.seat_height_mm || null,
+        wheelbase_mm: data.wheelbase_mm || null,
+        ground_clearance_mm: data.ground_clearance_mm || null,
+        fuel_capacity_l: data.fuel_capacity_l || null,
+        difficulty_level: data.difficulty_level,
+        status: data.status,
+        is_draft: data.is_draft,
+      };
+      
       if (motorcycle) {
         // Update existing motorcycle
+        console.log("Updating motorcycle with ID:", motorcycle.id);
         const { error } = await supabase
           .from('motorcycle_models')
           .update({
-            name: data.name,
-            brand_id: data.brand_id,
-            type: data.type,
-            category: data.category,
-            production_start_year: data.production_start_year,
-            production_status: data.production_status,
-            base_description: data.base_description,
-            summary: data.summary,
-            default_image_url: data.default_image_url || null,
-            slug: data.slug,
-            engine_size: data.engine_size || null,
-            horsepower: data.horsepower || null,
-            torque_nm: data.torque_nm || null,
-            top_speed_kph: data.top_speed_kph || null,
-            has_abs: data.has_abs,
-            weight_kg: data.weight_kg || null,
-            seat_height_mm: data.seat_height_mm || null,
-            wheelbase_mm: data.wheelbase_mm || null,
-            ground_clearance_mm: data.ground_clearance_mm || null,
-            fuel_capacity_l: data.fuel_capacity_l || null,
-            difficulty_level: data.difficulty_level,
-            status: data.status,
-            is_draft: data.is_draft,
+            ...motorcycleData,
             updated_at: new Date().toISOString(),
           })
           .eq('id', motorcycle.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
         
         toast({
           title: "Success",
@@ -221,35 +232,15 @@ const AdminMotorcycleDialog = ({
         });
       } else {
         // Create new motorcycle
+        console.log("Creating new motorcycle");
         const { error } = await supabase
           .from('motorcycle_models')
-          .insert({
-            name: data.name,
-            brand_id: data.brand_id,
-            type: data.type,
-            category: data.category,
-            production_start_year: data.production_start_year,
-            production_status: data.production_status,
-            base_description: data.base_description,
-            summary: data.summary,
-            default_image_url: data.default_image_url || null,
-            slug: data.slug,
-            engine_size: data.engine_size || null,
-            horsepower: data.horsepower || null,
-            torque_nm: data.torque_nm || null,
-            top_speed_kph: data.top_speed_kph || null,
-            has_abs: data.has_abs,
-            weight_kg: data.weight_kg || null,
-            seat_height_mm: data.seat_height_mm || null,
-            wheelbase_mm: data.wheelbase_mm || null,
-            ground_clearance_mm: data.ground_clearance_mm || null,
-            fuel_capacity_l: data.fuel_capacity_l || null,
-            difficulty_level: data.difficulty_level,
-            status: data.status,
-            is_draft: data.is_draft,
-          });
+          .insert(motorcycleData);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
         
         toast({
           title: "Success",
@@ -259,13 +250,13 @@ const AdminMotorcycleDialog = ({
       
       setLoading(false);
       onClose(true);
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
       console.error("Error saving motorcycle:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save motorcycle. Please try again.",
+        description: error.message || "Failed to save motorcycle. Please try again.",
       });
     }
   };

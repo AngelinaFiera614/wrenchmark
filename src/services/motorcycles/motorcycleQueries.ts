@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 const MOTORCYCLE_MODEL_SELECT_QUERY = `
@@ -48,17 +49,10 @@ export const fetchAllMotorcycles = async () => {
       
     if (error) {
       console.error("Error fetching motorcycle models:", error);
-      console.error("Error details:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
       throw error;
     }
     
     console.log(`Successfully fetched ${data?.length || 0} published motorcycle models`);
-    console.log("Sample motorcycle data:", data?.[0]);
     return data || [];
   } catch (error) {
     console.error("Unexpected error in fetchAllMotorcycles:", error);
@@ -79,10 +73,17 @@ export const fetchAllMotorcyclesForAdmin = async () => {
       
     if (error) {
       console.error("Error fetching admin motorcycle models:", error);
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       throw error;
     }
     
     console.log(`Successfully fetched ${data?.length || 0} motorcycle models for admin`);
+    console.log("Sample admin motorcycle data:", data?.[0]);
     return data || [];
   } catch (error) {
     console.error("Unexpected error in fetchAllMotorcyclesForAdmin:", error);

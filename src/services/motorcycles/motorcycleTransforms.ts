@@ -23,7 +23,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   
   return {
     id: rawData.id,
-    make: brandData.name || "Unknown", // Map brand name to make
+    make: brandData.name || "Unknown Brand", // Map brand name to make with fallback
     brand_id: rawData.brand_id,
     model: rawData.name, // Map name to model
     year: rawData.production_start_year || new Date().getFullYear(),

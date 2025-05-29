@@ -6,47 +6,43 @@ import { PlusCircle, Loader2, FileText, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getAllMotorcyclesForAdmin, publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycleService";
+import { publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycleService";
 import { supabase } from "@/integrations/supabase/client";
 import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycleDialog";
 import { Motorcycle } from "@/types";
+import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/motorcycleQueries";
+import { transformMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
 
 const AdminMotorcycleModels = () => {
   const { toast } = useToast();
   const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
   const [editModel, setEditModel] = useState<Motorcycle | null>(null);
-  const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set<string>());
 
-  // Fetch motorcycle models with improved error handling using admin service
+  // Fetch motorcycle models with admin permissions and proper error handling
   const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-motorcycle-models"],
     queryFn: async () => {
       try {
         console.log("Admin: Starting to fetch motorcycle models...");
-        const data = await getAllMotorcyclesForAdmin();
-        console.log("Admin: Successfully fetched models:", data?.length);
-        return data;
+        const rawData = await fetchAllMotorcyclesForAdmin();
+        console.log("Admin: Raw data received:", rawData?.length);
+        
+        // Transform the raw data to match the Motorcycle interface
+        const transformedData = rawData.map(transformMotorcycleData);
+        console.log("Admin: Successfully transformed models:", transformedData?.length);
+        
+        return transformedData;
       } catch (error) {
         console.error("Admin: Error fetching motorcycle models:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load motorcycle models. Please try again.",
+          description: "Failed to load motorcycle models. Please check your admin permissions.",
         });
         throw error;
       }
     }
   });
-
-  const toggleModelExpansion = (modelId: string) => {
-    const newExpanded = new Set(expandedModels);
-    if (newExpanded.has(modelId)) {
-      newExpanded.delete(modelId);
-    } else {
-      newExpanded.add(modelId);
-    }
-    setExpandedModels(newExpanded);
-  };
 
   const handleCreateModel = () => {
     setEditModel(null);
@@ -147,7 +143,7 @@ const AdminMotorcycleModels = () => {
                 Failed to load motorcycle models
               </div>
               <div className="text-muted-foreground">
-                There was an error loading the motorcycle data. Please check the console for details.
+                There was an error loading the motorcycle data. Please check your admin permissions and try again.
               </div>
               <Button variant="outline" onClick={() => refetch()}>
                 Try Again
