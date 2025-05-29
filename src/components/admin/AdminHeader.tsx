@@ -30,6 +30,14 @@ export function AdminHeader() {
                 src="/wrenchmark-monogram.png" 
                 alt="Wrenchmark logo" 
                 className="h-8 w-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = document.createElement('span');
+                  fallback.textContent = 'W';
+                  fallback.className = 'text-xl font-bold text-accent-teal';
+                  target.parentNode?.appendChild(fallback);
+                }}
               />
             </Link>
             <span className="hidden md:inline-block text-xs bg-accent-teal/20 text-accent-teal px-2 py-0.5 rounded-md ml-2">
@@ -59,6 +67,14 @@ export function AdminHeader() {
                   src="/wrenchmark-monogram.png" 
                   alt="Wrenchmark logo" 
                   className="h-6 w-auto mr-2"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = document.createElement('span');
+                    fallback.textContent = 'W';
+                    fallback.className = 'text-lg font-bold text-accent-teal';
+                    target.parentNode?.appendChild(fallback);
+                  }}
                 />
                 <h2 className="text-accent-teal font-bold">ADMIN PORTAL</h2>
               </div>

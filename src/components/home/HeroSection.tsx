@@ -26,6 +26,14 @@ const HeroSection: React.FC = () => {
                 src="/wrenchmark-logo-full-dark.png" 
                 alt="Wrenchmark logo" 
                 className="h-16 md:h-20 w-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = document.createElement('h1');
+                  fallback.textContent = 'WRENCHMARK';
+                  fallback.className = 'text-3xl md:text-4xl font-bold text-accent-teal';
+                  target.parentNode?.appendChild(fallback);
+                }}
               />
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">

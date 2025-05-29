@@ -13,6 +13,14 @@ const Header: React.FC = () => {
             src="/wrenchmark-logo-full-dark.png" 
             alt="Wrenchmark logo" 
             className="h-10 md:h-12 w-auto"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const fallback = document.createElement('span');
+              fallback.textContent = 'WRENCHMARK';
+              fallback.className = 'text-xl font-bold text-accent-teal';
+              target.parentNode?.appendChild(fallback);
+            }}
           />
         </Link>
 
