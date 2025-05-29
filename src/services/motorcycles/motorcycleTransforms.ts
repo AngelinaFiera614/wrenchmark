@@ -55,6 +55,24 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     engine_cc: engineSize,
     displacement_cc: engineSize,
     horsepower_hp: horsepower,
+    
+    // Enhanced engine information
+    power_rpm: rawData.power_rpm,
+    torque_rpm: rawData.torque_rpm,
+    engine_type: rawData.engine_type,
+    cylinder_count: rawData.cylinder_count,
+    
+    // Enhanced brake system information
+    brake_type: rawData.brake_type,
+    has_abs: rawData.has_abs,
+    
+    // US Standard fields (calculated in app, not stored)
+    weight_lbs: rawData.weight_kg ? Math.round(rawData.weight_kg * 2.205) : undefined,
+    seat_height_in: rawData.seat_height_mm ? Math.round(rawData.seat_height_mm / 25.4) : undefined,
+    wheelbase_in: rawData.wheelbase_mm ? Math.round(rawData.wheelbase_mm / 25.4) : undefined,
+    ground_clearance_in: rawData.ground_clearance_mm ? Math.round(rawData.ground_clearance_mm / 25.4) : undefined,
+    fuel_capacity_gal: rawData.fuel_capacity_l ? Math.round(rawData.fuel_capacity_l * 0.264172 * 100) / 100 : undefined,
+    top_speed_mph: rawData.top_speed_kph ? Math.round(rawData.top_speed_kph * 0.621371) : undefined,
   };
 };
 

@@ -42,18 +42,18 @@ const motorcycleFormSchema = z.object({
     .refine((val) => !val || validateSlug(val), "Invalid slug format"),
   
   // Performance fields with bounds
-  engine_size: z.coerce.number().min(0).max(10000).optional(),
-  horsepower: z.coerce.number().min(0).max(2000).optional(),
-  torque_nm: z.coerce.number().min(0).max(2000).optional(),
-  top_speed_kph: z.coerce.number().min(0).max(500).optional(),
+  engine_size: z.coerce.number().min(0).max(10000).optional().or(z.literal("")),
+  horsepower: z.coerce.number().min(0).max(2000).optional().or(z.literal("")),
+  torque_nm: z.coerce.number().min(0).max(2000).optional().or(z.literal("")),
+  top_speed_kph: z.coerce.number().min(0).max(500).optional().or(z.literal("")),
   has_abs: z.boolean().default(false),
   
   // Dimensions fields with realistic bounds
-  weight_kg: z.coerce.number().min(0).max(1000).optional(),
-  seat_height_mm: z.coerce.number().min(500).max(1200).optional(),
-  wheelbase_mm: z.coerce.number().min(1000).max(2500).optional(),
-  ground_clearance_mm: z.coerce.number().min(50).max(500).optional(),
-  fuel_capacity_l: z.coerce.number().min(0).max(50).optional(),
+  weight_kg: z.coerce.number().min(0).max(1000).optional().or(z.literal("")),
+  seat_height_mm: z.coerce.number().min(500).max(1200).optional().or(z.literal("")),
+  wheelbase_mm: z.coerce.number().min(1000).max(2500).optional().or(z.literal("")),
+  ground_clearance_mm: z.coerce.number().min(50).max(500).optional().or(z.literal("")),
+  fuel_capacity_l: z.coerce.number().min(0).max(50).optional().or(z.literal("")),
   difficulty_level: z.coerce.number().min(1).max(5).default(3),
   
   // Status
@@ -104,16 +104,16 @@ const AdminMotorcycleDialog = ({
       summary: "",
       default_image_url: "",
       slug: "",
-      engine_size: undefined,
-      horsepower: undefined,
-      torque_nm: undefined,
-      top_speed_kph: undefined,
+      engine_size: "",
+      horsepower: "",
+      torque_nm: "",
+      top_speed_kph: "",
       has_abs: false,
-      weight_kg: undefined,
-      seat_height_mm: undefined,
-      wheelbase_mm: undefined,
-      ground_clearance_mm: undefined,
-      fuel_capacity_l: undefined,
+      weight_kg: "",
+      seat_height_mm: "",
+      wheelbase_mm: "",
+      ground_clearance_mm: "",
+      fuel_capacity_l: "",
       difficulty_level: 3,
       status: "active",
       is_draft: true,
@@ -123,27 +123,29 @@ const AdminMotorcycleDialog = ({
   // When editing an existing motorcycle, populate form
   useEffect(() => {
     if (motorcycle) {
+      console.log("Populating form with motorcycle data:", motorcycle);
+      
       form.reset({
-        name: motorcycle.model,
+        name: motorcycle.model || "",
         brand_id: motorcycle.brand_id || "",
         type: motorcycle.category || "Standard",
-        category: motorcycle.category,
-        production_start_year: motorcycle.year,
+        category: motorcycle.category || "",
+        production_start_year: motorcycle.year || new Date().getFullYear(),
         production_status: motorcycle.status || "active",
-        base_description: motorcycle.summary,
-        summary: motorcycle.summary,
-        default_image_url: motorcycle.image_url,
+        base_description: motorcycle.summary || "",
+        summary: motorcycle.summary || "",
+        default_image_url: motorcycle.image_url || "",
         slug: motorcycle.slug || "",
-        engine_size: motorcycle.engine_size || undefined,
-        horsepower: motorcycle.horsepower || undefined,
-        torque_nm: motorcycle.torque_nm || undefined,
-        top_speed_kph: motorcycle.top_speed_kph || undefined,
+        engine_size: motorcycle.engine_size || "",
+        horsepower: motorcycle.horsepower || "",
+        torque_nm: motorcycle.torque_nm || "",
+        top_speed_kph: motorcycle.top_speed_kph || "",
         has_abs: motorcycle.abs || false,
-        weight_kg: motorcycle.weight_kg || undefined,
-        seat_height_mm: motorcycle.seat_height_mm || undefined,
-        wheelbase_mm: motorcycle.wheelbase_mm || undefined,
-        ground_clearance_mm: motorcycle.ground_clearance_mm || undefined,
-        fuel_capacity_l: motorcycle.fuel_capacity_l || undefined,
+        weight_kg: motorcycle.weight_kg || "",
+        seat_height_mm: motorcycle.seat_height_mm || "",
+        wheelbase_mm: motorcycle.wheelbase_mm || "",
+        ground_clearance_mm: motorcycle.ground_clearance_mm || "",
+        fuel_capacity_l: motorcycle.fuel_capacity_l || "",
         difficulty_level: motorcycle.difficulty_level || 3,
         status: motorcycle.status || "active",
         is_draft: motorcycle.is_draft || false,
@@ -161,16 +163,16 @@ const AdminMotorcycleDialog = ({
         summary: "",
         default_image_url: "",
         slug: "",
-        engine_size: undefined,
-        horsepower: undefined,
-        torque_nm: undefined,
-        top_speed_kph: undefined,
+        engine_size: "",
+        horsepower: "",
+        torque_nm: "",
+        top_speed_kph: "",
         has_abs: false,
-        weight_kg: undefined,
-        seat_height_mm: undefined,
-        wheelbase_mm: undefined,
-        ground_clearance_mm: undefined,
-        fuel_capacity_l: undefined,
+        weight_kg: "",
+        seat_height_mm: "",
+        wheelbase_mm: "",
+        ground_clearance_mm: "",
+        fuel_capacity_l: "",
         difficulty_level: 3,
         status: "active",
         is_draft: true,
@@ -189,7 +191,15 @@ const AdminMotorcycleDialog = ({
     }
   };
 
+  // Helper function to convert empty strings to null for numeric fields
+  const convertEmptyToNull = (value: any) => {
+    if (value === "" || value === undefined) return null;
+    if (typeof value === "string" && value.trim() === "") return null;
+    return value;
+  };
+
   const onSubmit = async (data: MotorcycleFormValues) => {
+    console.log("Form submission started with data:", data);
     setLoading(true);
     
     try {
@@ -206,41 +216,50 @@ const AdminMotorcycleDialog = ({
         name: sanitizedData.name,
         brand_id: sanitizedData.brand_id,
         type: sanitizedData.type,
-        category: sanitizedData.category,
+        category: sanitizedData.category || sanitizedData.type,
         production_start_year: sanitizedData.production_start_year,
         production_status: sanitizedData.production_status,
         base_description: sanitizedData.base_description,
         summary: sanitizedData.summary,
         default_image_url: sanitizedData.default_image_url || null,
         slug: sanitizedData.slug || `${sanitizedData.name.toLowerCase().replace(/\s+/g, '-')}-${sanitizedData.production_start_year}`,
-        engine_size: sanitizedData.engine_size || null,
-        horsepower: sanitizedData.horsepower || null,
-        torque_nm: sanitizedData.torque_nm || null,
-        top_speed_kph: sanitizedData.top_speed_kph || null,
+        engine_size: convertEmptyToNull(sanitizedData.engine_size),
+        horsepower: convertEmptyToNull(sanitizedData.horsepower),
+        torque_nm: convertEmptyToNull(sanitizedData.torque_nm),
+        top_speed_kph: convertEmptyToNull(sanitizedData.top_speed_kph),
         has_abs: sanitizedData.has_abs,
-        weight_kg: sanitizedData.weight_kg || null,
-        seat_height_mm: sanitizedData.seat_height_mm || null,
-        wheelbase_mm: sanitizedData.wheelbase_mm || null,
-        ground_clearance_mm: sanitizedData.ground_clearance_mm || null,
-        fuel_capacity_l: sanitizedData.fuel_capacity_l || null,
+        weight_kg: convertEmptyToNull(sanitizedData.weight_kg),
+        seat_height_mm: convertEmptyToNull(sanitizedData.seat_height_mm),
+        wheelbase_mm: convertEmptyToNull(sanitizedData.wheelbase_mm),
+        ground_clearance_mm: convertEmptyToNull(sanitizedData.ground_clearance_mm),
+        fuel_capacity_l: convertEmptyToNull(sanitizedData.fuel_capacity_l),
         difficulty_level: sanitizedData.difficulty_level,
         status: sanitizedData.status,
         is_draft: sanitizedData.is_draft,
       };
+
+      console.log("Prepared motorcycle data for database:", motorcycleData);
       
       if (motorcycle) {
         // Update existing motorcycle
-        const { error } = await supabase
+        console.log("Updating motorcycle with ID:", motorcycle.id);
+        
+        const { data: result, error } = await supabase
           .from('motorcycle_models')
           .update({
             ...motorcycleData,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', motorcycle.id);
+          .eq('id', motorcycle.id)
+          .select()
+          .single();
         
         if (error) {
+          console.error("Update error:", error);
           throw error;
         }
+
+        console.log("Update successful:", result);
 
         // Log admin action
         await logAdminAction({
@@ -256,13 +275,20 @@ const AdminMotorcycleDialog = ({
         });
       } else {
         // Create new motorcycle
-        const { error } = await supabase
+        console.log("Creating new motorcycle");
+        
+        const { data: result, error } = await supabase
           .from('motorcycle_models')
-          .insert(motorcycleData);
+          .insert(motorcycleData)
+          .select()
+          .single();
         
         if (error) {
+          console.error("Insert error:", error);
           throw error;
         }
+
+        console.log("Insert successful:", result);
 
         // Log admin action
         await logAdminAction({
@@ -280,11 +306,12 @@ const AdminMotorcycleDialog = ({
       setLoading(false);
       onClose(true);
     } catch (error: any) {
+      console.error("Submit error:", error);
       setLoading(false);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save motorcycle. Please check your input and try again.",
+        description: error.message || "Failed to save motorcycle. Please check your input and try again.",
       });
     }
   };

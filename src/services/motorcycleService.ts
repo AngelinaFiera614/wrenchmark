@@ -1,211 +1,123 @@
 
+import { supabase } from "@/integrations/supabase/client";
 import { Motorcycle } from "@/types";
-import { 
-  fetchAllMotorcycles,
-  fetchAllMotorcyclesForAdmin,
-  fetchMotorcycleBySlug,
-  fetchMotorcycleBySlugForAdmin,
-  fetchMotorcycleById,
-  fetchMotorcycleByIdForAdmin,
-  fetchMotorcyclesByIds,
-  fetchMotorcyclesByIdsForAdmin,
-  fetchMotorcycleByDetails,
-  insertPlaceholderMotorcycle,
-  updateMotorcycleDraftStatus
-} from "./motorcycles/motorcycleQueries";
-import { 
-  transformMotorcycleData,
-  createPlaceholderMotorcycleData,
-  createDraftMotorcycleData
-} from "./motorcycles/motorcycleTransforms";
 
-export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
+export const publishMotorcycle = async (motorcycleId: string): Promise<boolean> => {
   try {
-    console.log("Service: Starting getAllMotorcycles (published only)...");
-    const data = await fetchAllMotorcycles();
-    console.log("Service: Raw data received:", data?.length, "items");
+    console.log("Publishing motorcycle:", motorcycleId);
     
-    if (!data || data.length === 0) {
-      console.warn("Service: No motorcycle data received from database");
-      return [];
-    }
-    
-    const transformedData = data.map(transformMotorcycleData);
-    console.log("Service: Transformed data:", transformedData?.length, "motorcycles");
-    console.log("Service: Sample transformed motorcycle:", transformedData[0]);
-    
-    return transformedData;
-  } catch (error) {
-    console.error("Service: Error in getAllMotorcycles:", error);
-    return [];
-  }
-};
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .update({ is_draft: false })
+      .eq('id', motorcycleId)
+      .select()
+      .single();
 
-export const getAllMotorcyclesForAdmin = async (): Promise<Motorcycle[]> => {
-  try {
-    console.log("Service: Starting getAllMotorcyclesForAdmin (including drafts)...");
-    const data = await fetchAllMotorcyclesForAdmin();
-    console.log("Service: Raw admin data received:", data?.length, "items");
-    
-    if (!data || data.length === 0) {
-      console.warn("Service: No motorcycle data received from database for admin");
-      return [];
-    }
-    
-    const transformedData = data.map(transformMotorcycleData);
-    console.log("Service: Transformed admin data:", transformedData?.length, "motorcycles");
-    
-    return transformedData;
-  } catch (error) {
-    console.error("Service: Error in getAllMotorcyclesForAdmin:", error);
-    return [];
-  }
-};
-
-export const getMotorcycleBySlug = async (slug: string, isAdmin: boolean = false): Promise<Motorcycle | null> => {
-  try {
-    const { data, error } = isAdmin 
-      ? await fetchMotorcycleBySlugForAdmin(slug)
-      : await fetchMotorcycleBySlug(slug);
-    
     if (error) {
-      console.error("Error fetching motorcycle by slug:", error);
-      
-      // If slug lookup fails, try finding by ID as fallback
-      const { data: fallbackData, error: fallbackError } = isAdmin
-        ? await fetchMotorcycleByIdForAdmin(slug)
-        : await fetchMotorcycleById(slug);
-      
-      if (fallbackError) {
-        console.error("Error in fallback motorcycle lookup:", fallbackError);
-        return null;
-      }
-      
-      if (fallbackData) {
-        return transformMotorcycleData(fallbackData);
-      }
-      
-      return null;
-    }
-    
-    if (!data) {
-      return null;
-    }
-    
-    return transformMotorcycleData(data);
-  } catch (error) {
-    console.error("Error in getMotorcycleBySlug:", error);
-    return null;
-  }
-};
-
-export const getMotorcyclesByIds = async (ids: string[], isAdmin: boolean = false): Promise<Motorcycle[]> => {
-  try {
-    const { data, error } = isAdmin
-      ? await fetchMotorcyclesByIdsForAdmin(ids)
-      : await fetchMotorcyclesByIds(ids);
-    
-    if (error) {
-      console.error("Error fetching motorcycles by IDs:", error);
-      return [];
-    }
-    
-    return data.map(transformMotorcycleData);
-  } catch (error) {
-    console.error("Error in getMotorcyclesByIds:", error);
-    return [];
-  }
-};
-
-export const findMotorcycleByDetails = async (make: string, model: string, year: number): Promise<Motorcycle | null> => {
-  try {
-    const { data, error } = await fetchMotorcycleByDetails(model, year);
-    
-    if (error) {
-      console.error("Error finding motorcycle by details:", error);
-      return null;
-    }
-    
-    if (!data) {
-      return null;
-    }
-    
-    return transformMotorcycleData(data);
-  } catch (error) {
-    console.error("Error in findMotorcycleByDetails:", error);
-    return null;
-  }
-};
-
-export const createPlaceholderMotorcycle = async (motorcycleData: {
-  make: string;
-  model: string;
-  year: number;
-}): Promise<Motorcycle> => {
-  try {
-    const insertData = createPlaceholderMotorcycleData(motorcycleData);
-    const { data, error } = await insertPlaceholderMotorcycle(insertData);
-    
-    if (error) {
-      console.error("Error creating placeholder motorcycle:", error);
+      console.error("Publish error:", error);
       throw error;
     }
-    
-    return {
-      ...transformMotorcycleData(data),
-      make: motorcycleData.make
-    };
-  } catch (error) {
-    console.error("Error in createPlaceholderMotorcycle:", error);
-    throw error;
-  }
-};
 
-export const createDraftMotorcycle = async (name: string, brandId: string): Promise<Motorcycle> => {
-  try {
-    const insertData = createDraftMotorcycleData(name, brandId);
-    const { data, error } = await insertPlaceholderMotorcycle(insertData);
-    
-    if (error) {
-      console.error("Error creating draft motorcycle:", error);
-      throw error;
-    }
-    
-    return transformMotorcycleData(data);
-  } catch (error) {
-    console.error("Error in createDraftMotorcycle:", error);
-    throw error;
-  }
-};
-
-export const publishMotorcycle = async (id: string): Promise<boolean> => {
-  try {
-    const { error } = await updateMotorcycleDraftStatus(id, false);
-    
-    if (error) {
-      console.error("Error publishing motorcycle:", error);
-      return false;
-    }
-    
+    console.log("Motorcycle published successfully:", data);
     return true;
   } catch (error) {
-    console.error("Error in publishMotorcycle:", error);
+    console.error("Failed to publish motorcycle:", error);
     return false;
   }
 };
 
-export const unpublishMotorcycle = async (id: string): Promise<boolean> => {
+export const unpublishMotorcycle = async (motorcycleId: string): Promise<boolean> => {
   try {
-    const { error } = await updateMotorcycleDraftStatus(id, true);
+    console.log("Unpublishing motorcycle:", motorcycleId);
     
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .update({ is_draft: true })
+      .eq('id', motorcycleId)
+      .select()
+      .single();
+
     if (error) {
-      console.error("Error unpublishing motorcycle:", error);
-      return false;
+      console.error("Unpublish error:", error);
+      throw error;
     }
-    
+
+    console.log("Motorcycle unpublished successfully:", data);
     return true;
   } catch (error) {
-    console.error("Error in unpublishMotorcycle:", error);
+    console.error("Failed to unpublish motorcycle:", error);
+    return false;
+  }
+};
+
+export const updateMotorcycle = async (motorcycleId: string, updateData: Partial<Motorcycle>): Promise<boolean> => {
+  try {
+    console.log("Updating motorcycle:", motorcycleId, updateData);
+    
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', motorcycleId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Update error:", error);
+      throw error;
+    }
+
+    console.log("Motorcycle updated successfully:", data);
+    return true;
+  } catch (error) {
+    console.error("Failed to update motorcycle:", error);
+    return false;
+  }
+};
+
+export const createMotorcycle = async (motorcycleData: any): Promise<string | null> => {
+  try {
+    console.log("Creating motorcycle:", motorcycleData);
+    
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .insert(motorcycleData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Create error:", error);
+      throw error;
+    }
+
+    console.log("Motorcycle created successfully:", data);
+    return data.id;
+  } catch (error) {
+    console.error("Failed to create motorcycle:", error);
+    return null;
+  }
+};
+
+export const deleteMotorcycle = async (motorcycleId: string): Promise<boolean> => {
+  try {
+    console.log("Deleting motorcycle:", motorcycleId);
+    
+    const { error } = await supabase
+      .from('motorcycle_models')
+      .delete()
+      .eq('id', motorcycleId);
+
+    if (error) {
+      console.error("Delete error:", error);
+      throw error;
+    }
+
+    console.log("Motorcycle deleted successfully");
+    return true;
+  } catch (error) {
+    console.error("Failed to delete motorcycle:", error);
     return false;
   }
 };
