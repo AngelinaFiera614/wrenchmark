@@ -25,10 +25,14 @@ export function AdminHeader() {
         
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
-            <Link to="/" className="font-bold text-xl text-accent-teal mr-2">
-              WRENCHMARK
+            <Link to="/" className="flex items-center mr-2">
+              <img 
+                src="/wrenchmark-monogram.png" 
+                alt="Wrenchmark logo" 
+                className="h-8 w-auto"
+              />
             </Link>
-            <span className="hidden md:inline-block text-xs bg-accent-teal/20 text-accent-teal px-2 py-0.5 rounded-md">
+            <span className="hidden md:inline-block text-xs bg-accent-teal/20 text-accent-teal px-2 py-0.5 rounded-md ml-2">
               Admin
             </span>
           </div>
@@ -50,7 +54,14 @@ export function AdminHeader() {
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
           <div className="fixed inset-y-0 left-0 w-full max-w-xs bg-background border-r border-border">
             <div className="flex items-center justify-between p-4">
-              <h2 className="text-accent-teal font-bold">ADMIN PORTAL</h2>
+              <div className="flex items-center">
+                <img 
+                  src="/wrenchmark-monogram.png" 
+                  alt="Wrenchmark logo" 
+                  className="h-6 w-auto mr-2"
+                />
+                <h2 className="text-accent-teal font-bold">ADMIN PORTAL</h2>
+              </div>
               <Button 
                 variant="ghost" 
                 size="icon"

@@ -8,8 +8,12 @@ const Header: React.FC = () => {
   return (
     <header className="bg-background border-b">
       <div className="container flex items-center justify-between h-16">
-        <Link to="/" className="text-2xl font-bold">
-          <span className="text-accent-teal">WRENCH</span>MARK
+        <Link to="/" className="flex items-center">
+          <img 
+            src="/wrenchmark-logo-full-dark.png" 
+            alt="Wrenchmark logo" 
+            className="h-10 md:h-12 w-auto"
+          />
         </Link>
 
         <div className="flex items-center space-x-4">
