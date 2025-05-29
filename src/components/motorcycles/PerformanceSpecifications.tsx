@@ -1,7 +1,7 @@
 
 import { Motorcycle } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GaugeCircle, Zap, Gauge, Timer } from "lucide-react";
+import { GaugeCircle, Zap, Gauge, Timer, Shield } from "lucide-react";
 import { PerformanceSpecItem } from "./performance/PerformanceSpecItem";
 import { usePerformanceData } from "./performance/usePerformanceData";
 
@@ -10,7 +10,7 @@ interface PerformanceSpecificationsProps {
 }
 
 export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificationsProps) {
-  const { engineSize, horsepower, torque, topSpeed, unit } = usePerformanceData(motorcycle);
+  const { engineType, horsepower, torque, topSpeed, brakeSystem, unit } = usePerformanceData(motorcycle);
   
   return (
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-100 shadow-md">
@@ -25,27 +25,33 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
         <div className="space-y-4">
           <PerformanceSpecItem 
             label="Engine" 
-            value={engineSize} 
+            value={engineType} 
             icon={<GaugeCircle className="h-4 w-4" />}
-            tooltip="Engine displacement in cubic centimeters, indicating the size of the engine"
+            tooltip="Engine displacement and configuration type"
           />
           <PerformanceSpecItem 
-            label="Horsepower" 
+            label="Power" 
             value={horsepower} 
             icon={<Zap className="h-4 w-4" />}
-            tooltip="Maximum power output of the engine, measured in horsepower (hp)"
+            tooltip="Maximum power output with RPM peak where available"
           />
           <PerformanceSpecItem 
             label="Torque" 
             value={torque} 
             icon={<Timer className="h-4 w-4" />}
-            tooltip="Rotational force produced by the engine, measured in Newton meters (Nm)"
+            tooltip="Maximum torque output with RPM peak where available"
           />
           <PerformanceSpecItem 
             label="Top Speed" 
             value={topSpeed} 
             icon={<Gauge className="h-4 w-4" />}
             tooltip={`Maximum speed the motorcycle can achieve in ${unit === 'metric' ? 'kilometers per hour' : 'miles per hour'}`}
+          />
+          <PerformanceSpecItem 
+            label="Brake System" 
+            value={brakeSystem} 
+            icon={<Shield className="h-4 w-4" />}
+            tooltip="Brake system type and safety features"
           />
         </div>
       </CardContent>

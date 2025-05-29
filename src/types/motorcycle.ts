@@ -45,12 +45,22 @@ export interface Motorcycle {
   migration_status?: string;
   status?: string;
   engine?: string;
-  is_draft?: boolean; // Add draft status
+  is_draft?: boolean;
   
   // Compatibility aliases for legacy code
   engine_cc?: number;
   displacement_cc?: number;
   horsepower_hp?: number;
+  
+  // Enhanced engine information
+  power_rpm?: number;
+  torque_rpm?: number;
+  engine_type?: string;
+  cylinder_count?: number;
+  
+  // Enhanced brake system information
+  brake_type?: string;
+  has_abs?: boolean;
   
   // US Standard fields (calculated in app, not stored)
   weight_lbs?: number;

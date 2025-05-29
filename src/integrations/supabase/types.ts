@@ -306,7 +306,9 @@ export type Database = {
           id: string
           name: string
           power_hp: number | null
+          power_rpm: number | null
           torque_nm: number | null
+          torque_rpm: number | null
           updated_at: string
           valve_count: number | null
         }
@@ -319,7 +321,9 @@ export type Database = {
           id?: string
           name: string
           power_hp?: number | null
+          power_rpm?: number | null
           torque_nm?: number | null
+          torque_rpm?: number | null
           updated_at?: string
           valve_count?: number | null
         }
@@ -332,7 +336,9 @@ export type Database = {
           id?: string
           name?: string
           power_hp?: number | null
+          power_rpm?: number | null
           torque_nm?: number | null
+          torque_rpm?: number | null
           updated_at?: string
           valve_count?: number | null
         }
