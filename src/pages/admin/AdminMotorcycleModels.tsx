@@ -2,15 +2,16 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, FileText, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getAllMotorcycleModels } from "@/services/modelService";
+import { getAllMotorcyclesForAdmin, publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycleService";
 import { supabase } from "@/integrations/supabase/client";
 import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
 import AdminModelYearDialog from "@/components/admin/models/AdminModelYearDialog";
 import AdminConfigurationDialog from "@/components/admin/models/AdminConfigurationDialog";
-import ModelsTable from "@/components/admin/models/ModelsTable";
+import { Motorcycle } from "@/types";
 
 const AdminMotorcycleModels = () => {
   const { toast } = useToast();
@@ -20,13 +21,13 @@ const AdminMotorcycleModels = () => {
   const [selectedYearForConfig, setSelectedYearForConfig] = useState(null);
   const [expandedModels, setExpandedModels] = useState<Set<string>>(new Set<string>());
 
-  // Fetch motorcycle models with improved error handling
+  // Fetch motorcycle models with improved error handling using admin service
   const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-motorcycle-models"],
     queryFn: async () => {
       try {
         console.log("Admin: Starting to fetch motorcycle models...");
-        const data = await getAllMotorcycleModels();
+        const data = await getAllMotorcyclesForAdmin();
         console.log("Admin: Successfully fetched models:", data?.length);
         return data;
       } catch (error) {
@@ -67,8 +68,33 @@ const AdminMotorcycleModels = () => {
     setSelectedYearForConfig(year);
   };
 
+  const handleTogglePublishStatus = async (motorcycle: Motorcycle) => {
+    try {
+      const success = motorcycle.is_draft 
+        ? await publishMotorcycle(motorcycle.id)
+        : await unpublishMotorcycle(motorcycle.id);
+
+      if (success) {
+        toast({
+          title: motorcycle.is_draft ? "Motorcycle Published" : "Motorcycle Unpublished",
+          description: `${motorcycle.make} ${motorcycle.model} has been ${motorcycle.is_draft ? 'published' : 'moved to drafts'}.`,
+        });
+        refetch();
+      } else {
+        throw new Error("Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error toggling publish status:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update motorcycle status. Please try again.",
+      });
+    }
+  };
+
   const handleDeleteModel = async (model) => {
-    if (!confirm(`Are you sure you want to delete ${model.brand?.name} ${model.name}? This will remove all associated years and configurations.`)) {
+    if (!confirm(`Are you sure you want to delete ${model.make} ${model.model}? This will remove all associated years and configurations.`)) {
       return;
     }
 
@@ -82,7 +108,7 @@ const AdminMotorcycleModels = () => {
 
       toast({
         title: "Model deleted",
-        description: `${model.brand?.name} ${model.name} has been removed.`,
+        description: `${model.make} ${model.model} has been removed.`,
       });
 
       refetch();
@@ -145,6 +171,9 @@ const AdminMotorcycleModels = () => {
     );
   }
 
+  const publishedModels = models?.filter(m => !m.is_draft) || [];
+  const draftModels = models?.filter(m => m.is_draft) || [];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -165,7 +194,7 @@ const AdminMotorcycleModels = () => {
 
       {/* Summary Stats */}
       {models && models.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Models</CardTitle>
@@ -177,39 +206,150 @@ const AdminMotorcycleModels = () => {
           
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Active Production</CardTitle>
+              <CardTitle className="text-sm font-medium">Published</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {models.filter(m => m.production_status === 'active').length}
-              </div>
+              <div className="text-2xl font-bold">{publishedModels.length}</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Years</CardTitle>
+              <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">{draftModels.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Active Production</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {models.reduce((total, model) => total + (model.years?.length || 0), 0)}
+                {models.filter(m => m.status === 'active').length}
               </div>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Models Table */}
+      {/* Models List */}
       {models && models.length > 0 ? (
-        <ModelsTable
-          models={models}
-          onEditModel={handleEditModel}
-          onDeleteModel={handleDeleteModel}
-          onAddYear={handleAddYear}
-          onAddConfiguration={handleAddConfiguration}
-          expandedModels={expandedModels}
-          onToggleExpanded={toggleModelExpansion}
-        />
+        <div className="space-y-6">
+          {/* Draft Models Section */}
+          {draftModels.length > 0 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <FileText className="mr-2 h-5 w-5 text-orange-600" />
+                Draft Models ({draftModels.length})
+              </h2>
+              <div className="grid gap-4">
+                {draftModels.map((motorcycle) => (
+                  <Card key={motorcycle.id} className="border-orange-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                            <FileText className="mr-1 h-3 w-3" />
+                            Draft
+                          </Badge>
+                          <div>
+                            <h3 className="font-medium">{motorcycle.make} {motorcycle.model}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {motorcycle.year} • {motorcycle.category}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTogglePublishStatus(motorcycle)}
+                          >
+                            <Eye className="mr-1 h-3 w-3" />
+                            Publish
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditModel(motorcycle)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteModel(motorcycle)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Published Models Section */}
+          {publishedModels.length > 0 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <Eye className="mr-2 h-5 w-5 text-green-600" />
+                Published Models ({publishedModels.length})
+              </h2>
+              <div className="grid gap-4">
+                {publishedModels.map((motorcycle) => (
+                  <Card key={motorcycle.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">
+                            <Eye className="mr-1 h-3 w-3" />
+                            Published
+                          </Badge>
+                          <div>
+                            <h3 className="font-medium">{motorcycle.make} {motorcycle.model}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {motorcycle.year} • {motorcycle.category}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTogglePublishStatus(motorcycle)}
+                          >
+                            <FileText className="mr-1 h-3 w-3" />
+                            Unpublish
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditModel(motorcycle)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteModel(motorcycle)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <Card>
           <CardContent className="p-8 text-center">

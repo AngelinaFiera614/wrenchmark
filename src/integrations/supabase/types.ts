@@ -1101,6 +1101,7 @@ export type Database = {
           has_abs: boolean | null
           horsepower: number | null
           id: string
+          is_draft: boolean
           model_history: string | null
           name: string
           predecessor_model_id: string | null
@@ -1136,6 +1137,7 @@ export type Database = {
           has_abs?: boolean | null
           horsepower?: number | null
           id?: string
+          is_draft?: boolean
           model_history?: string | null
           name: string
           predecessor_model_id?: string | null
@@ -1171,6 +1173,7 @@ export type Database = {
           has_abs?: boolean | null
           horsepower?: number | null
           id?: string
+          is_draft?: boolean
           model_history?: string | null
           name?: string
           predecessor_model_id?: string | null

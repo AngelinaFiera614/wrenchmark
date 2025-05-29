@@ -12,10 +12,12 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     engineSize: rawData.engine_size,
     horsepower: rawData.horsepower,
     hasEngineData: !!(rawData.engine_size || rawData.horsepower),
+    isDraft: rawData.is_draft,
     rawDataKeys: Object.keys(rawData)
   });
   
-  // Improved engine size handling - preserve null values for better filtering
+  // For drafts, provide safe defaults for missing data
+  const isDraft = rawData.is_draft || false;
   const engineSize = rawData.engine_size || null;
   const horsepower = rawData.horsepower || null;
   
@@ -29,7 +31,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     style_tags: [],
     difficulty_level: rawData.difficulty_level || 1,
     image_url: rawData.default_image_url || "",
-    engine_size: engineSize || 0, // Keep 0 for display compatibility
+    engine_size: engineSize || 0,
     horsepower: horsepower || 0,
     weight_kg: rawData.weight_kg || 0,
     seat_height_mm: rawData.seat_height_mm || 0,
@@ -47,6 +49,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     migration_status: "migrated",
     status: rawData.status || rawData.production_status,
     engine: rawData.engine_size ? `${rawData.engine_size}cc` : "",
+    is_draft: isDraft, // Add draft status to the transformed data
     
     // Compatibility aliases - preserve original values for filtering
     engine_cc: engineSize,
@@ -59,6 +62,7 @@ export const createPlaceholderMotorcycleData = (motorcycleData: {
   make: string;
   model: string;
   year: number;
+  isDraft?: boolean;
 }) => {
   return {
     name: motorcycleData.model,
@@ -68,5 +72,17 @@ export const createPlaceholderMotorcycleData = (motorcycleData: {
     slug: `${motorcycleData.make.toLowerCase()}-${motorcycleData.model.toLowerCase()}-${motorcycleData.year}`.replace(/\s+/g, '-'),
     brand_id: null, // This should be set based on the make
     base_description: `${motorcycleData.make} ${motorcycleData.model} ${motorcycleData.year}`,
+    is_draft: motorcycleData.isDraft || false,
+  };
+};
+
+export const createDraftMotorcycleData = (name: string, brandId: string) => {
+  return {
+    name,
+    brand_id: brandId,
+    type: "Standard",
+    production_status: "active",
+    slug: `${name.toLowerCase().replace(/\s+/g, '-')}-draft-${Date.now()}`,
+    is_draft: true,
   };
 };

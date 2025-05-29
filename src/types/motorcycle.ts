@@ -45,6 +45,7 @@ export interface Motorcycle {
   migration_status?: string;
   status?: string;
   engine?: string;
+  is_draft?: boolean; // Add draft status
   
   // Compatibility aliases for legacy code
   engine_cc?: number;

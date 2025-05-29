@@ -1,20 +1,27 @@
+
 import { Motorcycle } from "@/types";
 import { 
   fetchAllMotorcycles,
+  fetchAllMotorcyclesForAdmin,
   fetchMotorcycleBySlug,
+  fetchMotorcycleBySlugForAdmin,
   fetchMotorcycleById,
+  fetchMotorcycleByIdForAdmin,
   fetchMotorcyclesByIds,
+  fetchMotorcyclesByIdsForAdmin,
   fetchMotorcycleByDetails,
-  insertPlaceholderMotorcycle
+  insertPlaceholderMotorcycle,
+  updateMotorcycleDraftStatus
 } from "./motorcycles/motorcycleQueries";
 import { 
   transformMotorcycleData,
-  createPlaceholderMotorcycleData
+  createPlaceholderMotorcycleData,
+  createDraftMotorcycleData
 } from "./motorcycles/motorcycleTransforms";
 
 export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
   try {
-    console.log("Service: Starting getAllMotorcycles...");
+    console.log("Service: Starting getAllMotorcycles (published only)...");
     const data = await fetchAllMotorcycles();
     console.log("Service: Raw data received:", data?.length, "items");
     
@@ -34,15 +41,40 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
   }
 };
 
-export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | null> => {
+export const getAllMotorcyclesForAdmin = async (): Promise<Motorcycle[]> => {
   try {
-    const { data, error } = await fetchMotorcycleBySlug(slug);
+    console.log("Service: Starting getAllMotorcyclesForAdmin (including drafts)...");
+    const data = await fetchAllMotorcyclesForAdmin();
+    console.log("Service: Raw admin data received:", data?.length, "items");
+    
+    if (!data || data.length === 0) {
+      console.warn("Service: No motorcycle data received from database for admin");
+      return [];
+    }
+    
+    const transformedData = data.map(transformMotorcycleData);
+    console.log("Service: Transformed admin data:", transformedData?.length, "motorcycles");
+    
+    return transformedData;
+  } catch (error) {
+    console.error("Service: Error in getAllMotorcyclesForAdmin:", error);
+    return [];
+  }
+};
+
+export const getMotorcycleBySlug = async (slug: string, isAdmin: boolean = false): Promise<Motorcycle | null> => {
+  try {
+    const { data, error } = isAdmin 
+      ? await fetchMotorcycleBySlugForAdmin(slug)
+      : await fetchMotorcycleBySlug(slug);
     
     if (error) {
       console.error("Error fetching motorcycle by slug:", error);
       
       // If slug lookup fails, try finding by ID as fallback
-      const { data: fallbackData, error: fallbackError } = await fetchMotorcycleById(slug);
+      const { data: fallbackData, error: fallbackError } = isAdmin
+        ? await fetchMotorcycleByIdForAdmin(slug)
+        : await fetchMotorcycleById(slug);
       
       if (fallbackError) {
         console.error("Error in fallback motorcycle lookup:", fallbackError);
@@ -67,9 +99,11 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
   }
 };
 
-export const getMotorcyclesByIds = async (ids: string[]): Promise<Motorcycle[]> => {
+export const getMotorcyclesByIds = async (ids: string[], isAdmin: boolean = false): Promise<Motorcycle[]> => {
   try {
-    const { data, error } = await fetchMotorcyclesByIds(ids);
+    const { data, error } = isAdmin
+      ? await fetchMotorcyclesByIdsForAdmin(ids)
+      : await fetchMotorcyclesByIds(ids);
     
     if (error) {
       console.error("Error fetching motorcycles by IDs:", error);
@@ -124,5 +158,54 @@ export const createPlaceholderMotorcycle = async (motorcycleData: {
   } catch (error) {
     console.error("Error in createPlaceholderMotorcycle:", error);
     throw error;
+  }
+};
+
+export const createDraftMotorcycle = async (name: string, brandId: string): Promise<Motorcycle> => {
+  try {
+    const insertData = createDraftMotorcycleData(name, brandId);
+    const { data, error } = await insertPlaceholderMotorcycle(insertData);
+    
+    if (error) {
+      console.error("Error creating draft motorcycle:", error);
+      throw error;
+    }
+    
+    return transformMotorcycleData(data);
+  } catch (error) {
+    console.error("Error in createDraftMotorcycle:", error);
+    throw error;
+  }
+};
+
+export const publishMotorcycle = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await updateMotorcycleDraftStatus(id, false);
+    
+    if (error) {
+      console.error("Error publishing motorcycle:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in publishMotorcycle:", error);
+    return false;
+  }
+};
+
+export const unpublishMotorcycle = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await updateMotorcycleDraftStatus(id, true);
+    
+    if (error) {
+      console.error("Error unpublishing motorcycle:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in unpublishMotorcycle:", error);
+    return false;
   }
 };
