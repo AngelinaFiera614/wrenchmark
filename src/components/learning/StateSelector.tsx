@@ -45,8 +45,13 @@ const StateSelector: React.FC<StateSelectorProps> = ({
     );
   }
 
-  // Filter out any states with empty or invalid state codes
-  const validStates = states.filter(state => state.state_code && state.state_code.trim() !== '');
+  // Filter out any states with empty or invalid state codes and ensure they're non-empty strings
+  const validStates = states.filter(state => 
+    state.state_code && 
+    state.state_code.trim() !== '' &&
+    state.state_name &&
+    state.state_name.trim() !== ''
+  );
 
   return (
     <div>

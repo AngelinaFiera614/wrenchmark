@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,7 @@ export default function ImageManagement() {
   const [images, setImages] = useState<MotorcycleImage[]>([]);
   const [tags, setTags] = useState<ImageTag[]>([]);
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
-  const [selectedMotorcycle, setSelectedMotorcycle] = useState<string>('');
+  const [selectedMotorcycle, setSelectedMotorcycle] = useState<string>('all');
   const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -65,7 +64,7 @@ export default function ImageManagement() {
           file_name: file.name,
           file_size_bytes: file.size,
           mime_type: file.type,
-          motorcycle_id: selectedMotorcycle || undefined,
+          motorcycle_id: selectedMotorcycle !== 'all' ? selectedMotorcycle : undefined,
           brand: extractBrandFromFileName(file.name),
           model: extractModelFromFileName(file.name),
           year: extractYearFromFileName(file.name),
@@ -183,13 +182,13 @@ export default function ImageManagement() {
               <Label htmlFor="motorcycle-select">Filter by Motorcycle</Label>
               <Select value={selectedMotorcycle} onValueChange={(value) => {
                 setSelectedMotorcycle(value);
-                if (value) loadMotorcycleImages(value);
+                if (value !== 'all') loadMotorcycleImages(value);
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select motorcycle..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Images</SelectItem>
+                  <SelectItem value="all">All Images</SelectItem>
                   {motorcycles.map((motorcycle) => (
                     <SelectItem key={motorcycle.id} value={motorcycle.id}>
                       {motorcycle.make} {motorcycle.model} ({motorcycle.year})
