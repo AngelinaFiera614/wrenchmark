@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 const MOTORCYCLE_MODEL_SELECT_QUERY = `
@@ -29,7 +28,7 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
   is_draft,
   created_at,
   updated_at,
-  brands:brand_id(
+  brands!motorcycle_models_brand_id_fkey(
     id,
     name,
     slug
