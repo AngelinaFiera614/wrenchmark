@@ -44,70 +44,65 @@ import AdminParts from "@/pages/admin/AdminParts";
 import AdminAccessories from "@/pages/admin/AdminAccessories";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminEnhancedMedia from "@/pages/admin/AdminEnhancedMedia";
+import { BrowserRouter } from "react-router-dom";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import ModelDetailPage from "@/pages/ModelDetailPage";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <HelmetProvider>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <AuthProvider>
-          <ProfileProvider>
-            <MeasurementProvider>
-              <ComparisonProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Routes>
-                    <Route path="/" element={<Layout><Outlet /></Layout>}>
-                      <Route index element={<Index />} />
-                      <Route path="motorcycles" element={<Motorcycles />} />
-                      <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
-                      <Route path="brands" element={<BrandsDirectory />} />
-                      <Route path="brands/:slug" element={<BrandDetail />} />
-                      <Route path="manuals" element={<ManualsPage />} />
-                      <Route path="riding-skills" element={<RidingSkillsPage />} />
-                      <Route path="riding-skills/:id" element={<RidingSkillDetailPage />} />
-                      <Route path="courses" element={<CoursesPage />} />
-                      <Route path="courses/:courseId" element={<CourseDetailsPage />} />
-                      <Route path="courses/:courseId/:lessonId" element={<LessonDetailsPage />} />
-                      <Route path="glossary" element={<GlossaryPage />} />
-                      <Route path="glossary/:slug" element={<GlossaryTermPage />} />
-                      <Route path="compare" element={<CompareModels />} />
-                      <Route path="auth" element={<AuthPage />} />
-                      <Route path="login" element={<Navigate to="/auth" replace />} />
-                      <Route path="profile" element={<ProfilePage />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Route>
-                    
-                    {/* Admin Routes */}
-                    <Route path="/admin/*" element={<AdminLayout />}>
-                      <Route index element={<AdminDashboard />} />
-                      <Route path="models" element={<AdminModels />} />
-                      <Route path="brands" element={<AdminBrands />} />
-                      <Route path="engines" element={<AdminEngines />} />
-                      <Route path="brake-systems" element={<AdminBrakeSystems />} />
-                      <Route path="frames" element={<AdminFrames />} />
-                      <Route path="suspensions" element={<AdminSuspensions />} />
-                      <Route path="wheels" element={<AdminWheels />} />
-                      <Route path="enhanced-media" element={<AdminEnhancedMedia />} />
-                      <Route path="images" element={<AdminImages />} />
-                      <Route path="manuals" element={<AdminManuals />} />
-                      <Route path="riding-skills" element={<AdminRidingSkills />} />
-                      <Route path="courses" element={<AdminCourses />} />
-                      <Route path="glossary" element={<AdminGlossary />} />
-                      <Route path="parts" element={<AdminParts />} />
-                      <Route path="accessories" element={<AdminAccessories />} />
-                      <Route path="users" element={<AdminUsers />} />
-                    </Route>
-                  </Routes>
-                </TooltipProvider>
-              </ComparisonProvider>
-            </MeasurementProvider>
-          </ProfileProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </HelmetProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <div className="min-h-screen bg-explorer-dark">
+          <Routes>
+            <Route path="/" element={<Layout><Outlet /></Layout>}>
+              <Route index element={<Index />} />
+              <Route path="motorcycles" element={<Motorcycles />} />
+              <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
+              <Route path="brands" element={<BrandsDirectory />} />
+              <Route path="brands/:slug" element={<BrandDetail />} />
+              <Route path="manuals" element={<ManualsPage />} />
+              <Route path="riding-skills" element={<RidingSkillsPage />} />
+              <Route path="riding-skills/:id" element={<RidingSkillDetailPage />} />
+              <Route path="courses" element={<CoursesPage />} />
+              <Route path="courses/:courseId" element={<CourseDetailsPage />} />
+              <Route path="courses/:courseId/:lessonId" element={<LessonDetailsPage />} />
+              <Route path="glossary" element={<GlossaryPage />} />
+              <Route path="glossary/:slug" element={<GlossaryTermPage />} />
+              <Route path="compare" element={<CompareModels />} />
+              <Route path="auth" element={<AuthPage />} />
+              <Route path="login" element={<Navigate to="/auth" replace />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="models" element={<AdminModels />} />
+              <Route path="models/:slug" element={<ModelDetailPage />} />
+              <Route path="brands" element={<AdminBrands />} />
+              <Route path="engines" element={<AdminEngines />} />
+              <Route path="brake-systems" element={<AdminBrakeSystems />} />
+              <Route path="frames" element={<AdminFrames />} />
+              <Route path="suspensions" element={<AdminSuspensions />} />
+              <Route path="wheels" element={<AdminWheels />} />
+              <Route path="enhanced-media" element={<AdminEnhancedMedia />} />
+              <Route path="images" element={<AdminImages />} />
+              <Route path="manuals" element={<AdminManuals />} />
+              <Route path="riding-skills" element={<AdminRidingSkills />} />
+              <Route path="courses" element={<AdminCourses />} />
+              <Route path="glossary" element={<AdminGlossary />} />
+              <Route path="parts" element={<AdminParts />} />
+              <Route path="accessories" element={<AdminAccessories />} />
+              <Route path="users" element={<AdminUsers />} />
+            </Route>
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
