@@ -1,4 +1,3 @@
-
 export type MotorcycleCategory = 
   | "Sport" 
   | "Cruiser" 
@@ -98,6 +97,20 @@ export interface MotorcycleFilters {
   driveType?: string[];
   powerToWeightRange?: [number, number];
   isEntryLevel?: boolean | null;
+  coolingSystem?: string[];
+  licenseLevelFilter?: string[];
+  priceRange?: [number, number];
+  hasSmartFeatures?: boolean | null;
+  fuelCapacityRange?: [number, number];
+  topSpeedRange?: [number, number];
+  torqueRange?: [number, number];
+  advancedSearch?: {
+    engineType?: string[];
+    cylinderCount?: number[];
+    brakeType?: string[];
+    frameType?: string[];
+    suspensionType?: string[];
+  };
 }
 
 export interface MotorcycleFilterUpdates {
@@ -117,6 +130,20 @@ export interface MotorcycleFilterUpdates {
   driveType?: string[];
   powerToWeightRange?: [number, number];
   isEntryLevel?: boolean | null;
+  coolingSystem?: string[];
+  licenseLevelFilter?: string[];
+  priceRange?: [number, number];
+  hasSmartFeatures?: boolean | null;
+  fuelCapacityRange?: [number, number];
+  topSpeedRange?: [number, number];
+  torqueRange?: [number, number];
+  advancedSearch?: {
+    engineType?: string[];
+    cylinderCount?: number[];
+    brakeType?: string[];
+    frameType?: string[];
+    suspensionType?: string[];
+  };
 }
 
 export interface MotorcycleModel {

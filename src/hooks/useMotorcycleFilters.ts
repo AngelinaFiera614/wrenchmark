@@ -14,7 +14,27 @@ export const initialFilters: MotorcycleFilters = {
   seatHeightRange: [650, 950],
   abs: null,
   searchTerm: "",
-  styleTags: []
+  styleTags: [],
+  useCases: [],
+  skillLevel: [],
+  transmission: [],
+  driveType: [],
+  powerToWeightRange: [0, 2.0],
+  isEntryLevel: null,
+  coolingSystem: [],
+  licenseLevelFilter: [],
+  priceRange: [0, 50000],
+  hasSmartFeatures: null,
+  fuelCapacityRange: [0, 30],
+  topSpeedRange: [0, 350],
+  torqueRange: [0, 200],
+  advancedSearch: {
+    engineType: [],
+    cylinderCount: [],
+    brakeType: [],
+    frameType: [],
+    suspensionType: []
+  }
 };
 
 export function useMotorcycleFilters(

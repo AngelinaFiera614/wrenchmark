@@ -1,9 +1,9 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
 import MotorcycleGrid from "@/components/motorcycles/MotorcycleGrid";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import SmartSearchBar from "@/components/motorcycles/filters/SmartSearchBar";
 import { useMotorcycleFilters, initialFilters } from "@/hooks/useMotorcycleFilters";
 import { syncFiltersToUrl, parseFiltersFromUrl } from "@/lib/filter-utils";
 import { Button } from "@/components/ui/button";
@@ -62,13 +62,8 @@ export default function Motorcycles() {
   }, [filters, setSearchParams]);
 
   // Update search when user types and sync with URL params
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.target.value;
+  const handleSearch = (searchTerm: string) => {
     handleSearchChange(searchTerm);
-  };
-
-  const clearSearch = () => {
-    handleSearchChange("");
   };
 
   if (error) {
@@ -102,31 +97,32 @@ export default function Motorcycles() {
         <div className="space-y-6">
           <div className="flex flex-col gap-4">
             <h1 className="text-3xl font-bold">Motorcycles</h1>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search motorcycles..."
-                  className="pl-8 pr-10"
-                  value={filters.searchTerm}
-                  onChange={handleSearch}
-                />
-                {filters.searchTerm && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-2 h-5 w-5 p-0"
-                    onClick={clearSearch}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
+            
+            {/* Enhanced Search Bar */}
+            <SmartSearchBar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onSearch={handleSearch}
+              placeholder="Search by make, model, or features..."
+            />
+            
+            <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
                 {filteredMotorcycles.length} {filteredMotorcycles.length === 1 ? 'result' : 'results'}
                 {isFiltering && ' (filtered)'}
               </div>
+              
+              {isFiltering && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear all filters
+                </Button>
+              )}
             </div>
           </div>
 

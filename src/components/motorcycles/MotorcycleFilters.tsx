@@ -5,6 +5,8 @@ import type { MotorcycleCategory, MotorcycleFilters as FiltersType } from "@/typ
 import { FiltersContext } from "./filters/FiltersContext";
 import MobileFilters from "./filters/MobileFilters";
 import DesktopFilters from "./filters/DesktopFilters";
+import QuickFilters from "./filters/QuickFilters";
+import AdvancedFilters from "./filters/AdvancedFilters";
 import { countActiveFilters } from "@/lib/filter-utils";
 
 const categories: MotorcycleCategory[] = [
@@ -15,8 +17,8 @@ const categories: MotorcycleCategory[] = [
   "Naked",
   "Standard",
   "Scooter",
-  "Off-road", // Now valid in our MotorcycleCategory type
-  "Dual-sport", // Now valid in our MotorcycleCategory type
+  "Off-road",
+  "Dual-sport",
 ];
 
 const commonMakes = [
@@ -68,6 +70,12 @@ export default function MotorcycleFilters({
       </div>
 
       <FiltersContext.Provider value={contextValue}>
+        {/* Quick Filters - Always visible */}
+        <QuickFilters 
+          filters={filters}
+          onFilterChange={onFilterChange}
+        />
+
         {/* Mobile filters */}
         <MobileFilters 
           filters={filters}
@@ -83,6 +91,12 @@ export default function MotorcycleFilters({
           onFilterChange={onFilterChange}
           categories={categories}
           commonMakes={commonMakes}
+        />
+
+        {/* Advanced Filters */}
+        <AdvancedFilters 
+          filters={filters}
+          onFilterChange={onFilterChange}
         />
       </FiltersContext.Provider>
     </div>
