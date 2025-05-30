@@ -41,7 +41,7 @@ export class EnhancedMediaService {
     const fileExt = file.name.split('.').pop();
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     
-    let folder = mediaType;
+    let folder: string = mediaType;
     if (metadata?.yearCaptured) {
       folder = `${mediaType}/${metadata.yearCaptured}`;
     }
@@ -185,7 +185,8 @@ export class EnhancedMediaService {
 
       // Delete from storage
       const bucketName = this.getBucketName(media.media_type as MediaType);
-      const filePath = media.file_url.split('/').pop(); // Extract filename from URL
+      const urlParts = media.file_url.split('/');
+      const filePath = urlParts.slice(-3).join('/'); // Get the last 3 parts: motorcycleId/folder/filename
       
       if (filePath) {
         await supabase.storage
