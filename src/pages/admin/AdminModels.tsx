@@ -11,7 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
-import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
 
 const AdminModels = () => {
   const { toast } = useToast();
@@ -21,10 +20,23 @@ const AdminModels = () => {
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  // Fetch motorcycle models
+  // Fetch motorcycle models with brand information
   const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-motorcycle-models"],
-    queryFn: fetchAllMotorcycleModels
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('motorcycle_models')
+        .select(`
+          *,
+          brands!inner (
+            id,
+            name
+          )
+        `)
+        .order('name');
+      if (error) throw error;
+      return data;
+    }
   });
 
   // Fetch brands for filter dropdown
