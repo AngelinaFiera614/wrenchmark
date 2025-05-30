@@ -130,6 +130,13 @@ const AdminMotorcycleDialog = ({
     },
   });
 
+  // Helper function to safely convert formatted string to number or empty string
+  const safeParseNumber = (formattedValue: string): number | "" => {
+    if (!formattedValue || formattedValue.trim() === "") return "";
+    const num = parseFloat(formattedValue);
+    return isNaN(num) ? "" : num;
+  };
+
   // When editing an existing motorcycle, populate form with imperial values
   useEffect(() => {
     if (motorcycle) {
@@ -149,13 +156,13 @@ const AdminMotorcycleDialog = ({
         engine_size: motorcycle.engine_size || "",
         horsepower: motorcycle.horsepower || "",
         torque_nm: motorcycle.torque_nm || "",
-        top_speed_mph: formatSpeedForForm(motorcycle.top_speed_kph),
+        top_speed_mph: safeParseNumber(formatSpeedForForm(motorcycle.top_speed_kph)),
         has_abs: motorcycle.abs || false,
-        weight_lbs: formatWeightForForm(motorcycle.weight_kg),
-        seat_height_in: formatLengthForForm(motorcycle.seat_height_mm),
-        wheelbase_in: formatLengthForForm(motorcycle.wheelbase_mm),
-        ground_clearance_in: formatLengthForForm(motorcycle.ground_clearance_mm),
-        fuel_capacity_gal: formatVolumeForForm(motorcycle.fuel_capacity_l),
+        weight_lbs: safeParseNumber(formatWeightForForm(motorcycle.weight_kg)),
+        seat_height_in: safeParseNumber(formatLengthForForm(motorcycle.seat_height_mm)),
+        wheelbase_in: safeParseNumber(formatLengthForForm(motorcycle.wheelbase_mm)),
+        ground_clearance_in: safeParseNumber(formatLengthForForm(motorcycle.ground_clearance_mm)),
+        fuel_capacity_gal: safeParseNumber(formatVolumeForForm(motorcycle.fuel_capacity_l)),
         difficulty_level: motorcycle.difficulty_level || 3,
         status: motorcycle.status || "active",
         is_draft: motorcycle.is_draft || false,
