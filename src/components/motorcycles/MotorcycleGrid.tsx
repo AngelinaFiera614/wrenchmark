@@ -4,7 +4,8 @@ import { Motorcycle } from "@/types";
 import MotorcycleCard from "./MotorcycleCard";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import EmptyState from "@/components/common/EmptyState";
-import { Search } from "lucide-react";
+import { Search, Database, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MotorcycleGridProps {
   motorcycles: Motorcycle[];
@@ -22,11 +23,27 @@ export default function MotorcycleGrid({ motorcycles, isLoading }: MotorcycleGri
 
   if (motorcycles.length === 0) {
     return (
-      <EmptyState
-        icon={<Search className="h-12 w-12" />}
-        title="No Motorcycles Found"
-        description="Try adjusting your filters or search terms to find more motorcycles."
-      />
+      <div className="text-center py-12">
+        <Database className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-xl font-semibold mb-2">No Motorcycles Found</h3>
+        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+          We couldn't find any motorcycles matching your criteria. This might be because:
+        </p>
+        <div className="text-sm text-muted-foreground mb-6 space-y-2">
+          <p>• All motorcycles are currently in draft status</p>
+          <p>• Your search filters are too restrictive</p>
+          <p>• The database connection is experiencing issues</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            <Search className="h-4 w-4 mr-2" />
+            Try Refreshing
+          </Button>
+          <Button variant="outline" onClick={() => window.history.back()}>
+            Go Back
+          </Button>
+        </div>
+      </div>
     );
   }
 

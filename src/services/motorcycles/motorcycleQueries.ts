@@ -67,6 +67,8 @@ const DETAILED_MOTORCYCLE_MODEL_SELECT_QUERY = `
 
 export const fetchAllMotorcycles = async () => {
   try {
+    console.log("Fetching all published motorcycles...");
+    
     const { data, error } = await supabase
       .from('motorcycle_models')
       .select(MOTORCYCLE_MODEL_SELECT_QUERY)
@@ -75,11 +77,14 @@ export const fetchAllMotorcycles = async () => {
       .order('production_start_year', { ascending: true });
       
     if (error) {
+      console.error("Error fetching motorcycles:", error);
       throw error;
     }
     
+    console.log("Successfully fetched motorcycles:", data?.length || 0, "records");
     return data || [];
   } catch (error) {
+    console.error("Failed to fetch motorcycles:", error);
     throw error;
   }
 };
@@ -238,4 +243,44 @@ export const removeTagFromMotorcycle = async (motorcycleId: string, tagId: strin
     .eq('tag_id', tagId);
     
   return { data, error };
+};
+
+// Utility function to publish sample motorcycles for testing
+export const publishSampleMotorcycles = async (count: number = 5) => {
+  try {
+    console.log(`Publishing ${count} sample motorcycles...`);
+    
+    // Get draft motorcycles
+    const { data: draftMotorcycles, error: fetchError } = await supabase
+      .from('motorcycle_models')
+      .select('id, name')
+      .eq('is_draft', true)
+      .limit(count);
+      
+    if (fetchError) {
+      throw fetchError;
+    }
+    
+    if (!draftMotorcycles || draftMotorcycles.length === 0) {
+      console.log("No draft motorcycles found to publish");
+      return { published: 0 };
+    }
+    
+    // Update them to published status
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .update({ is_draft: false })
+      .in('id', draftMotorcycles.map(m => m.id))
+      .select('id, name');
+      
+    if (error) {
+      throw error;
+    }
+    
+    console.log(`Successfully published ${data?.length || 0} motorcycles:`, data?.map(m => m.name));
+    return { published: data?.length || 0, motorcycles: data };
+  } catch (error) {
+    console.error("Failed to publish sample motorcycles:", error);
+    throw error;
+  }
 };

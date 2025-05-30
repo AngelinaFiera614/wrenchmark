@@ -2,43 +2,27 @@
 import { Motorcycle } from "@/types";
 
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
-  // Handle the corrected brands relationship structure
+  console.log("Transforming motorcycle data:", rawData);
+  
+  // Handle brand data - it should come from the brands relationship
   const brandData = rawData.brands || {};
+  const brandName = brandData.name || rawData.brand_name || 'Unknown Brand';
   
-  console.log("Transforming motorcycle data:", {
-    name: rawData.name,
-    brandName: brandData.name,
-    hasValidBrand: !!brandData.name,
-    engineSize: rawData.engine_size,
-    horsepower: rawData.horsepower,
-    hasEngineData: !!(rawData.engine_size || rawData.horsepower),
-    isDraft: rawData.is_draft,
-    powerToWeightRatio: rawData.power_to_weight_ratio,
-    transmission: rawData.transmission,
-    driveType: rawData.drive_type,
-    coolingSystem: rawData.cooling_system,
-    rawDataKeys: Object.keys(rawData)
-  });
-  
-  // For drafts, provide safe defaults for missing data
-  const isDraft = rawData.is_draft || false;
-  const engineSize = rawData.engine_size || null;
-  const horsepower = rawData.horsepower || null;
-  
-  return {
+  // Create the transformed motorcycle object
+  const transformed: Motorcycle = {
     id: rawData.id,
-    make: brandData.name || "Unknown Brand",
+    make: brandName,
     brand_id: rawData.brand_id,
-    model: rawData.name,
+    model: rawData.name || 'Unknown Model',
     year: rawData.production_start_year || new Date().getFullYear(),
-    category: rawData.category || rawData.type || "Standard",
-    style_tags: [],
-    difficulty_level: rawData.difficulty_level || 1,
-    image_url: rawData.default_image_url || "",
-    engine_size: engineSize || 0,
-    horsepower: horsepower || 0,
+    category: rawData.category || rawData.type || 'Standard',
+    style_tags: [], // Will be populated from tags relationship if available
+    difficulty_level: rawData.difficulty_level || 3,
+    image_url: rawData.default_image_url || '/placeholder.svg',
+    engine_size: rawData.engine_size || 0,
+    horsepower: rawData.horsepower || 0,
     weight_kg: rawData.weight_kg || 0,
-    wet_weight_kg: rawData.wet_weight_kg || 0,
+    wet_weight_kg: rawData.wet_weight_kg,
     seat_height_mm: rawData.seat_height_mm || 0,
     abs: rawData.has_abs || false,
     top_speed_kph: rawData.top_speed_kph || 0,
@@ -47,28 +31,28 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     ground_clearance_mm: rawData.ground_clearance_mm || 0,
     fuel_capacity_l: rawData.fuel_capacity_l || 0,
     smart_features: [],
-    summary: rawData.summary || rawData.base_description || "",
+    summary: rawData.summary || rawData.base_description || '',
     slug: rawData.slug,
     created_at: rawData.created_at,
     is_placeholder: false,
-    migration_status: "migrated",
+    migration_status: 'migrated',
     status: rawData.status || rawData.production_status,
-    engine: rawData.engine_size ? `${rawData.engine_size}cc` : "",
-    is_draft: isDraft,
+    engine: `${rawData.engine_size || 0}cc`,
+    is_draft: rawData.is_draft || false,
     
-    // New enhanced technical fields
+    // Enhanced technical fields
     transmission: rawData.transmission,
     drive_type: rawData.drive_type,
     cooling_system: rawData.cooling_system,
     power_to_weight_ratio: rawData.power_to_weight_ratio,
-    is_entry_level: rawData.is_entry_level || false,
+    is_entry_level: rawData.is_entry_level,
     recommended_license_level: rawData.recommended_license_level,
     use_cases: rawData.use_cases || [],
     
-    // Compatibility aliases - preserve original values for filtering
-    engine_cc: engineSize,
-    displacement_cc: engineSize,
-    horsepower_hp: horsepower,
+    // Compatibility aliases for legacy code
+    engine_cc: rawData.engine_size,
+    displacement_cc: rawData.engine_size,
+    horsepower_hp: rawData.horsepower,
     
     // Enhanced engine information
     power_rpm: rawData.power_rpm,
@@ -79,42 +63,56 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     // Enhanced brake system information
     brake_type: rawData.brake_type,
     has_abs: rawData.has_abs,
-    
-    // US Standard fields (calculated in app, not stored)
-    weight_lbs: rawData.weight_kg ? Math.round(rawData.weight_kg * 2.205) : undefined,
-    seat_height_in: rawData.seat_height_mm ? Math.round(rawData.seat_height_mm / 25.4) : undefined,
-    wheelbase_in: rawData.wheelbase_mm ? Math.round(rawData.wheelbase_mm / 25.4) : undefined,
-    ground_clearance_in: rawData.ground_clearance_mm ? Math.round(rawData.ground_clearance_mm / 25.4) : undefined,
-    fuel_capacity_gal: rawData.fuel_capacity_l ? Math.round(rawData.fuel_capacity_l * 0.264172 * 100) / 100 : undefined,
-    top_speed_mph: rawData.top_speed_kph ? Math.round(rawData.top_speed_kph * 0.621371) : undefined,
   };
+  
+  console.log("Transformed motorcycle:", transformed);
+  return transformed;
 };
 
-export const createPlaceholderMotorcycleData = (motorcycleData: {
+export const createPlaceholderMotorcycleData = (input: {
   make: string;
   model: string;
   year: number;
   isDraft?: boolean;
 }) => {
+  const slug = `${input.make}-${input.model}-${input.year}`.toLowerCase().replace(/\s+/g, '-');
+  
   return {
-    name: motorcycleData.model,
-    type: "Standard",
-    production_start_year: motorcycleData.year,
-    production_status: "active",
-    slug: `${motorcycleData.make.toLowerCase()}-${motorcycleData.model.toLowerCase()}-${motorcycleData.year}`.replace(/\s+/g, '-'),
-    brand_id: null,
-    base_description: `${motorcycleData.make} ${motorcycleData.model} ${motorcycleData.year}`,
-    is_draft: motorcycleData.isDraft || false,
+    name: input.model,
+    type: 'Standard',
+    base_description: `${input.year} ${input.make} ${input.model}`,
+    production_start_year: input.year,
+    production_status: 'active',
+    default_image_url: '/placeholder.svg',
+    slug: slug,
+    is_draft: input.isDraft || false,
+    // Basic technical data with defaults
+    engine_size: 600,
+    horsepower: 50,
+    torque_nm: 45,
+    weight_kg: 180,
+    seat_height_mm: 800,
+    wheelbase_mm: 1400,
+    ground_clearance_mm: 150,
+    fuel_capacity_l: 15,
+    top_speed_kph: 180,
+    has_abs: true,
+    difficulty_level: 3,
+    category: 'Standard',
+    summary: `The ${input.year} ${input.make} ${input.model} is a versatile motorcycle suitable for various riding conditions.`,
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 };
 
-export const createDraftMotorcycleData = (name: string, brandId: string) => {
-  return {
-    name,
-    brand_id: brandId,
-    type: "Standard",
-    production_status: "active",
-    slug: `${name.toLowerCase().replace(/\s+/g, '-')}-draft-${Date.now()}`,
-    is_draft: true,
-  };
+export const createDraftMotorcycleData = (input: {
+  make: string;
+  model: string;
+  year: number;
+}) => {
+  return createPlaceholderMotorcycleData({
+    ...input,
+    isDraft: true,
+  });
 };

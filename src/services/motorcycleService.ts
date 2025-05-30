@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Motorcycle } from "@/types";
-import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/motorcycleQueries";
+import { fetchAllMotorcycles as fetchAllMotorcyclesQuery, fetchAllMotorcyclesForAdmin, publishSampleMotorcycles } from "@/services/motorcycles/motorcycleQueries";
 import { transformMotorcycleData, createPlaceholderMotorcycleData, createDraftMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
 
 export const publishMotorcycle = async (motorcycleId: string): Promise<boolean> => {
@@ -124,36 +123,38 @@ export const deleteMotorcycle = async (motorcycleId: string): Promise<boolean> =
   }
 };
 
-// Add back the missing exported functions that other files depend on
-
+// Updated getAllMotorcycles to use the fixed query
 export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
   try {
-    console.log("Fetching all motorcycles");
+    console.log("Fetching all motorcycles using fixed query...");
     
-    const { data, error } = await supabase
-      .from('motorcycle_models')
-      .select(`
-        *,
-        brands (
-          id,
-          name,
-          slug
-        )
-      `)
-      .eq('is_draft', false)
-      .order('name');
-
-    if (error) {
-      console.error("Error fetching motorcycles:", error);
-      throw error;
+    const rawData = await fetchAllMotorcyclesQuery();
+    console.log("Raw motorcycle data:", rawData);
+    
+    if (!rawData || rawData.length === 0) {
+      console.log("No published motorcycles found. Attempting to publish sample data...");
+      
+      // Try to publish some sample motorcycles
+      try {
+        await publishSampleMotorcycles(5);
+        // Retry fetching after publishing
+        const retryData = await fetchAllMotorcyclesQuery();
+        if (retryData && retryData.length > 0) {
+          console.log("Successfully fetched motorcycles after publishing samples:", retryData.length);
+          return retryData.map(transformMotorcycleData);
+        }
+      } catch (publishError) {
+        console.warn("Could not publish sample motorcycles:", publishError);
+      }
+      
+      console.log("No motorcycles available to display");
+      return [];
     }
-
-    console.log("Raw motorcycle data:", data);
     
     // Transform the data to match the Motorcycle interface
-    const transformedData = data.map(transformMotorcycleData);
+    const transformedData = rawData.map(transformMotorcycleData);
     
-    console.log("Transformed motorcycle data:", transformedData);
+    console.log("Transformed motorcycle data:", transformedData.length, "motorcycles");
     return transformedData;
   } catch (error) {
     console.error("Failed to fetch motorcycles:", error);
@@ -169,22 +170,24 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
       .from('motorcycle_models')
       .select(`
         *,
-        brands (
+        brands!motorcycle_models_brand_id_fkey (
           id,
           name,
           slug
         )
       `)
       .eq('slug', slug)
-      .single();
+      .eq('is_draft', false)
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        console.log("No motorcycle found with slug:", slug);
-        return null;
-      }
       console.error("Error fetching motorcycle by slug:", error);
       throw error;
+    }
+
+    if (!data) {
+      console.log("No motorcycle found with slug:", slug);
+      return null;
     }
 
     console.log("Raw motorcycle data by slug:", data);
@@ -208,7 +211,7 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       .from('motorcycle_models')
       .select(`
         *,
-        brands (
+        brands!motorcycle_models_brand_id_fkey (
           id,
           name,
           slug
@@ -216,16 +219,17 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       `)
       .eq('name', model)
       .eq('production_start_year', year)
-      .eq('brands.name', make)
-      .single();
+      .eq('is_draft', false)
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        console.log("No motorcycle found with details:", { make, model, year });
-        return null;
-      }
       console.error("Error finding motorcycle by details:", error);
       throw error;
+    }
+
+    if (!data) {
+      console.log("No motorcycle found with details:", { make, model, year });
+      return null;
     }
 
     console.log("Found motorcycle by details:", data);
@@ -328,3 +332,6 @@ export const createPlaceholderMotorcycle = async (motorcycleData: {
     throw error;
   }
 };
+
+// Export the utility function for publishing sample data
+export { publishSampleMotorcycles };
