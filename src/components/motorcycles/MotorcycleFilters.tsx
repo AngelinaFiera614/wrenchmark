@@ -7,6 +7,7 @@ import MobileFilters from "./filters/MobileFilters";
 import DesktopFilters from "./filters/DesktopFilters";
 import QuickFilters from "./filters/QuickFilters";
 import AdvancedFilters from "./filters/AdvancedFilters";
+import ComponentFilters from "./filters/ComponentFilters";
 import { countActiveFilters } from "@/lib/filter-utils";
 
 const categories: MotorcycleCategory[] = [
@@ -91,6 +92,12 @@ export default function MotorcycleFilters({
           onFilterChange={onFilterChange}
           categories={categories}
           commonMakes={commonMakes}
+        />
+
+        {/* Component Filters - NEW */}
+        <ComponentFilters
+          filters={filters}
+          onFilterChange={onFilterChange}
         />
 
         {/* Advanced Filters */}

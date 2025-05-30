@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import EnhancedComparisonMatrix from "@/components/motorcycles/EnhancedComparisonMatrix";
+import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator";
 
 export default function CompareModels() {
   return (
@@ -9,21 +11,14 @@ export default function CompareModels() {
         <div>
           <h1 className="text-3xl font-bold">Compare Models</h1>
           <p className="text-muted-foreground">
-            Compare motorcycle specifications side by side
+            Advanced motorcycle comparison with calculated performance metrics
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Model Comparison</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Model comparison functionality will be implemented here.
-            </p>
-          </CardContent>
-        </Card>
+        <EnhancedComparisonMatrix />
       </div>
+      
+      <ComparisonIndicator />
     </div>
   );
 }

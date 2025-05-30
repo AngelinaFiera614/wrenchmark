@@ -4,10 +4,11 @@ import { useSearchParams } from "react-router-dom";
 import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
 import MotorcycleGrid from "@/components/motorcycles/MotorcycleGrid";
 import SmartSearchBar from "@/components/motorcycles/filters/SmartSearchBar";
+import SmartRecommendations from "@/components/motorcycles/SmartRecommendations";
 import { useMotorcycleFilters, initialFilters } from "@/hooks/useMotorcycleFilters";
 import { syncFiltersToUrl, parseFiltersFromUrl } from "@/lib/filter-utils";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator";
 import { getAllMotorcycles } from "@/services/motorcycleService";
 import { Motorcycle } from "@/types";
@@ -18,6 +19,7 @@ export default function Motorcycles() {
   const [isLoading, setIsLoading] = useState(true);
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showRecommendations, setShowRecommendations] = useState(true);
   
   // Fetch motorcycles from Supabase
   useEffect(() => {
@@ -112,19 +114,40 @@ export default function Motorcycles() {
                 {isFiltering && ' (filtered)'}
               </div>
               
-              {isFiltering && (
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={resetFilters}
+                  onClick={() => setShowRecommendations(!showRecommendations)}
                   className="text-xs"
                 >
-                  <X className="h-3 w-3 mr-1" />
-                  Clear all filters
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  {showRecommendations ? 'Hide' : 'Show'} Recommendations
                 </Button>
-              )}
+                
+                {isFiltering && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resetFilters}
+                    className="text-xs"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Clear all filters
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Smart Recommendations */}
+          {showRecommendations && !isLoading && (
+            <SmartRecommendations
+              motorcycles={motorcycles}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+            />
+          )}
 
           <MotorcycleGrid 
             motorcycles={filteredMotorcycles} 
