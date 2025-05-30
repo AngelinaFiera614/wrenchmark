@@ -235,15 +235,7 @@ export type Database = {
           name?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "color_options_model_year_id_fkey"
-            columns: ["model_year_id"]
-            isOneToOne: false
-            referencedRelation: "model_years"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       color_variants: {
         Row: {
@@ -1041,20 +1033,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_model_configurations_model_year"
-            columns: ["model_year_id"]
-            isOneToOne: false
-            referencedRelation: "model_years"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_model_configurations_year"
-            columns: ["model_year_id"]
-            isOneToOne: false
-            referencedRelation: "model_years"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "model_configurations_brake_system_id_fkey"
             columns: ["brake_system_id"]
             isOneToOne: false
@@ -1083,80 +1061,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "model_configurations_model_year_id_fkey"
-            columns: ["model_year_id"]
-            isOneToOne: false
-            referencedRelation: "model_years"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "model_configurations_wheel_id_fkey"
             columns: ["wheel_id"]
             isOneToOne: false
             referencedRelation: "wheels"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      model_years: {
-        Row: {
-          changes: string | null
-          created_at: string
-          id: string
-          image_url: string | null
-          market_regions: string[] | null
-          marketing_tagline: string | null
-          motorcycle_id: string
-          msrp_usd: number | null
-          production_numbers: number | null
-          special_editions: string[] | null
-          technical_updates: string | null
-          updated_at: string
-          year: number
-        }
-        Insert: {
-          changes?: string | null
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          market_regions?: string[] | null
-          marketing_tagline?: string | null
-          motorcycle_id: string
-          msrp_usd?: number | null
-          production_numbers?: number | null
-          special_editions?: string[] | null
-          technical_updates?: string | null
-          updated_at?: string
-          year: number
-        }
-        Update: {
-          changes?: string | null
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          market_regions?: string[] | null
-          marketing_tagline?: string | null
-          motorcycle_id?: string
-          msrp_usd?: number | null
-          production_numbers?: number | null
-          special_editions?: string[] | null
-          technical_updates?: string | null
-          updated_at?: string
-          year?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_model_years_motorcycle"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycle_models"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "model_years_motorcycle_id_fkey"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
           },
         ]
@@ -1217,13 +1125,6 @@ export type Database = {
           year_published?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "motorcycle_documents_model_year_id_fkey"
-            columns: ["model_year_id"]
-            isOneToOne: false
-            referencedRelation: "model_years"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "motorcycle_documents_motorcycle_id_fkey"
             columns: ["motorcycle_id"]
@@ -1348,13 +1249,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_motorcycle_images_model_year"
-            columns: ["model_year_id"]
-            isOneToOne: false
-            referencedRelation: "model_years"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_motorcycle_images_motorcycle"
             columns: ["motorcycle_id"]
             isOneToOne: false
@@ -1366,13 +1260,6 @@ export type Database = {
             columns: ["configuration_id"]
             isOneToOne: false
             referencedRelation: "model_configurations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motorcycle_images_model_year_id_fkey"
-            columns: ["model_year_id"]
-            isOneToOne: false
-            referencedRelation: "model_years"
             referencedColumns: ["id"]
           },
           {
@@ -1679,13 +1566,6 @@ export type Database = {
             columns: ["configuration_id"]
             isOneToOne: false
             referencedRelation: "model_configurations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motorcycle_videos_model_year_id_fkey"
-            columns: ["model_year_id"]
-            isOneToOne: false
-            referencedRelation: "model_years"
             referencedColumns: ["id"]
           },
           {
