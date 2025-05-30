@@ -18,7 +18,7 @@ import CompareModels from "@/pages/CompareModels";
 import NotFound from "@/pages/NotFound";
 import AuthPage from "@/pages/AuthPage";
 import ProfilePage from "@/pages/ProfilePage";
-import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminModels from "@/pages/admin/AdminModels";
 import AdminBrands from "@/pages/admin/AdminBrands";
