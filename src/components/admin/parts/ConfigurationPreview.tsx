@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, Share, Print } from "lucide-react";
+import { Download, Share, Printer } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
 
 interface ConfigurationPreviewProps {
@@ -106,7 +106,7 @@ const ConfigurationPreview = ({
                 Share
               </Button>
               <Button size="sm" variant="outline" className="bg-explorer-card border-explorer-chrome/30 text-explorer-text">
-                <Print className="mr-2 h-4 w-4" />
+                <Printer className="mr-2 h-4 w-4" />
                 Print
               </Button>
             </div>
