@@ -20,7 +20,7 @@ export async function verifyAdminStatus(userId: string): Promise<boolean> {
     const { data, error } = await supabase
       .from("profiles")
       .select("is_admin")
-      .eq("id", userId)
+      .eq("user_id", userId)
       .maybeSingle();
     
     if (error) {

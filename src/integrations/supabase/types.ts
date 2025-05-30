@@ -1706,6 +1706,7 @@ export type Database = {
           id: string
           is_admin: boolean
           updated_at: string
+          user_id: string
           username: string | null
         }
         Insert: {
@@ -1716,6 +1717,7 @@ export type Database = {
           id: string
           is_admin?: boolean
           updated_at?: string
+          user_id: string
           username?: string | null
         }
         Update: {
@@ -1726,6 +1728,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           updated_at?: string
+          user_id?: string
           username?: string | null
         }
         Relationships: []
@@ -1961,6 +1964,42 @@ export type Database = {
             referencedColumns: ["slug"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          email_notifications: boolean | null
+          id: string
+          measurement_unit: string | null
+          notifications_enabled: boolean | null
+          privacy_level: string | null
+          theme: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          measurement_unit?: string | null
+          notifications_enabled?: boolean | null
+          privacy_level?: string | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          measurement_unit?: string | null
+          notifications_enabled?: boolean | null
+          privacy_level?: string | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_progress: {
         Row: {

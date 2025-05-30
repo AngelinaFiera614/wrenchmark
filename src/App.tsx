@@ -16,6 +16,8 @@ import MotorcycleDetail from "@/pages/MotorcycleDetail";
 import BrandDetail from "@/pages/BrandDetail";
 import CompareModels from "@/pages/CompareModels";
 import NotFound from "@/pages/NotFound";
+import AuthPage from "@/pages/AuthPage";
+import ProfilePage from "@/pages/ProfilePage";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminModels from "@/pages/admin/AdminModels";
@@ -50,6 +52,8 @@ const App = () => (
                       <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
                       <Route path="brands/:slug" element={<BrandDetail />} />
                       <Route path="compare" element={<CompareModels />} />
+                      <Route path="auth" element={<AuthPage />} />
+                      <Route path="profile" element={<ProfilePage />} />
                       <Route path="*" element={<NotFound />} />
                     </Route>
                     

@@ -17,25 +17,26 @@ import { format } from "date-fns";
 
 interface UserProfile {
   id: string;
+  user_id: string;
   username: string | null;
-  email: string;
+  full_name: string | null;
   is_admin: boolean;
   created_at: string;
-  last_sign_in_at: string | null;
   avatar_url: string | null;
 }
 
 const AdminUsers = () => {
-  // Fetch user profiles including auth data
+  // Fetch user profiles
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      // Join profiles with auth.users to get email addresses
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
           id, 
+          user_id,
           username,
+          full_name,
           is_admin,
           created_at,
           avatar_url
@@ -44,22 +45,19 @@ const AdminUsers = () => {
         
       if (error) throw error;
 
-      // Since we can't directly query auth.users from client due to RLS,
-      // we'll need to handle this with limited information
-      return profiles.map(profile => ({
-        ...profile,
-        email: "***@***", // Privacy-focused placeholder
-        last_sign_in_at: null,
-      })) as UserProfile[];
+      return profiles as UserProfile[];
     },
     refetchOnWindowFocus: false,
   });
 
-  const getInitials = (username: string | null, email: string): string => {
+  const getInitials = (username: string | null, fullName: string | null, userId: string): string => {
     if (username) {
       return username.substring(0, 2).toUpperCase();
     }
-    return email.substring(0, 2).toUpperCase();
+    if (fullName) {
+      return fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    }
+    return userId.substring(0, 2).toUpperCase();
   };
 
   return (
@@ -81,7 +79,7 @@ const AdminUsers = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">User</TableHead>
-                <TableHead>Username</TableHead>
+                <TableHead>Details</TableHead>
                 <TableHead className="hidden md:table-cell">Created</TableHead>
                 <TableHead className="hidden md:table-cell">Role</TableHead>
               </TableRow>
@@ -92,17 +90,22 @@ const AdminUsers = () => {
                   <TableCell>
                     <Avatar>
                       {user.avatar_url ? (
-                        <AvatarImage src={user.avatar_url} alt={user.username || "User"} />
+                        <AvatarImage src={user.avatar_url} alt={user.username || user.full_name || "User"} />
                       ) : (
                         <AvatarFallback className="bg-accent-teal/20 text-accent-teal">
-                          {getInitials(user.username, user.id.substring(0, 2))}
+                          {getInitials(user.username, user.full_name, user.user_id)}
                         </AvatarFallback>
                       )}
                     </Avatar>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{user.username || "No username"}</div>
-                    <div className="text-xs text-muted-foreground">ID: {user.id.substring(0, 8)}...</div>
+                    <div className="font-medium">
+                      {user.full_name || user.username || "No name"}
+                    </div>
+                    {user.username && user.full_name && (
+                      <div className="text-sm text-muted-foreground">@{user.username}</div>
+                    )}
+                    <div className="text-xs text-muted-foreground">ID: {user.user_id.substring(0, 8)}...</div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     {format(new Date(user.created_at), "MMM d, yyyy")}
@@ -126,10 +129,10 @@ const AdminUsers = () => {
       )}
       
       <div className="p-4 border rounded-md bg-muted/10">
-        <h3 className="text-sm font-medium mb-2">Note about user data:</h3>
+        <h3 className="text-sm font-medium mb-2">User Management:</h3>
         <p className="text-xs text-muted-foreground">
-          For privacy and security reasons, sensitive user data like email addresses and last sign-in
-          times are not displayed in this interface. This user list is intended for moderation purposes only.
+          User profiles are automatically created when users sign up. The trigger ensures
+          consistent profile creation and the RLS policies protect user data privacy.
         </p>
       </div>
     </div>
