@@ -27,6 +27,9 @@ import {
   Camera,
   Settings,
   Database,
+  Cog,
+  Shield,
+  Zap,
 } from "lucide-react";
 
 const contentManagementItems = [
@@ -48,7 +51,11 @@ const learningItems = [
 ];
 
 const componentsItems = [
-  { name: "Components", href: "/admin/components", icon: Wrench },
+  { name: "Engines", href: "/admin/engines", icon: Cog },
+  { name: "Brake Systems", href: "/admin/brake-systems", icon: Shield },
+  { name: "Frames", href: "/admin/frames", icon: Settings },
+  { name: "Suspensions", href: "/admin/suspensions", icon: Zap },
+  { name: "Wheels", href: "/admin/wheels", icon: Wrench },
   { name: "Parts", href: "/admin/parts", icon: Wrench },
   { name: "Accessories", href: "/admin/accessories", icon: PaintBucket },
 ];
