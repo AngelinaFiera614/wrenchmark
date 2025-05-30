@@ -34,6 +34,16 @@
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
+
+    /* Sidebar variables for admin */
+    --sidebar-background: 240 10% 3.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 172 100% 41%;
+    --sidebar-primary-foreground: 240 10% 3.9%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 172 100% 41%;
   }
  
   .dark {
@@ -64,6 +74,16 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    /* Dark sidebar variables */
+    --sidebar-background: 240 10% 3.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 172 100% 41%;
+    --sidebar-primary-foreground: 240 10% 3.9%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 172 100% 41%;
   }
 
   /* Wrenchmark custom colors */
@@ -133,6 +153,19 @@
 
 .dark .wrenchmark-link {
   @apply hover:text-accent-teal;
+}
+
+/* Admin sidebar specific styles */
+.admin-sidebar {
+  @apply bg-explorer-dark border-explorer-chrome/20;
+}
+
+.admin-sidebar [data-sidebar="menu-button"][data-active="true"] {
+  @apply bg-accent-teal/20 text-accent-teal border-accent-teal/30;
+}
+
+.admin-sidebar [data-sidebar="menu-button"]:hover:not([data-active="true"]) {
+  @apply bg-explorer-chrome/10 text-explorer-text;
 }
 
 /* Mobile-specific utility classes */

@@ -1,97 +1,52 @@
 
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import AdminSidebar from "./AdminSidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth";
+import { Badge } from "@/components/ui/badge";
 
 export function AdminHeader() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, profile } = useAuth();
 
   return (
-    <>
-      <header className="sticky top-0 z-30 flex items-center h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 border-b border-border">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="md:hidden"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
-        </Button>
+    <header className="sticky top-0 z-30 flex items-center h-16 bg-explorer-dark/95 backdrop-blur supports-[backdrop-filter]:bg-explorer-dark/90 px-4 border-b border-explorer-chrome/20">
+      <div className="flex items-center gap-4">
+        <SidebarTrigger className="text-explorer-text hover:text-accent-teal transition-colors" />
         
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center mr-2">
-              <img 
-                src="/wrenchmark-monogram.png" 
-                alt="Wrenchmark logo" 
-                className="h-8 w-auto"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const fallback = document.createElement('span');
-                  fallback.textContent = 'W';
-                  fallback.className = 'text-xl font-bold text-accent-teal';
-                  target.parentNode?.appendChild(fallback);
-                }}
-              />
-            </Link>
-            <span className="hidden md:inline-block text-xs bg-accent-teal/20 text-accent-teal px-2 py-0.5 rounded-md ml-2">
-              Admin
+        <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-2 group">
+            <img 
+              src="/wrenchmark-monogram.png" 
+              alt="Wrenchmark logo" 
+              className="h-8 w-auto group-hover:opacity-80 transition-opacity"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const fallback = document.createElement('span');
+                fallback.textContent = 'W';
+                fallback.className = 'text-xl font-bold text-accent-teal';
+                target.parentNode?.appendChild(fallback);
+              }}
+            />
+            <span className="hidden md:block text-sm text-explorer-text-muted group-hover:text-explorer-text transition-colors">
+              Back to App
             </span>
-          </div>
+          </Link>
           
-          <div className="flex items-center gap-4">
-            {profile && (
-              <div className="text-sm text-right">
-                <p className="font-medium">{profile.username || user?.email}</p>
-                <p className="text-xs text-muted-foreground">Administrator</p>
-              </div>
-            )}
-          </div>
+          <Badge variant="outline" className="bg-accent-teal/20 text-accent-teal border-accent-teal/30">
+            Admin Portal
+          </Badge>
         </div>
-      </header>
+      </div>
       
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <div className="fixed inset-y-0 left-0 w-full max-w-xs bg-background border-r border-border">
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center">
-                <img 
-                  src="/wrenchmark-monogram.png" 
-                  alt="Wrenchmark logo" 
-                  className="h-6 w-auto mr-2"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const fallback = document.createElement('span');
-                    fallback.textContent = 'W';
-                    fallback.className = 'text-lg font-bold text-accent-teal';
-                    target.parentNode?.appendChild(fallback);
-                  }}
-                />
-                <h2 className="text-accent-teal font-bold">ADMIN PORTAL</h2>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X className="h-5 w-5" />
-                <span className="sr-only">Close menu</span>
-              </Button>
-            </div>
-            <AdminSidebar />
+      <div className="ml-auto flex items-center gap-4">
+        {profile && (
+          <div className="text-sm text-right">
+            <p className="font-medium text-explorer-text">{profile.username || user?.email}</p>
+            <p className="text-xs text-explorer-text-muted">Administrator</p>
           </div>
-        </div>
-      )}
-    </>
+        )}
+      </div>
+    </header>
   );
 }
 

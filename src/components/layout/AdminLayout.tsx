@@ -1,11 +1,12 @@
 
 import React, { useEffect } from "react";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
-import AdminSidebar from "../admin/AdminSidebar";
-import { AdminHeader } from "../admin/AdminHeader";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import ModernAdminSidebar from "../admin/ModernAdminSidebar";
+import { AdminHeader } from "../admin/AdminHeader";
 
 const AdminLayout = () => {
   const { user, isAdmin, isAdminVerified, isLoading, session } = useAuth();
@@ -26,10 +27,10 @@ const AdminLayout = () => {
   // Show loading while auth verification is in progress
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-explorer-dark">
         <div className="flex flex-col items-center space-y-4">
           <Loader className="h-10 w-10 animate-spin text-accent-teal" />
-          <p className="text-muted-foreground">Loading admin portal...</p>
+          <p className="text-explorer-text-muted">Loading admin portal...</p>
         </div>
       </div>
     );
@@ -45,18 +46,18 @@ const AdminLayout = () => {
   // Then check admin status
   if (isAdminVerified || isAdmin) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <AdminHeader />
-        
-        <div className="flex-1 flex flex-col md:flex-row">
-          <div className="hidden md:block">
-            <AdminSidebar />
+      <div className="min-h-screen bg-explorer-dark">
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full">
+            <ModernAdminSidebar />
+            <SidebarInset className="flex flex-col flex-1">
+              <AdminHeader />
+              <main className="flex-1 p-6 overflow-auto bg-explorer-dark">
+                <Outlet />
+              </main>
+            </SidebarInset>
           </div>
-          
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
-            <Outlet />
-          </main>
-        </div>
+        </SidebarProvider>
       </div>
     );
   }
