@@ -12,17 +12,17 @@ interface DimensionsFieldsProps {
 export function DimensionsFields({ control }: DimensionsFieldsProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Physical Dimensions</h3>
+      <h3 className="text-lg font-medium">Physical Dimensions (Imperial Units)</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField
           control={control}
-          name="seat_height_mm"
+          name="seat_height_in"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Seat Height (mm)</FormLabel>
+              <FormLabel>Seat Height (inches)</FormLabel>
               <FormControl>
-                <Input type="number" {...field} />
+                <Input type="number" step="0.1" {...field} min={20} max={48} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -31,12 +31,12 @@ export function DimensionsFields({ control }: DimensionsFieldsProps) {
         
         <FormField
           control={control}
-          name="weight_kg"
+          name="weight_lbs"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Weight (kg)</FormLabel>
+              <FormLabel>Weight (lbs)</FormLabel>
               <FormControl>
-                <Input type="number" step="0.1" {...field} />
+                <Input type="number" step="0.1" {...field} min={0} max={2200} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -45,12 +45,12 @@ export function DimensionsFields({ control }: DimensionsFieldsProps) {
         
         <FormField
           control={control}
-          name="wheelbase_mm"
+          name="wheelbase_in"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Wheelbase (mm)</FormLabel>
+              <FormLabel>Wheelbase (inches)</FormLabel>
               <FormControl>
-                <Input type="number" {...field} />
+                <Input type="number" step="0.1" {...field} min={40} max={100} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -59,12 +59,26 @@ export function DimensionsFields({ control }: DimensionsFieldsProps) {
         
         <FormField
           control={control}
-          name="fuel_capacity_l"
+          name="fuel_capacity_gal"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Fuel Capacity (L)</FormLabel>
+              <FormLabel>Fuel Capacity (gallons)</FormLabel>
               <FormControl>
-                <Input type="number" step="0.1" {...field} />
+                <Input type="number" step="0.1" {...field} min={0} max={13} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={control}
+          name="ground_clearance_in"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ground Clearance (inches)</FormLabel>
+              <FormControl>
+                <Input type="number" step="0.1" {...field} min={2} max={20} />
               </FormControl>
               <FormMessage />
             </FormItem>

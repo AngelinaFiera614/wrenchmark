@@ -156,12 +156,12 @@ export function PerformanceFields({ control }: PerformanceFieldsProps) {
       
       <FormField
         control={control}
-        name="top_speed_kph"
+        name="top_speed_mph"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Top Speed (KPH)</FormLabel>
+            <FormLabel>Top Speed (MPH)</FormLabel>
             <FormControl>
-              <Input type="number" {...field} />
+              <Input type="number" {...field} min={0} max={300} />
             </FormControl>
             <FormMessage />
           </FormItem>

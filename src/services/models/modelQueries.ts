@@ -26,6 +26,57 @@ export const fetchAllMotorcycleModels = async () => {
   }
 };
 
+export const fetchMotorcycleModelBySlug = async (slug: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(`
+        *,
+        brands!motorcycle_models_brand_id_fkey(
+          id,
+          name,
+          slug
+        )
+      `)
+      .eq('slug', slug)
+      .maybeSingle();
+      
+    if (error) {
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error fetching motorcycle model by slug:", error);
+    throw error;
+  }
+};
+
+export const fetchModelsForComparison = async (slugs: string[]) => {
+  try {
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(`
+        *,
+        brands!motorcycle_models_brand_id_fkey(
+          id,
+          name,
+          slug
+        )
+      `)
+      .in('slug', slugs);
+      
+    if (error) {
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching models for comparison:", error);
+    throw error;
+  }
+};
+
 export const deleteMotorcycleModelCascade = async (modelId: string) => {
   try {
     const { data, error } = await supabase

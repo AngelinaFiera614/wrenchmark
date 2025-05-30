@@ -17,8 +17,18 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 import { sanitizeHtml, validateSlug } from "@/services/security/inputSanitizer";
 import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
+import { 
+  parseWeightForDb, 
+  parseLengthForDb, 
+  parseVolumeForDb, 
+  parseSpeedForDb,
+  formatWeightForForm,
+  formatLengthForForm,
+  formatVolumeForForm,
+  formatSpeedForForm
+} from "@/utils/imperialConverters";
 
-// Enhanced validation schema with security checks
+// Enhanced validation schema with imperial input validation
 const motorcycleFormSchema = z.object({
   name: z.string()
     .min(1, "Model name is required")
@@ -41,19 +51,19 @@ const motorcycleFormSchema = z.object({
     .optional()
     .refine((val) => !val || validateSlug(val), "Invalid slug format"),
   
-  // Performance fields with bounds
+  // Performance fields with imperial input bounds
   engine_size: z.coerce.number().min(0).max(10000).optional().or(z.literal("")),
   horsepower: z.coerce.number().min(0).max(2000).optional().or(z.literal("")),
   torque_nm: z.coerce.number().min(0).max(2000).optional().or(z.literal("")),
-  top_speed_kph: z.coerce.number().min(0).max(500).optional().or(z.literal("")),
+  top_speed_mph: z.coerce.number().min(0).max(300).optional().or(z.literal("")), // MPH input
   has_abs: z.boolean().default(false),
   
-  // Dimensions fields with realistic bounds
-  weight_kg: z.coerce.number().min(0).max(1000).optional().or(z.literal("")),
-  seat_height_mm: z.coerce.number().min(500).max(1200).optional().or(z.literal("")),
-  wheelbase_mm: z.coerce.number().min(1000).max(2500).optional().or(z.literal("")),
-  ground_clearance_mm: z.coerce.number().min(50).max(500).optional().or(z.literal("")),
-  fuel_capacity_l: z.coerce.number().min(0).max(50).optional().or(z.literal("")),
+  // Dimensions fields with imperial input bounds
+  weight_lbs: z.coerce.number().min(0).max(2200).optional().or(z.literal("")), // LBS input
+  seat_height_in: z.coerce.number().min(20).max(48).optional().or(z.literal("")), // Inches input
+  wheelbase_in: z.coerce.number().min(40).max(100).optional().or(z.literal("")), // Inches input
+  ground_clearance_in: z.coerce.number().min(2).max(20).optional().or(z.literal("")), // Inches input
+  fuel_capacity_gal: z.coerce.number().min(0).max(13).optional().or(z.literal("")), // Gallons input
   difficulty_level: z.coerce.number().min(1).max(5).default(3),
   
   // Status
@@ -107,20 +117,20 @@ const AdminMotorcycleDialog = ({
       engine_size: "",
       horsepower: "",
       torque_nm: "",
-      top_speed_kph: "",
+      top_speed_mph: "",
       has_abs: false,
-      weight_kg: "",
-      seat_height_mm: "",
-      wheelbase_mm: "",
-      ground_clearance_mm: "",
-      fuel_capacity_l: "",
+      weight_lbs: "",
+      seat_height_in: "",
+      wheelbase_in: "",
+      ground_clearance_in: "",
+      fuel_capacity_gal: "",
       difficulty_level: 3,
       status: "active",
       is_draft: true,
     },
   });
 
-  // When editing an existing motorcycle, populate form
+  // When editing an existing motorcycle, populate form with imperial values
   useEffect(() => {
     if (motorcycle) {
       console.log("Populating form with motorcycle data:", motorcycle);
@@ -139,13 +149,13 @@ const AdminMotorcycleDialog = ({
         engine_size: motorcycle.engine_size || "",
         horsepower: motorcycle.horsepower || "",
         torque_nm: motorcycle.torque_nm || "",
-        top_speed_kph: motorcycle.top_speed_kph || "",
+        top_speed_mph: formatSpeedForForm(motorcycle.top_speed_kph),
         has_abs: motorcycle.abs || false,
-        weight_kg: motorcycle.weight_kg || "",
-        seat_height_mm: motorcycle.seat_height_mm || "",
-        wheelbase_mm: motorcycle.wheelbase_mm || "",
-        ground_clearance_mm: motorcycle.ground_clearance_mm || "",
-        fuel_capacity_l: motorcycle.fuel_capacity_l || "",
+        weight_lbs: formatWeightForForm(motorcycle.weight_kg),
+        seat_height_in: formatLengthForForm(motorcycle.seat_height_mm),
+        wheelbase_in: formatLengthForForm(motorcycle.wheelbase_mm),
+        ground_clearance_in: formatLengthForForm(motorcycle.ground_clearance_mm),
+        fuel_capacity_gal: formatVolumeForForm(motorcycle.fuel_capacity_l),
         difficulty_level: motorcycle.difficulty_level || 3,
         status: motorcycle.status || "active",
         is_draft: motorcycle.is_draft || false,
@@ -166,13 +176,13 @@ const AdminMotorcycleDialog = ({
         engine_size: "",
         horsepower: "",
         torque_nm: "",
-        top_speed_kph: "",
+        top_speed_mph: "",
         has_abs: false,
-        weight_kg: "",
-        seat_height_mm: "",
-        wheelbase_mm: "",
-        ground_clearance_mm: "",
-        fuel_capacity_l: "",
+        weight_lbs: "",
+        seat_height_in: "",
+        wheelbase_in: "",
+        ground_clearance_in: "",
+        fuel_capacity_gal: "",
         difficulty_level: 3,
         status: "active",
         is_draft: true,
@@ -211,7 +221,7 @@ const AdminMotorcycleDialog = ({
         summary: data.summary ? sanitizeHtml(data.summary) : null,
       };
 
-      // Prepare the data for insertion/update
+      // Prepare the data for insertion/update with imperial to metric conversions
       const motorcycleData = {
         name: sanitizedData.name,
         brand_id: sanitizedData.brand_id,
@@ -226,13 +236,13 @@ const AdminMotorcycleDialog = ({
         engine_size: convertEmptyToNull(sanitizedData.engine_size),
         horsepower: convertEmptyToNull(sanitizedData.horsepower),
         torque_nm: convertEmptyToNull(sanitizedData.torque_nm),
-        top_speed_kph: convertEmptyToNull(sanitizedData.top_speed_kph),
+        top_speed_kph: parseSpeedForDb(sanitizedData.top_speed_mph || ""),
         has_abs: sanitizedData.has_abs,
-        weight_kg: convertEmptyToNull(sanitizedData.weight_kg),
-        seat_height_mm: convertEmptyToNull(sanitizedData.seat_height_mm),
-        wheelbase_mm: convertEmptyToNull(sanitizedData.wheelbase_mm),
-        ground_clearance_mm: convertEmptyToNull(sanitizedData.ground_clearance_mm),
-        fuel_capacity_l: convertEmptyToNull(sanitizedData.fuel_capacity_l),
+        weight_kg: parseWeightForDb(sanitizedData.weight_lbs || ""),
+        seat_height_mm: Math.round(parseLengthForDb(sanitizedData.seat_height_in || "") || 0) || null,
+        wheelbase_mm: Math.round(parseLengthForDb(sanitizedData.wheelbase_in || "") || 0) || null,
+        ground_clearance_mm: parseLengthForDb(sanitizedData.ground_clearance_in || ""),
+        fuel_capacity_l: parseVolumeForDb(sanitizedData.fuel_capacity_gal || ""),
         difficulty_level: sanitizedData.difficulty_level,
         status: sanitizedData.status,
         is_draft: sanitizedData.is_draft,
@@ -320,7 +330,7 @@ const AdminMotorcycleDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={() => onClose(false)}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Motorcycle" : "Add New Motorcycle"}
@@ -414,7 +424,7 @@ const AdminMotorcycleDialog = ({
               />
             </div>
 
-            {/* Performance Fields */}
+            {/* Performance Fields with Imperial Units */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -446,13 +456,115 @@ const AdminMotorcycleDialog = ({
               
               <FormField
                 control={form.control}
-                name="top_speed_kph"
+                name="top_speed_mph"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Top Speed (kph)</FormLabel>
+                    <FormLabel>Top Speed (mph)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} min={0} max={500} />
+                      <Input type="number" {...field} min={0} max={300} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Dimensions Fields with Imperial Units */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="weight_lbs"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Weight (lbs)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" {...field} min={0} max={2200} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="seat_height_in"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Seat Height (inches)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" {...field} min={20} max={48} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="wheelbase_in"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Wheelbase (inches)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" {...field} min={40} max={100} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="ground_clearance_in"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ground Clearance (inches)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" {...field} min={2} max={20} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="fuel_capacity_gal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fuel Capacity (gallons)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.1" {...field} min={0} max={13} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="difficulty_level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Difficulty Level (1-5)</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      defaultValue={field.value.toString()}
+                      value={field.value.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Difficulty" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5].map((level) => (
+                          <SelectItem key={level} value={level.toString()}>
+                            {level} - {level === 1 ? "Beginner" : level === 5 ? "Expert" : "Intermediate"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
