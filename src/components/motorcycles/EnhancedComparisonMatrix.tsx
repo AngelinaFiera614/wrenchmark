@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,19 +69,19 @@ export default function EnhancedComparisonMatrix() {
 
   const comparisonData = useMemo(() => {
     return motorcyclesToCompare.map(motorcycle => {
-      const calculated = calculatedFields.reduce((acc, field) => {
-        const value = field.calculator(motorcycle);
-        if (value !== null) {
-          acc[field.key as keyof ComparisonMotorcycle] = value;
-        }
-        return acc;
-      }, {} as Partial<ComparisonMotorcycle>);
+      const powerToWeight = calculatedFields[0].calculator(motorcycle);
+      const torqueToWeight = calculatedFields[1].calculator(motorcycle);
+      const powerPerCC = calculatedFields[2].calculator(motorcycle);
+      const weightPerCC = calculatedFields[3].calculator(motorcycle);
 
       return {
         ...motorcycle,
-        ...calculated,
         name: `${motorcycle.make} ${motorcycle.model}`,
-        shortName: motorcycle.model
+        shortName: motorcycle.model,
+        powerToWeight: powerToWeight || undefined,
+        torqueToWeight: torqueToWeight || undefined,
+        powerPerCC: powerPerCC || undefined,
+        weightPerCC: weightPerCC || undefined,
       } as ComparisonMotorcycle;
     });
   }, [motorcyclesToCompare, calculatedFields]);
