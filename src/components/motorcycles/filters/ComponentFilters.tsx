@@ -21,6 +21,9 @@ interface ComponentOption {
   type?: string;
   material?: string;
   brand?: string;
+  engine_type?: string;
+  front_type?: string;
+  rear_type?: string;
 }
 
 export default function ComponentFilters({ filters, onFilterChange }: ComponentFiltersProps) {
@@ -57,10 +60,34 @@ export default function ComponentFilters({ filters, onFilterChange }: ComponentF
           .select('id, front_type, rear_type, brand')
           .order('front_type');
 
-        setEngines(engineData || []);
-        setBrakes(brakeData || []);
-        setFrames(frameData || []);
-        setSuspensions(suspensionData || []);
+        // Map the data to include required name property
+        setEngines((engineData || []).map(engine => ({
+          id: engine.id,
+          name: engine.name,
+          engine_type: engine.engine_type
+        })));
+
+        setBrakes((brakeData || []).map(brake => ({
+          id: brake.id,
+          name: brake.type || 'Unnamed Brake System',
+          type: brake.type,
+          brand: brake.brake_brand
+        })));
+
+        setFrames((frameData || []).map(frame => ({
+          id: frame.id,
+          name: frame.type || 'Unnamed Frame',
+          type: frame.type,
+          material: frame.material
+        })));
+
+        setSuspensions((suspensionData || []).map(suspension => ({
+          id: suspension.id,
+          name: `${suspension.front_type || 'Unknown'} / ${suspension.rear_type || 'Unknown'}`,
+          front_type: suspension.front_type,
+          rear_type: suspension.rear_type,
+          brand: suspension.brand
+        })));
       } catch (error) {
         console.error('Error fetching component data:', error);
       }

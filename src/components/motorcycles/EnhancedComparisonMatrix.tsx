@@ -18,7 +18,7 @@ interface CalculatedField {
 }
 
 export default function EnhancedComparisonMatrix() {
-  const { selectedMotorcycles } = useComparison();
+  const { motorcyclesToCompare } = useComparison();
   const [selectedMetric, setSelectedMetric] = useState<string>('powerToWeight');
 
   const calculatedFields: CalculatedField[] = useMemo(() => [
@@ -53,7 +53,7 @@ export default function EnhancedComparisonMatrix() {
   ], []);
 
   const comparisonData = useMemo(() => {
-    return selectedMotorcycles.map(motorcycle => {
+    return motorcyclesToCompare.map(motorcycle => {
       const calculated = calculatedFields.reduce((acc, field) => {
         const value = field.calculator(motorcycle);
         if (value !== null) {
@@ -69,7 +69,7 @@ export default function EnhancedComparisonMatrix() {
         shortName: motorcycle.model
       };
     });
-  }, [selectedMotorcycles, calculatedFields]);
+  }, [motorcyclesToCompare, calculatedFields]);
 
   const chartData = useMemo(() => {
     return comparisonData.map(bike => ({
@@ -108,7 +108,7 @@ export default function EnhancedComparisonMatrix() {
     }));
   }, [comparisonData]);
 
-  if (selectedMotorcycles.length === 0) {
+  if (motorcyclesToCompare.length === 0) {
     return (
       <Card>
         <CardHeader>
