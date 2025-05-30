@@ -17,7 +17,7 @@ export const fetchWheels = async (): Promise<WheelOption[]> => {
     
     return data.map(wheel => ({
       id: wheel.id,
-      name: `${wheel.type || 'Standard'} - ${wheel.front_size || 'Unknown'} / ${wheel.rear_size || 'Unknown'}`,
+      name: `${wheel.front_size || ''} / ${wheel.rear_size || ''} ${wheel.type || 'Wheels'}`.trim(),
       type: wheel.type,
       front_size: wheel.front_size,
       rear_size: wheel.rear_size,
@@ -34,8 +34,8 @@ export const fetchWheels = async (): Promise<WheelOption[]> => {
   }
 };
 
-// Create new wheels
-export const createWheels = async (wheelData: Omit<WheelOption, 'id'>): Promise<WheelOption | null> => {
+// Create a new wheel
+export const createWheels = async (wheelData: Omit<WheelOption, 'id' | 'name'>): Promise<WheelOption | null> => {
   try {
     const { data, error } = await supabase
       .from('wheels')
@@ -54,13 +54,13 @@ export const createWheels = async (wheelData: Omit<WheelOption, 'id'>): Promise<
       .single();
       
     if (error) {
-      console.error("Error creating wheels:", error);
+      console.error("Error creating wheel:", error);
       return null;
     }
     
     return {
       id: data.id,
-      name: `${data.type || 'Standard'} - ${data.front_size || 'Unknown'} / ${data.rear_size || 'Unknown'}`,
+      name: `${data.front_size || ''} / ${data.rear_size || ''} ${data.type || 'Wheels'}`.trim(),
       type: data.type,
       front_size: data.front_size,
       rear_size: data.rear_size,

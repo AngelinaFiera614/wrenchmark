@@ -8,7 +8,7 @@ export const fetchSuspensions = async (): Promise<SuspensionOption[]> => {
     const { data, error } = await supabase
       .from('suspensions')
       .select('*')
-      .order('brand');
+      .order('front_type');
       
     if (error) {
       console.error("Error fetching suspensions:", error);
@@ -17,7 +17,7 @@ export const fetchSuspensions = async (): Promise<SuspensionOption[]> => {
     
     return data.map(suspension => ({
       id: suspension.id,
-      name: `${suspension.brand || 'Unknown'} - ${suspension.front_type || 'Standard'} / ${suspension.rear_type || 'Standard'}`,
+      name: `${suspension.front_type || 'Front'} / ${suspension.rear_type || 'Rear'}`,
       front_type: suspension.front_type,
       rear_type: suspension.rear_type,
       brand: suspension.brand,
@@ -34,7 +34,7 @@ export const fetchSuspensions = async (): Promise<SuspensionOption[]> => {
 };
 
 // Create a new suspension
-export const createSuspension = async (suspensionData: Omit<SuspensionOption, 'id'>): Promise<SuspensionOption | null> => {
+export const createSuspension = async (suspensionData: Omit<SuspensionOption, 'id' | 'name'>): Promise<SuspensionOption | null> => {
   try {
     const { data, error } = await supabase
       .from('suspensions')
@@ -58,7 +58,7 @@ export const createSuspension = async (suspensionData: Omit<SuspensionOption, 'i
     
     return {
       id: data.id,
-      name: `${data.brand || 'Unknown'} - ${data.front_type || 'Standard'} / ${data.rear_type || 'Standard'}`,
+      name: `${data.front_type || 'Front'} / ${data.rear_type || 'Rear'}`,
       front_type: data.front_type,
       rear_type: data.rear_type,
       brand: data.brand,
