@@ -17,6 +17,22 @@ interface CalculatedField {
   calculator: (motorcycle: Motorcycle) => number | null;
 }
 
+interface ComparisonMotorcycle extends Motorcycle {
+  name: string;
+  shortName: string;
+  powerToWeight?: number;
+  torqueToWeight?: number;
+  powerPerCC?: number;
+  weightPerCC?: number;
+}
+
+interface NormalizedScore {
+  motorcycle: ComparisonMotorcycle;
+  performanceScore: number;
+  fuelEfficiencyScore: number;
+  practicalityScore: number;
+}
+
 export default function EnhancedComparisonMatrix() {
   const { motorcyclesToCompare } = useComparison();
   const [selectedMetric, setSelectedMetric] = useState<string>('powerToWeight');
@@ -57,29 +73,29 @@ export default function EnhancedComparisonMatrix() {
       const calculated = calculatedFields.reduce((acc, field) => {
         const value = field.calculator(motorcycle);
         if (value !== null) {
-          acc[field.key] = value;
+          acc[field.key as keyof ComparisonMotorcycle] = value;
         }
         return acc;
-      }, {} as Record<string, number>);
+      }, {} as Partial<ComparisonMotorcycle>);
 
       return {
         ...motorcycle,
         ...calculated,
         name: `${motorcycle.make} ${motorcycle.model}`,
         shortName: motorcycle.model
-      };
+      } as ComparisonMotorcycle;
     });
   }, [motorcyclesToCompare, calculatedFields]);
 
   const chartData = useMemo(() => {
     return comparisonData.map(bike => ({
       name: bike.shortName,
-      value: bike[selectedMetric as keyof typeof bike] as number || 0
+      value: bike[selectedMetric as keyof ComparisonMotorcycle] as number || 0
     }));
   }, [comparisonData, selectedMetric]);
 
   const normalizedScores = useMemo(() => {
-    const scores = comparisonData.map(bike => {
+    const scores: NormalizedScore[] = comparisonData.map(bike => {
       const powerToWeight = bike.powerToWeight || 0;
       const torqueToWeight = bike.torqueToWeight || 0;
       const powerPerCC = bike.powerPerCC || 0;
@@ -190,7 +206,7 @@ export default function EnhancedComparisonMatrix() {
                     {bike.make} {bike.model}
                   </TableCell>
                   {calculatedFields.map((field) => {
-                    const value = bike[field.key as keyof typeof bike] as number;
+                    const value = bike[field.key as keyof ComparisonMotorcycle] as number;
                     return (
                       <TableCell key={field.key} className="text-center">
                         {value ? field.formatter(value) : 'N/A'}
