@@ -36,7 +36,7 @@ const ModelsTable = () => {
   };
 
   const handleDeleteModel = async (model) => {
-    const brandName = model.brands?.name || 'Unknown Brand';
+    const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || 'Unknown Brand';
     if (!confirm(`Are you sure you want to delete the ${brandName} ${model.name} model? This action cannot be undone.`)) {
       return;
     }
@@ -74,7 +74,7 @@ const ModelsTable = () => {
 
   // Filter models based on search
   const filteredModels = models?.filter(model => {
-    const brandName = model.brands?.name || '';
+    const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || '';
     const matchesSearch = !searchTerm || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       model.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -128,69 +128,72 @@ const ModelsTable = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredModels.map((model) => (
-                  <TableRow key={model.id} className="border-explorer-chrome/20">
-                    <TableCell className="text-explorer-text">
-                      {model.brands?.name || 'Unknown'}
-                    </TableCell>
-                    <TableCell>
-                      <Link 
-                        to={`/admin/models/${model.slug}`}
-                        className="font-medium text-accent-teal hover:text-accent-teal/80"
-                      >
-                        {model.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-explorer-text">{model.type}</TableCell>
-                    <TableCell className="text-explorer-text">
-                      {model.production_start_year}-{model.production_end_year || 'Present'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline" 
-                        className={`${
-                          model.production_status === 'active' 
-                            ? 'bg-green-400/20 text-green-400 border-green-400/30' 
-                            : 'bg-explorer-chrome/20 text-explorer-text border-explorer-chrome/30'
-                        }`}
-                      >
-                        {model.production_status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
+                {filteredModels.map((model) => {
+                  const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || 'Unknown';
+                  return (
+                    <TableRow key={model.id} className="border-explorer-chrome/20">
+                      <TableCell className="text-explorer-text">
+                        {brandName}
+                      </TableCell>
+                      <TableCell>
+                        <Link 
+                          to={`/admin/models/${model.slug}`}
+                          className="font-medium text-accent-teal hover:text-accent-teal/80"
                         >
-                          <Link to={`/admin/models/${model.slug}`}>
-                            <Eye className="mr-1 h-3 w-3" />
-                            Manage
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditModel(model)}
-                          className="h-8 px-2 text-xs"
+                          {model.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-explorer-text">{model.type}</TableCell>
+                      <TableCell className="text-explorer-text">
+                        {model.production_start_year}-{model.production_end_year || 'Present'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className={`${
+                            model.production_status === 'active' 
+                              ? 'bg-green-400/20 text-green-400 border-green-400/30' 
+                              : 'bg-explorer-chrome/20 text-explorer-text border-explorer-chrome/30'
+                          }`}
                         >
-                          <Edit className="mr-1 h-3 w-3" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteModel(model)}
-                          className="h-8 px-2 text-xs text-red-400 hover:text-red-300"
-                        >
-                          <Trash2 className="mr-1 h-3 w-3" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          {model.production_status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <Link to={`/admin/models/${model.slug}`}>
+                              <Eye className="mr-1 h-3 w-3" />
+                              Manage
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditModel(model)}
+                            className="h-8 px-2 text-xs"
+                          >
+                            <Edit className="mr-1 h-3 w-3" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteModel(model)}
+                            className="h-8 px-2 text-xs text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="mr-1 h-3 w-3" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           ) : (

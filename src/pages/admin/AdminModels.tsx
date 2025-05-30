@@ -53,7 +53,7 @@ const AdminModels = () => {
   };
 
   const handleDeleteModel = async (model) => {
-    const brandName = model.brands?.name || 'Unknown Brand';
+    const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || 'Unknown Brand';
     if (!confirm(`Are you sure you want to delete ${brandName} ${model.name}? This action cannot be undone.`)) {
       return;
     }
@@ -91,7 +91,7 @@ const AdminModels = () => {
 
       if (error) throw error;
 
-      const brandName = model.brands?.name || 'Unknown Brand';
+      const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || 'Unknown Brand';
       toast({
         title: model.is_draft ? "Model Published" : "Model Unpublished",
         description: `${brandName} ${model.name} has been ${model.is_draft ? 'published' : 'moved to drafts'}.`,
@@ -117,7 +117,7 @@ const AdminModels = () => {
 
   // Filter models based on search and filters
   const filteredModels = models?.filter(model => {
-    const brandName = model.brands?.name || '';
+    const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || '';
     const matchesSearch = !searchTerm || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       brandName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -304,88 +304,91 @@ const AdminModels = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredModels.map((model) => (
-                  <TableRow key={model.id} className="border-explorer-chrome/20">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {model.default_image_url && (
-                          <img 
-                            src={model.default_image_url} 
-                            alt={model.name}
-                            className="w-12 h-8 object-cover rounded border border-explorer-chrome/30"
-                          />
-                        )}
-                        <div>
-                          <div className="font-medium text-explorer-text">{model.name}</div>
-                          <div className="text-sm text-explorer-text-muted">{model.slug}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-explorer-text">{model.brands?.name || 'Unknown'}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-explorer-chrome/20 text-explorer-text border-explorer-chrome/30">
-                        {model.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-explorer-text">
-                      {model.production_start_year}
-                      {model.production_end_year && ` - ${model.production_end_year}`}
-                    </TableCell>
-                    <TableCell>
-                      {model.is_draft ? (
-                        <Badge variant="outline" className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                          <FileText className="mr-1 h-3 w-3" />
-                          Draft
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/30">
-                          <Eye className="mr-1 h-3 w-3" />
-                          Published
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleTogglePublishStatus(model)}
-                          className="h-8 px-2 text-xs"
-                        >
-                          {model.is_draft ? (
-                            <>
-                              <Eye className="mr-1 h-3 w-3" />
-                              Publish
-                            </>
-                          ) : (
-                            <>
-                              <FileText className="mr-1 h-3 w-3" />
-                              Unpublish
-                            </>
+                {filteredModels.map((model) => {
+                  const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || 'Unknown';
+                  return (
+                    <TableRow key={model.id} className="border-explorer-chrome/20">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {model.default_image_url && (
+                            <img 
+                              src={model.default_image_url} 
+                              alt={model.name}
+                              className="w-12 h-8 object-cover rounded border border-explorer-chrome/30"
+                            />
                           )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditModel(model)}
-                          className="h-8 px-2 text-xs"
-                        >
-                          <Edit className="mr-1 h-3 w-3" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteModel(model)}
-                          className="h-8 px-2 text-xs text-red-400 hover:text-red-300"
-                        >
-                          <Trash2 className="mr-1 h-3 w-3" />
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          <div>
+                            <div className="font-medium text-explorer-text">{model.name}</div>
+                            <div className="text-sm text-explorer-text-muted">{model.slug}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-explorer-text">{brandName}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-explorer-chrome/20 text-explorer-text border-explorer-chrome/30">
+                          {model.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-explorer-text">
+                        {model.production_start_year}
+                        {model.production_end_year && ` - ${model.production_end_year}`}
+                      </TableCell>
+                      <TableCell>
+                        {model.is_draft ? (
+                          <Badge variant="outline" className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                            <FileText className="mr-1 h-3 w-3" />
+                            Draft
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/30">
+                            <Eye className="mr-1 h-3 w-3" />
+                            Published
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTogglePublishStatus(model)}
+                            className="h-8 px-2 text-xs"
+                          >
+                            {model.is_draft ? (
+                              <>
+                                <Eye className="mr-1 h-3 w-3" />
+                                Publish
+                              </>
+                            ) : (
+                              <>
+                                <FileText className="mr-1 h-3 w-3" />
+                                Unpublish
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditModel(model)}
+                            className="h-8 px-2 text-xs"
+                          >
+                            <Edit className="mr-1 h-3 w-3" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteModel(model)}
+                            className="h-8 px-2 text-xs text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="mr-1 h-3 w-3" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           ) : (
