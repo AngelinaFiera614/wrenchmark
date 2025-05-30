@@ -75,7 +75,7 @@ const navigationGroups = [
       { name: "Frames", href: "/admin/frames", icon: Settings },
       { name: "Suspensions", href: "/admin/suspensions", icon: Zap },
       { name: "Wheels", href: "/admin/wheels", icon: Wrench },
-      { name: "Parts", href: "/admin/parts", icon: Wrench },
+      { name: "Configurations", href: "/admin/parts", icon: Settings },
       { name: "Accessories", href: "/admin/accessories", icon: PaintBucket },
     ]
   },

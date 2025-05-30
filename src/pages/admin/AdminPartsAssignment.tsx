@@ -68,9 +68,9 @@ const AdminPartsAssignment = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-explorer-text">Parts Assignment</h1>
+          <h1 className="text-3xl font-bold text-explorer-text">Configurations</h1>
           <p className="text-explorer-text-muted mt-1">
-            Manage component assignments for motorcycle configurations
+            Manage motorcycle configurations: select brand → model → year → configuration, then assign components, options, and trim levels
           </p>
         </div>
         
@@ -106,7 +106,7 @@ const AdminPartsAssignment = () => {
       <Card className="bg-explorer-card border-explorer-chrome/30">
         <CardContent className="p-4">
           <div className="flex items-center space-x-2 text-sm">
-            <span className="text-explorer-text-muted">Navigation:</span>
+            <span className="text-explorer-text-muted">Configuration Path:</span>
             {selectedModelData && (
               <>
                 <Badge variant="secondary" className="bg-accent-teal/20 text-accent-teal">
@@ -131,7 +131,7 @@ const AdminPartsAssignment = () => {
               </>
             )}
             {!selectedModelData && (
-              <span className="text-explorer-text-muted">Select a model to begin</span>
+              <span className="text-explorer-text-muted">Select a brand and model to begin configuration workflow</span>
             )}
           </div>
         </CardContent>
