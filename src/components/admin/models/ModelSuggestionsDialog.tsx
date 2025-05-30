@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ interface ModelSuggestionsDialogProps {
   model: any;
   suggestedData: FetchedModelData;
   source?: string;
-  onApplied: () => void;
+  onApplied: (appliedFields: Record<string, any>) => void;
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -159,7 +158,7 @@ export default function ModelSuggestionsDialog({
         description: `Successfully updated ${Object.keys(appliedFields).length} fields.`,
       });
 
-      onApplied();
+      onApplied(appliedFields);
       onClose();
     } catch (error) {
       console.error('Error applying changes:', error);
