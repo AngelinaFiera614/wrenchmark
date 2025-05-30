@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycleService";
 import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycleDialog";
 import DeleteConfirmationDialog from "@/components/admin/models/DeleteConfirmationDialog";
+import BulkPublishingControls from "@/components/admin/models/BulkPublishingControls";
 import { Motorcycle } from "@/types";
 import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/motorcycleQueries";
 import { transformMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
