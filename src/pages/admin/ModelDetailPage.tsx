@@ -15,13 +15,14 @@ import { useConfigurationMetrics, useMultipleConfigurationMetrics } from "@/hook
 import AdminModelYearDialog from "@/components/admin/models/AdminModelYearDialog";
 import ModelSuggestionsDialog from "@/components/admin/models/ModelSuggestionsDialog";
 import { useModelAutofill } from "@/hooks/useModelAutofill";
-import { useAuthContext } from "@/context/auth/AuthContext";
+import { useAuth } from "@/context/auth";
 
 const ModelDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin } = useAuthContext();
+  const { user, profile } = useAuth();
+  const isAdmin = profile?.is_admin;
   
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
