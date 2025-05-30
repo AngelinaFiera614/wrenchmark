@@ -7,17 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycleService";
-import { supabase } from "@/integrations/supabase/client";
 import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycleDialog";
+import DeleteConfirmationDialog from "@/components/admin/models/DeleteConfirmationDialog";
 import { Motorcycle } from "@/types";
 import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/motorcycleQueries";
 import { transformMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
+import { deleteMotorcycleModelCascade } from "@/services/models/modelQueries";
 import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
 
 const AdminMotorcycleModels = () => {
   const { toast } = useToast();
   const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
   const [editModel, setEditModel] = useState<Motorcycle | null>(null);
+  const [deleteModel, setDeleteModel] = useState<Motorcycle | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch motorcycle models with admin permissions and proper error handling
   const { data: models, isLoading, error, refetch } = useQuery({
@@ -83,39 +86,44 @@ const AdminMotorcycleModels = () => {
     }
   };
 
-  const handleDeleteModel = async (model: Motorcycle) => {
-    if (!confirm(`Are you sure you want to delete ${model.make} ${model.model}? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteClick = (model: Motorcycle) => {
+    setDeleteModel(model);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModel) return;
 
     try {
-      const { error } = await supabase
-        .from('motorcycle_models')
-        .delete()
-        .eq('id', model.id);
+      setIsDeleting(true);
+      const success = await deleteMotorcycleModelCascade(deleteModel.id);
 
-      if (error) throw error;
+      if (success) {
+        // Log admin action
+        await logAdminAction({
+          action: auditActions.MOTORCYCLE_DELETE,
+          tableName: 'motorcycle_models',
+          recordId: deleteModel.id,
+          oldValues: deleteModel,
+        });
 
-      // Log admin action
-      await logAdminAction({
-        action: auditActions.MOTORCYCLE_DELETE,
-        tableName: 'motorcycle_models',
-        recordId: model.id,
-        oldValues: model,
-      });
+        toast({
+          title: "Model deleted",
+          description: `${deleteModel.make} ${deleteModel.model} and all related data has been removed.`,
+        });
 
-      toast({
-        title: "Model deleted",
-        description: `${model.make} ${model.model} has been removed.`,
-      });
-
-      refetch();
+        refetch();
+        setDeleteModel(null);
+      } else {
+        throw new Error("Deletion failed");
+      }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to delete model. Please try again.",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -276,7 +284,8 @@ const AdminMotorcycleModels = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteModel(motorcycle)}
+                            onClick={() => handleDeleteClick(motorcycle)}
+                            className="text-red-400 hover:text-red-300"
                           >
                             Delete
                           </Button>
@@ -332,7 +341,8 @@ const AdminMotorcycleModels = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteModel(motorcycle)}
+                            onClick={() => handleDeleteClick(motorcycle)}
+                            className="text-red-400 hover:text-red-300"
                           >
                             Delete
                           </Button>
@@ -366,6 +376,15 @@ const AdminMotorcycleModels = () => {
         open={isCreateModelOpen}
         motorcycle={editModel}
         onClose={handleDialogClose}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={!!deleteModel}
+        onClose={() => setDeleteModel(null)}
+        onConfirm={handleDeleteConfirm}
+        motorcycle={deleteModel}
+        isDeleting={isDeleting}
       />
     </div>
   );

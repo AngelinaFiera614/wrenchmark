@@ -8,18 +8,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Search, Edit, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
+import DeleteConfirmationDialog from "@/components/admin/models/DeleteConfirmationDialog";
 import { Link } from "react-router-dom";
-import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
+import { fetchAllMotorcycleModels, deleteMotorcycleModelCascade } from "@/services/models/modelQueries";
 
 const ModelsTable = () => {
   const { toast } = useToast();
   const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
   const [editModel, setEditModel] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deleteModel, setDeleteModel] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch models using the fixed query
+  // Fetch models using the updated query
   const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-models"],
     queryFn: fetchAllMotorcycleModels,
@@ -46,32 +48,36 @@ const ModelsTable = () => {
     return 'Unknown Brand';
   };
 
-  const handleDeleteModel = async (model) => {
-    const brandName = getBrandName(model.brands);
-    if (!confirm(`Are you sure you want to delete the ${brandName} ${model.name} model? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteClick = (model) => {
+    setDeleteModel(model);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModel) return;
 
     try {
-      const { error } = await supabase
-        .from('motorcycle_models')
-        .delete()
-        .eq('id', model.id);
+      setIsDeleting(true);
+      const success = await deleteMotorcycleModelCascade(deleteModel.id);
 
-      if (error) throw error;
-
-      toast({
-        title: "Model deleted",
-        description: `${brandName} ${model.name} has been removed.`,
-      });
-
-      refetch();
+      if (success) {
+        toast({
+          title: "Model deleted",
+          description: `${getBrandName(deleteModel.brands)} ${deleteModel.name} and all related data has been removed.`,
+        });
+        refetch();
+        setDeleteModel(null);
+      } else {
+        throw new Error("Deletion failed");
+      }
     } catch (error) {
+      console.error("Delete error:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to delete model. Please try again.",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -194,7 +200,7 @@ const ModelsTable = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDeleteModel(model)}
+                            onClick={() => handleDeleteClick(model)}
                             className="h-8 px-2 text-xs text-red-400 hover:text-red-300"
                           >
                             <Trash2 className="mr-1 h-3 w-3" />
@@ -234,6 +240,15 @@ const ModelsTable = () => {
         open={isCreateModelOpen}
         model={editModel}
         onClose={handleDialogClose}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={!!deleteModel}
+        onClose={() => setDeleteModel(null)}
+        onConfirm={handleDeleteConfirm}
+        motorcycle={deleteModel}
+        isDeleting={isDeleting}
       />
     </div>
   );

@@ -2117,6 +2117,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      delete_motorcycle_model_cascade: {
+        Args: { model_id_param: string }
+        Returns: boolean
+      }
       generate_course_slug: {
         Args: Record<PropertyKey, never> | { title_input: string }
         Returns: string
@@ -2140,6 +2144,10 @@ export type Database = {
           completed_lessons: number
           progress_percentage: number
         }[]
+      }
+      get_motorcycle_model_relations: {
+        Args: { model_id_param: string }
+        Returns: Json
       }
       get_tags_for_manual: {
         Args: { manual_id_param: string }
