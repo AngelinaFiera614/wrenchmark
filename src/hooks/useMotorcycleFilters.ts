@@ -12,7 +12,7 @@ export const initialFilters: MotorcycleFilters = {
   difficultyLevel: 5, // Set to max level so it doesn't filter out anything
   weightRange: [0, 500], // Increased max weight range
   seatHeightRange: [600, 1000], // Increased seat height range
-  abs: null,
+  abs: null, // Changed to null so it doesn't filter
   searchTerm: "",
   styleTags: [],
   useCases: [],

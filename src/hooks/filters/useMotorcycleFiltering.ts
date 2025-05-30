@@ -1,3 +1,4 @@
+
 import { useMemo } from "react";
 import { Motorcycle, MotorcycleFilters } from "@/types";
 
@@ -16,7 +17,7 @@ export function useMotorcycleFiltering(
     let filtered = motorcycles;
 
     // Search term filtering (enhanced for technical specs)
-    if (debouncedSearchTerm) {
+    if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
       console.log("Applying search filter for:", debouncedSearchTerm);
       const searchLower = debouncedSearchTerm.toLowerCase();
       filtered = filtered.filter(motorcycle => {
@@ -32,7 +33,7 @@ export function useMotorcycleFiltering(
           ...(motorcycle.use_cases || []),
           ...(motorcycle.style_tags || []),
           ...(motorcycle.smart_features || [])
-        ].join(" ").toLowerCase();
+        ].filter(Boolean).join(" ").toLowerCase();
         
         const matches = searchableText.includes(searchLower);
         console.log(`Search check for ${motorcycle.make} ${motorcycle.model}:`, matches);
@@ -41,11 +42,13 @@ export function useMotorcycleFiltering(
       console.log("After search filter:", filtered.length);
     }
 
-    // Category filtering
+    // Category filtering - only apply if categories are selected
     if (filters.categories && filters.categories.length > 0) {
       console.log("Applying category filter:", filters.categories);
       const beforeCount = filtered.length;
       filtered = filtered.filter(motorcycle => {
+        // Include motorcycles with missing category data
+        if (!motorcycle.category) return true;
         const matches = filters.categories.includes(motorcycle.category as any);
         console.log(`Category check for ${motorcycle.make} ${motorcycle.model} (${motorcycle.category}):`, matches);
         return matches;
@@ -53,7 +56,7 @@ export function useMotorcycleFiltering(
       console.log(`After category filter: ${beforeCount} -> ${filtered.length}`);
     }
 
-    // Make filtering
+    // Make filtering - only apply if make is specified
     if (filters.make && filters.make.trim() !== '') {
       console.log("Applying make filter:", filters.make);
       const beforeCount = filtered.length;
@@ -65,39 +68,51 @@ export function useMotorcycleFiltering(
       console.log(`After make filter: ${beforeCount} -> ${filtered.length}`);
     }
 
-    // Year range filtering
+    // Year range filtering - be permissive with missing year data
     if (filters.yearRange && filters.yearRange.length === 2) {
-      console.log("Applying year range filter:", filters.yearRange);
-      const beforeCount = filtered.length;
-      filtered = filtered.filter(motorcycle => {
-        const matches = motorcycle.year >= filters.yearRange[0] && 
-                       motorcycle.year <= filters.yearRange[1];
-        console.log(`Year check for ${motorcycle.make} ${motorcycle.model} (${motorcycle.year}):`, matches);
-        return matches;
-      });
-      console.log(`After year filter: ${beforeCount} -> ${filtered.length}`);
+      const [minYear, maxYear] = filters.yearRange;
+      // Only apply if not at the default range
+      if (minYear > 1980 || maxYear < 2025) {
+        console.log("Applying year range filter:", filters.yearRange);
+        const beforeCount = filtered.length;
+        filtered = filtered.filter(motorcycle => {
+          // Include motorcycles with missing year data
+          if (!motorcycle.year || motorcycle.year === 0) return true;
+          const matches = motorcycle.year >= minYear && motorcycle.year <= maxYear;
+          console.log(`Year check for ${motorcycle.make} ${motorcycle.model} (${motorcycle.year}):`, matches);
+          return matches;
+        });
+        console.log(`After year filter: ${beforeCount} -> ${filtered.length}`);
+      }
     }
 
-    // Engine size filtering
+    // Engine size filtering - be permissive with missing data
     if (filters.engineSizeRange && filters.engineSizeRange.length === 2) {
-      console.log("Applying engine size filter:", filters.engineSizeRange);
-      const beforeCount = filtered.length;
-      filtered = filtered.filter(motorcycle => {
-        const engineSize = motorcycle.engine_size || 0;
-        const matches = engineSize >= filters.engineSizeRange[0] && 
-                       engineSize <= filters.engineSizeRange[1];
-        console.log(`Engine size check for ${motorcycle.make} ${motorcycle.model} (${engineSize}cc):`, matches);
-        return matches;
-      });
-      console.log(`After engine size filter: ${beforeCount} -> ${filtered.length}`);
+      const [minSize, maxSize] = filters.engineSizeRange;
+      // Only apply if not at the default range
+      if (minSize > 0 || maxSize < 2000) {
+        console.log("Applying engine size filter:", filters.engineSizeRange);
+        const beforeCount = filtered.length;
+        filtered = filtered.filter(motorcycle => {
+          const engineSize = motorcycle.engine_size || 0;
+          // Include motorcycles with missing engine data
+          if (engineSize === 0 || engineSize === null || engineSize === undefined) return true;
+          const matches = engineSize >= minSize && engineSize <= maxSize;
+          console.log(`Engine size check for ${motorcycle.make} ${motorcycle.model} (${engineSize}cc):`, matches);
+          return matches;
+        });
+        console.log(`After engine size filter: ${beforeCount} -> ${filtered.length}`);
+      }
     }
 
-    // Difficulty level filtering
+    // Difficulty level filtering - only apply if not at maximum
     if (filters.difficultyLevel && filters.difficultyLevel < 5) {
       console.log("Applying difficulty filter:", filters.difficultyLevel);
       const beforeCount = filtered.length;
       filtered = filtered.filter(motorcycle => {
         const difficultyLevel = motorcycle.difficulty_level || 3;
+        // Include motorcycles with missing difficulty data
+        if (!motorcycle.difficulty_level) return true;
         const matches = difficultyLevel <= filters.difficultyLevel;
         console.log(`Difficulty check for ${motorcycle.make} ${motorcycle.model} (${difficultyLevel}):`, matches);
         return matches;
@@ -105,35 +120,45 @@ export function useMotorcycleFiltering(
       console.log(`After difficulty filter: ${beforeCount} -> ${filtered.length}`);
     }
 
-    // Weight filtering
+    // Weight filtering - be permissive with missing data
     if (filters.weightRange && filters.weightRange.length === 2) {
-      console.log("Applying weight filter:", filters.weightRange);
-      const beforeCount = filtered.length;
-      filtered = filtered.filter(motorcycle => {
-        const weight = motorcycle.weight_kg || 0;
-        const matches = weight >= filters.weightRange[0] && 
-                       weight <= filters.weightRange[1];
-        console.log(`Weight check for ${motorcycle.make} ${motorcycle.model} (${weight}kg):`, matches);
-        return matches;
-      });
-      console.log(`After weight filter: ${beforeCount} -> ${filtered.length}`);
+      const [minWeight, maxWeight] = filters.weightRange;
+      // Only apply if not at the default range
+      if (minWeight > 0 || maxWeight < 500) {
+        console.log("Applying weight filter:", filters.weightRange);
+        const beforeCount = filtered.length;
+        filtered = filtered.filter(motorcycle => {
+          const weight = motorcycle.weight_kg || 0;
+          // Include motorcycles with missing weight data
+          if (weight === 0 || weight === null || weight === undefined) return true;
+          const matches = weight >= minWeight && weight <= maxWeight;
+          console.log(`Weight check for ${motorcycle.make} ${motorcycle.model} (${weight}kg):`, matches);
+          return matches;
+        });
+        console.log(`After weight filter: ${beforeCount} -> ${filtered.length}`);
+      }
     }
 
-    // Seat height filtering
+    // Seat height filtering - be permissive with missing data
     if (filters.seatHeightRange && filters.seatHeightRange.length === 2) {
-      console.log("Applying seat height filter:", filters.seatHeightRange);
-      const beforeCount = filtered.length;
-      filtered = filtered.filter(motorcycle => {
-        const seatHeight = motorcycle.seat_height_mm || 0;
-        const matches = seatHeight >= filters.seatHeightRange[0] && 
-                       seatHeight <= filters.seatHeightRange[1];
-        console.log(`Seat height check for ${motorcycle.make} ${motorcycle.model} (${seatHeight}mm):`, matches);
-        return matches;
-      });
-      console.log(`After seat height filter: ${beforeCount} -> ${filtered.length}`);
+      const [minHeight, maxHeight] = filters.seatHeightRange;
+      // Only apply if not at the default range
+      if (minHeight > 600 || maxHeight < 1000) {
+        console.log("Applying seat height filter:", filters.seatHeightRange);
+        const beforeCount = filtered.length;
+        filtered = filtered.filter(motorcycle => {
+          const seatHeight = motorcycle.seat_height_mm || 0;
+          // Include motorcycles with missing seat height data
+          if (seatHeight === 0 || seatHeight === null || seatHeight === undefined) return true;
+          const matches = seatHeight >= minHeight && seatHeight <= maxHeight;
+          console.log(`Seat height check for ${motorcycle.make} ${motorcycle.model} (${seatHeight}mm):`, matches);
+          return matches;
+        });
+        console.log(`After seat height filter: ${beforeCount} -> ${filtered.length}`);
+      }
     }
 
-    // ABS filtering
+    // ABS filtering - only apply if explicitly set
     if (filters.abs !== null && filters.abs !== undefined) {
       console.log("Applying ABS filter:", filters.abs);
       const beforeCount = filtered.length;
@@ -146,28 +171,30 @@ export function useMotorcycleFiltering(
       console.log(`After ABS filter: ${beforeCount} -> ${filtered.length}`);
     }
 
-    // Transmission filtering
+    // Transmission filtering - only apply if specified
     if (filters.transmission && filters.transmission.length > 0) {
       console.log("Applying transmission filter:", filters.transmission);
       const beforeCount = filtered.length;
       filtered = filtered.filter(motorcycle => {
-        const matches = motorcycle.transmission && 
-                       filters.transmission!.some(trans => 
-                         motorcycle.transmission!.toLowerCase().includes(trans.toLowerCase())
-                       );
+        // Include motorcycles with missing transmission data
+        if (!motorcycle.transmission) return true;
+        const matches = filters.transmission!.some(trans => 
+          motorcycle.transmission!.toLowerCase().includes(trans.toLowerCase())
+        );
         console.log(`Transmission check for ${motorcycle.make} ${motorcycle.model} (${motorcycle.transmission}):`, matches);
         return matches;
       });
       console.log(`After transmission filter: ${beforeCount} -> ${filtered.length}`);
     }
 
-    // Drive type filtering
+    // Drive type filtering - only apply if specified
     if (filters.driveType && filters.driveType.length > 0) {
       console.log("Applying drive type filter:", filters.driveType);
       const beforeCount = filtered.length;
       filtered = filtered.filter(motorcycle => {
-        const matches = motorcycle.drive_type && 
-                       filters.driveType!.includes(motorcycle.drive_type);
+        // Include motorcycles with missing drive type data
+        if (!motorcycle.drive_type) return true;
+        const matches = filters.driveType!.includes(motorcycle.drive_type);
         console.log(`Drive type check for ${motorcycle.make} ${motorcycle.model} (${motorcycle.drive_type}):`, matches);
         return matches;
       });
@@ -346,6 +373,10 @@ export function useMotorcycleFiltering(
         if (typeof value === 'boolean') return value;
         if (value === null) return false;
         if (key === 'difficultyLevel') return value < 5;
+        if (key === 'yearRange') return value[0] > 1980 || value[1] < 2025;
+        if (key === 'engineSizeRange') return value[0] > 0 || value[1] < 2000;
+        if (key === 'weightRange') return value[0] > 0 || value[1] < 500;
+        if (key === 'seatHeightRange') return value[0] > 600 || value[1] < 1000;
         return false;
       }).length
     });
