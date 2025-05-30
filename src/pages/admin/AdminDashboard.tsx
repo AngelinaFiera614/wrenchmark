@@ -8,6 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
+interface MotorcycleWithBrand {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  is_draft: boolean;
+  brands: {
+    name: string;
+  };
+}
+
 const AdminDashboard = () => {
   const { stats, isLoading: statsLoading } = useAdminStats();
 
@@ -33,13 +44,13 @@ const AdminDashboard = () => {
         .from('motorcycle_models')
         .select(`
           id, name, created_at, updated_at, is_draft,
-          brands!inner(name)
+          brands(name)
         `)
         .order('updated_at', { ascending: false })
         .limit(5);
         
       if (error) throw error;
-      return data;
+      return data as MotorcycleWithBrand[];
     },
   });
 
@@ -97,7 +108,7 @@ const AdminDashboard = () => {
                   <div key={motorcycle.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium">{motorcycle.brands.name} {motorcycle.name}</p>
+                        <p className="font-medium">{motorcycle.brands?.name} {motorcycle.name}</p>
                         {motorcycle.is_draft && (
                           <Badge variant="outline" className="text-xs">Draft</Badge>
                         )}
