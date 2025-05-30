@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Upload, X, Image, Video, FileText } from "lucide-react";
+import { Loader2, Upload, X, Image, Video, FileText, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { MediaUploadData, PhotoContext, MediaType, VideoType, DocumentType } from "@/types/media";
+import { MediaUploadData, PhotoContext, MediaType } from "@/types/media";
+import { useEnhancedMedia } from "@/hooks/useEnhancedMedia";
 
 interface EnhancedMediaUploadProps {
   motorcycleId?: string;
@@ -45,14 +46,13 @@ const VIEW_ANGLES = [
 
 export default function EnhancedMediaUpload({
   motorcycleId,
-  modelYearId,
-  configurationId,
   onUploadComplete,
   onError
 }: EnhancedMediaUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<MediaUploadData[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFiles, uploadProgress, initializeStorage } = useEnhancedMedia(motorcycleId);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -91,20 +91,24 @@ export default function EnhancedMediaUpload({
       return;
     }
 
+    if (!motorcycleId) {
+      toast.error("No motorcycle selected");
+      return;
+    }
+
     setIsUploading(true);
     try {
-      const uploadedFiles = [];
+      // Initialize storage if needed
+      await initializeStorage();
       
-      for (const uploadData of selectedFiles) {
-        // Here we would implement the actual upload logic
-        // For now, we'll simulate the upload
-        console.log('Uploading:', uploadData);
-        uploadedFiles.push(uploadData);
+      const results = await uploadFiles(selectedFiles);
+      const successful = results.filter(r => r.success);
+      
+      if (successful.length > 0) {
+        toast.success(`Successfully uploaded ${successful.length} files`);
+        setSelectedFiles([]);
+        onUploadComplete?.(successful);
       }
-
-      toast.success(`Successfully uploaded ${uploadedFiles.length} files`);
-      setSelectedFiles([]);
-      onUploadComplete?.(uploadedFiles);
     } catch (error) {
       console.error('Upload failed:', error);
       toast.error("Upload failed");
@@ -137,6 +141,7 @@ export default function EnhancedMediaUpload({
               onClick={() => fileInputRef.current?.click()}
               variant="outline"
               className="w-full"
+              disabled={isUploading}
             >
               <Upload className="h-4 w-4 mr-2" />
               Select Files
@@ -145,7 +150,15 @@ export default function EnhancedMediaUpload({
 
           {selectedFiles.length > 0 && (
             <div className="space-y-4">
-              <h3 className="font-medium">Selected Files ({selectedFiles.length})</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Selected Files ({selectedFiles.length})</h3>
+                {Object.keys(uploadProgress).length > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploading...
+                  </div>
+                )}
+              </div>
               
               {selectedFiles.map((uploadData, index) => (
                 <Card key={index} className="p-4">
@@ -156,11 +169,17 @@ export default function EnhancedMediaUpload({
                       <Badge variant="secondary">
                         {uploadData.mediaType}
                       </Badge>
+                      {uploadProgress[`${uploadData.file.name}-${index}`] !== undefined && (
+                        <Badge variant="outline">
+                          {Math.round(uploadProgress[`${uploadData.file.name}-${index}`])}%
+                        </Badge>
+                      )}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFile(index)}
+                      disabled={isUploading}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -174,6 +193,7 @@ export default function EnhancedMediaUpload({
                         onValueChange={(value: MediaType) => 
                           updateFileData(index, { mediaType: value })
                         }
+                        disabled={isUploading}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -199,6 +219,7 @@ export default function EnhancedMediaUpload({
                           onValueChange={(value) => 
                             updateFileData(index, { angle: value })
                           }
+                          disabled={isUploading}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select angle" />
@@ -221,6 +242,7 @@ export default function EnhancedMediaUpload({
                         onValueChange={(value: PhotoContext) => 
                           updateFileData(index, { context: value })
                         }
+                        disabled={isUploading}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select context" />
@@ -243,6 +265,7 @@ export default function EnhancedMediaUpload({
                         onChange={(e) => 
                           updateFileData(index, { colorCode: e.target.value })
                         }
+                        disabled={isUploading}
                       />
                     </div>
 
@@ -257,6 +280,7 @@ export default function EnhancedMediaUpload({
                             yearCaptured: e.target.value ? parseInt(e.target.value) : undefined 
                           })
                         }
+                        disabled={isUploading}
                       />
                     </div>
 
@@ -268,6 +292,7 @@ export default function EnhancedMediaUpload({
                         onChange={(e) => 
                           updateFileData(index, { historicalSignificance: e.target.value })
                         }
+                        disabled={isUploading}
                       />
                     </div>
 
@@ -279,6 +304,7 @@ export default function EnhancedMediaUpload({
                           onCheckedChange={(checked) => 
                             updateFileData(index, { isPrimary: checked as boolean })
                           }
+                          disabled={isUploading}
                         />
                         <Label htmlFor={`primary-${index}`}>Primary Image</Label>
                       </div>
@@ -290,6 +316,7 @@ export default function EnhancedMediaUpload({
                           onCheckedChange={(checked) => 
                             updateFileData(index, { isFeatured: checked as boolean })
                           }
+                          disabled={isUploading}
                         />
                         <Label htmlFor={`featured-${index}`}>Featured</Label>
                       </div>
@@ -300,7 +327,7 @@ export default function EnhancedMediaUpload({
 
               <Button 
                 onClick={handleUpload}
-                disabled={isUploading}
+                disabled={isUploading || !motorcycleId}
                 className="w-full"
               >
                 {isUploading ? (

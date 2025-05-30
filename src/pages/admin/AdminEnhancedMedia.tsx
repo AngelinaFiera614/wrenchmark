@@ -1,108 +1,53 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Image, Video, FileText, Calendar, Settings } from "lucide-react";
+import { Upload, Image, Video, FileText, Calendar, Settings, Database } from "lucide-react";
 import EnhancedMediaUpload from "@/components/admin/media/EnhancedMediaUpload";
 import EnhancedMediaGallery from "@/components/admin/media/EnhancedMediaGallery";
-import { EnhancedMotorcycleImage } from "@/types/media";
+import { useEnhancedMedia } from "@/hooks/useEnhancedMedia";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminEnhancedMedia() {
-  const [selectedTab, setSelectedTab] = useState('upload');
-  const [mediaData, setMediaData] = useState<EnhancedMotorcycleImage[]>([]);
+  const [selectedTab, setSelectedTab] = useState('overview');
+  const { initializeStorage } = useEnhancedMedia();
 
-  // Mock data for demonstration
-  const mockMedia: EnhancedMotorcycleImage[] = [
-    {
-      id: '1',
-      file_name: 'ducati-panigale-v4-front.jpg',
-      file_url: '/api/placeholder/400/300',
-      alt_text: 'Ducati Panigale V4 Front View',
-      angle: 'front',
-      photo_context: 'studio',
-      color: 'Ducati Red',
-      color_code: 'DR-1',
-      year_captured: 2024,
-      media_type: 'image',
-      is_primary: true,
-      is_featured: true,
-      file_size_bytes: 1024000,
-      width_px: 1920,
-      height_px: 1080,
-      historical_significance: 'Launch press kit image for the 2024 model year',
-      created_at: '2024-01-15T10:00:00Z',
-      updated_at: '2024-01-15T10:00:00Z'
-    },
-    {
-      id: '2',
-      file_name: 'ducati-panigale-v4-action.jpg',
-      file_url: '/api/placeholder/400/300',
-      alt_text: 'Ducati Panigale V4 Action Shot',
-      angle: 'right_side',
-      photo_context: 'action',
-      color: 'Ducati Red',
-      year_captured: 2024,
-      media_type: 'image',
-      is_primary: false,
-      is_featured: true,
-      file_size_bytes: 1200000,
-      width_px: 1920,
-      height_px: 1080,
-      historical_significance: 'Track testing at Mugello Circuit',
-      created_at: '2024-02-01T14:30:00Z',
-      updated_at: '2024-02-01T14:30:00Z'
-    },
-    {
-      id: '3',
-      file_name: 'ducati-panigale-v4-review.mp4',
-      file_url: '/api/placeholder/video',
-      alt_text: 'Ducati Panigale V4 Review Video',
-      media_type: 'video',
-      video_url: '/api/placeholder/video',
-      thumbnail_url: '/api/placeholder/400/300',
-      duration_seconds: 420,
-      year_captured: 2024,
-      is_primary: false,
-      is_featured: true,
-      historical_significance: 'Official launch review video',
-      created_at: '2024-02-15T09:00:00Z',
-      updated_at: '2024-02-15T09:00:00Z'
+  // Fetch all media across all motorcycles for admin overview
+  const { data: allMedia = [], isLoading } = useQuery({
+    queryKey: ['admin-all-media'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('motorcycle_images')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     }
-  ];
-
-  const handleUploadComplete = (uploadedFiles: any[]) => {
-    console.log('Upload complete:', uploadedFiles);
-    // Here we would typically refresh the media data
-  };
-
-  const handleMediaSelect = (media: EnhancedMotorcycleImage) => {
-    console.log('Media selected:', media);
-  };
-
-  const handleMediaEdit = (media: EnhancedMotorcycleImage) => {
-    console.log('Edit media:', media);
-  };
-
-  const handleMediaDelete = (media: EnhancedMotorcycleImage) => {
-    console.log('Delete media:', media);
-  };
+  });
 
   const getMediaStats = () => {
     const stats = {
-      total: mockMedia.length,
-      images: mockMedia.filter(m => m.media_type === 'image').length,
-      videos: mockMedia.filter(m => m.media_type === 'video').length,
-      documents: mockMedia.filter(m => 
-        ['document', 'brochure', 'manual'].includes(m.media_type)
+      total: allMedia.length,
+      images: allMedia.filter(m => m.media_type === 'image').length,
+      videos: allMedia.filter(m => m.media_type === 'video').length,
+      documents: allMedia.filter(m => 
+        ['document', 'brochure', 'manual'].includes(m.media_type || '')
       ).length,
-      historic: mockMedia.filter(m => m.historical_significance).length,
-      featured: mockMedia.filter(m => m.is_featured).length
+      historic: allMedia.filter(m => m.historical_significance).length,
+      featured: allMedia.filter(m => m.is_featured).length
     };
     return stats;
   };
 
   const stats = getMediaStats();
+
+  const handleInitializeStorage = async () => {
+    await initializeStorage();
+  };
 
   return (
     <div className="space-y-6">
@@ -113,6 +58,10 @@ export default function AdminEnhancedMedia() {
             Comprehensive media handling with historical tracking and advanced organization
           </p>
         </div>
+        <Button onClick={handleInitializeStorage} variant="outline">
+          <Database className="h-4 w-4 mr-2" />
+          Initialize Storage
+        </Button>
       </div>
 
       {/* Stats Overview */}
@@ -170,61 +119,126 @@ export default function AdminEnhancedMedia() {
       {/* Main Content Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="upload" className="flex items-center gap-2">
-            <Upload className="h-4 w-4" />
-            Upload
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Overview
           </TabsTrigger>
           <TabsTrigger value="gallery" className="flex items-center gap-2">
             <Image className="h-4 w-4" />
-            Gallery
+            All Media
           </TabsTrigger>
           <TabsTrigger value="timeline" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Timeline
           </TabsTrigger>
-          <TabsTrigger value="collections" className="flex items-center gap-2">
+          <TabsTrigger value="management" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Collections
+            Management
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upload" className="mt-6">
-          <EnhancedMediaUpload
-            onUploadComplete={handleUploadComplete}
-            onError={(error) => console.error('Upload error:', error)}
-          />
+        <TabsContent value="overview" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Media System Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-medium mb-2">Storage Status</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Images Bucket:</span>
+                      <Badge variant="outline">Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Videos Bucket:</span>
+                      <Badge variant="outline">Active</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Documents Bucket:</span>
+                      <Badge variant="outline">Active</Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-2">Recent Activity</h4>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <div>Enhanced media system initialized</div>
+                    <div>Storage buckets configured</div>
+                    <div>Media management ready</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">Quick Actions</h4>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedTab('gallery')}
+                  >
+                    View All Media
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={handleInitializeStorage}
+                  >
+                    Reinitialize Storage
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="gallery" className="mt-6">
           <EnhancedMediaGallery
-            media={mockMedia}
-            onMediaSelect={handleMediaSelect}
-            onMediaEdit={handleMediaEdit}
-            onMediaDelete={handleMediaDelete}
+            media={allMedia}
             enableTimeline={false}
           />
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-6">
           <EnhancedMediaGallery
-            media={mockMedia}
-            onMediaSelect={handleMediaSelect}
-            onMediaEdit={handleMediaEdit}
-            onMediaDelete={handleMediaDelete}
+            media={allMedia}
             enableTimeline={true}
           />
         </TabsContent>
 
-        <TabsContent value="collections" className="mt-6">
+        <TabsContent value="management" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Media Collections</CardTitle>
+              <CardTitle>Media Management Tools</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Media collections functionality will be implemented here. This will allow grouping 
-                related media items for events, press kits, model years, and historical significance.
-              </p>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Bulk Operations</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Advanced media management tools for bulk operations and maintenance.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" disabled>
+                      Bulk Tag Update
+                    </Button>
+                    <Button variant="outline" disabled>
+                      Archive Old Media
+                    </Button>
+                    <Button variant="outline" disabled>
+                      Generate Thumbnails
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-2">Analytics</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Media analytics and reporting features will be available here.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
