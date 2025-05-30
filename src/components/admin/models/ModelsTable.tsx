@@ -95,7 +95,7 @@ const ModelsTable = () => {
 
   // Filter models based on search
   const filteredModels = models?.filter(model => {
-    const brandName = model.brands?.name || '';
+    const brandName = Array.isArray(model.brands) && model.brands.length > 0 ? model.brands[0].name : '';
     const matchesSearch = !searchTerm || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       model.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -152,7 +152,7 @@ const ModelsTable = () => {
                 {filteredModels.map((model) => (
                   <TableRow key={model.id} className="border-explorer-chrome/20">
                     <TableCell className="text-explorer-text">
-                      {model.brands?.name || 'Unknown'}
+                      {Array.isArray(model.brands) && model.brands.length > 0 ? model.brands[0].name : 'Unknown'}
                     </TableCell>
                     <TableCell>
                       <Link 

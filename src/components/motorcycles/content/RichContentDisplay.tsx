@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
-import { marked } from 'marked';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit, Code } from 'lucide-react';
+import { SecureContentRenderer } from '@/components/security/SecureContentRenderer';
+import { sanitizeUserInput } from '@/services/security/inputSanitizer';
 
 interface RichContentDisplayProps {
   content: string;
@@ -20,31 +21,24 @@ export default function RichContentDisplay({
 }: RichContentDisplayProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
-  const [renderedContent, setRenderedContent] = useState('');
   const [viewMode, setViewMode] = useState<'rendered' | 'markdown'>('rendered');
 
-  useEffect(() => {
-    const renderMarkdown = async () => {
-      try {
-        const html = await marked(content);
-        setRenderedContent(html);
-      } catch (error) {
-        console.error('Error rendering markdown:', error);
-        setRenderedContent(content);
-      }
-    };
-    
-    renderMarkdown();
-  }, [content]);
-
   const handleSave = () => {
-    onEdit?.(editContent);
+    const sanitizedContent = sanitizeUserInput(editContent, 10000);
+    onEdit?.(sanitizedContent);
     setIsEditing(false);
   };
 
   const handleCancel = () => {
     setEditContent(content);
     setIsEditing(false);
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length <= 10000) { // Prevent excessive input
+      setEditContent(value);
+    }
   };
 
   if (isEditing) {
@@ -57,24 +51,30 @@ export default function RichContentDisplay({
           <div className="space-y-4">
             <textarea
               value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
+              onChange={handleContentChange}
               className="w-full h-64 bg-explorer-dark border border-explorer-chrome/30 rounded text-explorer-text p-3 resize-none focus:border-explorer-teal/50 focus:outline-none"
               placeholder="Enter markdown content..."
+              maxLength={10000}
             />
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSave}
-                className="bg-explorer-teal text-explorer-dark hover:bg-explorer-teal/80"
-              >
-                Save
-              </Button>
-              <Button
-                onClick={handleCancel}
-                variant="outline"
-                className="border-explorer-chrome/30 text-explorer-text hover:border-explorer-teal/50"
-              >
-                Cancel
-              </Button>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-explorer-text-muted">
+                {editContent.length}/10000 characters
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSave}
+                  className="bg-explorer-teal text-explorer-dark hover:bg-explorer-teal/80"
+                >
+                  Save
+                </Button>
+                <Button
+                  onClick={handleCancel}
+                  variant="outline"
+                  className="border-explorer-chrome/30 text-explorer-text hover:border-explorer-teal/50"
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -129,9 +129,10 @@ export default function RichContentDisplay({
         {content ? (
           <div className="prose prose-invert max-w-none">
             {viewMode === 'rendered' ? (
-              <div
+              <SecureContentRenderer 
+                content={content}
+                type="markdown"
                 className="text-explorer-text"
-                dangerouslySetInnerHTML={{ __html: renderedContent }}
               />
             ) : (
               <pre className="bg-explorer-dark-light p-4 rounded border border-explorer-chrome/20 text-sm text-explorer-text whitespace-pre-wrap">
