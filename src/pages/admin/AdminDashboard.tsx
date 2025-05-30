@@ -147,41 +147,6 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      {stats?.recentActivity && stats.recentActivity.length > 0 && (
-        <Card className="bg-explorer-card border-explorer-chrome/30 hover:border-accent-teal/30 transition-colors">
-          <CardHeader>
-            <CardTitle className="text-explorer-text flex items-center gap-2">
-              Recent System Activity
-              <Badge variant="outline" className="bg-accent-teal/20 text-accent-teal border-accent-teal/30">
-                {stats.recentActivity.length}
-              </Badge>
-            </CardTitle>
-            <CardDescription className="text-explorer-text-muted">
-              Recent administrative actions in the system
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats.recentActivity.map((activity) => (
-                <div key={activity.id} className="flex justify-between items-start py-2 border-b border-explorer-chrome/20 last:border-b-0">
-                  <div>
-                    <p className="font-medium text-explorer-text">{activity.action}</p>
-                    {activity.resource_type && (
-                      <p className="text-sm text-explorer-text-muted">
-                        Resource: {activity.resource_type}
-                      </p>
-                    )}
-                  </div>
-                  <p className="text-xs text-explorer-text-muted">
-                    {format(new Date(activity.created_at), "MMM d, HH:mm")}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

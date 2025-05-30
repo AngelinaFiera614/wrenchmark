@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -7,7 +6,6 @@ export interface AdminStats {
   totalBrands: number;
   totalMotorcycles: number;
   totalManuals: number;
-  recentActivity: ActivityLog[];
 }
 
 export interface ActivityLog {
@@ -23,20 +21,18 @@ export interface ActivityLog {
 export async function getAdminStats(): Promise<AdminStats> {
   try {
     // Get counts from various tables
-    const [usersResult, brandsResult, motorcyclesResult, manualsResult, activityResult] = await Promise.all([
+    const [usersResult, brandsResult, motorcyclesResult, manualsResult] = await Promise.all([
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('brands').select('id', { count: 'exact', head: true }),
       supabase.from('motorcycle_models').select('id', { count: 'exact', head: true }),
-      supabase.from('manuals').select('id', { count: 'exact', head: true }),
-      supabase.from('user_activity_log').select('*').order('created_at', { ascending: false }).limit(10)
+      supabase.from('manuals').select('id', { count: 'exact', head: true })
     ]);
 
     return {
       totalUsers: usersResult.count || 0,
       totalBrands: brandsResult.count || 0,
       totalMotorcycles: motorcyclesResult.count || 0,
-      totalManuals: manualsResult.count || 0,
-      recentActivity: activityResult.data || []
+      totalManuals: manualsResult.count || 0
     };
   } catch (error) {
     console.error("Error fetching admin stats:", error);
