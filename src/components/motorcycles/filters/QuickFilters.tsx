@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MotorcycleFilters } from "@/types";
+import { MotorcycleFilters, MotorcycleCategory } from "@/types";
 
 interface QuickFiltersProps {
   filters: MotorcycleFilters;
@@ -42,7 +42,7 @@ export default function QuickFilters({ filters, onFilterChange }: QuickFiltersPr
       action: () => {
         const newCategories = filters.categories.includes("Sport")
           ? filters.categories.filter(c => c !== "Sport")
-          : [...filters.categories, "Sport"];
+          : [...filters.categories, "Sport" as MotorcycleCategory];
         onFilterChange({
           ...filters,
           categories: newCategories
@@ -55,7 +55,7 @@ export default function QuickFilters({ filters, onFilterChange }: QuickFiltersPr
       action: () => {
         const newCategories = filters.categories.includes("Touring")
           ? filters.categories.filter(c => c !== "Touring")
-          : [...filters.categories, "Touring"];
+          : [...filters.categories, "Touring" as MotorcycleCategory];
         onFilterChange({
           ...filters,
           categories: newCategories
@@ -68,7 +68,7 @@ export default function QuickFilters({ filters, onFilterChange }: QuickFiltersPr
       action: () => {
         const newCategories = filters.categories.includes("Adventure")
           ? filters.categories.filter(c => c !== "Adventure")
-          : [...filters.categories, "Adventure"];
+          : [...filters.categories, "Adventure" as MotorcycleCategory];
         onFilterChange({
           ...filters,
           categories: newCategories

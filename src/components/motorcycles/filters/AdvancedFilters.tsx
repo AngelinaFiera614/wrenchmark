@@ -3,13 +3,12 @@ import React, { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ChevronDown, Settings, X } from "lucide-react";
 import FilterSection from "@/components/common/FilterSection";
-import RangeSlider from "@/components/common/RangeSlider";
 import { MotorcycleFilters } from "@/types";
+import { Slider } from "@/components/ui/slider";
 
 interface AdvancedFiltersProps {
   filters: MotorcycleFilters;
@@ -175,64 +174,68 @@ export default function AdvancedFilters({ filters, onFilterChange }: AdvancedFil
         </div>
 
         {/* Power-to-Weight Ratio */}
-        <RangeSlider
-          title="Power-to-Weight Ratio"
-          values={filters.powerToWeightRange || [0, 2.0]}
-          min={0}
-          max={2.0}
-          step={0.1}
-          unit="hp/kg"
-          onChange={(values) => onFilterChange({
-            ...filters,
-            powerToWeightRange: [values[0], values[1]]
-          })}
-          filterType="powerToWeight"
-        />
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Power-to-Weight Ratio: {filters.powerToWeightRange?.[0] || 0} - {filters.powerToWeightRange?.[1] || 2.0} hp/kg</Label>
+          <Slider
+            value={filters.powerToWeightRange || [0, 2.0]}
+            onValueChange={(values) => onFilterChange({
+              ...filters,
+              powerToWeightRange: [values[0], values[1]]
+            })}
+            min={0}
+            max={2.0}
+            step={0.1}
+            className="w-full"
+          />
+        </div>
 
         {/* Fuel Capacity */}
-        <RangeSlider
-          title="Fuel Capacity"
-          values={filters.fuelCapacityRange || [0, 30]}
-          min={0}
-          max={30}
-          step={1}
-          unit="L"
-          onChange={(values) => onFilterChange({
-            ...filters,
-            fuelCapacityRange: [values[0], values[1]]
-          })}
-          filterType="fuelCapacity"
-        />
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Fuel Capacity: {filters.fuelCapacityRange?.[0] || 0} - {filters.fuelCapacityRange?.[1] || 30} L</Label>
+          <Slider
+            value={filters.fuelCapacityRange || [0, 30]}
+            onValueChange={(values) => onFilterChange({
+              ...filters,
+              fuelCapacityRange: [values[0], values[1]]
+            })}
+            min={0}
+            max={30}
+            step={1}
+            className="w-full"
+          />
+        </div>
 
         {/* Top Speed */}
-        <RangeSlider
-          title="Top Speed"
-          values={filters.topSpeedRange || [0, 350]}
-          min={0}
-          max={350}
-          step={10}
-          unit="km/h"
-          onChange={(values) => onFilterChange({
-            ...filters,
-            topSpeedRange: [values[0], values[1]]
-          })}
-          filterType="topSpeed"
-        />
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Top Speed: {filters.topSpeedRange?.[0] || 0} - {filters.topSpeedRange?.[1] || 350} km/h</Label>
+          <Slider
+            value={filters.topSpeedRange || [0, 350]}
+            onValueChange={(values) => onFilterChange({
+              ...filters,
+              topSpeedRange: [values[0], values[1]]
+            })}
+            min={0}
+            max={350}
+            step={10}
+            className="w-full"
+          />
+        </div>
 
         {/* Torque */}
-        <RangeSlider
-          title="Torque"
-          values={filters.torqueRange || [0, 200]}
-          min={0}
-          max={200}
-          step={5}
-          unit="Nm"
-          onChange={(values) => onFilterChange({
-            ...filters,
-            torqueRange: [values[0], values[1]]
-          })}
-          filterType="torque"
-        />
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Torque: {filters.torqueRange?.[0] || 0} - {filters.torqueRange?.[1] || 200} Nm</Label>
+          <Slider
+            value={filters.torqueRange || [0, 200]}
+            onValueChange={(values) => onFilterChange({
+              ...filters,
+              torqueRange: [values[0], values[1]]
+            })}
+            min={0}
+            max={200}
+            step={5}
+            className="w-full"
+          />
+        </div>
 
         {/* Transmission */}
         <FilterSection title="Transmission">
