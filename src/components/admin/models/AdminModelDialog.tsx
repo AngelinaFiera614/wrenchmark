@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import ImageUpload from "@/components/admin/shared/ImageUpload";
 
 const AdminModelDialog = ({ open, model, onClose }) => {
   const { toast } = useToast();
@@ -23,10 +22,20 @@ const AdminModelDialog = ({ open, model, onClose }) => {
     production_end_year: null,
     production_status: 'active',
     default_image_url: '',
-    model_history: '',
-    production_notes: '',
-    design_philosophy: '',
-    target_market: ''
+    is_draft: false,
+    category: 'Standard',
+    engine_size: null,
+    horsepower: null,
+    torque_nm: null,
+    weight_kg: null,
+    seat_height_mm: null,
+    wheelbase_mm: null,
+    ground_clearance_mm: null,
+    fuel_capacity_l: null,
+    top_speed_kph: null,
+    has_abs: false,
+    difficulty_level: 3,
+    summary: ''
   });
 
   // Fetch brands for selection
@@ -53,10 +62,20 @@ const AdminModelDialog = ({ open, model, onClose }) => {
         production_end_year: model.production_end_year || null,
         production_status: model.production_status || 'active',
         default_image_url: model.default_image_url || '',
-        model_history: model.model_history || '',
-        production_notes: model.production_notes || '',
-        design_philosophy: model.design_philosophy || '',
-        target_market: model.target_market || ''
+        is_draft: model.is_draft || false,
+        category: model.category || model.type || 'Standard',
+        engine_size: model.engine_size || null,
+        horsepower: model.horsepower || null,
+        torque_nm: model.torque_nm || null,
+        weight_kg: model.weight_kg || null,
+        seat_height_mm: model.seat_height_mm || null,
+        wheelbase_mm: model.wheelbase_mm || null,
+        ground_clearance_mm: model.ground_clearance_mm || null,
+        fuel_capacity_l: model.fuel_capacity_l || null,
+        top_speed_kph: model.top_speed_kph || null,
+        has_abs: model.has_abs || false,
+        difficulty_level: model.difficulty_level || 3,
+        summary: model.summary || model.base_description || ''
       });
     } else {
       setFormData({
@@ -68,10 +87,20 @@ const AdminModelDialog = ({ open, model, onClose }) => {
         production_end_year: null,
         production_status: 'active',
         default_image_url: '',
-        model_history: '',
-        production_notes: '',
-        design_philosophy: '',
-        target_market: ''
+        is_draft: false,
+        category: 'Standard',
+        engine_size: null,
+        horsepower: null,
+        torque_nm: null,
+        weight_kg: null,
+        seat_height_mm: null,
+        wheelbase_mm: null,
+        ground_clearance_mm: null,
+        fuel_capacity_l: null,
+        top_speed_kph: null,
+        has_abs: false,
+        difficulty_level: 3,
+        summary: ''
       });
     }
   }, [model]);
@@ -95,7 +124,17 @@ const AdminModelDialog = ({ open, model, onClose }) => {
       const dataToSubmit = {
         ...formData,
         slug,
-        production_end_year: formData.production_end_year || null
+        production_end_year: formData.production_end_year || null,
+        engine_size: formData.engine_size ? Number(formData.engine_size) : null,
+        horsepower: formData.horsepower ? Number(formData.horsepower) : null,
+        torque_nm: formData.torque_nm ? Number(formData.torque_nm) : null,
+        weight_kg: formData.weight_kg ? Number(formData.weight_kg) : null,
+        seat_height_mm: formData.seat_height_mm ? Number(formData.seat_height_mm) : null,
+        wheelbase_mm: formData.wheelbase_mm ? Number(formData.wheelbase_mm) : null,
+        ground_clearance_mm: formData.ground_clearance_mm ? Number(formData.ground_clearance_mm) : null,
+        fuel_capacity_l: formData.fuel_capacity_l ? Number(formData.fuel_capacity_l) : null,
+        top_speed_kph: formData.top_speed_kph ? Number(formData.top_speed_kph) : null,
+        difficulty_level: Number(formData.difficulty_level)
       };
 
       if (model) {
@@ -131,7 +170,7 @@ const AdminModelDialog = ({ open, model, onClose }) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save model. Please try again.",
+        description: `Failed to save model: ${error.message}`,
       });
     } finally {
       setLoading(false);
@@ -238,6 +277,56 @@ const AdminModelDialog = ({ open, model, onClose }) => {
             </div>
           </div>
 
+          {/* Technical Specifications */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Technical Specifications</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="engine_size">Engine Size (cc)</Label>
+                <Input
+                  id="engine_size"
+                  type="number"
+                  value={formData.engine_size || ''}
+                  onChange={(e) => handleInputChange('engine_size', e.target.value)}
+                  placeholder="e.g., 1000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="horsepower">Horsepower (hp)</Label>
+                <Input
+                  id="horsepower"
+                  type="number"
+                  value={formData.horsepower || ''}
+                  onChange={(e) => handleInputChange('horsepower', e.target.value)}
+                  placeholder="e.g., 150"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="weight_kg">Weight (kg)</Label>
+                <Input
+                  id="weight_kg"
+                  type="number"
+                  value={formData.weight_kg || ''}
+                  onChange={(e) => handleInputChange('weight_kg', e.target.value)}
+                  placeholder="e.g., 180"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="seat_height_mm">Seat Height (mm)</Label>
+                <Input
+                  id="seat_height_mm"
+                  type="number"
+                  value={formData.seat_height_mm || ''}
+                  onChange={(e) => handleInputChange('seat_height_mm', e.target.value)}
+                  placeholder="e.g., 800"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="base_description">Description</Label>
             <Textarea
@@ -250,62 +339,13 @@ const AdminModelDialog = ({ open, model, onClose }) => {
           </div>
 
           <div className="space-y-2">
-            <Label>Default Image</Label>
-            <ImageUpload
-              bucketName="motorcycles"
-              folderPath={`models/${generateSlug()}`}
+            <Label htmlFor="default_image_url">Image URL</Label>
+            <Input
+              id="default_image_url"
               value={formData.default_image_url}
-              onChange={(url) => handleInputChange('default_image_url', url)}
-              previewHeight={200}
-              previewWidth={300}
+              onChange={(e) => handleInputChange('default_image_url', e.target.value)}
+              placeholder="https://example.com/image.jpg"
             />
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Historical Information</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="model_history">Model History</Label>
-              <Textarea
-                id="model_history"
-                value={formData.model_history}
-                onChange={(e) => handleInputChange('model_history', e.target.value)}
-                placeholder="Historical background and evolution of the model"
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="design_philosophy">Design Philosophy</Label>
-              <Textarea
-                id="design_philosophy"
-                value={formData.design_philosophy}
-                onChange={(e) => handleInputChange('design_philosophy', e.target.value)}
-                placeholder="Design principles and philosophy behind the model"
-                rows={2}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="target_market">Target Market</Label>
-              <Input
-                id="target_market"
-                value={formData.target_market}
-                onChange={(e) => handleInputChange('target_market', e.target.value)}
-                placeholder="e.g., Sport riders, commuters, touring enthusiasts"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="production_notes">Production Notes</Label>
-              <Textarea
-                id="production_notes"
-                value={formData.production_notes}
-                onChange={(e) => handleInputChange('production_notes', e.target.value)}
-                placeholder="Notes about production, manufacturing, or special details"
-                rows={2}
-              />
-            </div>
           </div>
 
           <div className="flex justify-end gap-2">

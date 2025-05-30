@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
+import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
 
 const AdminModels = () => {
   const { toast } = useToast();
@@ -20,23 +21,12 @@ const AdminModels = () => {
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  // Fetch motorcycle models with brand information
+  // Fetch motorcycle models using the fixed query
   const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-motorcycle-models"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('motorcycle_models')
-        .select(`
-          *,
-          brands!inner (
-            id,
-            name
-          )
-        `)
-        .order('name');
-      if (error) throw error;
-      return data;
-    }
+    queryFn: fetchAllMotorcycleModels,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   // Fetch brands for filter dropdown
@@ -63,7 +53,8 @@ const AdminModels = () => {
   };
 
   const handleDeleteModel = async (model) => {
-    if (!confirm(`Are you sure you want to delete ${model.brands?.name} ${model.name}? This action cannot be undone.`)) {
+    const brandName = model.brands?.name || 'Unknown Brand';
+    if (!confirm(`Are you sure you want to delete ${brandName} ${model.name}? This action cannot be undone.`)) {
       return;
     }
 
@@ -77,11 +68,12 @@ const AdminModels = () => {
 
       toast({
         title: "Model deleted",
-        description: `${model.brands?.name} ${model.name} has been removed.`,
+        description: `${brandName} ${model.name} has been removed.`,
       });
 
       refetch();
     } catch (error) {
+      console.error("Delete error:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -99,12 +91,14 @@ const AdminModels = () => {
 
       if (error) throw error;
 
+      const brandName = model.brands?.name || 'Unknown Brand';
       toast({
         title: model.is_draft ? "Model Published" : "Model Unpublished",
-        description: `${model.brands?.name} ${model.name} has been ${model.is_draft ? 'published' : 'moved to drafts'}.`,
+        description: `${brandName} ${model.name} has been ${model.is_draft ? 'published' : 'moved to drafts'}.`,
       });
       refetch();
     } catch (error) {
+      console.error("Toggle publish error:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -123,9 +117,10 @@ const AdminModels = () => {
 
   // Filter models based on search and filters
   const filteredModels = models?.filter(model => {
+    const brandName = model.brands?.name || '';
     const matchesSearch = !searchTerm || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      model.brands?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      brandName.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesBrand = selectedBrand === "all" || model.brand_id === selectedBrand;
     
@@ -148,6 +143,7 @@ const AdminModels = () => {
   }
 
   if (error) {
+    console.error("Admin models error:", error);
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-start">
@@ -157,6 +153,13 @@ const AdminModels = () => {
               Manage motorcycle models with detailed specifications.
             </p>
           </div>
+          <Button 
+            onClick={handleCreateModel}
+            className="bg-accent-teal text-black hover:bg-accent-teal/80"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Model
+          </Button>
         </div>
         
         <Card className="bg-explorer-card border-explorer-chrome/30">
@@ -166,7 +169,7 @@ const AdminModels = () => {
                 Failed to load motorcycle models
               </div>
               <div className="text-explorer-text-muted">
-                There was an error loading the motorcycle data. Please check your admin permissions and try again.
+                Error: {error.message || 'Unknown error occurred'}
               </div>
               <Button variant="outline" onClick={() => refetch()}>
                 Try Again
@@ -318,7 +321,7 @@ const AdminModels = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-explorer-text">{model.brands?.name}</TableCell>
+                    <TableCell className="text-explorer-text">{model.brands?.name || 'Unknown'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-explorer-chrome/20 text-explorer-text border-explorer-chrome/30">
                         {model.type}
@@ -388,9 +391,9 @@ const AdminModels = () => {
           ) : (
             <div className="text-center py-8">
               <div className="text-explorer-text-muted">
-                {searchTerm || selectedBrand !== "all" || selectedStatus !== "all" 
-                  ? "No models match your current filters." 
-                  : "No motorcycle models found. Start by adding your first model."
+                {searchTerm || selectedBrand !== "all" || selectedStatus !== "all"
+                  ? "No models match your filters." 
+                  : "No models found. Start by adding your first model."
                 }
               </div>
               {!searchTerm && selectedBrand === "all" && selectedStatus === "all" && (
@@ -399,7 +402,6 @@ const AdminModels = () => {
                   onClick={handleCreateModel}
                   className="mt-4"
                 >
-                  <PlusCircle className="mr-2 h-4 w-4" />
                   Add Model
                 </Button>
               )}

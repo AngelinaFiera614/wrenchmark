@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Use the same query pattern as the main motorcycles page for consistency
@@ -26,9 +27,10 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
   status,
   category,
   summary,
+  is_draft,
   created_at,
   updated_at,
-  brands:brand_id(
+  brands!motorcycle_models_brand_id_fkey(
     id,
     name,
     slug
@@ -37,17 +39,21 @@ const MOTORCYCLE_MODEL_SELECT_QUERY = `
 
 const DETAILED_MODEL_SELECT_QUERY = `
   *,
-  brand:brand_id(id, name, country, logo_url),
-  years:model_years(
-    *,
-    configurations:model_configurations(
-      *,
-      engine:engine_id(id, name, displacement_cc, power_hp, torque_nm, engine_type),
-      brakes:brake_system_id(id, type, has_traction_control, brake_type_front, brake_type_rear),
-      frame:frame_id(id, type, material),
-      suspension:suspension_id(id, front_type, rear_type, adjustability, brand),
-      wheels:wheel_id(id, type, front_size, rear_size),
-      colors:colors(*)
+  brands!motorcycle_models_brand_id_fkey(
+    id,
+    name,
+    slug,
+    logo_url,
+    country
+  ),
+  motorcycle_model_tags!motorcycle_model_tags_motorcycle_id_fkey(
+    motorcycle_tags!motorcycle_model_tags_tag_id_fkey(
+      id,
+      name,
+      category,
+      description,
+      color_hex,
+      icon
     )
   )
 `;
@@ -59,6 +65,7 @@ export const fetchAllMotorcycleModels = async () => {
     const { data, error } = await supabase
       .from('motorcycle_models')
       .select(MOTORCYCLE_MODEL_SELECT_QUERY)
+      .order('is_draft', { ascending: false })
       .order('name', { ascending: true })
       .order('production_start_year', { ascending: true });
       
@@ -88,7 +95,7 @@ export const fetchMotorcycleModelBySlug = async (slug: string) => {
       .from('motorcycle_models')
       .select(DETAILED_MODEL_SELECT_QUERY)
       .eq('slug', slug)
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error("Error fetching motorcycle model:", error);

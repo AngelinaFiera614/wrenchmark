@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
 import { Link } from "react-router-dom";
+import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
 
 const ModelsTable = () => {
   const { toast } = useToast();
@@ -18,33 +19,10 @@ const ModelsTable = () => {
   const [editModel, setEditModel] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch models
+  // Fetch models using the fixed query
   const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-models"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('motorcycle_models')
-        .select(`
-          id,
-          brand_id,
-          name,
-          type,
-          base_description,
-          production_start_year,
-          production_end_year,
-          production_status,
-          default_image_url,
-          slug,
-          brands:brand_id(
-            id,
-            name,
-            slug
-          )
-        `)
-        .order('name', { ascending: true });
-      if (error) throw error;
-      return data;
-    }
+    queryFn: fetchAllMotorcycleModels,
   });
 
   const handleCreateModel = () => {
@@ -58,7 +36,8 @@ const ModelsTable = () => {
   };
 
   const handleDeleteModel = async (model) => {
-    if (!confirm(`Are you sure you want to delete the ${model.name} model? This action cannot be undone.`)) {
+    const brandName = model.brands?.name || 'Unknown Brand';
+    if (!confirm(`Are you sure you want to delete the ${brandName} ${model.name} model? This action cannot be undone.`)) {
       return;
     }
 
@@ -72,7 +51,7 @@ const ModelsTable = () => {
 
       toast({
         title: "Model deleted",
-        description: `${model.name} has been removed.`,
+        description: `${brandName} ${model.name} has been removed.`,
       });
 
       refetch();
@@ -95,7 +74,7 @@ const ModelsTable = () => {
 
   // Filter models based on search
   const filteredModels = models?.filter(model => {
-    const brandName = Array.isArray(model.brands) && model.brands.length > 0 ? model.brands[0].name : '';
+    const brandName = model.brands?.name || '';
     const matchesSearch = !searchTerm || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       model.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -152,7 +131,7 @@ const ModelsTable = () => {
                 {filteredModels.map((model) => (
                   <TableRow key={model.id} className="border-explorer-chrome/20">
                     <TableCell className="text-explorer-text">
-                      {Array.isArray(model.brands) && model.brands.length > 0 ? model.brands[0].name : 'Unknown'}
+                      {model.brands?.name || 'Unknown'}
                     </TableCell>
                     <TableCell>
                       <Link 
