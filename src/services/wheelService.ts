@@ -17,10 +17,16 @@ export const fetchWheels = async (): Promise<WheelOption[]> => {
     
     return data.map(wheel => ({
       id: wheel.id,
-      name: wheel.type || `${wheel.front_size}/${wheel.rear_size}` || 'Unnamed Wheels',
+      name: `${wheel.type || 'Standard'} - ${wheel.front_size || 'Unknown'} / ${wheel.rear_size || 'Unknown'}`,
       type: wheel.type,
       front_size: wheel.front_size,
-      rear_size: wheel.rear_size
+      rear_size: wheel.rear_size,
+      front_tire_size: wheel.front_tire_size,
+      rear_tire_size: wheel.rear_tire_size,
+      rim_material: wheel.rim_material,
+      spoke_count_front: wheel.spoke_count_front,
+      spoke_count_rear: wheel.spoke_count_rear,
+      notes: wheel.notes
     }));
   } catch (error) {
     console.error("Error in fetchWheels:", error);
@@ -36,7 +42,13 @@ export const createWheels = async (wheelData: Omit<WheelOption, 'id'>): Promise<
       .insert({
         type: wheelData.type,
         front_size: wheelData.front_size,
-        rear_size: wheelData.rear_size
+        rear_size: wheelData.rear_size,
+        front_tire_size: wheelData.front_tire_size,
+        rear_tire_size: wheelData.rear_tire_size,
+        rim_material: wheelData.rim_material,
+        spoke_count_front: wheelData.spoke_count_front,
+        spoke_count_rear: wheelData.spoke_count_rear,
+        notes: wheelData.notes
       })
       .select()
       .single();
@@ -48,10 +60,16 @@ export const createWheels = async (wheelData: Omit<WheelOption, 'id'>): Promise<
     
     return {
       id: data.id,
-      name: wheelData.type || `${wheelData.front_size}/${wheelData.rear_size}` || 'Unnamed Wheels',
+      name: `${data.type || 'Standard'} - ${data.front_size || 'Unknown'} / ${data.rear_size || 'Unknown'}`,
       type: data.type,
       front_size: data.front_size,
-      rear_size: data.rear_size
+      rear_size: data.rear_size,
+      front_tire_size: data.front_tire_size,
+      rear_tire_size: data.rear_tire_size,
+      rim_material: data.rim_material,
+      spoke_count_front: data.spoke_count_front,
+      spoke_count_rear: data.spoke_count_rear,
+      notes: data.notes
     };
   } catch (error) {
     console.error("Error in createWheels:", error);

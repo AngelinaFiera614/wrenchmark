@@ -13,6 +13,10 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     horsepower: rawData.horsepower,
     hasEngineData: !!(rawData.engine_size || rawData.horsepower),
     isDraft: rawData.is_draft,
+    powerToWeightRatio: rawData.power_to_weight_ratio,
+    transmission: rawData.transmission,
+    driveType: rawData.drive_type,
+    coolingSystem: rawData.cooling_system,
     rawDataKeys: Object.keys(rawData)
   });
   
@@ -23,9 +27,9 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   
   return {
     id: rawData.id,
-    make: brandData.name || "Unknown Brand", // Map brand name to make with fallback
+    make: brandData.name || "Unknown Brand",
     brand_id: rawData.brand_id,
-    model: rawData.name, // Map name to model
+    model: rawData.name,
     year: rawData.production_start_year || new Date().getFullYear(),
     category: rawData.category || rawData.type || "Standard",
     style_tags: [],
@@ -34,6 +38,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     engine_size: engineSize || 0,
     horsepower: horsepower || 0,
     weight_kg: rawData.weight_kg || 0,
+    wet_weight_kg: rawData.wet_weight_kg || 0,
     seat_height_mm: rawData.seat_height_mm || 0,
     abs: rawData.has_abs || false,
     top_speed_kph: rawData.top_speed_kph || 0,
@@ -50,6 +55,15 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     status: rawData.status || rawData.production_status,
     engine: rawData.engine_size ? `${rawData.engine_size}cc` : "",
     is_draft: isDraft,
+    
+    // New enhanced technical fields
+    transmission: rawData.transmission,
+    drive_type: rawData.drive_type,
+    cooling_system: rawData.cooling_system,
+    power_to_weight_ratio: rawData.power_to_weight_ratio,
+    is_entry_level: rawData.is_entry_level || false,
+    recommended_license_level: rawData.recommended_license_level,
+    use_cases: rawData.use_cases || [],
     
     // Compatibility aliases - preserve original values for filtering
     engine_cc: engineSize,
@@ -83,12 +97,12 @@ export const createPlaceholderMotorcycleData = (motorcycleData: {
   isDraft?: boolean;
 }) => {
   return {
-    name: motorcycleData.model, // Map model to name for database
+    name: motorcycleData.model,
     type: "Standard",
     production_start_year: motorcycleData.year,
     production_status: "active",
     slug: `${motorcycleData.make.toLowerCase()}-${motorcycleData.model.toLowerCase()}-${motorcycleData.year}`.replace(/\s+/g, '-'),
-    brand_id: null, // This should be set based on the make
+    brand_id: null,
     base_description: `${motorcycleData.make} ${motorcycleData.model} ${motorcycleData.year}`,
     is_draft: motorcycleData.isDraft || false,
   };

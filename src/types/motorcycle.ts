@@ -30,6 +30,7 @@ export interface Motorcycle {
   engine_size: number;
   horsepower: number;
   weight_kg: number;
+  wet_weight_kg?: number;
   seat_height_mm: number;
   abs: boolean;
   top_speed_kph: number;
@@ -46,6 +47,15 @@ export interface Motorcycle {
   status?: string;
   engine?: string;
   is_draft?: boolean;
+  
+  // New enhanced technical fields
+  transmission?: string;
+  drive_type?: string;
+  cooling_system?: string;
+  power_to_weight_ratio?: number;
+  is_entry_level?: boolean;
+  recommended_license_level?: string;
+  use_cases?: string[];
   
   // Compatibility aliases for legacy code
   engine_cc?: number;
@@ -82,6 +92,12 @@ export interface MotorcycleFilters {
   seatHeightRange: [number, number];
   abs: boolean | null;
   styleTags?: string[];
+  useCases?: string[];
+  skillLevel?: string[];
+  transmission?: string[];
+  driveType?: string[];
+  powerToWeightRange?: [number, number];
+  isEntryLevel?: boolean | null;
 }
 
 export interface MotorcycleFilterUpdates {
@@ -95,6 +111,12 @@ export interface MotorcycleFilterUpdates {
   seatHeightRange?: [number, number];
   abs?: boolean | null;
   styleTags?: string[];
+  useCases?: string[];
+  skillLevel?: string[];
+  transmission?: string[];
+  driveType?: string[];
+  powerToWeightRange?: [number, number];
+  isEntryLevel?: boolean | null;
 }
 
 export interface MotorcycleModel {
@@ -159,4 +181,22 @@ export interface ModelComparison {
     selectedYear: ModelYear;
     selectedConfig: Configuration;
   })[];
+}
+
+// New interfaces for motorcycle tags
+export interface MotorcycleTag {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  color_hex: string;
+  icon?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MotorcycleModelTag {
+  motorcycle_id: string;
+  tag_id: string;
+  motorcycle_tags: MotorcycleTag;
 }
