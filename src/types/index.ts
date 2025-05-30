@@ -1,4 +1,3 @@
-
 // Re-export all types from domain-specific files
 export * from './motorcycle';
 export * from './brand';
@@ -16,3 +15,4 @@ export * from './manual-tags';
 export * from './accessories';
 export * from './colors';
 export * from './media';
+export * from './autofill';

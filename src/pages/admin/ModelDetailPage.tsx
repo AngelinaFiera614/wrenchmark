@@ -1,11 +1,10 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Plus, Edit, Trash2, Copy } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Copy, Download, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getMotorcycleModelBySlug } from "@/services/modelService";
 import { fetchModelYears } from "@/services/models/modelYearService";
@@ -14,17 +13,25 @@ import ConfigurationEditor from "@/components/admin/models/ConfigurationEditor";
 import MetricsDisplay from "@/components/admin/models/MetricsDisplay";
 import { useConfigurationMetrics, useMultipleConfigurationMetrics } from "@/hooks/useConfigurationMetrics";
 import AdminModelYearDialog from "@/components/admin/models/AdminModelYearDialog";
+import ModelSuggestionsDialog from "@/components/admin/models/ModelSuggestionsDialog";
+import { useModelAutofill } from "@/hooks/useModelAutofill";
+import { useAuthContext } from "@/context/auth/AuthContext";
 
 const ModelDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin } = useAuthContext();
   
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [showConfigEditor, setShowConfigEditor] = useState(false);
   const [editingConfig, setEditingConfig] = useState(null);
   const [showYearDialog, setShowYearDialog] = useState(false);
+  const [showSuggestionsDialog, setShowSuggestionsDialog] = useState(false);
+
+  // Autofill functionality
+  const { isLoading: isFetching, suggestions, fetchModelInfo, clearSuggestions } = useModelAutofill();
 
   // Fetch model data
   const { data: model, isLoading: modelLoading } = useQuery({
@@ -94,6 +101,21 @@ const ModelDetailPage = () => {
     refetchYears();
   };
 
+  const handleFetchModelInfo = async () => {
+    if (!model) return;
+    
+    const success = await fetchModelInfo(model);
+    if (success && suggestions) {
+      setShowSuggestionsDialog(true);
+    }
+  };
+
+  const handleSuggestionsApplied = () => {
+    clearSuggestions();
+    // Refetch the model data to show updated values
+    window.location.reload();
+  };
+
   if (modelLoading) {
     return (
       <div className="flex justify-center py-10">
@@ -152,6 +174,34 @@ const ModelDetailPage = () => {
             </p>
           </div>
         </div>
+        
+        {/* Admin Actions */}
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleFetchModelInfo}
+              disabled={isFetching || model.ignore_autofill}
+              className="bg-accent-teal text-black hover:bg-accent-teal/80"
+            >
+              {isFetching ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2" />
+                  Fetching...
+                </>
+              ) : (
+                <>
+                  <Zap className="mr-2 h-4 w-4" />
+                  Fetch Model Info
+                </>
+              )}
+            </Button>
+            {model.ignore_autofill && (
+              <span className="text-xs text-muted-foreground">
+                Autofill disabled
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -414,6 +464,18 @@ const ModelDetailPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Suggestions Dialog */}
+      {suggestions && (
+        <ModelSuggestionsDialog
+          open={showSuggestionsDialog}
+          onClose={() => setShowSuggestionsDialog(false)}
+          model={model}
+          suggestedData={suggestions.suggested_data}
+          source={suggestions.source}
+          onApplied={handleSuggestionsApplied}
+        />
+      )}
 
       {/* Dialogs */}
       <AdminModelYearDialog

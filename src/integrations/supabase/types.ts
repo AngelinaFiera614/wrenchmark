@@ -1069,6 +1069,91 @@ export type Database = {
           },
         ]
       }
+      model_fetch_logs: {
+        Row: {
+          action_type: string
+          applied_fields: Json | null
+          created_at: string
+          id: string
+          motorcycle_model_id: string
+          notes: string | null
+          rejected_fields: Json | null
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          applied_fields?: Json | null
+          created_at?: string
+          id?: string
+          motorcycle_model_id: string
+          notes?: string | null
+          rejected_fields?: Json | null
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          applied_fields?: Json | null
+          created_at?: string
+          id?: string
+          motorcycle_model_id?: string
+          notes?: string | null
+          rejected_fields?: Json | null
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_fetch_logs_motorcycle_model_id_fkey"
+            columns: ["motorcycle_model_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_suggestions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          fetched_at: string
+          id: string
+          motorcycle_model_id: string
+          source: string | null
+          suggested_data: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          fetched_at?: string
+          id?: string
+          motorcycle_model_id: string
+          source?: string | null
+          suggested_data?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          fetched_at?: string
+          id?: string
+          motorcycle_model_id?: string
+          source?: string | null
+          suggested_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_suggestions_motorcycle_model_id_fkey"
+            columns: ["motorcycle_model_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       motorcycle_documents: {
         Row: {
           created_at: string | null
@@ -1326,6 +1411,7 @@ export type Database = {
           has_abs: boolean | null
           horsepower: number | null
           id: string
+          ignore_autofill: boolean
           is_draft: boolean
           is_entry_level: boolean | null
           model_history: string | null
@@ -1370,6 +1456,7 @@ export type Database = {
           has_abs?: boolean | null
           horsepower?: number | null
           id?: string
+          ignore_autofill?: boolean
           is_draft?: boolean
           is_entry_level?: boolean | null
           model_history?: string | null
@@ -1414,6 +1501,7 @@ export type Database = {
           has_abs?: boolean | null
           horsepower?: number | null
           id?: string
+          ignore_autofill?: boolean
           is_draft?: boolean
           is_entry_level?: boolean | null
           model_history?: string | null
@@ -1989,6 +2077,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_suggestions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       complete_lesson: {
         Args: { lesson_id_param: string; quiz_score_param?: number }
         Returns: boolean
