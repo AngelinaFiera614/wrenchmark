@@ -9,9 +9,9 @@ export const initialFilters: MotorcycleFilters = {
   make: "",
   yearRange: [1980, 2025],
   engineSizeRange: [0, 2000],
-  difficultyLevel: 5,
-  weightRange: [100, 400],
-  seatHeightRange: [650, 950],
+  difficultyLevel: 5, // Set to max level so it doesn't filter out anything
+  weightRange: [0, 500], // Increased max weight range
+  seatHeightRange: [600, 1000], // Increased seat height range
   abs: null,
   searchTerm: "",
   styleTags: [],
@@ -19,15 +19,15 @@ export const initialFilters: MotorcycleFilters = {
   skillLevel: [],
   transmission: [],
   driveType: [],
-  powerToWeightRange: [0, 2.0],
+  powerToWeightRange: [0, 5.0], // Increased range
   isEntryLevel: null,
   coolingSystem: [],
   licenseLevelFilter: [],
-  priceRange: [0, 50000],
+  priceRange: [0, 100000], // Increased price range
   hasSmartFeatures: null,
-  fuelCapacityRange: [0, 30],
-  topSpeedRange: [0, 350],
-  torqueRange: [0, 200],
+  fuelCapacityRange: [0, 50], // Increased fuel capacity range
+  topSpeedRange: [0, 400], // Increased top speed range
+  torqueRange: [0, 500], // Increased torque range
   advancedSearch: {
     engineType: [],
     cylinderCount: [],
@@ -41,12 +41,18 @@ export function useMotorcycleFilters(
   motorcycles: Motorcycle[], 
   startingFilters: MotorcycleFilters = initialFilters
 ) {
+  console.log("=== MOTORCYCLE FILTERS HOOK DEBUG ===");
+  console.log("Input motorcycles count:", motorcycles.length);
+  console.log("Starting filters:", startingFilters);
+
   const {
     filters,
     debouncedSearchTerm,
     isSearching,
     handlers
   } = useFilterState(startingFilters);
+
+  console.log("Current filters in hook:", filters);
 
   const { isFiltering } = useFilteringState(filters);
 
