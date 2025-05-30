@@ -16,7 +16,7 @@ interface MotorcycleWithBrand {
   is_draft: boolean;
   brands: {
     name: string;
-  };
+  }[];
 }
 
 const AdminDashboard = () => {
@@ -108,7 +108,7 @@ const AdminDashboard = () => {
                   <div key={motorcycle.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium">{motorcycle.brands?.name} {motorcycle.name}</p>
+                        <p className="font-medium">{motorcycle.brands?.[0]?.name} {motorcycle.name}</p>
                         {motorcycle.is_draft && (
                           <Badge variant="outline" className="text-xs">Draft</Badge>
                         )}
