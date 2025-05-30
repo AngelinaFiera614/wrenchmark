@@ -123,41 +123,67 @@ export const deleteMotorcycle = async (motorcycleId: string): Promise<boolean> =
   }
 };
 
-// Updated getAllMotorcycles to use the fixed query
+// Updated getAllMotorcycles to use the fixed query with enhanced debugging
 export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
   try {
+    console.log("=== STARTING getAllMotorcycles DEBUG ===");
     console.log("Fetching all motorcycles using fixed query...");
     
     const rawData = await fetchAllMotorcyclesQuery();
-    console.log("Raw motorcycle data:", rawData);
+    console.log("Raw motorcycle data received:", rawData);
+    console.log("Raw data length:", rawData?.length || 0);
+    console.log("Raw data sample:", rawData?.[0]);
     
     if (!rawData || rawData.length === 0) {
       console.log("No published motorcycles found. Attempting to publish sample data...");
       
       // Try to publish some sample motorcycles
       try {
-        await publishSampleMotorcycles(5);
+        const publishResult = await publishSampleMotorcycles(5);
+        console.log("Publish sample result:", publishResult);
+        
         // Retry fetching after publishing
         const retryData = await fetchAllMotorcyclesQuery();
+        console.log("Retry data after publishing:", retryData);
+        
         if (retryData && retryData.length > 0) {
           console.log("Successfully fetched motorcycles after publishing samples:", retryData.length);
-          return retryData.map(transformMotorcycleData);
+          const transformedRetryData = retryData.map(transformMotorcycleData);
+          console.log("Transformed retry data:", transformedRetryData);
+          console.log("=== END getAllMotorcycles DEBUG (retry success) ===");
+          return transformedRetryData;
         }
       } catch (publishError) {
         console.warn("Could not publish sample motorcycles:", publishError);
       }
       
       console.log("No motorcycles available to display");
+      console.log("=== END getAllMotorcycles DEBUG (no data) ===");
       return [];
     }
     
+    console.log("Starting data transformation...");
     // Transform the data to match the Motorcycle interface
-    const transformedData = rawData.map(transformMotorcycleData);
+    const transformedData = rawData.map((rawMotorcycle, index) => {
+      console.log(`Transforming motorcycle ${index + 1}:`, rawMotorcycle);
+      const transformed = transformMotorcycleData(rawMotorcycle);
+      console.log(`Transformed motorcycle ${index + 1}:`, transformed);
+      return transformed;
+    });
     
-    console.log("Transformed motorcycle data:", transformedData.length, "motorcycles");
+    console.log("Final transformed motorcycle data:", transformedData.length, "motorcycles");
+    console.log("Sample transformed motorcycle:", transformedData[0]);
+    console.log("=== END getAllMotorcycles DEBUG (success) ===");
     return transformedData;
   } catch (error) {
+    console.error("=== ERROR in getAllMotorcycles ===");
     console.error("Failed to fetch motorcycles:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    console.log("=== END getAllMotorcycles DEBUG (error) ===");
     throw error;
   }
 };

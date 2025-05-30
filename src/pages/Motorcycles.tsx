@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
@@ -28,23 +27,27 @@ export default function Motorcycles() {
       try {
         setIsLoading(true);
         setError(null);
-        console.log("Starting motorcycle fetch...");
+        console.log("=== MOTORCYCLES PAGE: Starting motorcycle fetch ===");
         
         const data = await getAllMotorcycles();
-        console.log("Motorcycles fetched successfully:", data.length, "motorcycles");
+        console.log("=== MOTORCYCLES PAGE: Motorcycles fetched ===", data.length, "motorcycles");
+        console.log("=== MOTORCYCLES PAGE: Sample motorcycle ===", data[0]);
         setMotorcycles(data);
         
         if (data.length === 0) {
+          console.log("=== MOTORCYCLES PAGE: No motorcycles found ===");
           toast.info("No published motorcycles found. Some sample data may have been published for testing.");
         } else {
+          console.log("=== MOTORCYCLES PAGE: Success ===");
           toast.success(`Loaded ${data.length} motorcycles successfully`);
         }
       } catch (error) {
-        console.error("Failed to load motorcycles:", error);
+        console.error("=== MOTORCYCLES PAGE: ERROR ===", error);
         setError(`Failed to load motorcycles data: ${error instanceof Error ? error.message : 'Unknown error'}`);
         toast.error("Failed to load motorcycles data");
       } finally {
         setIsLoading(false);
+        console.log("=== MOTORCYCLES PAGE: Fetch complete ===");
       }
     };
 
@@ -62,6 +65,12 @@ export default function Motorcycles() {
     filteredMotorcycles,
     isFiltering
   } = useMotorcycleFilters(motorcycles, parsedFilters);
+
+  console.log("=== MOTORCYCLES PAGE: Current State ===");
+  console.log("Motorcycles in state:", motorcycles.length);
+  console.log("Filtered motorcycles:", filteredMotorcycles.length);
+  console.log("Is loading:", isLoading);
+  console.log("Error:", error);
 
   // Sync filters to URL when they change
   useEffect(() => {

@@ -2,11 +2,15 @@
 import { Motorcycle } from "@/types";
 
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
+  console.log("=== STARTING transformMotorcycleData DEBUG ===");
   console.log("Transforming motorcycle data:", rawData);
   
   // Handle brand data - it should come from the brands relationship
   const brandData = rawData.brands || {};
+  console.log("Brand data from relationship:", brandData);
+  
   const brandName = brandData.name || rawData.brand_name || 'Unknown Brand';
+  console.log("Resolved brand name:", brandName);
   
   // Create the transformed motorcycle object
   const transformed: Motorcycle = {
@@ -66,6 +70,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   };
   
   console.log("Transformed motorcycle:", transformed);
+  console.log("=== END transformMotorcycleData DEBUG ===");
   return transformed;
 };
 

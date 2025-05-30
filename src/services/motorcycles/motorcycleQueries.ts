@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 const MOTORCYCLE_MODEL_SELECT_QUERY = `
@@ -67,6 +66,7 @@ const DETAILED_MOTORCYCLE_MODEL_SELECT_QUERY = `
 
 export const fetchAllMotorcycles = async () => {
   try {
+    console.log("=== STARTING fetchAllMotorcycles DEBUG ===");
     console.log("Fetching all published motorcycles...");
     
     const { data, error } = await supabase
@@ -78,13 +78,33 @@ export const fetchAllMotorcycles = async () => {
       
     if (error) {
       console.error("Error fetching motorcycles:", error);
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       throw error;
     }
     
+    console.log("Query executed successfully");
+    console.log("Raw Supabase response data:", data);
     console.log("Successfully fetched motorcycles:", data?.length || 0, "records");
+    console.log("Sample motorcycle from query:", data?.[0]);
+    
+    // Validate the brand relationship data
+    if (data && data.length > 0) {
+      data.forEach((motorcycle, index) => {
+        console.log(`Motorcycle ${index + 1} brand data:`, motorcycle.brands);
+      });
+    }
+    
+    console.log("=== END fetchAllMotorcycles DEBUG ===");
     return data || [];
   } catch (error) {
+    console.error("=== ERROR in fetchAllMotorcycles ===");
     console.error("Failed to fetch motorcycles:", error);
+    console.log("=== END fetchAllMotorcycles DEBUG (error) ===");
     throw error;
   }
 };
@@ -248,18 +268,21 @@ export const removeTagFromMotorcycle = async (motorcycleId: string, tagId: strin
 // Utility function to publish sample motorcycles for testing
 export const publishSampleMotorcycles = async (count: number = 5) => {
   try {
-    console.log(`Publishing ${count} sample motorcycles...`);
+    console.log(`=== PUBLISHING ${count} SAMPLE MOTORCYCLES ===`);
     
     // Get draft motorcycles
     const { data: draftMotorcycles, error: fetchError } = await supabase
       .from('motorcycle_models')
-      .select('id, name')
+      .select('id, name, is_draft')
       .eq('is_draft', true)
       .limit(count);
       
     if (fetchError) {
+      console.error("Error fetching draft motorcycles:", fetchError);
       throw fetchError;
     }
+    
+    console.log("Found draft motorcycles:", draftMotorcycles);
     
     if (!draftMotorcycles || draftMotorcycles.length === 0) {
       console.log("No draft motorcycles found to publish");
@@ -271,15 +294,18 @@ export const publishSampleMotorcycles = async (count: number = 5) => {
       .from('motorcycle_models')
       .update({ is_draft: false })
       .in('id', draftMotorcycles.map(m => m.id))
-      .select('id, name');
+      .select('id, name, is_draft');
       
     if (error) {
+      console.error("Error publishing motorcycles:", error);
       throw error;
     }
     
     console.log(`Successfully published ${data?.length || 0} motorcycles:`, data?.map(m => m.name));
+    console.log("=== END PUBLISHING SAMPLE MOTORCYCLES ===");
     return { published: data?.length || 0, motorcycles: data };
   } catch (error) {
+    console.error("=== ERROR PUBLISHING SAMPLE MOTORCYCLES ===");
     console.error("Failed to publish sample motorcycles:", error);
     throw error;
   }
