@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Image, Video, FileText, Timeline, Settings } from "lucide-react";
+import { Upload, Image, Video, FileText, Calendar, Settings } from "lucide-react";
 import EnhancedMediaUpload from "@/components/admin/media/EnhancedMediaUpload";
 import EnhancedMediaGallery from "@/components/admin/media/EnhancedMediaGallery";
 import { EnhancedMotorcycleImage } from "@/types/media";
@@ -154,7 +153,7 @@ export default function AdminEnhancedMedia() {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-1">
-              <Timeline className="h-4 w-4 mr-1" />
+              <Calendar className="h-4 w-4 mr-1" />
               <div className="text-2xl font-bold">{stats.historic}</div>
             </div>
             <div className="text-sm text-muted-foreground">Historic</div>
@@ -180,7 +179,7 @@ export default function AdminEnhancedMedia() {
             Gallery
           </TabsTrigger>
           <TabsTrigger value="timeline" className="flex items-center gap-2">
-            <Timeline className="h-4 w-4" />
+            <Calendar className="h-4 w-4" />
             Timeline
           </TabsTrigger>
           <TabsTrigger value="collections" className="flex items-center gap-2">
