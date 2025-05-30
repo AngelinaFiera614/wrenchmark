@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Profile {
   id: string;
+  user_id: string;
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
@@ -16,10 +17,10 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", userId)
-    .single();
+    .eq("user_id", userId)
+    .maybeSingle();
 
-  if (error) {
+  if (error && error.code !== 'PGRST116') {
     console.error("Error fetching profile:", error);
     return null;
   }
@@ -40,6 +41,7 @@ export async function createProfileIfNotExists(userId: string): Promise<Profile 
   // Create new profile if it doesn't exist
   const newProfile = {
     id: userId,
+    user_id: userId,
     username: null,
     full_name: null,
     avatar_url: null,
@@ -70,7 +72,7 @@ export async function updateProfile(
   const { data, error } = await supabase
     .from("profiles")
     .update(profileData)
-    .eq("id", userId)
+    .eq("user_id", userId)
     .select()
     .single();
 

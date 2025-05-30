@@ -8,6 +8,7 @@ import { Helmet } from 'react-helmet-async';
 import UserCoursesSection from '@/components/profile/UserCoursesSection';
 import UserSkillsSection from '@/components/profile/UserSkillsSection';
 import GlossaryProgressSection from '@/components/profile/GlossaryProgressSection';
+import UserPreferencesSection from '@/components/profile/UserPreferencesSection';
 import { createProfileIfNotExists } from '@/services/profileService';
 import { toast } from 'sonner';
 import { Loader, RefreshCw } from 'lucide-react';
@@ -92,10 +93,13 @@ const ProfilePage: React.FC = () => {
                 </Avatar>
                 <div>
                   <CardTitle className="text-xl">
-                    {user.user_metadata?.full_name || user.email}
+                    {profile?.full_name || user.user_metadata?.full_name || user.email}
                   </CardTitle>
-                  {user.user_metadata?.full_name && (
+                  {(profile?.full_name || user.user_metadata?.full_name) && (
                     <CardDescription>{user.email}</CardDescription>
+                  )}
+                  {profile?.username && (
+                    <CardDescription>@{profile.username}</CardDescription>
                   )}
                 </div>
               </div>
@@ -112,6 +116,9 @@ const ProfilePage: React.FC = () => {
             <CardContent>
               <div className="text-sm text-muted-foreground">
                 <p>Account created: {new Date(user.created_at).toLocaleDateString()}</p>
+                {profile?.is_admin && (
+                  <p className="text-accent-teal font-medium">Administrator</p>
+                )}
                 {!profile && (
                   <div className="bg-yellow-900/20 border border-yellow-700 text-yellow-500 px-4 py-2 rounded-md mt-3">
                     <p className="flex items-center">
@@ -125,8 +132,9 @@ const ProfilePage: React.FC = () => {
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
               <UserCoursesSection />
+              <UserPreferencesSection />
             </div>
             <div className="space-y-6">
               <GlossaryProgressSection />

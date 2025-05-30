@@ -1,104 +1,135 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { getProfileById, createProfileIfNotExists, Profile } from "@/services/profileService";
 import { toast } from "sonner";
+import type { Profile } from "@/services/profileService";
 
-/**
- * Hook for managing user profile data
- */
 export function useProfile(user: User | null) {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
-  const [profileCreationAttempted, setProfileCreationAttempted] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState<boolean>(false);
   const [profileError, setProfileError] = useState<Error | null>(null);
-  const [lastRefreshTime, setLastRefreshTime] = useState(0);
-  
-  const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      console.log(`[useProfile] Fetching profile data for user: ${userId}`);
-      setIsProfileLoading(true);
-      setProfileError(null);
-      
-      const profileData = await getProfileById(userId);
-      
-      if (!profileData) {
-        console.log("[useProfile] No profile found, creating one");
-        
-        if (!profileCreationAttempted) {
-          setProfileCreationAttempted(true);
-          // Try to create a new profile if one doesn't exist
-          try {
-            const createdProfile = await createProfileIfNotExists(userId);
-            
-            if (createdProfile) {
-              console.log("[useProfile] Created new profile for user");
-              setProfile(createdProfile);
-            } else {
-              const error = new Error("Failed to create profile");
-              console.error("[useProfile]", error);
-              setProfileError(error);
-              toast.error("Failed to create user profile. Please try refreshing the page.");
-              setProfile(null);
-            }
-          } catch (error: any) {
-            console.error("[useProfile] Error creating profile:", error);
-            setProfileError(error);
-            toast.error("Failed to create user profile. Please try refreshing the page.");
-            setProfile(null);
-          }
-        }
-      } else {
-        console.log("[useProfile] Found existing profile");
-        setProfile(profileData);
-      }
-    } catch (error: any) {
-      console.error("[useProfile] Error fetching profile:", error);
-      setProfileError(error);
-      toast.error("Failed to load user profile. Please try refreshing the page.");
+
+  const fetchProfile = async (userId: string) => {
+    if (!userId) {
       setProfile(null);
+      return;
+    }
+
+    setIsProfileLoading(true);
+    setProfileError(null);
+
+    try {
+      console.log("[useProfile] Fetching profile for user:", userId);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("[useProfile] Error fetching profile:", error);
+        throw error;
+      }
+
+      if (data) {
+        console.log("[useProfile] Profile found:", data);
+        setProfile(data);
+      } else {
+        console.log("[useProfile] No profile found, creating one");
+        // Auto-create profile if it doesn't exist
+        await createProfileIfNotExists(userId);
+      }
+    } catch (err) {
+      console.error("[useProfile] Profile fetch exception:", err);
+      setProfileError(err as Error);
+      
+      // Try to create profile if fetch failed due to missing profile
+      if ((err as any)?.code === 'PGRST116') {
+        await createProfileIfNotExists(userId);
+      }
     } finally {
       setIsProfileLoading(false);
     }
-  }, [profileCreationAttempted]);
+  };
 
-  // Add debounce functionality to avoid too frequent refreshes
-  const refreshProfile = useCallback(async () => {
-    if (!user) {
-      console.log("[useProfile] Cannot refresh profile: no user");
-      return;
+  const createProfileIfNotExists = async (userId: string) => {
+    try {
+      console.log("[useProfile] Creating profile for user:", userId);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          user_id: userId,
+          username: user?.email?.split('@')[0] || 'user',
+          is_admin: false,
+          full_name: user?.user_metadata?.full_name || null
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("[useProfile] Error creating profile:", error);
+        throw error;
+      }
+
+      console.log("[useProfile] Profile created:", data);
+      setProfile(data);
+      toast.success("Profile created successfully");
+    } catch (err) {
+      console.error("[useProfile] Profile creation failed:", err);
+      setProfileError(err as Error);
     }
-    
-    // Prevent too frequent refreshes (e.g., within 1 second)
-    const now = Date.now();
-    if (now - lastRefreshTime < 1000) {
-      console.log("[useProfile] Skipping refresh profile - too soon after last refresh");
-      return;
+  };
+
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await fetchProfile(user.id);
     }
-    
-    setLastRefreshTime(now);
-    console.log("[useProfile] Refreshing profile for user:", user.id);
+  };
+
+  const updateProfile = async (updates: Partial<Profile>) => {
+    if (!user?.id || !profile) {
+      throw new Error("User must be logged in to update profile");
+    }
+
     setIsProfileLoading(true);
-    setProfileCreationAttempted(false); // Reset this flag to allow re-creation attempt
-    await fetchProfile(user.id);
-  }, [user, fetchProfile, lastRefreshTime]);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', user.id)
+        .select()
+        .single();
 
-  // Force refresh if we have a user but no profile
-  useEffect(() => {
-    if (user && !profile && !isProfileLoading && !profileError) {
-      console.log("[useProfile] Have user but no profile, triggering refresh");
-      refreshProfile();
+      if (error) throw error;
+
+      setProfile(data);
+      toast.success("Profile updated successfully");
+    } catch (err) {
+      console.error("[useProfile] Profile update failed:", err);
+      throw err;
+    } finally {
+      setIsProfileLoading(false);
     }
-  }, [user, profile, isProfileLoading, profileError, refreshProfile]);
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchProfile(user.id);
+    } else {
+      setProfile(null);
+    }
+  }, [user?.id]);
 
   return {
     profile,
     setProfile,
     isProfileLoading,
-    setIsProfileLoading,
     profileError,
-    fetchProfile,
     refreshProfile,
-    setProfileCreationAttempted
+    updateProfile
   };
 }
