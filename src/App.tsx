@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { MeasurementProvider } from "@/context/MeasurementContext";
@@ -14,10 +14,19 @@ import Index from "@/pages/Index";
 import Motorcycles from "@/pages/Motorcycles";
 import MotorcycleDetail from "@/pages/MotorcycleDetail";
 import BrandDetail from "@/pages/BrandDetail";
+import BrandsDirectory from "@/pages/BrandsDirectory";
 import CompareModels from "@/pages/CompareModels";
 import NotFound from "@/pages/NotFound";
 import AuthPage from "@/pages/AuthPage";
 import ProfilePage from "@/pages/ProfilePage";
+import ManualsPage from "@/pages/ManualsPage";
+import RidingSkillsPage from "@/pages/RidingSkillsPage";
+import RidingSkillDetailPage from "@/pages/RidingSkillDetailPage";
+import CoursesPage from "@/pages/CoursesPage";
+import CourseDetailsPage from "@/pages/CourseDetailsPage";
+import LessonDetailsPage from "@/pages/LessonDetailsPage";
+import GlossaryPage from "@/pages/GlossaryPage";
+import GlossaryTermPage from "@/pages/GlossaryTermPage";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminModels from "@/pages/admin/AdminModels";
@@ -50,9 +59,19 @@ const App = () => (
                       <Route index element={<Index />} />
                       <Route path="motorcycles" element={<Motorcycles />} />
                       <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
+                      <Route path="brands" element={<BrandsDirectory />} />
                       <Route path="brands/:slug" element={<BrandDetail />} />
+                      <Route path="manuals" element={<ManualsPage />} />
+                      <Route path="riding-skills" element={<RidingSkillsPage />} />
+                      <Route path="riding-skills/:id" element={<RidingSkillDetailPage />} />
+                      <Route path="courses" element={<CoursesPage />} />
+                      <Route path="courses/:courseId" element={<CourseDetailsPage />} />
+                      <Route path="courses/:courseId/:lessonId" element={<LessonDetailsPage />} />
+                      <Route path="glossary" element={<GlossaryPage />} />
+                      <Route path="glossary/:slug" element={<GlossaryTermPage />} />
                       <Route path="compare" element={<CompareModels />} />
                       <Route path="auth" element={<AuthPage />} />
+                      <Route path="login" element={<Navigate to="/auth" replace />} />
                       <Route path="profile" element={<ProfilePage />} />
                       <Route path="*" element={<NotFound />} />
                     </Route>
