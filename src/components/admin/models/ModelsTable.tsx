@@ -35,8 +35,19 @@ const ModelsTable = () => {
     setIsCreateModelOpen(true);
   };
 
+  const getBrandName = (brands: any) => {
+    if (!brands) return 'Unknown Brand';
+    if (Array.isArray(brands) && brands.length > 0) {
+      return brands[0]?.name || 'Unknown Brand';
+    }
+    if (typeof brands === 'object' && brands.name) {
+      return brands.name;
+    }
+    return 'Unknown Brand';
+  };
+
   const handleDeleteModel = async (model) => {
-    const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || 'Unknown Brand';
+    const brandName = getBrandName(model.brands);
     if (!confirm(`Are you sure you want to delete the ${brandName} ${model.name} model? This action cannot be undone.`)) {
       return;
     }
@@ -74,7 +85,7 @@ const ModelsTable = () => {
 
   // Filter models based on search
   const filteredModels = models?.filter(model => {
-    const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || '';
+    const brandName = getBrandName(model.brands);
     const matchesSearch = !searchTerm || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       model.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -129,7 +140,7 @@ const ModelsTable = () => {
               </TableHeader>
               <TableBody>
                 {filteredModels.map((model) => {
-                  const brandName = Array.isArray(model.brands) ? model.brands[0]?.name : model.brands?.name || 'Unknown';
+                  const brandName = getBrandName(model.brands);
                   return (
                     <TableRow key={model.id} className="border-explorer-chrome/20">
                       <TableCell className="text-explorer-text">
