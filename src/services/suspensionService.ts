@@ -73,3 +73,65 @@ export const createSuspension = async (suspensionData: Omit<SuspensionOption, 'i
     return null;
   }
 };
+
+// Update an existing suspension
+export const updateSuspension = async (id: string, suspensionData: Omit<SuspensionOption, 'id' | 'name'>): Promise<SuspensionOption | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('suspensions')
+      .update({
+        front_type: suspensionData.front_type,
+        rear_type: suspensionData.rear_type,
+        brand: suspensionData.brand,
+        adjustability: suspensionData.adjustability,
+        front_travel_mm: suspensionData.front_travel_mm,
+        rear_travel_mm: suspensionData.rear_travel_mm,
+        front_brand: suspensionData.front_brand,
+        rear_brand: suspensionData.rear_brand
+      })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("Error updating suspension:", error);
+      return null;
+    }
+    
+    return {
+      id: data.id,
+      name: `${data.front_type || 'Front'} / ${data.rear_type || 'Rear'}`,
+      front_type: data.front_type,
+      rear_type: data.rear_type,
+      brand: data.brand,
+      adjustability: data.adjustability,
+      front_travel_mm: data.front_travel_mm,
+      rear_travel_mm: data.rear_travel_mm,
+      front_brand: data.front_brand,
+      rear_brand: data.rear_brand
+    };
+  } catch (error) {
+    console.error("Error in updateSuspension:", error);
+    return null;
+  }
+};
+
+// Delete a suspension
+export const deleteSuspension = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('suspensions')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error("Error deleting suspension:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in deleteSuspension:", error);
+    return false;
+  }
+};
