@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { MeasurementProvider } from "@/context/MeasurementContext";
@@ -43,35 +43,33 @@ const App = () => (
               <ComparisonProvider>
                 <TooltipProvider>
                   <Toaster />
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={<Layout><Outlet /></Layout>}>
-                        <Route index element={<Index />} />
-                        <Route path="motorcycles" element={<Motorcycles />} />
-                        <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
-                        <Route path="brands/:slug" element={<BrandDetail />} />
-                        <Route path="compare" element={<CompareModels />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Route>
-                      
-                      {/* Admin Routes */}
-                      <Route path="/admin/*" element={<AdminLayout />}>
-                        <Route index element={<AdminDashboard />} />
-                        <Route path="models" element={<AdminModels />} />
-                        <Route path="brands" element={<AdminBrands />} />
-                        <Route path="enhanced-media" element={<AdminEnhancedMedia />} />
-                        <Route path="images" element={<AdminImages />} />
-                        <Route path="manuals" element={<AdminManuals />} />
-                        <Route path="riding-skills" element={<AdminRidingSkills />} />
-                        <Route path="courses" element={<AdminCourses />} />
-                        <Route path="glossary" element={<AdminGlossary />} />
-                        <Route path="components" element={<AdminComponents />} />
-                        <Route path="parts" element={<AdminParts />} />
-                        <Route path="accessories" element={<AdminAccessories />} />
-                        <Route path="users" element={<AdminUsers />} />
-                      </Route>
-                    </Routes>
-                  </BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Layout><Outlet /></Layout>}>
+                      <Route index element={<Index />} />
+                      <Route path="motorcycles" element={<Motorcycles />} />
+                      <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
+                      <Route path="brands/:slug" element={<BrandDetail />} />
+                      <Route path="compare" element={<CompareModels />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Route>
+                    
+                    {/* Admin Routes */}
+                    <Route path="/admin/*" element={<AdminLayout />}>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="models" element={<AdminModels />} />
+                      <Route path="brands" element={<AdminBrands />} />
+                      <Route path="enhanced-media" element={<AdminEnhancedMedia />} />
+                      <Route path="images" element={<AdminImages />} />
+                      <Route path="manuals" element={<AdminManuals />} />
+                      <Route path="riding-skills" element={<AdminRidingSkills />} />
+                      <Route path="courses" element={<AdminCourses />} />
+                      <Route path="glossary" element={<AdminGlossary />} />
+                      <Route path="components" element={<AdminComponents />} />
+                      <Route path="parts" element={<AdminParts />} />
+                      <Route path="accessories" element={<AdminAccessories />} />
+                      <Route path="users" element={<AdminUsers />} />
+                    </Route>
+                  </Routes>
                 </TooltipProvider>
               </ComparisonProvider>
             </MeasurementProvider>
