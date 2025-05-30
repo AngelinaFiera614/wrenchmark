@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -45,8 +46,8 @@ import AdminAccessories from "@/pages/admin/AdminAccessories";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminEnhancedMedia from "@/pages/admin/AdminEnhancedMedia";
 import { BrowserRouter } from "react-router-dom";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import ModelDetailPage from "@/pages/ModelDetailPage";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ModelDetailPage from "@/pages/admin/ModelDetailPage";
 
 const queryClient = new QueryClient();
 

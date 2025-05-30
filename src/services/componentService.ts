@@ -5,3 +5,9 @@ export * from './brakeService';
 export * from './frameService';
 export * from './suspensionService';
 export * from './wheelService';
+
+// Export specific functions with consistent naming
+export { 
+  createBrake as createBrakeSystem,
+  fetchBrakes as fetchBrakeSystems 
+} from './brakeService';

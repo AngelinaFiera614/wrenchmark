@@ -54,12 +54,24 @@ const ComponentSelector = ({
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
-    return (
-      component.name?.toLowerCase().includes(searchLower) ||
-      component.type?.toLowerCase().includes(searchLower) ||
-      component.brand?.toLowerCase().includes(searchLower) ||
-      component.material?.toLowerCase().includes(searchLower)
-    );
+    const name = component.name?.toLowerCase() || '';
+    
+    // Type-safe property access based on component type
+    let searchableText = name;
+    
+    if (componentType === 'engine' && 'engine_type' in component) {
+      searchableText += ` ${component.engine_type || ''}`;
+    } else if (componentType === 'brakes' && 'brake_brand' in component) {
+      searchableText += ` ${component.brake_brand || ''}`;
+    } else if (componentType === 'frame' && 'material' in component) {
+      searchableText += ` ${component.material || ''}`;
+    } else if (componentType === 'suspension' && 'brand' in component) {
+      searchableText += ` ${component.brand || ''}`;
+    } else if (componentType === 'wheels' && 'rim_material' in component) {
+      searchableText += ` ${component.rim_material || ''}`;
+    }
+    
+    return searchableText.includes(searchLower);
   }) || [];
 
   const getComponentLabel = (component: any) => {

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -94,10 +95,11 @@ const ModelsTable = () => {
 
   // Filter models based on search
   const filteredModels = models?.filter(model => {
+    const brandName = model.brands?.name || '';
     const matchesSearch = !searchTerm || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       model.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      model.brands?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      brandName.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesSearch;
   }) || [];
@@ -150,7 +152,7 @@ const ModelsTable = () => {
                 {filteredModels.map((model) => (
                   <TableRow key={model.id} className="border-explorer-chrome/20">
                     <TableCell className="text-explorer-text">
-                      {model.brands?.name || model.brand?.name || 'Unknown'}
+                      {model.brands?.name || 'Unknown'}
                     </TableCell>
                     <TableCell>
                       <Link 

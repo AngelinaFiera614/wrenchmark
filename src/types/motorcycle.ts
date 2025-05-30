@@ -179,28 +179,35 @@ export interface ModelYear {
 export interface Configuration {
   id: string;
   model_year_id: string;
-  name: string;
-  engine_id: string;
-  brake_system_id: string;
-  frame_id: string;
-  suspension_id: string;
-  wheel_id: string;
-  color_id?: string;
+  name?: string;
+  engine_id?: string;
+  brake_system_id?: string;
+  frame_id?: string;
+  suspension_id?: string;
+  wheel_id?: string;
   seat_height_mm?: number;
   weight_kg?: number;
   wheelbase_mm?: number;
   fuel_capacity_l?: number;
   ground_clearance_mm?: number;
-  image_url?: string;
-  is_default: boolean;
+  is_default?: boolean;
   trim_level?: string;
-  colors?: any[];
+  market_region?: string;
+  price_premium_usd?: number;
+  image_url?: string;
+  color_id?: string;
+  optional_equipment?: string[];
+  special_features?: string[];
+  created_at?: string;
+  updated_at?: string;
+  
+  // Related components
   engine?: any;
   brakes?: any;
   frame?: any;
   suspension?: any;
   wheels?: any;
-  accessories?: any[];
+  colors?: any[];
 }
 
 export interface ModelComparison {
