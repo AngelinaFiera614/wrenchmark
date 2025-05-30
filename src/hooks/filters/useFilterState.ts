@@ -40,21 +40,21 @@ export function useFilterState(startingFilters: MotorcycleFilters) {
     styleTags,
     abs,
     searchTerm,
-    // Include all the missing properties from the full MotorcycleFilters interface
-    useCases: startingFilters.useCases || [],
-    skillLevel: startingFilters.skillLevel || [],
-    transmission: startingFilters.transmission || [],
-    driveType: startingFilters.driveType || [],
-    powerToWeightRange: startingFilters.powerToWeightRange || [0, 2.0],
-    isEntryLevel: startingFilters.isEntryLevel || null,
-    coolingSystem: startingFilters.coolingSystem || [],
-    licenseLevelFilter: startingFilters.licenseLevelFilter || [],
-    priceRange: startingFilters.priceRange || [0, 50000],
-    hasSmartFeatures: startingFilters.hasSmartFeatures || null,
-    fuelCapacityRange: startingFilters.fuelCapacityRange || [0, 30],
-    topSpeedRange: startingFilters.topSpeedRange || [0, 350],
-    torqueRange: startingFilters.torqueRange || [0, 200],
-    advancedSearch: startingFilters.advancedSearch || {
+    // Use static default values instead of spreading startingFilters to prevent circular dependency
+    useCases: [],
+    skillLevel: [],
+    transmission: [],
+    driveType: [],
+    powerToWeightRange: [0, 2.0],
+    isEntryLevel: null,
+    coolingSystem: [],
+    licenseLevelFilter: [],
+    priceRange: [0, 50000],
+    hasSmartFeatures: null,
+    fuelCapacityRange: [0, 30],
+    topSpeedRange: [0, 350],
+    torqueRange: [0, 200],
+    advancedSearch: {
       engineType: [],
       cylinderCount: [],
       brakeType: [],
@@ -64,7 +64,7 @@ export function useFilterState(startingFilters: MotorcycleFilters) {
   }), [
     categories, make, yearRange, engineSizeRange, 
     difficultyLevel, weightRange, seatHeightRange, 
-    styleTags, abs, searchTerm, startingFilters
+    styleTags, abs, searchTerm
   ]);
 
   const resetFilters = useCallback(() => {
