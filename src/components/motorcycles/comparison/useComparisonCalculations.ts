@@ -1,6 +1,5 @@
 
 import { useMemo } from "react";
-import { Zap, TrendingUp, Weight, Gauge } from "lucide-react";
 import { Motorcycle } from "@/types";
 import { CalculatedField, ComparisonMotorcycle, NormalizedScore } from "./types";
 
@@ -9,28 +8,28 @@ export function useComparisonCalculations(motorcyclesToCompare: Motorcycle[]) {
     {
       label: 'Power-to-Weight',
       key: 'powerToWeight',
-      icon: <Zap className="h-4 w-4" />,
+      iconName: 'zap',
       formatter: (value) => `${value.toFixed(2)} hp/kg`,
       calculator: (m) => m.horsepower && m.weight_kg ? m.horsepower / m.weight_kg : null
     },
     {
       label: 'Torque-to-Weight',
       key: 'torqueToWeight',
-      icon: <TrendingUp className="h-4 w-4" />,
+      iconName: 'trending-up',
       formatter: (value) => `${value.toFixed(2)} Nm/kg`,
       calculator: (m) => m.torque_nm && m.weight_kg ? m.torque_nm / m.weight_kg : null
     },
     {
       label: 'Power per CC',
       key: 'powerPerCC',
-      icon: <Gauge className="h-4 w-4" />,
+      iconName: 'gauge',
       formatter: (value) => `${value.toFixed(3)} hp/cc`,
       calculator: (m) => m.horsepower && m.engine_size ? m.horsepower / m.engine_size : null
     },
     {
       label: 'Weight per CC',
       key: 'weightPerCC',
-      icon: <Weight className="h-4 w-4" />,
+      iconName: 'weight',
       formatter: (value) => `${value.toFixed(3)} kg/cc`,
       calculator: (m) => m.weight_kg && m.engine_size ? m.weight_kg / m.engine_size : null
     }

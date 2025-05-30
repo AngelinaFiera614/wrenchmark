@@ -3,12 +3,12 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Zap, Gauge, Weight } from "lucide-react";
 
 interface CalculatedField {
   label: string;
   key: string;
-  icon: React.ReactNode;
+  iconName: string;
   formatter: (value: number) => string;
 }
 
@@ -18,6 +18,22 @@ interface ComparisonChartProps {
   onMetricChange: (metric: string) => void;
   chartData: Array<{ name: string; value: number }>;
 }
+
+const getIcon = (iconName: string) => {
+  const iconProps = { className: "h-4 w-4" };
+  switch (iconName) {
+    case 'zap':
+      return <Zap {...iconProps} />;
+    case 'trending-up':
+      return <TrendingUp {...iconProps} />;
+    case 'gauge':
+      return <Gauge {...iconProps} />;
+    case 'weight':
+      return <Weight {...iconProps} />;
+    default:
+      return <TrendingUp {...iconProps} />;
+  }
+};
 
 export default function ComparisonChart({
   calculatedFields,
@@ -41,7 +57,7 @@ export default function ComparisonChart({
               onClick={() => onMetricChange(field.key)}
               className="flex items-center gap-1"
             >
-              {field.icon}
+              {getIcon(field.iconName)}
               {field.label}
             </Button>
           ))}

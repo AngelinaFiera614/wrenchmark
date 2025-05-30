@@ -2,12 +2,13 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Zap, TrendingUp, Gauge, Weight } from "lucide-react";
 import { ComparisonMotorcycle } from "./types";
 
 interface CalculatedField {
   label: string;
   key: string;
-  icon: React.ReactNode;
+  iconName: string;
   formatter: (value: number) => string;
 }
 
@@ -15,6 +16,22 @@ interface PerformanceMetricsTableProps {
   comparisonData: ComparisonMotorcycle[];
   calculatedFields: CalculatedField[];
 }
+
+const getIcon = (iconName: string) => {
+  const iconProps = { className: "h-4 w-4" };
+  switch (iconName) {
+    case 'zap':
+      return <Zap {...iconProps} />;
+    case 'trending-up':
+      return <TrendingUp {...iconProps} />;
+    case 'gauge':
+      return <Gauge {...iconProps} />;
+    case 'weight':
+      return <Weight {...iconProps} />;
+    default:
+      return <TrendingUp {...iconProps} />;
+  }
+};
 
 export default function PerformanceMetricsTable({
   comparisonData,
@@ -33,7 +50,7 @@ export default function PerformanceMetricsTable({
               {calculatedFields.map((field) => (
                 <TableHead key={field.key} className="text-center">
                   <div className="flex items-center justify-center gap-1">
-                    {field.icon}
+                    {getIcon(field.iconName)}
                     {field.label}
                   </div>
                 </TableHead>

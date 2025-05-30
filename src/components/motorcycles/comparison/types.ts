@@ -20,7 +20,7 @@ export interface NormalizedScore {
 export interface CalculatedField {
   label: string;
   key: string;
-  icon: React.ReactNode;
+  iconName: string;
   formatter: (value: number) => string;
   calculator: (motorcycle: Motorcycle) => number | null;
 }
