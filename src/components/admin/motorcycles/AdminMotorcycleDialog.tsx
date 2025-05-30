@@ -1,20 +1,14 @@
 
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader } from "lucide-react";
 import { sanitizeHtml, validateSlug } from "@/services/security/inputSanitizer";
 import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
 import { 
@@ -27,6 +21,13 @@ import {
   formatVolumeForForm,
   formatSpeedForForm
 } from "@/utils/imperialConverters";
+
+// Import the new form sections
+import { BasicInfoFields } from "./form/BasicInfoFields";
+import { PerformanceFields } from "./form/PerformanceFields";
+import { DimensionsFields } from "./form/DimensionsFields";
+import { AdditionalFields } from "./form/AdditionalFields";
+import { FormActions } from "./form/FormActions";
 
 // Enhanced validation schema with imperial input validation
 const motorcycleFormSchema = z.object({
@@ -337,7 +338,7 @@ const AdminMotorcycleDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={() => onClose(false)}>
-      <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Motorcycle" : "Add New Motorcycle"}
@@ -345,306 +346,23 @@ const AdminMotorcycleDialog = ({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Basic Info */}
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Model Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., Ninja 300" maxLength={100} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="brand_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Brand</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a brand" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {brands?.map((brand) => (
-                          <SelectItem key={brand.id} value={brand.id}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Sport">Sport</SelectItem>
-                        <SelectItem value="Cruiser">Cruiser</SelectItem>
-                        <SelectItem value="Touring">Touring</SelectItem>
-                        <SelectItem value="Adventure">Adventure</SelectItem>
-                        <SelectItem value="Naked">Naked</SelectItem>
-                        <SelectItem value="Dual-sport">Dual-sport</SelectItem>
-                        <SelectItem value="Standard">Standard</SelectItem>
-                        <SelectItem value="Scooter">Scooter</SelectItem>
-                        <SelectItem value="Off-road">Off-road</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="production_start_year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Production Year</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} min={1885} max={new Date().getFullYear() + 5} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Performance Fields with Imperial Units */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="engine_size"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Engine Size (cc)</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} min={0} max={10000} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="horsepower"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Horsepower</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} min={0} max={2000} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="top_speed_mph"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Top Speed (mph)</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} min={0} max={300} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Dimensions Fields with Imperial Units */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="weight_lbs"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Weight (lbs)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" {...field} min={0} max={2200} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="seat_height_in"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Seat Height (inches)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" {...field} min={20} max={48} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="wheelbase_in"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Wheelbase (inches)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" {...field} min={40} max={100} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="ground_clearance_in"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ground Clearance (inches)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" {...field} min={2} max={20} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="fuel_capacity_gal"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fuel Capacity (gallons)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.1" {...field} min={0} max={13} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="difficulty_level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Difficulty Level (1-5)</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(parseInt(value))} 
-                      defaultValue={field.value.toString()}
-                      value={field.value.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Difficulty" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {[1, 2, 3, 4, 5].map((level) => (
-                          <SelectItem key={level} value={level.toString()}>
-                            {level} - {level === 1 ? "Beginner" : level === 5 ? "Expert" : "Intermediate"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Additional Fields */}
-            <FormField
-              control={form.control}
-              name="summary"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Brief description of the motorcycle" maxLength={1000} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <BasicInfoFields control={form.control} />
+            
+            <PerformanceFields control={form.control} />
+            
+            <DimensionsFields control={form.control} />
+            
+            <AdditionalFields 
+              control={form.control} 
+              onGenerateSlug={generateSlug} 
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="slug"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Slug</FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl>
-                        <Input {...field} placeholder="motorcycle-slug" maxLength={100} />
-                      </FormControl>
-                      <Button type="button" variant="outline" onClick={generateSlug}>
-                        Generate
-                      </Button>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="has_abs"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Has ABS</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => onClose(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : isEditing ? "Update" : "Create"}
-              </Button>
-            </div>
+            <FormActions
+              loading={loading}
+              onCancel={() => onClose(false)}
+              isEditing={isEditing}
+            />
           </form>
         </Form>
       </DialogContent>
