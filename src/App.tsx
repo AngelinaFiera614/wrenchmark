@@ -1,94 +1,84 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/auth';
-import { Layout } from '@/components/layout';
-import AdminLayout from '@/components/admin/AdminLayout';
-import Index from './pages/Index';
-import Auth from './pages/Auth';
-import ProfilePage from './pages/ProfilePage';
-import Courses from './pages/CoursesPage';
-import CourseDetails from './pages/CourseDetailsPage';
-import LessonDetails from './pages/LessonDetailsPage';
-import NotFound from './pages/NotFoundPage';
-import Motorcycles from './pages/Motorcycles';
-import MotorcycleDetail from './pages/MotorcycleDetail';
-import ModelComparisonPage from './pages/ModelComparisonPage';
-import ComparisonPage from './pages/ComparisonPage';
-import ManualsPage from './pages/ManualsPage';
-import GlossaryPage from './pages/GlossaryPage';
-import AdminImages from './pages/admin/AdminImages';
-import BrandsDirectory from './pages/BrandsDirectory';
-import BrandDetail from './pages/BrandDetail';
-// Import all admin page components
-import {
-  AdminDashboard,
-  AdminCourses,
-  AdminLessons,
-  AdminBrands,
-  AdminRidingSkills,
-  AdminManuals,
-  AdminGlossary,
-  AdminStateRules
-} from './pages/admin';
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { MeasurementProvider } from "@/context/MeasurementContext";
+import { ComparisonProvider } from "@/context/ComparisonContext";
+import { AuthProvider } from "@/context/auth/AuthProvider";
+import { ProfileProvider } from "@/context/profile/ProfileProvider";
+import Layout from "@/components/layout/Layout";
+import Home from "@/pages/Home";
+import Motorcycles from "@/pages/Motorcycles";
+import MotorcycleDetail from "@/pages/MotorcycleDetail";
+import BrandDetail from "@/pages/BrandDetail";
+import CompareModels from "@/pages/CompareModels";
+import NotFound from "@/pages/NotFound";
+import AdminLayout from "@/components/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminModels from "@/pages/admin/AdminModels";
+import AdminBrands from "@/pages/admin/AdminBrands";
+import AdminImages from "@/pages/admin/AdminImages";
+import AdminManuals from "@/pages/admin/AdminManuals";
+import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
+import AdminCourses from "@/pages/admin/AdminCourses";
+import AdminGlossary from "@/pages/admin/AdminGlossary";
+import AdminComponents from "@/pages/admin/AdminComponents";
+import AdminParts from "@/pages/admin/AdminParts";
+import AdminAccessories from "@/pages/admin/AdminAccessories";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminEnhancedMedia from "@/pages/admin/AdminEnhancedMedia";
 
-// Import and rename the motorcycle models component to be the main motorcycles admin
-import AdminMotorcycleModels from './pages/admin/AdminMotorcycleModels';
+const queryClient = new QueryClient();
 
-function App() {
-  const { isLoading, isAdmin } = useAuth();
-  const [isAppLoading, setIsAppLoading] = useState(true);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setIsAppLoading(false);
-    }
-  }, [isLoading]);
-
-  if (isAppLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <span className="loading loading-dots loading-lg"></span>
-      </div>
-    );
-  }
-
-  return (
-    <Routes>
-      {/* Admin routes */}
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="brands" element={<AdminBrands />} />
-        <Route path="motorcycles" element={<AdminMotorcycleModels />} />
-        <Route path="motorcycle-models" element={<AdminMotorcycleModels />} />
-        <Route path="manuals" element={<AdminManuals />} />
-        <Route path="glossary" element={<AdminGlossary />} />
-        <Route path="riding-skills" element={<AdminRidingSkills />} />
-        <Route path="courses" element={<AdminCourses />} />
-        <Route path="images" element={<AdminImages />} />
-      </Route>
-
-      {/* Auth routes - without main layout */}
-      <Route path="/auth" element={<Auth />} />
-
-      {/* Main app routes */}
-      <Route path="/" element={<Layout children={<Outlet />} />}>
-        <Route index element={<Index />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/motorcycles" element={<Motorcycles />} />
-        <Route path="/motorcycles/:slug" element={<MotorcycleDetail />} />
-        <Route path="/compare" element={<ComparisonPage />} />
-        <Route path="/model-comparison" element={<ModelComparisonPage />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/courses/:courseId" element={<CourseDetails />} />
-        <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonDetails />} />
-        <Route path="/manuals" element={<ManualsPage />} />
-        <Route path="/glossary" element={<GlossaryPage />} />
-        <Route path="/brands" element={<BrandsDirectory />} />
-        <Route path="/brands/:brandId" element={<BrandDetail />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
-  );
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <HelmetProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <ProfileProvider>
+            <MeasurementProvider>
+              <ComparisonProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/" element={<Layout />}>
+                        <Route index element={<Home />} />
+                        <Route path="motorcycles" element={<Motorcycles />} />
+                        <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
+                        <Route path="brands/:slug" element={<BrandDetail />} />
+                        <Route path="compare" element={<CompareModels />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Route>
+                      
+                      {/* Admin Routes */}
+                      <Route path="/admin/*" element={<AdminLayout />}>
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="models" element={<AdminModels />} />
+                        <Route path="brands" element={<AdminBrands />} />
+                        <Route path="enhanced-media" element={<AdminEnhancedMedia />} />
+                        <Route path="images" element={<AdminImages />} />
+                        <Route path="manuals" element={<AdminManuals />} />
+                        <Route path="riding-skills" element={<AdminRidingSkills />} />
+                        <Route path="courses" element={<AdminCourses />} />
+                        <Route path="glossary" element={<AdminGlossary />} />
+                        <Route path="components" element={<AdminComponents />} />
+                        <Route path="parts" element={<AdminParts />} />
+                        <Route path="accessories" element={<AdminAccessories />} />
+                        <Route path="users" element={<AdminUsers />} />
+                      </Route>
+                    </Routes>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </ComparisonProvider>
+            </MeasurementProvider>
+          </ProfileProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
+  </QueryClientProvider>
+);
 
 export default App;

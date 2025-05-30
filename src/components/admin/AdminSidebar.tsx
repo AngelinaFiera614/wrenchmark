@@ -1,159 +1,67 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Building2,
   Bike,
+  Users,
   FileText,
   BookOpen,
-  Target,
   GraduationCap,
-  ImageIcon
+  Building2,
+  PaintBucket,
+  Wrench,
+  Camera,
 } from "lucide-react";
 
-interface SidebarItemProps {
-  to: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}
+const navigation = [
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Models", href: "/admin/models", icon: Bike },
+  { name: "Brands", href: "/admin/brands", icon: Building2 },
+  { name: "Enhanced Media", href: "/admin/enhanced-media", icon: Camera },
+  { name: "Images", href: "/admin/images", icon: Camera },
+  { name: "Manuals", href: "/admin/manuals", icon: FileText },
+  { name: "Riding Skills", href: "/admin/riding-skills", icon: GraduationCap },
+  { name: "Courses", href: "/admin/courses", icon: BookOpen },
+  { name: "Glossary", href: "/admin/glossary", icon: BookOpen },
+  { name: "Components", href: "/admin/components", icon: Wrench },
+  { name: "Parts", href: "/admin/parts", icon: Wrench },
+  { name: "Accessories", href: "/admin/accessories", icon: PaintBucket },
+  { name: "Users", href: "/admin/users", icon: Users },
+];
 
-const SidebarItem = ({ to, icon, children }: SidebarItemProps) => {
+export default function AdminSidebar() {
   const location = useLocation();
-  const isActive = location.pathname === to;
 
   return (
-    <li className="mb-1">
-      <Link
-        to={to}
-        className={cn(
-          "group flex items-center space-x-3 rounded-lg p-3 text-sm font-medium transition-all duration-200 ease-in-out hover:scale-[1.02]",
-          isActive 
-            ? "bg-gradient-to-r from-accent-teal/20 to-accent-teal/10 text-accent-teal border-l-4 border-accent-teal shadow-lg shadow-accent-teal/20" 
-            : "text-gray-300 hover:bg-white/5 hover:text-accent-teal hover:shadow-md backdrop-blur-sm"
-        )}
-      >
-        <div className={cn(
-          "flex items-center justify-center w-6 h-6 transition-all duration-200",
-          isActive 
-            ? "text-accent-teal drop-shadow-lg" 
-            : "text-gray-400 group-hover:text-accent-teal group-hover:drop-shadow-sm"
-        )}>
-          {icon}
-        </div>
-        <span className={cn(
-          "font-medium tracking-wide transition-all duration-200",
-          isActive ? "text-accent-teal font-semibold" : "group-hover:text-accent-teal"
-        )}>
-          {children}
-        </span>
-        {isActive && (
-          <div className="ml-auto w-2 h-2 rounded-full bg-accent-teal shadow-lg shadow-accent-teal/50 animate-pulse" />
-        )}
-      </Link>
-    </li>
-  );
-};
-
-const AdminSidebar = () => {
-  return (
-    <div className="flex h-full w-64 flex-col bg-gradient-to-b from-gray-900 via-gray-900/95 to-black border-r border-gray-800/50 backdrop-blur-xl">
-      {/* Header Section */}
-      <div className="flex-shrink-0 p-6 border-b border-gray-800/50">
-        <div className="flex flex-col space-y-3">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-teal to-accent-teal/70 flex items-center justify-center shadow-lg">
-              <LayoutDashboard className="h-4 w-4 text-black font-bold" />
-            </div>
-            <h2 className="text-lg font-bold tracking-wider text-white">
-              ADMIN
-            </h2>
-          </div>
-          <div className="h-px bg-gradient-to-r from-accent-teal/50 via-accent-teal/30 to-transparent" />
-          <p className="text-xs text-gray-400 font-medium tracking-wide uppercase">
-            Content Management Portal
-          </p>
-        </div>
+    <div className="w-64 bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
+      <div className="flex items-center flex-shrink-0 px-4">
+        <h2 className="text-lg font-semibold text-gray-900">Admin Panel</h2>
       </div>
-
-      {/* Navigation Section */}
-      <div className="flex-1 px-4 py-6 overflow-y-auto">
-        <nav className="space-y-1">
-          <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3 px-3">
-              Overview
-            </h3>
-            <ul className="space-y-1">
-              <SidebarItem to="/admin" icon={<LayoutDashboard className="h-5 w-5" />}>
-                Dashboard
-              </SidebarItem>
-            </ul>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3 px-3">
-              Content Management
-            </h3>
-            <ul className="space-y-1">
-              <SidebarItem to="/admin/brands" icon={<Building2 className="h-5 w-5" />}>
-                Brands
-              </SidebarItem>
-              <SidebarItem to="/admin/motorcycles" icon={<Bike className="h-5 w-5" />}>
-                Motorcycles
-              </SidebarItem>
-              <SidebarItem to="/admin/manuals" icon={<FileText className="h-5 w-5" />}>
-                Manuals
-              </SidebarItem>
-              <SidebarItem to="/admin/glossary" icon={<BookOpen className="h-5 w-5" />}>
-                Glossary
-              </SidebarItem>
-            </ul>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3 px-3">
-              Learning & Skills
-            </h3>
-            <ul className="space-y-1">
-              <SidebarItem to="/admin/riding-skills" icon={<Target className="h-5 w-5" />}>
-                Riding Skills
-              </SidebarItem>
-              <SidebarItem to="/admin/courses" icon={<GraduationCap className="h-5 w-5" />}>
-                Courses
-              </SidebarItem>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3 px-3">
-              Media & Assets
-            </h3>
-            <ul className="space-y-1">
-              <SidebarItem to="/admin/images" icon={<ImageIcon className="h-5 w-5" />}>
-                Images
-              </SidebarItem>
-            </ul>
-          </div>
-        </nav>
-      </div>
-
-      {/* Footer Section */}
-      <div className="flex-shrink-0 p-4 border-t border-gray-800/50">
-        <div className="rounded-lg bg-gradient-to-r from-accent-teal/10 to-transparent p-3 border border-accent-teal/20">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 rounded-full bg-accent-teal animate-pulse" />
-            <span className="text-xs text-gray-400 font-medium">
-              System Active
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            All services operational
-          </p>
-        </div>
-      </div>
+      <nav className="mt-5 flex-1 px-2 space-y-1">
+        {navigation.map((item) => (
+          <Link
+            key={item.name}
+            to={item.href}
+            className={cn(
+              "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+              location.pathname === item.href
+                ? "bg-gray-100 text-gray-900"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            )}
+          >
+            <item.icon
+              className={cn(
+                "mr-3 flex-shrink-0 h-6 w-6",
+                location.pathname === item.href
+                  ? "text-gray-500"
+                  : "text-gray-400 group-hover:text-gray-500"
+              )}
+            />
+            {item.name}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
-};
-
-export default AdminSidebar;
+}

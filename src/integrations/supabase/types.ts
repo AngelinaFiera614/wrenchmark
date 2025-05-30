@@ -245,6 +245,65 @@ export type Database = {
           },
         ]
       }
+      color_variants: {
+        Row: {
+          brand_id: string | null
+          color_code: string
+          created_at: string | null
+          description: string | null
+          hex_code: string | null
+          id: string
+          image_url: string | null
+          is_matte: boolean | null
+          is_metallic: boolean | null
+          is_pearl: boolean | null
+          name: string
+          updated_at: string | null
+          year_discontinued: number | null
+          year_introduced: number | null
+        }
+        Insert: {
+          brand_id?: string | null
+          color_code: string
+          created_at?: string | null
+          description?: string | null
+          hex_code?: string | null
+          id?: string
+          image_url?: string | null
+          is_matte?: boolean | null
+          is_metallic?: boolean | null
+          is_pearl?: boolean | null
+          name: string
+          updated_at?: string | null
+          year_discontinued?: number | null
+          year_introduced?: number | null
+        }
+        Update: {
+          brand_id?: string | null
+          color_code?: string
+          created_at?: string | null
+          description?: string | null
+          hex_code?: string | null
+          id?: string
+          image_url?: string | null
+          is_matte?: boolean | null
+          is_metallic?: boolean | null
+          is_pearl?: boolean | null
+          name?: string
+          updated_at?: string | null
+          year_discontinued?: number | null
+          year_introduced?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "color_variants_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_block_types: {
         Row: {
           created_at: string | null
@@ -756,6 +815,109 @@ export type Database = {
           },
         ]
       }
+      media_collection_items: {
+        Row: {
+          collection_id: string
+          created_at: string | null
+          document_id: string | null
+          id: string
+          image_id: string | null
+          sort_order: number | null
+          video_id: string | null
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          image_id?: string | null
+          sort_order?: number | null
+          video_id?: string | null
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          image_id?: string | null
+          sort_order?: number | null
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "media_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_collection_items_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_collection_items_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_collection_items_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_collections: {
+        Row: {
+          collection_type: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          motorcycle_id: string | null
+          name: string
+          updated_at: string | null
+          year: number | null
+        }
+        Insert: {
+          collection_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          motorcycle_id?: string | null
+          name: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Update: {
+          collection_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          motorcycle_id?: string | null
+          name?: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_collections_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media_library: {
         Row: {
           alt_text: string | null
@@ -999,6 +1161,78 @@ export type Database = {
           },
         ]
       }
+      motorcycle_documents: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          document_type: string | null
+          document_url: string
+          download_count: number | null
+          file_size_bytes: number | null
+          id: string
+          is_official: boolean | null
+          language: string | null
+          model_year_id: string | null
+          motorcycle_id: string | null
+          page_count: number | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          year_published: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          document_type?: string | null
+          document_url: string
+          download_count?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          is_official?: boolean | null
+          language?: string | null
+          model_year_id?: string | null
+          motorcycle_id?: string | null
+          page_count?: number | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          year_published?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          document_type?: string | null
+          document_url?: string
+          download_count?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          is_official?: boolean | null
+          language?: string | null
+          model_year_id?: string | null
+          motorcycle_id?: string | null
+          page_count?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          year_published?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "motorcycle_documents_model_year_id_fkey"
+            columns: ["model_year_id"]
+            isOneToOne: false
+            referencedRelation: "model_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_documents_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       motorcycle_images: {
         Row: {
           alt_text: string | null
@@ -1006,25 +1240,34 @@ export type Database = {
           brand: string | null
           caption: string | null
           color: string | null
+          color_code: string | null
           configuration_id: string | null
           created_at: string | null
+          document_url: string | null
+          duration_seconds: number | null
           file_name: string
           file_size_bytes: number | null
           file_url: string
           height_px: number | null
+          historical_significance: string | null
           id: string
           is_featured: boolean | null
           is_primary: boolean | null
+          media_type: string | null
           mime_type: string | null
           model: string | null
           model_year_id: string | null
           motorcycle_id: string | null
+          photo_context: string | null
           replaced_by: string | null
           style: string | null
+          thumbnail_url: string | null
           updated_at: string | null
           version: number | null
+          video_url: string | null
           width_px: number | null
           year: number | null
+          year_captured: number | null
         }
         Insert: {
           alt_text?: string | null
@@ -1032,25 +1275,34 @@ export type Database = {
           brand?: string | null
           caption?: string | null
           color?: string | null
+          color_code?: string | null
           configuration_id?: string | null
           created_at?: string | null
+          document_url?: string | null
+          duration_seconds?: number | null
           file_name: string
           file_size_bytes?: number | null
           file_url: string
           height_px?: number | null
+          historical_significance?: string | null
           id?: string
           is_featured?: boolean | null
           is_primary?: boolean | null
+          media_type?: string | null
           mime_type?: string | null
           model?: string | null
           model_year_id?: string | null
           motorcycle_id?: string | null
+          photo_context?: string | null
           replaced_by?: string | null
           style?: string | null
+          thumbnail_url?: string | null
           updated_at?: string | null
           version?: number | null
+          video_url?: string | null
           width_px?: number | null
           year?: number | null
+          year_captured?: number | null
         }
         Update: {
           alt_text?: string | null
@@ -1058,25 +1310,34 @@ export type Database = {
           brand?: string | null
           caption?: string | null
           color?: string | null
+          color_code?: string | null
           configuration_id?: string | null
           created_at?: string | null
+          document_url?: string | null
+          duration_seconds?: number | null
           file_name?: string
           file_size_bytes?: number | null
           file_url?: string
           height_px?: number | null
+          historical_significance?: string | null
           id?: string
           is_featured?: boolean | null
           is_primary?: boolean | null
+          media_type?: string | null
           mime_type?: string | null
           model?: string | null
           model_year_id?: string | null
           motorcycle_id?: string | null
+          photo_context?: string | null
           replaced_by?: string | null
           style?: string | null
+          thumbnail_url?: string | null
           updated_at?: string | null
           version?: number | null
+          video_url?: string | null
           width_px?: number | null
           year?: number | null
+          year_captured?: number | null
         }
         Relationships: [
           {
@@ -1356,6 +1617,85 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      motorcycle_videos: {
+        Row: {
+          configuration_id: string | null
+          created_at: string | null
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          is_featured: boolean | null
+          model_year_id: string | null
+          motorcycle_id: string | null
+          quality: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          video_type: string | null
+          video_url: string
+          view_count: number | null
+          year_captured: number | null
+        }
+        Insert: {
+          configuration_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          is_featured?: boolean | null
+          model_year_id?: string | null
+          motorcycle_id?: string | null
+          quality?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          video_type?: string | null
+          video_url: string
+          view_count?: number | null
+          year_captured?: number | null
+        }
+        Update: {
+          configuration_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          is_featured?: boolean | null
+          model_year_id?: string | null
+          motorcycle_id?: string | null
+          quality?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          video_type?: string | null
+          video_url?: string
+          view_count?: number | null
+          year_captured?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "motorcycle_videos_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_videos_model_year_id_fkey"
+            columns: ["model_year_id"]
+            isOneToOne: false
+            referencedRelation: "model_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_videos_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
