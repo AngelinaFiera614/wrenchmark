@@ -5,13 +5,13 @@ export function countActiveFilters(filters: MotorcycleFilters): number {
   let count = 0;
   
   if (filters.searchTerm) count++;
-  if (filters.categories.length > 0) count++;
+  if (filters.categories && filters.categories.length > 0) count++;
   if (filters.make) count++;
-  if (filters.yearRange[0] !== 1980 || filters.yearRange[1] !== 2025) count++;
-  if (filters.engineSizeRange[0] !== 0 || filters.engineSizeRange[1] !== 2000) count++;
-  if (filters.difficultyLevel < 5) count++;
-  if (filters.weightRange[0] !== 100 || filters.weightRange[1] !== 400) count++;
-  if (filters.seatHeightRange[0] !== 650 || filters.seatHeightRange[1] !== 950) count++;
+  if (filters.yearRange && (filters.yearRange[0] !== 1980 || filters.yearRange[1] !== 2025)) count++;
+  if (filters.engineSizeRange && (filters.engineSizeRange[0] !== 0 || filters.engineSizeRange[1] !== 2000)) count++;
+  if (filters.difficultyLevel && filters.difficultyLevel < 5) count++;
+  if (filters.weightRange && (filters.weightRange[0] !== 100 || filters.weightRange[1] !== 400)) count++;
+  if (filters.seatHeightRange && (filters.seatHeightRange[0] !== 650 || filters.seatHeightRange[1] !== 950)) count++;
   if (filters.abs !== null) count++;
   if (filters.styleTags && filters.styleTags.length > 0) count++;
   
@@ -51,25 +51,25 @@ export function syncFiltersToUrl(filters: MotorcycleFilters, searchParams: URLSe
   );
   keysToRemove.forEach(key => searchParams.delete(key));
 
-  // Add active filters
+  // Add active filters with safety checks
   if (filters.searchTerm) searchParams.set('search', filters.searchTerm);
-  if (filters.categories.length > 0) searchParams.set('categories', filters.categories.join(','));
+  if (filters.categories && filters.categories.length > 0) searchParams.set('categories', filters.categories.join(','));
   if (filters.make) searchParams.set('make', filters.make);
-  if (filters.yearRange[0] !== 1980) searchParams.set('yearMin', filters.yearRange[0].toString());
-  if (filters.yearRange[1] !== 2025) searchParams.set('yearMax', filters.yearRange[1].toString());
-  if (filters.engineSizeRange[0] !== 0) searchParams.set('engineMin', filters.engineSizeRange[0].toString());
-  if (filters.engineSizeRange[1] !== 2000) searchParams.set('engineMax', filters.engineSizeRange[1].toString());
-  if (filters.difficultyLevel < 5) searchParams.set('difficulty', filters.difficultyLevel.toString());
-  if (filters.weightRange[0] !== 100) searchParams.set('weightMin', filters.weightRange[0].toString());
-  if (filters.weightRange[1] !== 400) searchParams.set('weightMax', filters.weightRange[1].toString());
-  if (filters.seatHeightRange[0] !== 650) searchParams.set('seatMin', filters.seatHeightRange[0].toString());
-  if (filters.seatHeightRange[1] !== 950) searchParams.set('seatMax', filters.seatHeightRange[1].toString());
-  if (filters.abs !== null) searchParams.set('abs', filters.abs.toString());
+  if (filters.yearRange && filters.yearRange[0] !== 1980) searchParams.set('yearMin', filters.yearRange[0].toString());
+  if (filters.yearRange && filters.yearRange[1] !== 2025) searchParams.set('yearMax', filters.yearRange[1].toString());
+  if (filters.engineSizeRange && filters.engineSizeRange[0] !== 0) searchParams.set('engineMin', filters.engineSizeRange[0].toString());
+  if (filters.engineSizeRange && filters.engineSizeRange[1] !== 2000) searchParams.set('engineMax', filters.engineSizeRange[1].toString());
+  if (filters.difficultyLevel !== undefined && filters.difficultyLevel < 5) searchParams.set('difficulty', filters.difficultyLevel.toString());
+  if (filters.weightRange && filters.weightRange[0] !== 100) searchParams.set('weightMin', filters.weightRange[0].toString());
+  if (filters.weightRange && filters.weightRange[1] !== 400) searchParams.set('weightMax', filters.weightRange[1].toString());
+  if (filters.seatHeightRange && filters.seatHeightRange[0] !== 650) searchParams.set('seatMin', filters.seatHeightRange[0].toString());
+  if (filters.seatHeightRange && filters.seatHeightRange[1] !== 950) searchParams.set('seatMax', filters.seatHeightRange[1].toString());
+  if (filters.abs !== null && filters.abs !== undefined) searchParams.set('abs', filters.abs.toString());
   if (filters.useCases && filters.useCases.length > 0) searchParams.set('useCases', filters.useCases.join(','));
   if (filters.transmission && filters.transmission.length > 0) searchParams.set('transmission', filters.transmission.join(','));
   if (filters.driveType && filters.driveType.length > 0) searchParams.set('driveType', filters.driveType.join(','));
-  if (filters.isEntryLevel !== null) searchParams.set('entryLevel', filters.isEntryLevel.toString());
-  if (filters.hasSmartFeatures !== null) searchParams.set('smartFeatures', filters.hasSmartFeatures.toString());
+  if (filters.isEntryLevel !== null && filters.isEntryLevel !== undefined) searchParams.set('entryLevel', filters.isEntryLevel.toString());
+  if (filters.hasSmartFeatures !== null && filters.hasSmartFeatures !== undefined) searchParams.set('smartFeatures', filters.hasSmartFeatures.toString());
 }
 
 export function parseFiltersFromUrl(searchParams: URLSearchParams, defaultFilters: MotorcycleFilters): MotorcycleFilters {

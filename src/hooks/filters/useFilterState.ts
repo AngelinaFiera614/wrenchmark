@@ -39,11 +39,32 @@ export function useFilterState(startingFilters: MotorcycleFilters) {
     seatHeightRange,
     styleTags,
     abs,
-    searchTerm
+    searchTerm,
+    // Include all the missing properties from the full MotorcycleFilters interface
+    useCases: startingFilters.useCases || [],
+    skillLevel: startingFilters.skillLevel || [],
+    transmission: startingFilters.transmission || [],
+    driveType: startingFilters.driveType || [],
+    powerToWeightRange: startingFilters.powerToWeightRange || [0, 2.0],
+    isEntryLevel: startingFilters.isEntryLevel || null,
+    coolingSystem: startingFilters.coolingSystem || [],
+    licenseLevelFilter: startingFilters.licenseLevelFilter || [],
+    priceRange: startingFilters.priceRange || [0, 50000],
+    hasSmartFeatures: startingFilters.hasSmartFeatures || null,
+    fuelCapacityRange: startingFilters.fuelCapacityRange || [0, 30],
+    topSpeedRange: startingFilters.topSpeedRange || [0, 350],
+    torqueRange: startingFilters.torqueRange || [0, 200],
+    advancedSearch: startingFilters.advancedSearch || {
+      engineType: [],
+      cylinderCount: [],
+      brakeType: [],
+      frameType: [],
+      suspensionType: []
+    }
   }), [
     categories, make, yearRange, engineSizeRange, 
     difficultyLevel, weightRange, seatHeightRange, 
-    styleTags, abs, searchTerm
+    styleTags, abs, searchTerm, startingFilters
   ]);
 
   const resetFilters = useCallback(() => {
