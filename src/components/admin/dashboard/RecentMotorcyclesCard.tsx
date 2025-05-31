@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Plus, Edit } from "lucide-react";
+import { ExternalLink, Plus, Edit, AlertCircle, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 
@@ -21,19 +21,17 @@ interface RecentMotorcyclesCardProps {
   motorcycles: MotorcycleWithBrand[] | undefined;
   isLoading: boolean;
   error: Error | null;
+  refetch?: () => void;
 }
 
-const RecentMotorcyclesCard = ({ motorcycles, isLoading, error }: RecentMotorcyclesCardProps) => {
+const RecentMotorcyclesCard = ({ motorcycles, isLoading, error, refetch }: RecentMotorcyclesCardProps) => {
   const getActivityType = (motorcycle: MotorcycleWithBrand) => {
     const created = new Date(motorcycle.created_at);
     const updated = new Date(motorcycle.updated_at);
     const timeDiff = updated.getTime() - created.getTime();
     
     // If updated within 1 minute of creation, consider it "created"
-    if (timeDiff < 60000) {
-      return 'created';
-    }
-    return 'updated';
+    return timeDiff < 60000 ? 'created' : 'updated';
   };
 
   const getActivityIcon = (activityType: string) => {
@@ -42,6 +40,14 @@ const RecentMotorcyclesCard = ({ motorcycles, isLoading, error }: RecentMotorcyc
 
   const getActivityColor = (activityType: string) => {
     return activityType === 'created' ? 'text-green-400' : 'text-blue-400';
+  };
+
+  const handleRetry = () => {
+    if (refetch) {
+      refetch();
+    } else {
+      window.location.reload();
+    }
   };
 
   return (
@@ -73,19 +79,28 @@ const RecentMotorcyclesCard = ({ motorcycles, isLoading, error }: RecentMotorcyc
         {isLoading ? (
           <div className="text-center py-4">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent-teal mx-auto"></div>
-            <p className="text-explorer-text-muted mt-2">Loading...</p>
+            <p className="text-explorer-text-muted mt-2">Loading motorcycle activity...</p>
           </div>
         ) : error ? (
           <div className="text-center py-4">
-            <p className="text-red-400 mb-2">Failed to load motorcycle activity</p>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.location.reload()}
-              className="text-explorer-text border-explorer-chrome/30"
-            >
-              Retry
-            </Button>
+            <div className="flex flex-col items-center gap-3">
+              <AlertCircle className="h-8 w-8 text-red-400" />
+              <div>
+                <p className="text-red-400 mb-1 font-medium">Failed to load motorcycle activity</p>
+                <p className="text-explorer-text-muted text-sm">
+                  {error.message || 'An unexpected error occurred'}
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleRetry}
+                className="text-explorer-text border-explorer-chrome/30 hover:bg-explorer-chrome/20"
+              >
+                <RefreshCw className="mr-1 h-3 w-3" />
+                Retry
+              </Button>
+            </div>
           </div>
         ) : motorcycles && motorcycles.length > 0 ? (
           <div className="space-y-3 max-h-64 overflow-y-auto">

@@ -10,7 +10,12 @@ import RecentMotorcyclesCard from "@/components/admin/dashboard/RecentMotorcycle
 const AdminDashboard = () => {
   const { stats, isLoading: statsLoading } = useAdminStats();
   const { data: recentBrands, isLoading: brandsLoading } = useRecentBrands();
-  const { data: recentMotorcycles, isLoading: motorcyclesLoading, error: motorcyclesError } = useRecentMotorcycles();
+  const { 
+    data: recentMotorcycles, 
+    isLoading: motorcyclesLoading, 
+    error: motorcyclesError,
+    refetch: refetchMotorcycles 
+  } = useRecentMotorcycles();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -28,6 +33,7 @@ const AdminDashboard = () => {
           motorcycles={recentMotorcycles} 
           isLoading={motorcyclesLoading} 
           error={motorcyclesError} 
+          refetch={refetchMotorcycles}
         />
       </div>
     </div>

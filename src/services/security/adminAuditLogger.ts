@@ -11,19 +11,39 @@ export interface AuditLogEntry {
 
 export const logAdminAction = async (entry: AuditLogEntry): Promise<void> => {
   try {
-    const { error } = await supabase.rpc('log_admin_action', {
-      p_action: entry.action,
-      p_table_name: entry.tableName,
-      p_record_id: entry.recordId || null,
-      p_old_values: entry.oldValues || null,
-      p_new_values: entry.newValues || null,
-    });
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.warn('No authenticated user for audit logging');
+      return;
+    }
+
+    // Try to use the existing admin_audit_log table if it exists
+    const { error } = await supabase
+      .from('admin_audit_log')
+      .insert({
+        user_id: user.id,
+        action: entry.action,
+        table_name: entry.tableName,
+        record_id: entry.recordId || null,
+        old_values: entry.oldValues || null,
+        new_values: entry.newValues || null,
+        created_at: new Date().toISOString(),
+      });
 
     if (error) {
-      console.error('Failed to log admin action:', error);
+      // If the table doesn't exist or there's an error, log to console for now
+      console.log('Admin action (audit log unavailable):', {
+        user_id: user.id,
+        action: entry.action,
+        table_name: entry.tableName,
+        record_id: entry.recordId,
+        timestamp: new Date().toISOString(),
+      });
     }
   } catch (error) {
     console.error('Error logging admin action:', error);
+    // Don't throw - logging failures shouldn't break the main flow
   }
 };
 
@@ -39,4 +59,6 @@ export const auditActions = {
   USER_ROLE_CHANGE: 'user_role_change',
   MANUAL_UPLOAD: 'manual_upload',
   MANUAL_DELETE: 'manual_delete',
+  ADMIN_VIEW_RECENT_BRANDS: 'admin_view_recent_brands',
+  ADMIN_VIEW_RECENT_MOTORCYCLES: 'admin_view_recent_motorcycles',
 } as const;
