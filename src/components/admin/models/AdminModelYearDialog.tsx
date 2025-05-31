@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { createModelYear } from "@/services/models/modelYearService";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AdminModelYearDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface AdminModelYearDialogProps {
 
 const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
@@ -38,6 +40,7 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
         changes: formData.changes || undefined,
         image_url: formData.image_url || undefined,
         marketing_tagline: formData.marketing_tagline || undefined,
+        is_available: true,
       };
 
       const result = await createModelYear(yearData);
@@ -46,6 +49,10 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
           title: "Model year created",
           description: `${formData.year} model year has been added successfully.`,
         });
+        
+        // Invalidate queries to refresh the data
+        queryClient.invalidateQueries({ queryKey: ["model-years", model.id] });
+        
         onClose();
         // Reset form
         setFormData({
@@ -55,8 +62,15 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
           image_url: "",
           marketing_tagline: "",
         });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to create model year. It may already exist.",
+        });
       }
     } catch (error) {
+      console.error("Error creating model year:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -67,11 +81,24 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
     }
   };
 
+  const handleClose = () => {
+    setFormData({
+      year: new Date().getFullYear(),
+      msrp_usd: "",
+      changes: "",
+      image_url: "",
+      marketing_tagline: "",
+    });
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-explorer-card border-explorer-chrome/30 max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-explorer-text">Add Model Year</DialogTitle>
+          <DialogTitle className="text-explorer-text">
+            Add Model Year for {model?.name}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,6 +107,8 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
             <Input
               id="year"
               type="number"
+              min="1900"
+              max="2030"
               value={formData.year}
               onChange={(e) => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
               className="bg-explorer-dark border-explorer-chrome/30"
@@ -93,6 +122,7 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
               id="msrp_usd"
               type="number"
               step="0.01"
+              min="0"
               value={formData.msrp_usd}
               onChange={(e) => setFormData(prev => ({ ...prev, msrp_usd: e.target.value }))}
               className="bg-explorer-dark border-explorer-chrome/30"
@@ -108,6 +138,7 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
               onChange={(e) => setFormData(prev => ({ ...prev, changes: e.target.value }))}
               className="bg-explorer-dark border-explorer-chrome/30"
               placeholder="Describe changes for this model year..."
+              rows={3}
             />
           </div>
 
@@ -138,7 +169,7 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={loading}
               className="flex-1"
             >

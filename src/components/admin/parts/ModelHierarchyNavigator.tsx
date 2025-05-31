@@ -1,11 +1,16 @@
+
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Calendar, Settings, Wrench, AlertCircle, RefreshCw } from "lucide-react";
+import { ChevronDown, ChevronRight, Calendar, Settings, Wrench, AlertCircle, RefreshCw, Plus } from "lucide-react";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
+import { generateModelYears } from "@/services/models/modelYearService";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import ModelSearchInput from "./ModelSearchInput";
+import AdminModelYearDialog from "../models/AdminModelYearDialog";
 
 interface ModelHierarchyNavigatorProps {
   models: MotorcycleModel[];
@@ -34,6 +39,10 @@ const ModelHierarchyNavigator = ({
 }: ModelHierarchyNavigatorProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [retryCount, setRetryCount] = useState(0);
+  const [generatingYears, setGeneratingYears] = useState(false);
+  const [showAddYearDialog, setShowAddYearDialog] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Filter and group models based on search query
   const filteredModelsByBrand = useMemo(() => {
@@ -70,11 +79,47 @@ const ModelHierarchyNavigator = ({
     0
   );
 
+  const selectedModelData = models?.find(m => m.id === selectedModel);
+
   const handleRetryModelYears = () => {
     setRetryCount(prev => prev + 1);
     // Re-trigger the model selection to refetch data
     if (selectedModel) {
       onModelSelect(selectedModel);
+    }
+  };
+
+  const handleGenerateModelYears = async () => {
+    if (!selectedModel) return;
+
+    setGeneratingYears(true);
+    try {
+      const success = await generateModelYears(selectedModel);
+      if (success) {
+        toast({
+          title: "Model years generated",
+          description: "Model years have been automatically generated based on production range.",
+        });
+        // Refresh the model years data
+        queryClient.invalidateQueries({ queryKey: ["model-years", selectedModel] });
+        // Re-trigger the model selection to refetch data
+        onModelSelect(selectedModel);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Failed to generate years",
+          description: "Could not generate model years. Please check the model's production data.",
+        });
+      }
+    } catch (error) {
+      console.error("Error generating model years:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An error occurred while generating model years.",
+      });
+    } finally {
+      setGeneratingYears(false);
     }
   };
 
@@ -160,21 +205,50 @@ const ModelHierarchyNavigator = ({
       {/* Model Years Column */}
       <Card className="bg-explorer-card border-explorer-chrome/30">
         <CardHeader>
-          <CardTitle className="text-explorer-text flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Model Years ({modelYears.length})
-            {selectedModel && modelYears.length === 0 && !isLoading && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleRetryModelYears}
-                className="ml-auto"
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Retry
-              </Button>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-explorer-text flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Model Years ({modelYears.length})
+            </CardTitle>
+            {selectedModel && (
+              <div className="flex gap-2">
+                {modelYears.length === 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGenerateModelYears}
+                    disabled={generatingYears}
+                    className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+                  >
+                    {generatingYears ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1" />
+                    ) : (
+                      <Plus className="h-3 w-3 mr-1" />
+                    )}
+                    Generate Years
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowAddYearDialog(true)}
+                  className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Year
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRetryModelYears}
+                  className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Refresh
+                </Button>
+              </div>
             )}
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {!selectedModel ? (
@@ -185,20 +259,36 @@ const ModelHierarchyNavigator = ({
             <div className="p-8 text-center">
               <AlertCircle className="h-12 w-12 text-orange-400 mx-auto mb-4" />
               <p className="text-explorer-text-muted mb-2">
-                Failed to load model years
+                No model years found
               </p>
               <p className="text-xs text-explorer-text-muted mb-4">
-                This might be due to a database relationship issue
+                Generate years based on production range or add them manually
               </p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleRetryModelYears}
-                className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Try Again
-              </Button>
+              <div className="flex gap-2 justify-center">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleGenerateModelYears}
+                  disabled={generatingYears}
+                  className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+                >
+                  {generatingYears ? (
+                    <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1" />
+                  ) : (
+                    <Plus className="h-3 w-3 mr-1" />
+                  )}
+                  Generate Years
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowAddYearDialog(true)}
+                  className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Manually
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto">
@@ -216,9 +306,16 @@ const ModelHierarchyNavigator = ({
                   <div className="w-full">
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{year.year}</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {year.configurations?.length || 0} configs
-                      </Badge>
+                      <div className="flex gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {year.configurations?.length || 0} configs
+                        </Badge>
+                        {year.is_available && (
+                          <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-400">
+                            Available
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     {year.changes && (
                       <div className="text-xs text-explorer-text-muted mt-1">
@@ -317,6 +414,13 @@ const ModelHierarchyNavigator = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Add Model Year Dialog */}
+      <AdminModelYearDialog
+        open={showAddYearDialog}
+        model={selectedModelData}
+        onClose={() => setShowAddYearDialog(false)}
+      />
     </div>
   );
 };
