@@ -1,3 +1,4 @@
+
 export type MotorcycleCategory = 
   | "Sport" 
   | "Cruiser" 
@@ -173,6 +174,7 @@ export interface ModelYear {
   is_available?: boolean;
   created_at?: string;
   updated_at?: string;
+  configurations?: Configuration[];
 }
 
 export interface Configuration {
