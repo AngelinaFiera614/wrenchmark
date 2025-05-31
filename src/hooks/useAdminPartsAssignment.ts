@@ -39,17 +39,24 @@ export const useAdminPartsAssignment = () => {
   const selectedConfigData = configurations?.find(c => c.id === selectedConfig);
 
   const handleModelSelect = (modelId: string) => {
+    console.log("Selecting model:", modelId);
     setSelectedModel(modelId);
     setSelectedYear(null);
     setSelectedConfig(null);
+    // Invalidate and refetch model years
+    queryClient.invalidateQueries({ queryKey: ["model-years", modelId] });
   };
 
   const handleYearSelect = (yearId: string) => {
+    console.log("Selecting year:", yearId);
     setSelectedYear(yearId);
     setSelectedConfig(null);
+    // Invalidate and refetch configurations
+    queryClient.invalidateQueries({ queryKey: ["configurations", yearId] });
   };
 
   const handleConfigSelect = (configId: string) => {
+    console.log("Selecting config:", configId);
     setSelectedConfig(configId);
   };
 

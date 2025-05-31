@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
-import AdminModelYearDialog from "../models/AdminModelYearDialog";
 import ModelsColumn from "./hierarchy/ModelsColumn";
 import ModelYearsColumn from "./hierarchy/ModelYearsColumn";
 import ConfigurationsColumn from "./hierarchy/ConfigurationsColumn";
@@ -34,7 +33,6 @@ const ModelHierarchyNavigator = ({
   isLoading
 }: ModelHierarchyNavigatorProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAddYearDialog, setShowAddYearDialog] = useState(false);
   
   const { generatingYears, handleRetryModelYears, handleGenerateModelYears } = useHierarchyActions();
 
@@ -69,7 +67,6 @@ const ModelHierarchyNavigator = ({
         onYearSelect={onYearSelect}
         onRetryModelYears={() => handleRetryModelYears(selectedModel, onModelSelect)}
         onGenerateModelYears={() => handleGenerateModelYears(selectedModel, onModelSelect)}
-        onAddYearClick={() => setShowAddYearDialog(true)}
         generatingYears={generatingYears}
         isLoading={isLoading}
       />
@@ -79,12 +76,6 @@ const ModelHierarchyNavigator = ({
         selectedYear={selectedYear}
         selectedConfig={selectedConfig}
         onConfigSelect={onConfigSelect}
-      />
-
-      <AdminModelYearDialog
-        open={showAddYearDialog}
-        model={selectedModelData}
-        onClose={() => setShowAddYearDialog(false)}
       />
     </div>
   );

@@ -9,10 +9,7 @@ export const fetchModelYears = async (modelId: string): Promise<ModelYear[]> => 
     
     const { data, error } = await supabase
       .from('model_years')
-      .select(`
-        *,
-        configurations:model_configurations(*)
-      `)
+      .select('*')
       .eq('motorcycle_id', modelId)
       .order('year', { ascending: true });
       
@@ -29,7 +26,7 @@ export const fetchModelYears = async (modelId: string): Promise<ModelYear[]> => 
   }
 };
 
-// Create a new model year
+// Create a new model year with default configuration
 export const createModelYear = async (yearData: Omit<ModelYear, 'id' | 'configurations'>): Promise<ModelYear | null> => {
   try {
     const { data, error } = await supabase
@@ -41,6 +38,17 @@ export const createModelYear = async (yearData: Omit<ModelYear, 'id' | 'configur
     if (error) {
       console.error("Error creating model year:", error);
       return null;
+    }
+    
+    // Create a default configuration for the new model year
+    if (data) {
+      await supabase
+        .from('model_configurations')
+        .insert({
+          model_year_id: data.id,
+          name: 'Standard',
+          is_default: true
+        });
     }
     
     return data;
@@ -92,34 +100,11 @@ export const deleteModelYear = async (id: string): Promise<boolean> => {
   }
 };
 
-// Reorder model years (for timeline drag-and-drop)
-export const reorderModelYears = async (modelId: string, yearUpdates: { id: string; year: number }[]): Promise<boolean> => {
-  try {
-    const updates = yearUpdates.map(update => 
-      supabase
-        .from('model_years')
-        .update({ year: update.year })
-        .eq('id', update.id)
-    );
-    
-    const results = await Promise.all(updates);
-    const hasError = results.some(result => result.error);
-    
-    if (hasError) {
-      console.error("Error reordering model years");
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error in reorderModelYears:", error);
-    return false;
-  }
-};
-
 // Generate model years for a model based on production range
 export const generateModelYears = async (modelId: string): Promise<boolean> => {
   try {
+    console.log("Generating model years for model:", modelId);
+    
     // First get the model data
     const { data: model, error: modelError } = await supabase
       .from('motorcycle_models')
@@ -142,6 +127,8 @@ export const generateModelYears = async (modelId: string): Promise<boolean> => {
       ? 2025 
       : Math.min(model.production_end_year, 2025);
 
+    console.log("Generating years from", startYear, "to", endYear);
+
     const years = [];
     for (let year = startYear; year <= endYear; year++) {
       years.push({
@@ -154,19 +141,40 @@ export const generateModelYears = async (modelId: string): Promise<boolean> => {
     }
 
     if (years.length === 0) {
+      console.error("No years to generate");
       return false;
     }
 
-    const { error } = await supabase
+    // Insert model years
+    const { data: insertedYears, error } = await supabase
       .from('model_years')
       .upsert(years, { 
         onConflict: 'motorcycle_id,year',
         ignoreDuplicates: true 
-      });
+      })
+      .select();
 
     if (error) {
       console.error("Error generating model years:", error);
       return false;
+    }
+
+    console.log("Generated years:", insertedYears);
+
+    // Create default configurations for each year
+    if (insertedYears && insertedYears.length > 0) {
+      const configurations = insertedYears.map(year => ({
+        model_year_id: year.id,
+        name: 'Standard',
+        is_default: true
+      }));
+
+      await supabase
+        .from('model_configurations')
+        .upsert(configurations, {
+          onConflict: 'model_year_id,name',
+          ignoreDuplicates: true
+        });
     }
 
     return true;

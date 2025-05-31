@@ -14,7 +14,6 @@ interface ModelYearsColumnProps {
   onYearSelect: (yearId: string) => void;
   onRetryModelYears: () => void;
   onGenerateModelYears: () => void;
-  onAddYearClick: () => void;
   generatingYears: boolean;
   isLoading: boolean;
 }
@@ -26,7 +25,6 @@ const ModelYearsColumn = ({
   onYearSelect,
   onRetryModelYears,
   onGenerateModelYears,
-  onAddYearClick,
   generatingYears,
   isLoading
 }: ModelYearsColumnProps) => {
@@ -59,15 +57,6 @@ const ModelYearsColumn = ({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={onAddYearClick}
-                className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Add Year
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
                 onClick={onRetryModelYears}
                 className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
               >
@@ -90,33 +79,22 @@ const ModelYearsColumn = ({
               No model years found
             </p>
             <p className="text-xs text-explorer-text-muted mb-4">
-              Generate years based on production range or add them manually
+              Generate years based on production range
             </p>
-            <div className="flex gap-2 justify-center">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onGenerateModelYears}
-                disabled={generatingYears}
-                className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-              >
-                {generatingYears ? (
-                  <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1" />
-                ) : (
-                  <Plus className="h-3 w-3 mr-1" />
-                )}
-                Generate Years
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onAddYearClick}
-                className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-              >
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onGenerateModelYears}
+              disabled={generatingYears}
+              className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+            >
+              {generatingYears ? (
+                <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1" />
+              ) : (
                 <Plus className="h-3 w-3 mr-1" />
-                Add Manually
-              </Button>
-            </div>
+              )}
+              Generate Years
+            </Button>
           </div>
         ) : (
           <div className="max-h-96 overflow-y-auto">
@@ -135,9 +113,6 @@ const ModelYearsColumn = ({
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{year.year}</span>
                     <div className="flex gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {year.configurations?.length || 0} configs
-                      </Badge>
                       {year.is_available && (
                         <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-400">
                           Available

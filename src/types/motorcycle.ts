@@ -1,4 +1,3 @@
-
 export type MotorcycleCategory = 
   | "Sport" 
   | "Cruiser" 
@@ -172,12 +171,6 @@ export interface ModelYear {
   msrp_usd?: number;
   marketing_tagline?: string;
   is_available?: boolean;
-  configurations?: Configuration[];
-  engine_id?: string;
-  abs_id?: string;
-  frame_id?: string;
-  suspension_id?: string;
-  wheel_id?: string;
   created_at?: string;
   updated_at?: string;
 }
