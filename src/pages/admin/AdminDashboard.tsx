@@ -60,15 +60,29 @@ const AdminDashboard = () => {
       if (error) throw error;
       
       // Transform the data to flatten the brand structure
-      const transformedData: MotorcycleWithBrand[] = data.map(item => ({
-        id: item.id,
-        name: item.name,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        is_draft: item.is_draft,
-        slug: item.slug,
-        brand_name: Array.isArray(item.brands) ? item.brands[0]?.name || null : item.brands?.name || null
-      }));
+      const transformedData: MotorcycleWithBrand[] = data.map(item => {
+        // Properly type the brands property
+        const brands = item.brands as { name: string }[] | { name: string } | null;
+        let brandName: string | null = null;
+        
+        if (brands) {
+          if (Array.isArray(brands)) {
+            brandName = brands[0]?.name || null;
+          } else {
+            brandName = brands.name || null;
+          }
+        }
+        
+        return {
+          id: item.id,
+          name: item.name,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          is_draft: item.is_draft,
+          slug: item.slug,
+          brand_name: brandName
+        };
+      });
       
       return transformedData;
     },
