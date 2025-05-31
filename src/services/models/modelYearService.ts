@@ -11,7 +11,7 @@ export const fetchModelYears = async (modelId: string): Promise<ModelYear[]> => 
       .from('model_years')
       .select(`
         *,
-        configurations:model_configurations(count)
+        configurations:model_configurations(*)
       `)
       .eq('motorcycle_id', modelId)
       .order('year', { ascending: true });

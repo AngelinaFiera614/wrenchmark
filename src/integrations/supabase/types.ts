@@ -1154,6 +1154,53 @@ export type Database = {
           },
         ]
       }
+      model_years: {
+        Row: {
+          changes: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          marketing_tagline: string | null
+          motorcycle_id: string
+          msrp_usd: number | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          changes?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          marketing_tagline?: string | null
+          motorcycle_id: string
+          msrp_usd?: number | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          changes?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          marketing_tagline?: string | null
+          motorcycle_id?: string
+          msrp_usd?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_years_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       motorcycle_documents: {
         Row: {
           created_at: string | null
