@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
 import ModelsColumn from "./hierarchy/ModelsColumn";
 import ModelYearsColumn from "./hierarchy/ModelYearsColumn";
-import ConfigurationsColumn from "./hierarchy/ConfigurationsColumn";
+import TrimLevelsColumn from "./hierarchy/TrimLevelsColumn";
 import { useHierarchyActions } from "./hierarchy/useHierarchyActions";
 
 interface ModelHierarchyNavigatorProps {
@@ -71,7 +71,7 @@ const ModelHierarchyNavigator = ({
         isLoading={isLoading}
       />
 
-      <ConfigurationsColumn
+      <TrimLevelsColumn
         configurations={configurations}
         selectedYear={selectedYear}
         selectedConfig={selectedConfig}
