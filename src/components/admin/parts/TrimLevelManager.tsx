@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Copy, Trash, AlertCircle, Car, RefreshCw } from "lucide-react";
+import { Plus, Edit, Copy, Trash, AlertCircle, Car, RefreshCw, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
 import TrimLevelEditor from "./TrimLevelEditor";
 import ComponentAssignmentGrid from "./ComponentAssignmentGrid";
+import { deleteConfiguration } from "@/services/models/configurationService";
 
 interface TrimLevelManagerProps {
   modelYearId: string;
@@ -29,6 +30,7 @@ const TrimLevelManager = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editingConfig, setEditingConfig] = useState<Configuration | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const selectedConfigData = configurations.find(c => c.id === selectedConfig);
 
@@ -55,6 +57,44 @@ const TrimLevelManager = ({
     setIsEditing(true);
   };
 
+  const handleDelete = async (config: Configuration) => {
+    if (!confirm(`Are you sure you want to delete the "${config.name}" trim level? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(config.id);
+    
+    try {
+      console.log("Deleting trim level:", config.id);
+      const success = await deleteConfiguration(config.id);
+      
+      if (success) {
+        toast({
+          title: "Success!",
+          description: `Trim level "${config.name}" has been deleted successfully.`,
+          action: <CheckCircle className="h-4 w-4 text-green-500" />
+        });
+        
+        // If the deleted config was selected, clear selection
+        if (selectedConfig === config.id) {
+          onConfigSelect('');
+        }
+        
+        onConfigChange();
+      }
+    } catch (error: any) {
+      console.error("Error deleting trim level:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to delete trim level: ${error.message}`,
+        action: <AlertCircle className="h-4 w-4 text-red-500" />
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleEditorClose = (refreshData = false) => {
     console.log("Closing editor, refreshData:", refreshData);
     setIsEditing(false);
@@ -69,6 +109,7 @@ const TrimLevelManager = ({
     toast({
       title: "Success!",
       description: `Trim level "${savedConfig.name}" has been saved successfully.`,
+      action: <CheckCircle className="h-4 w-4 text-green-500" />
     });
     handleEditorClose(true);
     // Auto-select the newly created/updated config
@@ -153,6 +194,8 @@ const TrimLevelManager = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {configurations.map((config) => {
                 const completeness = getComponentCompleteness(config);
+                const isDeleting = deletingId === config.id;
+                
                 return (
                   <Card
                     key={config.id}
@@ -160,8 +203,8 @@ const TrimLevelManager = ({
                       selectedConfig === config.id
                         ? 'border-accent-teal bg-accent-teal/10 shadow-lg'
                         : 'border-explorer-chrome/30 hover:border-accent-teal/50'
-                    }`}
-                    onClick={() => onConfigSelect(config.id)}
+                    } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
+                    onClick={() => !isDeleting && onConfigSelect(config.id)}
                   >
                     <CardContent className="p-6">
                       <div className="space-y-4">
@@ -231,6 +274,7 @@ const TrimLevelManager = ({
                               handleEdit(config);
                             }}
                             className="flex-1 text-xs"
+                            disabled={isDeleting}
                           >
                             <Edit className="mr-1 h-3 w-3" />
                             Edit
@@ -243,9 +287,26 @@ const TrimLevelManager = ({
                               handleClone(config);
                             }}
                             className="flex-1 text-xs"
+                            disabled={isDeleting}
                           >
                             <Copy className="mr-1 h-3 w-3" />
                             Clone
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(config);
+                            }}
+                            className="text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                            disabled={isDeleting}
+                          >
+                            {isDeleting ? (
+                              <RefreshCw className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Trash className="h-3 w-3" />
+                            )}
                           </Button>
                         </div>
                       </div>

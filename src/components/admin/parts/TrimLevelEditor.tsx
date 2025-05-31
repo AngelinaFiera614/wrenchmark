@@ -12,6 +12,7 @@ import ComponentSelector from "@/components/admin/models/ComponentSelector";
 import MetricsDisplay from "@/components/admin/models/MetricsDisplay";
 import { useConfigurationMetrics } from "@/hooks/useConfigurationMetrics";
 import { createConfiguration, updateConfiguration } from "@/services/models/configurationService";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface TrimLevelEditorProps {
   modelYearId: string;
@@ -29,6 +30,7 @@ const TrimLevelEditor = ({
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("basic");
   const [saving, setSaving] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     name: configuration?.name || "",
@@ -84,46 +86,65 @@ const TrimLevelEditor = ({
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user makes changes
+    if (lastError) setLastError(null);
   };
 
   const handleComponentSelect = (componentType: string, componentId: string, component: any) => {
+    console.log(`Selected ${componentType}:`, componentId, component);
     handleInputChange(`${componentType}_id`, componentId);
     setSelectedComponents(prev => ({ ...prev, [componentType]: component }));
   };
 
-  const handleSave = async () => {
+  const validateForm = () => {
     if (!formData.name.trim()) {
+      throw new Error("Trim level name is required");
+    }
+    
+    if (!modelYearId) {
+      throw new Error("Model year ID is missing");
+    }
+
+    // Validate numeric fields if they're provided
+    const numericFields = ['seat_height_mm', 'weight_kg', 'wheelbase_mm', 'fuel_capacity_l', 'ground_clearance_mm', 'price_premium_usd'];
+    for (const field of numericFields) {
+      const value = formData[field as keyof typeof formData];
+      if (value !== '' && value !== null && value !== undefined) {
+        const numValue = Number(value);
+        if (isNaN(numValue) || numValue < 0) {
+          throw new Error(`${field.replace(/_/g, ' ')} must be a valid positive number`);
+        }
+      }
+    }
+  };
+
+  const handleSave = async () => {
+    setLastError(null);
+    
+    try {
+      validateForm();
+    } catch (validationError: any) {
+      const errorMessage = validationError.message;
+      setLastError(errorMessage);
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: "Trim level name is required.",
+        description: errorMessage,
       });
       return;
     }
 
     setSaving(true);
+    
     try {
-      console.log("Saving trim level with data:", {
-        model_year_id: modelYearId,
-        name: formData.name,
-        engine_id: formData.engine_id || null,
-        brake_system_id: formData.brake_system_id || null,
-        frame_id: formData.frame_id || null,
-        suspension_id: formData.suspension_id || null,
-        wheel_id: formData.wheel_id || null,
-        seat_height_mm: formData.seat_height_mm ? Number(formData.seat_height_mm) : null,
-        weight_kg: formData.weight_kg ? Number(formData.weight_kg) : null,
-        wheelbase_mm: formData.wheelbase_mm ? Number(formData.wheelbase_mm) : null,
-        fuel_capacity_l: formData.fuel_capacity_l ? Number(formData.fuel_capacity_l) : null,
-        ground_clearance_mm: formData.ground_clearance_mm ? Number(formData.ground_clearance_mm) : null,
-        is_default: formData.is_default,
-        market_region: formData.market_region || null,
-        price_premium_usd: formData.price_premium_usd ? Number(formData.price_premium_usd) : null,
-      });
+      console.log("=== STARTING TRIM LEVEL SAVE OPERATION ===");
+      console.log("Model Year ID:", modelYearId);
+      console.log("Configuration ID:", configuration?.id);
+      console.log("Form Data:", formData);
 
       const configData = {
         model_year_id: modelYearId,
-        name: formData.name,
+        name: formData.name.trim(),
         engine_id: formData.engine_id || null,
         brake_system_id: formData.brake_system_id || null,
         frame_id: formData.frame_id || null,
@@ -139,25 +160,35 @@ const TrimLevelEditor = ({
         price_premium_usd: formData.price_premium_usd ? Number(formData.price_premium_usd) : null,
       };
 
+      console.log("Cleaned config data:", configData);
+
       let savedConfig;
       if (configuration?.id) {
+        console.log("Updating existing configuration...");
         savedConfig = await updateConfiguration(configuration.id, configData);
       } else {
+        console.log("Creating new configuration...");
         savedConfig = await createConfiguration(configData);
       }
 
       if (savedConfig) {
-        console.log("Trim level saved successfully:", savedConfig);
+        console.log("=== SAVE OPERATION SUCCESSFUL ===");
+        console.log("Saved configuration:", savedConfig);
+        
         toast({
           title: "Success!",
           description: `${formData.name} has been ${configuration ? 'updated' : 'created'} successfully.`,
+          action: <CheckCircle className="h-4 w-4 text-green-500" />
         });
+        
         onSave(savedConfig);
       } else {
-        throw new Error("Failed to save trim level - no data returned");
+        throw new Error("No configuration data returned from save operation");
       }
     } catch (error: any) {
-      console.error("Error saving trim level:", error);
+      console.error("=== SAVE OPERATION FAILED ===");
+      console.error("Error details:", error);
+      console.error("Error stack:", error.stack);
       
       let errorMessage = "Failed to save trim level. Please try again.";
       
@@ -166,14 +197,19 @@ const TrimLevelEditor = ({
         errorMessage = "Permission denied. Please ensure you have admin privileges.";
       } else if (error?.message?.includes("foreign key")) {
         errorMessage = "Invalid component reference. Please check your component selections.";
+      } else if (error?.message?.includes("duplicate key")) {
+        errorMessage = "A trim level with this name already exists for this model year.";
       } else if (error?.message) {
         errorMessage = error.message;
       }
+      
+      setLastError(errorMessage);
       
       toast({
         variant: "destructive",
         title: "Error",
         description: errorMessage,
+        action: <AlertCircle className="h-4 w-4 text-red-500" />
       });
     } finally {
       setSaving(false);
@@ -199,6 +235,18 @@ const TrimLevelEditor = ({
           </Button>
         </div>
       </div>
+
+      {/* Error Display */}
+      {lastError && (
+        <Card className="border-red-500 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm">{lastError}</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
@@ -247,6 +295,7 @@ const TrimLevelEditor = ({
                     id="price_premium_usd"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.price_premium_usd}
                     onChange={(e) => handleInputChange('price_premium_usd', e.target.value)}
                     placeholder="0.00"
@@ -317,6 +366,7 @@ const TrimLevelEditor = ({
                     id="weight_kg"
                     type="number"
                     step="0.1"
+                    min="0"
                     value={formData.weight_kg}
                     onChange={(e) => handleInputChange('weight_kg', e.target.value)}
                     className="bg-explorer-dark border-explorer-chrome/30"
@@ -328,6 +378,7 @@ const TrimLevelEditor = ({
                   <Input
                     id="seat_height_mm"
                     type="number"
+                    min="0"
                     value={formData.seat_height_mm}
                     onChange={(e) => handleInputChange('seat_height_mm', e.target.value)}
                     className="bg-explorer-dark border-explorer-chrome/30"
@@ -339,6 +390,7 @@ const TrimLevelEditor = ({
                   <Input
                     id="wheelbase_mm"
                     type="number"
+                    min="0"
                     value={formData.wheelbase_mm}
                     onChange={(e) => handleInputChange('wheelbase_mm', e.target.value)}
                     className="bg-explorer-dark border-explorer-chrome/30"
@@ -350,6 +402,7 @@ const TrimLevelEditor = ({
                   <Input
                     id="ground_clearance_mm"
                     type="number"
+                    min="0"
                     value={formData.ground_clearance_mm}
                     onChange={(e) => handleInputChange('ground_clearance_mm', e.target.value)}
                     className="bg-explorer-dark border-explorer-chrome/30"
@@ -362,6 +415,7 @@ const TrimLevelEditor = ({
                     id="fuel_capacity_l"
                     type="number"
                     step="0.1"
+                    min="0"
                     value={formData.fuel_capacity_l}
                     onChange={(e) => handleInputChange('fuel_capacity_l', e.target.value)}
                     className="bg-explorer-dark border-explorer-chrome/30"
