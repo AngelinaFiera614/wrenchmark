@@ -3,161 +3,238 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Settings, ExternalLink, AlertTriangle, CheckCircle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Unlink, ExternalLink, Plus, AlertCircle, CheckCircle } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
-import ComponentSelector from "@/components/admin/models/ComponentSelector";
+import { unlinkComponentFromConfiguration } from "@/services/componentLinkingService";
+import { useToast } from "@/hooks/use-toast";
 
 interface ComponentAssignmentGridProps {
   configuration: Configuration;
-  onComponentChange: (componentType: string, componentId: string) => void;
+  onComponentChange: (componentType: string, componentId: string | null) => void;
 }
 
-const ComponentAssignmentGrid = ({
-  configuration,
-  onComponentChange
-}: ComponentAssignmentGridProps) => {
-  const [selectedComponentType, setSelectedComponentType] = useState<string | null>(null);
+const ComponentAssignmentGrid = ({ configuration, onComponentChange }: ComponentAssignmentGridProps) => {
+  const [unlinkingComponent, setUnlinkingComponent] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const componentTypes = [
     {
-      id: 'engine',
-      name: 'Engine',
+      type: 'engine',
+      label: 'Engine',
       icon: '🔧',
-      assignedId: configuration.engine_id,
-      assignedComponent: configuration.engine,
-      color: 'bg-red-500/20 text-red-400 border-red-500/30'
+      component: configuration.engine,
+      componentId: configuration.engine_id,
+      required: true
     },
     {
-      id: 'brakes',
-      name: 'Brake System',
+      type: 'brake_system',
+      label: 'Brake System',
       icon: '🛑',
-      assignedId: configuration.brake_system_id,
-      assignedComponent: configuration.brakes,
-      color: 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+      component: configuration.brakes,
+      componentId: configuration.brake_system_id,
+      required: true
     },
     {
-      id: 'frame',
-      name: 'Frame',
+      type: 'frame',
+      label: 'Frame',
       icon: '🏗️',
-      assignedId: configuration.frame_id,
-      assignedComponent: configuration.frame,
-      color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+      component: configuration.frame,
+      componentId: configuration.frame_id,
+      required: true
     },
     {
-      id: 'suspension',
-      name: 'Suspension',
+      type: 'suspension',
+      label: 'Suspension',
       icon: '🔩',
-      assignedId: configuration.suspension_id,
-      assignedComponent: configuration.suspension,
-      color: 'bg-green-500/20 text-green-400 border-green-500/30'
+      component: configuration.suspension,
+      componentId: configuration.suspension_id,
+      required: false
     },
     {
-      id: 'wheels',
-      name: 'Wheels',
+      type: 'wheel',
+      label: 'Wheels',
       icon: '⚫',
-      assignedId: configuration.wheel_id,
-      assignedComponent: configuration.wheels,
-      color: 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+      component: configuration.wheels,
+      componentId: configuration.wheel_id,
+      required: false
     }
   ];
 
-  const getComponentDescription = (componentType: string, component: any) => {
-    if (!component) return null;
+  const handleUnlinkComponent = async (componentType: string) => {
+    setUnlinkingComponent(componentType);
+    
+    try {
+      const result = await unlinkComponentFromConfiguration(
+        configuration.id,
+        componentType as any
+      );
 
-    switch (componentType) {
-      case 'engine':
-        return `${component.displacement_cc}cc${component.power_hp ? `, ${component.power_hp}hp` : ''}`;
-      case 'brakes':
-        return component.type || 'Brake System';
-      case 'frame':
-        return `${component.type}${component.material ? ` - ${component.material}` : ''}`;
-      case 'suspension':
-        return `${component.front_type || 'Front'} / ${component.rear_type || 'Rear'}`;
-      case 'wheels':
-        return `${component.front_size || ''} / ${component.rear_size || ''}`.trim();
-      default:
-        return component.name || 'Component';
+      if (result.success) {
+        toast({
+          title: "Component Unlinked",
+          description: "Component has been successfully unlinked from the configuration."
+        });
+        onComponentChange(componentType, null);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Unlink Failed",
+          description: result.error || "Failed to unlink component from configuration."
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred while unlinking the component."
+      });
+    } finally {
+      setUnlinkingComponent(null);
     }
   };
 
-  const handleComponentSelect = (componentId: string, component: any) => {
-    if (selectedComponentType) {
-      onComponentChange(selectedComponentType, componentId);
-      setSelectedComponentType(null);
+  const getComponentDisplayName = (componentType: any, component: any) => {
+    if (!component) return null;
+    
+    switch (componentType.type) {
+      case 'engine':
+        return `${component.name} - ${component.displacement_cc}cc`;
+      case 'brake_system':
+        return `${component.type} - ${component.brake_brand || 'Standard'}`;
+      case 'frame':
+        return `${component.type} - ${component.material || 'Standard'}`;
+      case 'suspension':
+        return `${component.front_type || 'Front'} / ${component.rear_type || 'Rear'}`;
+      case 'wheel':
+        return `${component.front_size || ''} / ${component.rear_size || ''} ${component.type || 'Wheels'}`.trim();
+      default:
+        return component.name || 'Unknown Component';
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card className="bg-explorer-card border-explorer-chrome/30">
         <CardHeader>
           <CardTitle className="text-explorer-text flex items-center gap-2">
-            <Settings className="h-5 w-5" />
             Component Assignment
+            <Badge variant="outline" className="text-xs">
+              {componentTypes.filter(ct => ct.componentId).length}/{componentTypes.length} assigned
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {componentTypes.map((type) => (
-              <Card
-                key={type.id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  type.assignedId
-                    ? 'border-green-500/30 bg-green-500/10'
-                    : 'border-orange-500/30 bg-orange-500/10'
+            {componentTypes.map((componentType) => (
+              <Card 
+                key={componentType.type} 
+                className={`border transition-colors ${
+                  componentType.componentId 
+                    ? 'border-accent-teal/30 bg-accent-teal/5' 
+                    : componentType.required 
+                      ? 'border-orange-400/30 bg-orange-400/5' 
+                      : 'border-explorer-chrome/30'
                 }`}
-                onClick={() => setSelectedComponentType(type.id)}
               >
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{type.icon}</span>
-                        <span className="font-medium text-explorer-text">{type.name}</span>
+                        <span className="text-lg">{componentType.icon}</span>
+                        <h3 className="font-medium text-explorer-text">{componentType.label}</h3>
                       </div>
-                      {type.assignedId ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <AlertTriangle className="h-4 w-4 text-orange-500" />
-                      )}
+                      <div className="flex items-center gap-1">
+                        {componentType.required && (
+                          <Badge variant="outline" className="text-xs text-orange-400 border-orange-400/30">
+                            Required
+                          </Badge>
+                        )}
+                        {componentType.componentId ? (
+                          <CheckCircle className="h-4 w-4 text-accent-teal" />
+                        ) : componentType.required ? (
+                          <AlertCircle className="h-4 w-4 text-orange-400" />
+                        ) : null}
+                      </div>
                     </div>
 
-                    {type.assignedComponent ? (
+                    {componentType.componentId ? (
                       <div className="space-y-2">
-                        <div className="text-sm font-medium text-explorer-text">
-                          {type.assignedComponent.name || 'Assigned Component'}
+                        <div className="p-2 bg-explorer-chrome/10 rounded border">
+                          <p className="text-sm text-explorer-text font-medium">
+                            {getComponentDisplayName(componentType, componentType.component)}
+                          </p>
+                          {componentType.component && (
+                            <p className="text-xs text-explorer-text-muted mt-1">
+                              ID: {componentType.componentId}
+                            </p>
+                          )}
                         </div>
-                        <div className="text-xs text-explorer-text-muted">
-                          {getComponentDescription(type.id, type.assignedComponent)}
+                        
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                disabled={unlinkingComponent === componentType.type}
+                                className="flex-1 text-orange-400 border-orange-400/30 hover:bg-orange-400/20"
+                              >
+                                <Unlink className="h-3 w-3 mr-1" />
+                                {unlinkingComponent === componentType.type ? "Unlinking..." : "Unlink"}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-explorer-card border-explorer-chrome/30">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-explorer-text">Unlink Component</AlertDialogTitle>
+                                <AlertDialogDescription className="text-explorer-text-muted">
+                                  Are you sure you want to unlink this {componentType.label.toLowerCase()} from the configuration? 
+                                  This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-explorer-chrome/20 border-explorer-chrome/30 text-explorer-text">
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleUnlinkComponent(componentType.type)}
+                                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                                >
+                                  Unlink Component
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
-                        <Badge variant="outline" className="text-xs bg-green-500/20 text-green-400">
-                          Assigned
-                        </Badge>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="text-sm text-explorer-text-muted">
-                          No {type.name.toLowerCase()} assigned
+                        <div className="p-3 border-2 border-dashed border-explorer-chrome/30 rounded text-center">
+                          <p className="text-sm text-explorer-text-muted">
+                            No {componentType.label.toLowerCase()} assigned
+                          </p>
+                          {componentType.required && (
+                            <p className="text-xs text-orange-400 mt-1">
+                              This component is required
+                            </p>
+                          )}
                         </div>
-                        <Badge variant="outline" className="text-xs bg-orange-500/20 text-orange-400">
-                          Not Assigned
-                        </Badge>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full text-accent-teal border-accent-teal/30 hover:bg-accent-teal/20"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Link {componentType.label}
+                        </Button>
                       </div>
                     )}
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedComponentType(type.id);
-                      }}
-                    >
-                      <ExternalLink className="mr-1 h-3 w-3" />
-                      {type.assignedId ? 'Change' : 'Assign'} Component
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -165,37 +242,6 @@ const ComponentAssignmentGrid = ({
           </div>
         </CardContent>
       </Card>
-
-      {/* Component Selection Dialog */}
-      <Dialog
-        open={!!selectedComponentType}
-        onOpenChange={(open) => !open && setSelectedComponentType(null)}
-      >
-        <DialogContent className="max-w-4xl bg-explorer-dark border-explorer-chrome/30">
-          <DialogHeader>
-            <DialogTitle className="text-explorer-text">
-              Select {selectedComponentType && componentTypes.find(t => t.id === selectedComponentType)?.name}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedComponentType && (
-            <div className="mt-4">
-              <ComponentSelector
-                componentType={selectedComponentType as any}
-                selectedId={
-                  selectedComponentType === 'engine' ? configuration.engine_id :
-                  selectedComponentType === 'brakes' ? configuration.brake_system_id :
-                  selectedComponentType === 'frame' ? configuration.frame_id :
-                  selectedComponentType === 'suspension' ? configuration.suspension_id :
-                  selectedComponentType === 'wheels' ? configuration.wheel_id :
-                  undefined
-                }
-                onSelect={handleComponentSelect}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

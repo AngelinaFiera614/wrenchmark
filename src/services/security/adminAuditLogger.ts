@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AuditLogEntry {
@@ -61,4 +60,14 @@ export const auditActions = {
   MANUAL_DELETE: 'manual_delete',
   ADMIN_VIEW_RECENT_BRANDS: 'admin_view_recent_brands',
   ADMIN_VIEW_RECENT_MOTORCYCLES: 'admin_view_recent_motorcycles',
+  COMPONENT_LINK_ENGINE: 'component_link_engine',
+  COMPONENT_LINK_BRAKE_SYSTEM: 'component_link_brake_system',
+  COMPONENT_LINK_FRAME: 'component_link_frame',
+  COMPONENT_LINK_SUSPENSION: 'component_link_suspension',
+  COMPONENT_LINK_WHEEL: 'component_link_wheel',
+  COMPONENT_UNLINK_ENGINE: 'component_unlink_engine',
+  COMPONENT_UNLINK_BRAKE_SYSTEM: 'component_unlink_brake_system',
+  COMPONENT_UNLINK_FRAME: 'component_unlink_frame',
+  COMPONENT_UNLINK_SUSPENSION: 'component_unlink_suspension',
+  COMPONENT_UNLINK_WHEEL: 'component_unlink_wheel',
 } as const;

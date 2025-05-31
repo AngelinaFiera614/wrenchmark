@@ -64,6 +64,11 @@ const AdminPartsAssignment = () => {
     setShowPreview(true);
   };
 
+  const handleComponentLinked = () => {
+    // Refetch configurations when a component is linked
+    queryClient.invalidateQueries({ queryKey: ["configurations", selectedYear] });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -171,14 +176,17 @@ const AdminPartsAssignment = () => {
               onConfigSelect={handleConfigSelect}
               onConfigChange={() => {
                 // Refetch configurations when changes are made
-                // This would typically trigger a refetch
+                queryClient.invalidateQueries({ queryKey: ["configurations", selectedYear] });
               }}
             />
           )}
         </TabsContent>
 
         <TabsContent value="components" className="space-y-4">
-          <ComponentLibrary />
+          <ComponentLibrary 
+            selectedConfiguration={selectedConfigData}
+            onComponentLinked={handleComponentLinked}
+          />
         </TabsContent>
 
         <TabsContent value="bulk" className="space-y-4">

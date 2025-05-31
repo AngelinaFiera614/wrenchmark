@@ -1,21 +1,31 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Filter } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Search, Plus, Filter, Link, Unlink, Pin, ExternalLink } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { fetchEngines } from "@/services/engineService";
 import { fetchBrakes } from "@/services/brakeService";
 import { fetchFrames } from "@/services/frameService";
 import { fetchSuspensions } from "@/services/suspensionService";
 import { fetchWheels } from "@/services/wheelService";
+import { linkComponentToConfiguration, unlinkComponentFromConfiguration, getComponentUsageInConfigurations } from "@/services/componentLinkingService";
+import { Configuration } from "@/types/motorcycle";
 
-const ComponentLibrary = () => {
+interface ComponentLibraryProps {
+  selectedConfiguration?: Configuration | null;
+  onComponentLinked?: () => void;
+}
+
+const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: ComponentLibraryProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("engines");
+  const [linkingComponent, setLinkingComponent] = useState<string | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch all component types
   const { data: engines } = useQuery({
@@ -24,7 +34,7 @@ const ComponentLibrary = () => {
   });
 
   const { data: brakes } = useQuery({
-    queryKey: ["brakes"],
+    queryKey: ["brakes"], 
     queryFn: fetchBrakes
   });
 
@@ -44,11 +54,11 @@ const ComponentLibrary = () => {
   });
 
   const componentTabs = [
-    { id: 'engines', label: 'Engines', data: engines || [], icon: '🔧' },
-    { id: 'brakes', label: 'Brakes', data: brakes || [], icon: '🛑' },
-    { id: 'frames', label: 'Frames', data: frames || [], icon: '🏗️' },
-    { id: 'suspensions', label: 'Suspension', data: suspensions || [], icon: '🔩' },
-    { id: 'wheels', label: 'Wheels', data: wheels || [], icon: '⚫' }
+    { id: 'engines', label: 'Engines', data: engines || [], icon: '🔧', dbField: 'engine' },
+    { id: 'brakes', label: 'Brakes', data: brakes || [], icon: '🛑', dbField: 'brake_system' },
+    { id: 'frames', label: 'Frames', data: frames || [], icon: '🏗️', dbField: 'frame' },
+    { id: 'suspensions', label: 'Suspension', data: suspensions || [], icon: '🔩', dbField: 'suspension' },
+    { id: 'wheels', label: 'Wheels', data: wheels || [], icon: '⚫', dbField: 'wheel' }
   ];
 
   const filterComponents = (components: any[]) => {
@@ -62,19 +72,118 @@ const ComponentLibrary = () => {
     );
   };
 
+  const isComponentLinked = (componentId: string, componentType: string) => {
+    if (!selectedConfiguration) return false;
+    const fieldName = `${componentType}_id`;
+    return selectedConfiguration[fieldName] === componentId;
+  };
+
+  const handleLinkComponent = async (componentId: string, componentType: string) => {
+    if (!selectedConfiguration) {
+      toast({
+        variant: "destructive",
+        title: "No Configuration Selected",
+        description: "Please select a configuration first to link components."
+      });
+      return;
+    }
+
+    setLinkingComponent(componentId);
+    
+    try {
+      const result = await linkComponentToConfiguration(
+        selectedConfiguration.id,
+        componentType as any,
+        componentId
+      );
+
+      if (result.success) {
+        toast({
+          title: "Component Linked",
+          description: "Component has been successfully linked to the configuration."
+        });
+        
+        // Refresh the configurations data
+        queryClient.invalidateQueries({ queryKey: ["configurations", selectedConfiguration.model_year_id] });
+        onComponentLinked?.();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Link Failed",
+          description: result.error || "Failed to link component to configuration."
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred while linking the component."
+      });
+    } finally {
+      setLinkingComponent(null);
+    }
+  };
+
+  const handleUnlinkComponent = async (componentType: string) => {
+    if (!selectedConfiguration) return;
+
+    try {
+      const result = await unlinkComponentFromConfiguration(
+        selectedConfiguration.id,
+        componentType as any
+      );
+
+      if (result.success) {
+        toast({
+          title: "Component Unlinked",
+          description: "Component has been successfully unlinked from the configuration."
+        });
+        
+        // Refresh the configurations data
+        queryClient.invalidateQueries({ queryKey: ["configurations", selectedConfiguration.model_year_id] });
+        onComponentLinked?.();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Unlink Failed",
+          description: result.error || "Failed to unlink component from configuration."
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred while unlinking the component."
+      });
+    }
+  };
+
   const renderComponentCard = (component: any, type: string) => {
+    const isLinked = isComponentLinked(component.id, componentTabs.find(t => t.id === type)?.dbField || type);
+    const isLinking = linkingComponent === component.id;
+    
     return (
-      <Card key={component.id} className="bg-explorer-card border-explorer-chrome/30 hover:border-accent-teal/30 transition-colors">
+      <Card key={component.id} className={`bg-explorer-card border-explorer-chrome/30 hover:border-accent-teal/30 transition-colors ${isLinked ? 'ring-2 ring-accent-teal/50' : ''}`}>
         <CardContent className="p-4">
           <div className="space-y-3">
             <div className="flex justify-between items-start">
-              <h3 className="font-medium text-explorer-text">{component.name}</h3>
-              <Badge variant="outline" className="text-xs">
-                {type.slice(0, -1).toUpperCase()}
-              </Badge>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-medium text-explorer-text">{component.name}</h3>
+                  {isLinked && (
+                    <Badge variant="outline" className="text-xs bg-accent-teal/20 text-accent-teal border-accent-teal/30">
+                      <Pin className="h-3 w-3 mr-1" />
+                      Linked
+                    </Badge>
+                  )}
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {type.slice(0, -1).toUpperCase()}
+                </Badge>
+              </div>
             </div>
 
-            {/* Type-specific details */}
+            {/* Component details based on type */}
             {type === 'engines' && (
               <div className="space-y-1 text-sm">
                 <div className="text-explorer-text">
@@ -131,13 +240,39 @@ const ComponentLibrary = () => {
               </div>
             )}
 
+            {/* Action buttons */}
             <div className="flex gap-2 pt-2">
               <Button size="sm" variant="outline" className="flex-1">
-                Edit
+                <ExternalLink className="h-3 w-3 mr-1" />
+                View
               </Button>
-              <Button size="sm" variant="outline" className="flex-1">
-                View Usage
-              </Button>
+              
+              {selectedConfiguration && (
+                <div className="flex gap-2 flex-1">
+                  {isLinked ? (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleUnlinkComponent(componentTabs.find(t => t.id === type)?.dbField || type)}
+                      className="flex-1 text-orange-400 border-orange-400/30 hover:bg-orange-400/20"
+                    >
+                      <Unlink className="h-3 w-3 mr-1" />
+                      Unlink
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleLinkComponent(component.id, componentTabs.find(t => t.id === type)?.dbField || type)}
+                      disabled={isLinking}
+                      className="flex-1 text-accent-teal border-accent-teal/30 hover:bg-accent-teal/20"
+                    >
+                      <Link className="h-3 w-3 mr-1" />
+                      {isLinking ? "Linking..." : "Link"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -151,7 +286,14 @@ const ComponentLibrary = () => {
       <Card className="bg-explorer-card border-explorer-chrome/30">
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-explorer-text">Component Library</CardTitle>
+            <div>
+              <CardTitle className="text-explorer-text">Component Library</CardTitle>
+              {selectedConfiguration && (
+                <p className="text-sm text-explorer-text-muted mt-1">
+                  Linking to: <span className="text-accent-teal">{selectedConfiguration.name || "Standard"}</span>
+                </p>
+              )}
+            </div>
             <Button className="bg-accent-teal text-black hover:bg-accent-teal/80">
               <Plus className="mr-2 h-4 w-4" />
               Add Component
