@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ModelYear } from "@/types/motorcycle";
 
@@ -9,14 +8,7 @@ export const fetchModelYears = async (modelId: string): Promise<ModelYear[]> => 
       .from('model_years')
       .select(`
         *,
-        configurations:model_configurations(
-          *,
-          engine:engine_id(id, name, displacement_cc, power_hp, torque_nm),
-          brakes:brake_system_id(id, type, has_traction_control),
-          frame:frame_id(id, type, material),
-          suspension:suspension_id(id, front_type, rear_type, brand),
-          wheels:wheel_id(id, type, front_size, rear_size)
-        )
+        configurations:model_configurations(count)
       `)
       .eq('motorcycle_id', modelId)
       .order('year', { ascending: true });

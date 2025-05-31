@@ -14,6 +14,7 @@ import { fetchSuspensions } from "@/services/suspensionService";
 import { fetchWheels } from "@/services/wheelService";
 import { linkComponentToConfiguration, unlinkComponentFromConfiguration, getComponentUsageInConfigurations } from "@/services/componentLinkingService";
 import { Configuration } from "@/types/motorcycle";
+import ComponentDetailDialog from "./ComponentDetailDialog";
 
 interface ComponentLibraryProps {
   selectedConfiguration?: Configuration | null;
@@ -24,6 +25,8 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("engines");
   const [linkingComponent, setLinkingComponent] = useState<string | null>(null);
+  const [viewingComponent, setViewingComponent] = useState<any>(null);
+  const [viewingComponentType, setViewingComponentType] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -158,6 +161,11 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
     }
   };
 
+  const handleViewComponent = (component: any, type: string) => {
+    setViewingComponent(component);
+    setViewingComponentType(type);
+  };
+
   const renderComponentCard = (component: any, type: string) => {
     const isLinked = isComponentLinked(component.id, componentTabs.find(t => t.id === type)?.dbField || type);
     const isLinking = linkingComponent === component.id;
@@ -242,7 +250,12 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
 
             {/* Action buttons */}
             <div className="flex gap-2 pt-2">
-              <Button size="sm" variant="outline" className="flex-1">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => handleViewComponent(component, type)}
+              >
                 <ExternalLink className="h-3 w-3 mr-1" />
                 View
               </Button>
@@ -363,6 +376,14 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Component Detail Dialog */}
+      <ComponentDetailDialog
+        component={viewingComponent}
+        componentType={viewingComponentType}
+        isOpen={!!viewingComponent}
+        onClose={() => setViewingComponent(null)}
+      />
     </div>
   );
 };

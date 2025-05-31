@@ -1,10 +1,9 @@
-
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Calendar, Settings, Wrench } from "lucide-react";
+import { ChevronDown, ChevronRight, Calendar, Settings, Wrench, AlertCircle, RefreshCw } from "lucide-react";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
 import ModelSearchInput from "./ModelSearchInput";
 
@@ -34,6 +33,7 @@ const ModelHierarchyNavigator = ({
   isLoading
 }: ModelHierarchyNavigatorProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
 
   // Filter and group models based on search query
   const filteredModelsByBrand = useMemo(() => {
@@ -69,6 +69,14 @@ const ModelHierarchyNavigator = ({
     (sum, brandModels) => sum + brandModels.length,
     0
   );
+
+  const handleRetryModelYears = () => {
+    setRetryCount(prev => prev + 1);
+    // Re-trigger the model selection to refetch data
+    if (selectedModel) {
+      onModelSelect(selectedModel);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -155,12 +163,42 @@ const ModelHierarchyNavigator = ({
           <CardTitle className="text-explorer-text flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             Model Years ({modelYears.length})
+            {selectedModel && modelYears.length === 0 && !isLoading && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRetryModelYears}
+                className="ml-auto"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Retry
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {!selectedModel ? (
             <div className="p-8 text-center text-explorer-text-muted">
               Select a model to view years
+            </div>
+          ) : modelYears.length === 0 && !isLoading ? (
+            <div className="p-8 text-center">
+              <AlertCircle className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+              <p className="text-explorer-text-muted mb-2">
+                Failed to load model years
+              </p>
+              <p className="text-xs text-explorer-text-muted mb-4">
+                This might be due to a database relationship issue
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRetryModelYears}
+                className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Try Again
+              </Button>
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto">
@@ -212,6 +250,16 @@ const ModelHierarchyNavigator = ({
           {!selectedYear ? (
             <div className="p-8 text-center text-explorer-text-muted">
               Select a model year to view configurations
+            </div>
+          ) : configurations.length === 0 ? (
+            <div className="p-8 text-center">
+              <Settings className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
+              <p className="text-explorer-text-muted mb-2">
+                No configurations found
+              </p>
+              <p className="text-xs text-explorer-text-muted">
+                This model year may not have any configurations set up yet
+              </p>
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto">
