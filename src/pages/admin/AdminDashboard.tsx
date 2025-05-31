@@ -39,7 +39,7 @@ const AdminDashboard = () => {
     },
   });
 
-  // Fetch recent motorcycle activity with proper brand join
+  // Fetch recent motorcycle activity with brand name using a proper join
   const { data: recentMotorcycles, isLoading: motorcyclesLoading, error: motorcyclesError } = useQuery({
     queryKey: ["recent-motorcycles"],
     queryFn: async () => {
@@ -52,7 +52,7 @@ const AdminDashboard = () => {
           updated_at, 
           is_draft,
           slug,
-          brands!motorcycle_models_brand_id_fkey(name)
+          brands!inner(name)
         `)
         .order('updated_at', { ascending: false })
         .limit(10);
@@ -67,7 +67,7 @@ const AdminDashboard = () => {
         updated_at: item.updated_at,
         is_draft: item.is_draft,
         slug: item.slug,
-        brand_name: item.brands?.name || null
+        brand_name: Array.isArray(item.brands) ? item.brands[0]?.name || null : item.brands?.name || null
       }));
       
       return transformedData;
