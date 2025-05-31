@@ -1,16 +1,12 @@
 
-import React, { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Calendar, Settings, Wrench, AlertCircle, RefreshCw, Plus } from "lucide-react";
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
-import { generateModelYears } from "@/services/models/modelYearService";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import ModelSearchInput from "./ModelSearchInput";
 import AdminModelYearDialog from "../models/AdminModelYearDialog";
+import ModelsColumn from "./hierarchy/ModelsColumn";
+import ModelYearsColumn from "./hierarchy/ModelYearsColumn";
+import ConfigurationsColumn from "./hierarchy/ConfigurationsColumn";
+import { useHierarchyActions } from "./hierarchy/useHierarchyActions";
 
 interface ModelHierarchyNavigatorProps {
   models: MotorcycleModel[];
@@ -38,90 +34,11 @@ const ModelHierarchyNavigator = ({
   isLoading
 }: ModelHierarchyNavigatorProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [retryCount, setRetryCount] = useState(0);
-  const [generatingYears, setGeneratingYears] = useState(false);
   const [showAddYearDialog, setShowAddYearDialog] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // Filter and group models based on search query
-  const filteredModelsByBrand = useMemo(() => {
-    let filteredModels = models;
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filteredModels = models.filter((model) => {
-        const brandName = model.brand?.name?.toLowerCase() || "";
-        const modelName = model.name?.toLowerCase() || "";
-        const modelType = model.type?.toLowerCase() || "";
-        
-        return (
-          brandName.includes(query) ||
-          modelName.includes(query) ||
-          modelType.includes(query)
-        );
-      });
-    }
-
-    // Group filtered models by brand
-    return filteredModels.reduce((acc, model) => {
-      const brandName = model.brand?.name || "Unknown Brand";
-      if (!acc[brandName]) {
-        acc[brandName] = [];
-      }
-      acc[brandName].push(model);
-      return acc;
-    }, {} as Record<string, MotorcycleModel[]>);
-  }, [models, searchQuery]);
-
-  const totalFilteredModels = Object.values(filteredModelsByBrand).reduce(
-    (sum, brandModels) => sum + brandModels.length,
-    0
-  );
+  
+  const { generatingYears, handleRetryModelYears, handleGenerateModelYears } = useHierarchyActions();
 
   const selectedModelData = models?.find(m => m.id === selectedModel);
-
-  const handleRetryModelYears = () => {
-    setRetryCount(prev => prev + 1);
-    // Re-trigger the model selection to refetch data
-    if (selectedModel) {
-      onModelSelect(selectedModel);
-    }
-  };
-
-  const handleGenerateModelYears = async () => {
-    if (!selectedModel) return;
-
-    setGeneratingYears(true);
-    try {
-      const success = await generateModelYears(selectedModel);
-      if (success) {
-        toast({
-          title: "Model years generated",
-          description: "Model years have been automatically generated based on production range.",
-        });
-        // Refresh the model years data
-        queryClient.invalidateQueries({ queryKey: ["model-years", selectedModel] });
-        // Re-trigger the model selection to refetch data
-        onModelSelect(selectedModel);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Failed to generate years",
-          description: "Could not generate model years. Please check the model's production data.",
-        });
-      }
-    } catch (error) {
-      console.error("Error generating model years:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An error occurred while generating model years.",
-      });
-    } finally {
-      setGeneratingYears(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -136,286 +53,34 @@ const ModelHierarchyNavigator = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Models Column */}
-      <Card className="bg-explorer-card border-explorer-chrome/30">
-        <CardHeader className="space-y-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-explorer-text flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Models
-            </CardTitle>
-            <Badge variant="secondary" className="text-xs">
-              {searchQuery ? `${totalFilteredModels} filtered` : `${models.length} total`}
-            </Badge>
-          </div>
-          
-          <ModelSearchInput
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            placeholder="Search models, brands, types..."
-          />
-        </CardHeader>
-        <CardContent className="p-0">
-          {Object.keys(filteredModelsByBrand).length === 0 ? (
-            <div className="p-8 text-center text-explorer-text-muted">
-              {searchQuery ? "No models found matching your search" : "No models available"}
-            </div>
-          ) : (
-            <div className="max-h-96 overflow-y-auto">
-              {Object.entries(filteredModelsByBrand).map(([brandName, brandModels]) => (
-                <Collapsible key={brandName} defaultOpen>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-explorer-chrome/10 border-b border-explorer-chrome/20">
-                    <span className="font-medium text-explorer-text">{brandName}</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {brandModels.length}
-                      </Badge>
-                      <ChevronDown className="h-4 w-4 text-explorer-text-muted" />
-                    </div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    {brandModels.map((model) => (
-                      <Button
-                        key={model.id}
-                        variant="ghost"
-                        onClick={() => onModelSelect(model.id)}
-                        className={`w-full justify-start text-left p-3 h-auto ${
-                          selectedModel === model.id
-                            ? 'bg-accent-teal/20 text-accent-teal border-accent-teal/30'
-                            : 'text-explorer-text hover:bg-explorer-chrome/10'
-                        }`}
-                      >
-                        <div>
-                          <div className="font-medium">{model.name}</div>
-                          <div className="text-xs text-explorer-text-muted">
-                            {model.type} • {model.production_start_year}
-                            {model.production_end_year && ` - ${model.production_end_year}`}
-                          </div>
-                        </div>
-                      </Button>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ModelsColumn
+        models={models}
+        selectedModel={selectedModel}
+        onModelSelect={onModelSelect}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
-      {/* Model Years Column */}
-      <Card className="bg-explorer-card border-explorer-chrome/30">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-explorer-text flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Model Years ({modelYears.length})
-            </CardTitle>
-            {selectedModel && (
-              <div className="flex gap-2">
-                {modelYears.length === 0 && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleGenerateModelYears}
-                    disabled={generatingYears}
-                    className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-                  >
-                    {generatingYears ? (
-                      <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1" />
-                    ) : (
-                      <Plus className="h-3 w-3 mr-1" />
-                    )}
-                    Generate Years
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowAddYearDialog(true)}
-                  className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add Year
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleRetryModelYears}
-                  className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Refresh
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {!selectedModel ? (
-            <div className="p-8 text-center text-explorer-text-muted">
-              Select a model to view years
-            </div>
-          ) : modelYears.length === 0 && !isLoading ? (
-            <div className="p-8 text-center">
-              <AlertCircle className="h-12 w-12 text-orange-400 mx-auto mb-4" />
-              <p className="text-explorer-text-muted mb-2">
-                No model years found
-              </p>
-              <p className="text-xs text-explorer-text-muted mb-4">
-                Generate years based on production range or add them manually
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleGenerateModelYears}
-                  disabled={generatingYears}
-                  className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-                >
-                  {generatingYears ? (
-                    <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1" />
-                  ) : (
-                    <Plus className="h-3 w-3 mr-1" />
-                  )}
-                  Generate Years
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowAddYearDialog(true)}
-                  className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add Manually
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="max-h-96 overflow-y-auto">
-              {modelYears.map((year) => (
-                <Button
-                  key={year.id}
-                  variant="ghost"
-                  onClick={() => onYearSelect(year.id)}
-                  className={`w-full justify-start text-left p-3 h-auto border-b border-explorer-chrome/10 last:border-b-0 ${
-                    selectedYear === year.id
-                      ? 'bg-accent-teal/20 text-accent-teal border-accent-teal/30'
-                      : 'text-explorer-text hover:bg-explorer-chrome/10'
-                  }`}
-                >
-                  <div className="w-full">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{year.year}</span>
-                      <div className="flex gap-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {year.configurations?.length || 0} configs
-                        </Badge>
-                        {year.is_available && (
-                          <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-400">
-                            Available
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    {year.changes && (
-                      <div className="text-xs text-explorer-text-muted mt-1">
-                        {year.changes}
-                      </div>
-                    )}
-                    {year.msrp_usd && (
-                      <div className="text-xs text-green-400 mt-1">
-                        MSRP: ${year.msrp_usd.toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                </Button>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ModelYearsColumn
+        modelYears={modelYears}
+        selectedModel={selectedModel}
+        selectedYear={selectedYear}
+        selectedModelData={selectedModelData}
+        onYearSelect={onYearSelect}
+        onRetryModelYears={() => handleRetryModelYears(selectedModel, onModelSelect)}
+        onGenerateModelYears={() => handleGenerateModelYears(selectedModel, onModelSelect)}
+        onAddYearClick={() => setShowAddYearDialog(true)}
+        generatingYears={generatingYears}
+        isLoading={isLoading}
+      />
 
-      {/* Configurations Column */}
-      <Card className="bg-explorer-card border-explorer-chrome/30">
-        <CardHeader>
-          <CardTitle className="text-explorer-text flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Configurations ({configurations.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {!selectedYear ? (
-            <div className="p-8 text-center text-explorer-text-muted">
-              Select a model year to view configurations
-            </div>
-          ) : configurations.length === 0 ? (
-            <div className="p-8 text-center">
-              <Settings className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
-              <p className="text-explorer-text-muted mb-2">
-                No configurations found
-              </p>
-              <p className="text-xs text-explorer-text-muted">
-                This model year may not have any configurations set up yet
-              </p>
-            </div>
-          ) : (
-            <div className="max-h-96 overflow-y-auto">
-              {configurations.map((config) => (
-                <Button
-                  key={config.id}
-                  variant="ghost"
-                  onClick={() => onConfigSelect(config.id)}
-                  className={`w-full justify-start text-left p-3 h-auto border-b border-explorer-chrome/10 last:border-b-0 ${
-                    selectedConfig === config.id
-                      ? 'bg-accent-teal/20 text-accent-teal border-accent-teal/30'
-                      : 'text-explorer-text hover:bg-explorer-chrome/10'
-                  }`}
-                >
-                  <div className="w-full">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{config.name || "Standard"}</span>
-                      {config.is_default && (
-                        <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-400">
-                          Default
-                        </Badge>
-                      )}
-                    </div>
-                    {config.trim_level && (
-                      <div className="text-xs text-explorer-text-muted mt-1">
-                        Trim: {config.trim_level}
-                      </div>
-                    )}
-                    {config.market_region && (
-                      <div className="text-xs text-explorer-text-muted">
-                        Region: {config.market_region}
-                      </div>
-                    )}
-                    <div className="flex gap-2 mt-2">
-                      {config.engine_id && (
-                        <Badge variant="outline" className="text-xs">E</Badge>
-                      )}
-                      {config.brake_system_id && (
-                        <Badge variant="outline" className="text-xs">B</Badge>
-                      )}
-                      {config.frame_id && (
-                        <Badge variant="outline" className="text-xs">F</Badge>
-                      )}
-                      {config.suspension_id && (
-                        <Badge variant="outline" className="text-xs">S</Badge>
-                      )}
-                      {config.wheel_id && (
-                        <Badge variant="outline" className="text-xs">W</Badge>
-                      )}
-                    </div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ConfigurationsColumn
+        configurations={configurations}
+        selectedYear={selectedYear}
+        selectedConfig={selectedConfig}
+        onConfigSelect={onConfigSelect}
+      />
 
-      {/* Add Model Year Dialog */}
       <AdminModelYearDialog
         open={showAddYearDialog}
         model={selectedModelData}
