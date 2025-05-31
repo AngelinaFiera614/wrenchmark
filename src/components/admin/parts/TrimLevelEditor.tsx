@@ -1,18 +1,13 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
-import ComponentSelector from "@/components/admin/models/ComponentSelector";
-import MetricsDisplay from "@/components/admin/models/MetricsDisplay";
 import { useConfigurationMetrics } from "@/hooks/useConfigurationMetrics";
 import { createConfiguration, updateConfiguration } from "@/services/models/configurationService";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import TrimLevelEditorHeader from "./trim-level-editor/TrimLevelEditorHeader";
+import TrimLevelEditorTabs from "./trim-level-editor/TrimLevelEditorTabs";
+import ErrorDisplay from "./trim-level-editor/ErrorDisplay";
 
 interface TrimLevelEditorProps {
   modelYearId: string;
@@ -218,218 +213,25 @@ const TrimLevelEditor = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-explorer-text">
-          {configuration ? 'Edit Trim Level' : 'New Trim Level'}
-        </h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel} disabled={saving}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={saving || !formData.name.trim()}
-            className="bg-accent-teal text-black hover:bg-accent-teal/80"
-          >
-            {saving ? "Saving..." : configuration ? "Update" : "Create"}
-          </Button>
-        </div>
-      </div>
+      <TrimLevelEditorHeader
+        isEditing={!!configuration}
+        onSave={handleSave}
+        onCancel={onCancel}
+        saving={saving}
+        formData={formData}
+      />
 
       {/* Error Display */}
-      {lastError && (
-        <Card className="border-red-500 bg-red-50 dark:bg-red-950/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span className="text-sm">{lastError}</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {lastError && <ErrorDisplay error={lastError} />}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="components">Components</TabsTrigger>
-          <TabsTrigger value="dimensions">Dimensions</TabsTrigger>
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="basic" className="space-y-4">
-          <Card className="bg-explorer-card border-explorer-chrome/30">
-            <CardHeader>
-              <CardTitle className="text-explorer-text">Trim Level Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Trim Level Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="e.g., Fireball, Stellar, Sport, Touring"
-                    className="bg-explorer-dark border-explorer-chrome/30"
-                    required
-                  />
-                  <p className="text-xs text-explorer-text-muted">
-                    Examples: Fireball, Stellar, Supernova, Sport, Touring, Base
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="market_region">Market Region</Label>
-                  <Input
-                    id="market_region"
-                    value={formData.market_region}
-                    onChange={(e) => handleInputChange('market_region', e.target.value)}
-                    placeholder="e.g., North America, Europe, Global"
-                    className="bg-explorer-dark border-explorer-chrome/30"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="price_premium_usd">Price Premium (USD)</Label>
-                  <Input
-                    id="price_premium_usd"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price_premium_usd}
-                    onChange={(e) => handleInputChange('price_premium_usd', e.target.value)}
-                    placeholder="0.00"
-                    className="bg-explorer-dark border-explorer-chrome/30"
-                  />
-                  <p className="text-xs text-explorer-text-muted">
-                    Additional cost over base model (leave empty for base model)
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_default"
-                  checked={formData.is_default}
-                  onCheckedChange={(checked) => handleInputChange('is_default', checked)}
-                />
-                <Label htmlFor="is_default">Base Model (Default Trim)</Label>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="components" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ComponentSelector
-              componentType="engine"
-              selectedId={formData.engine_id}
-              onSelect={(id, component) => handleComponentSelect('engine', id, component)}
-            />
-            
-            <ComponentSelector
-              componentType="brakes"
-              selectedId={formData.brake_system_id}
-              onSelect={(id, component) => handleComponentSelect('brake_system', id, component)}
-            />
-            
-            <ComponentSelector
-              componentType="frame"
-              selectedId={formData.frame_id}
-              onSelect={(id, component) => handleComponentSelect('frame', id, component)}
-            />
-            
-            <ComponentSelector
-              componentType="suspension"
-              selectedId={formData.suspension_id}
-              onSelect={(id, component) => handleComponentSelect('suspension', id, component)}
-            />
-            
-            <ComponentSelector
-              componentType="wheels"
-              selectedId={formData.wheel_id}
-              onSelect={(id, component) => handleComponentSelect('wheel', id, component)}
-            />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="dimensions" className="space-y-4">
-          <Card className="bg-explorer-card border-explorer-chrome/30">
-            <CardHeader>
-              <CardTitle className="text-explorer-text">Physical Dimensions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="weight_kg">Weight (kg)</Label>
-                  <Input
-                    id="weight_kg"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={formData.weight_kg}
-                    onChange={(e) => handleInputChange('weight_kg', e.target.value)}
-                    className="bg-explorer-dark border-explorer-chrome/30"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="seat_height_mm">Seat Height (mm)</Label>
-                  <Input
-                    id="seat_height_mm"
-                    type="number"
-                    min="0"
-                    value={formData.seat_height_mm}
-                    onChange={(e) => handleInputChange('seat_height_mm', e.target.value)}
-                    className="bg-explorer-dark border-explorer-chrome/30"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="wheelbase_mm">Wheelbase (mm)</Label>
-                  <Input
-                    id="wheelbase_mm"
-                    type="number"
-                    min="0"
-                    value={formData.wheelbase_mm}
-                    onChange={(e) => handleInputChange('wheelbase_mm', e.target.value)}
-                    className="bg-explorer-dark border-explorer-chrome/30"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="ground_clearance_mm">Ground Clearance (mm)</Label>
-                  <Input
-                    id="ground_clearance_mm"
-                    type="number"
-                    min="0"
-                    value={formData.ground_clearance_mm}
-                    onChange={(e) => handleInputChange('ground_clearance_mm', e.target.value)}
-                    className="bg-explorer-dark border-explorer-chrome/30"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="fuel_capacity_l">Fuel Capacity (L)</Label>
-                  <Input
-                    id="fuel_capacity_l"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={formData.fuel_capacity_l}
-                    onChange={(e) => handleInputChange('fuel_capacity_l', e.target.value)}
-                    className="bg-explorer-dark border-explorer-chrome/30"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="metrics">
-          <MetricsDisplay metrics={metrics} />
-        </TabsContent>
-      </Tabs>
+      <TrimLevelEditorTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onComponentSelect={handleComponentSelect}
+        metrics={metrics}
+      />
     </div>
   );
 };
