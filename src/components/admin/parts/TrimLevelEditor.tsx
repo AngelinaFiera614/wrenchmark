@@ -103,6 +103,24 @@ const TrimLevelEditor = ({
 
     setSaving(true);
     try {
+      console.log("Saving trim level with data:", {
+        model_year_id: modelYearId,
+        name: formData.name,
+        engine_id: formData.engine_id || null,
+        brake_system_id: formData.brake_system_id || null,
+        frame_id: formData.frame_id || null,
+        suspension_id: formData.suspension_id || null,
+        wheel_id: formData.wheel_id || null,
+        seat_height_mm: formData.seat_height_mm ? Number(formData.seat_height_mm) : null,
+        weight_kg: formData.weight_kg ? Number(formData.weight_kg) : null,
+        wheelbase_mm: formData.wheelbase_mm ? Number(formData.wheelbase_mm) : null,
+        fuel_capacity_l: formData.fuel_capacity_l ? Number(formData.fuel_capacity_l) : null,
+        ground_clearance_mm: formData.ground_clearance_mm ? Number(formData.ground_clearance_mm) : null,
+        is_default: formData.is_default,
+        market_region: formData.market_region || null,
+        price_premium_usd: formData.price_premium_usd ? Number(formData.price_premium_usd) : null,
+      });
+
       const configData = {
         model_year_id: modelYearId,
         name: formData.name,
@@ -129,19 +147,33 @@ const TrimLevelEditor = ({
       }
 
       if (savedConfig) {
+        console.log("Trim level saved successfully:", savedConfig);
         toast({
-          title: "Trim level saved",
+          title: "Success!",
           description: `${formData.name} has been ${configuration ? 'updated' : 'created'} successfully.`,
         });
         onSave(savedConfig);
       } else {
-        throw new Error("Failed to save trim level");
+        throw new Error("Failed to save trim level - no data returned");
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error saving trim level:", error);
+      
+      let errorMessage = "Failed to save trim level. Please try again.";
+      
+      // Handle specific error types
+      if (error?.message?.includes("violates row-level security policy")) {
+        errorMessage = "Permission denied. Please ensure you have admin privileges.";
+      } else if (error?.message?.includes("foreign key")) {
+        errorMessage = "Invalid component reference. Please check your component selections.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save trim level. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setSaving(false);
@@ -160,7 +192,7 @@ const TrimLevelEditor = ({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={saving}
+            disabled={saving || !formData.name.trim()}
             className="bg-accent-teal text-black hover:bg-accent-teal/80"
           >
             {saving ? "Saving..." : configuration ? "Update" : "Create"}
@@ -191,6 +223,7 @@ const TrimLevelEditor = ({
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="e.g., Fireball, Stellar, Sport, Touring"
                     className="bg-explorer-dark border-explorer-chrome/30"
+                    required
                   />
                   <p className="text-xs text-explorer-text-muted">
                     Examples: Fireball, Stellar, Supernova, Sport, Touring, Base

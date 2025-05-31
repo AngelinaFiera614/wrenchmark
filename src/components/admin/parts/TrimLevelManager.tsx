@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Copy, Trash, AlertCircle, Car } from "lucide-react";
+import { Plus, Edit, Copy, Trash, AlertCircle, Car, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
 import TrimLevelEditor from "./TrimLevelEditor";
 import ComponentAssignmentGrid from "./ComponentAssignmentGrid";
@@ -24,6 +25,7 @@ const TrimLevelManager = ({
   onConfigSelect,
   onConfigChange
 }: TrimLevelManagerProps) => {
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [editingConfig, setEditingConfig] = useState<Configuration | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -31,16 +33,19 @@ const TrimLevelManager = ({
   const selectedConfigData = configurations.find(c => c.id === selectedConfig);
 
   const handleCreateNew = () => {
+    console.log("Creating new trim level for model year:", modelYearId);
     setEditingConfig(null);
     setIsEditing(true);
   };
 
   const handleEdit = (config: Configuration) => {
+    console.log("Editing trim level:", config);
     setEditingConfig(config);
     setIsEditing(true);
   };
 
   const handleClone = (config: Configuration) => {
+    console.log("Cloning trim level:", config);
     const clonedConfig = {
       ...config,
       name: `${config.name} (Copy)`,
@@ -51,11 +56,23 @@ const TrimLevelManager = ({
   };
 
   const handleEditorClose = (refreshData = false) => {
+    console.log("Closing editor, refreshData:", refreshData);
     setIsEditing(false);
     setEditingConfig(null);
     if (refreshData) {
       onConfigChange();
     }
+  };
+
+  const handleSaveSuccess = (savedConfig: Configuration) => {
+    console.log("Trim level saved successfully:", savedConfig);
+    toast({
+      title: "Success!",
+      description: `Trim level "${savedConfig.name}" has been saved successfully.`,
+    });
+    handleEditorClose(true);
+    // Auto-select the newly created/updated config
+    onConfigSelect(savedConfig.id);
   };
 
   const getComponentCompleteness = (config: Configuration) => {
@@ -79,11 +96,8 @@ const TrimLevelManager = ({
       <TrimLevelEditor
         modelYearId={modelYearId}
         configuration={editingConfig || undefined}
-        onSave={(config) => {
-          onConfigChange();
-          setIsEditing(false);
-        }}
-        onCancel={() => setIsEditing(false)}
+        onSave={handleSaveSuccess}
+        onCancel={() => handleEditorClose(false)}
       />
     );
   }
@@ -97,6 +111,15 @@ const TrimLevelManager = ({
             <CardTitle className="text-explorer-text flex items-center gap-2">
               <Car className="h-5 w-5" />
               Trim Level Management
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onConfigChange}
+                className="ml-2 h-6 w-6 p-0"
+                title="Refresh trim levels"
+              >
+                <RefreshCw className="h-3 w-3" />
+              </Button>
             </CardTitle>
             <Button
               onClick={handleCreateNew}
