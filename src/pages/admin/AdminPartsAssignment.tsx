@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +19,8 @@ const AdminPartsAssignment = () => {
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("navigator");
   const [showPreview, setShowPreview] = useState(false);
+  
+  const queryClient = useQueryClient();
 
   // Fetch motorcycle models
   const { data: models, isLoading: modelsLoading } = useQuery({
