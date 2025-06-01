@@ -2179,8 +2179,8 @@ export type Database = {
         }[]
       }
       get_motorcycle_model_relations: {
-        Args: { model_id_param: string }
-        Returns: Json
+        Args: Record<PropertyKey, never> | { model_id_param: string }
+        Returns: undefined
       }
       get_tags_for_manual: {
         Args: { manual_id_param: string }
