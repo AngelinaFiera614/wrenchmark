@@ -101,13 +101,27 @@ const TrimLevelEditor = ({
     }
 
     // Validate numeric fields if they're provided
-    const numericFields = ['seat_height_mm', 'weight_kg', 'wheelbase_mm', 'fuel_capacity_l', 'ground_clearance_mm', 'price_premium_usd'];
-    for (const field of numericFields) {
+    const numericFields = [
+      { field: 'seat_height_mm', label: 'Seat height' },
+      { field: 'weight_kg', label: 'Weight' },
+      { field: 'wheelbase_mm', label: 'Wheelbase' },
+      { field: 'fuel_capacity_l', label: 'Fuel capacity' },
+      { field: 'ground_clearance_mm', label: 'Ground clearance' },
+      { field: 'price_premium_usd', label: 'Price premium' }
+    ];
+
+    for (const { field, label } of numericFields) {
       const value = formData[field as keyof typeof formData];
       if (value !== '' && value !== null && value !== undefined) {
         const numValue = Number(value);
-        if (isNaN(numValue) || numValue < 0) {
-          throw new Error(`${field.replace(/_/g, ' ')} must be a valid positive number`);
+        if (isNaN(numValue)) {
+          throw new Error(`${label} must be a valid number`);
+        }
+        if (field !== 'price_premium_usd' && numValue <= 0) {
+          throw new Error(`${label} must be a positive number`);
+        }
+        if (field === 'price_premium_usd' && numValue < 0) {
+          throw new Error(`${label} cannot be negative`);
         }
       }
     }
@@ -183,7 +197,6 @@ const TrimLevelEditor = ({
     } catch (error: any) {
       console.error("=== SAVE OPERATION FAILED ===");
       console.error("Error details:", error);
-      console.error("Error stack:", error.stack);
       
       let errorMessage = "Failed to save trim level. Please try again.";
       
@@ -192,8 +205,14 @@ const TrimLevelEditor = ({
         errorMessage = "Permission denied. Please ensure you have admin privileges.";
       } else if (error?.message?.includes("foreign key")) {
         errorMessage = "Invalid component reference. Please check your component selections.";
-      } else if (error?.message?.includes("duplicate key")) {
-        errorMessage = "A trim level with this name already exists for this model year.";
+      } else if (error?.message?.includes("unique constraint") || error?.message?.includes("duplicate key")) {
+        if (error.message.includes("idx_model_configurations_default_per_year")) {
+          errorMessage = "There can only be one default configuration per model year. Please uncheck 'Base Model' or update the existing default configuration.";
+        } else {
+          errorMessage = "A trim level with this name already exists for this model year.";
+        }
+      } else if (error?.message?.includes("check_positive_dimensions")) {
+        errorMessage = "All dimension values must be positive numbers.";
       } else if (error?.message) {
         errorMessage = error.message;
       }

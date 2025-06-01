@@ -2,13 +2,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Configuration } from "@/types/motorcycle";
 
-// Fetch configurations for a specific model year with fallback queries
+// Fetch configurations for a specific model year with proper error handling
 export const fetchConfigurations = async (modelYearId: string): Promise<Configuration[]> => {
   try {
     console.log("Fetching configurations for model year:", modelYearId);
     
-    // First try with all relationships
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from('model_configurations')
       .select(`
         *,
@@ -22,22 +21,9 @@ export const fetchConfigurations = async (modelYearId: string): Promise<Configur
       .eq('model_year_id', modelYearId)
       .order('is_default', { ascending: false });
       
-    // If the complex query fails, try a simpler one
     if (error) {
-      console.warn("Complex query failed, trying simple query:", error);
-      
-      const { data: simpleData, error: simpleError } = await supabase
-        .from('model_configurations')
-        .select('*')
-        .eq('model_year_id', modelYearId)
-        .order('is_default', { ascending: false });
-        
-      if (simpleError) {
-        console.error("Simple query also failed:", simpleError);
-        throw new Error(`Failed to fetch configurations: ${simpleError.message}`);
-      }
-      
-      data = simpleData;
+      console.error("Error fetching configurations:", error);
+      throw new Error(`Failed to fetch configurations: ${error.message}`);
     }
     
     console.log("Fetched configurations:", data);
@@ -48,7 +34,7 @@ export const fetchConfigurations = async (modelYearId: string): Promise<Configur
   }
 };
 
-// Create a new configuration with better validation and error handling
+// Create a new configuration with proper validation
 export const createConfiguration = async (configData: Omit<Configuration, 'id' | 'engine' | 'brakes' | 'frame' | 'suspension' | 'wheels' | 'colors'>): Promise<Configuration | null> => {
   try {
     console.log("Creating configuration with data:", configData);
@@ -70,9 +56,29 @@ export const createConfiguration = async (configData: Omit<Configuration, 'id' |
       frame_id: configData.frame_id || null,
       suspension_id: configData.suspension_id || null,
       wheel_id: configData.wheel_id || null,
+      // Ensure numeric fields are properly converted or null
+      seat_height_mm: configData.seat_height_mm ? Number(configData.seat_height_mm) : null,
+      weight_kg: configData.weight_kg ? Number(configData.weight_kg) : null,
+      wheelbase_mm: configData.wheelbase_mm ? Number(configData.wheelbase_mm) : null,
+      fuel_capacity_l: configData.fuel_capacity_l ? Number(configData.fuel_capacity_l) : null,
+      ground_clearance_mm: configData.ground_clearance_mm ? Number(configData.ground_clearance_mm) : null,
+      price_premium_usd: configData.price_premium_usd ? Number(configData.price_premium_usd) : null,
     };
 
-    // First create the basic configuration without relationships
+    // Validate positive dimensions
+    const dimensionFields = ['seat_height_mm', 'weight_kg', 'wheelbase_mm', 'fuel_capacity_l', 'ground_clearance_mm'];
+    for (const field of dimensionFields) {
+      const value = cleanConfigData[field as keyof typeof cleanConfigData];
+      if (value !== null && value !== undefined && Number(value) <= 0) {
+        throw new Error(`${field.replace(/_/g, ' ')} must be a positive number`);
+      }
+    }
+
+    // Validate price premium is not negative
+    if (cleanConfigData.price_premium_usd !== null && cleanConfigData.price_premium_usd < 0) {
+      throw new Error("Price premium cannot be negative");
+    }
+
     const { data: basicConfig, error: insertError } = await supabase
       .from('model_configurations')
       .insert(cleanConfigData)
@@ -80,13 +86,13 @@ export const createConfiguration = async (configData: Omit<Configuration, 'id' |
       .single();
       
     if (insertError) {
-      console.error("Error creating basic configuration:", insertError);
+      console.error("Error creating configuration:", insertError);
       throw new Error(`Failed to create configuration: ${insertError.message}`);
     }
 
-    console.log("Basic configuration created:", basicConfig);
+    console.log("Configuration created successfully:", basicConfig);
 
-    // Now try to fetch it with relationships (but don't fail if relationships don't work)
+    // Fetch the configuration with relationships
     try {
       const { data: configWithRelations, error: relationError } = await supabase
         .from('model_configurations')
@@ -117,7 +123,7 @@ export const createConfiguration = async (configData: Omit<Configuration, 'id' |
   }
 };
 
-// Update an existing configuration with better error handling
+// Update an existing configuration
 export const updateConfiguration = async (id: string, configData: Partial<Configuration>): Promise<Configuration | null> => {
   try {
     console.log("Updating configuration:", id, "with data:", configData);
@@ -131,6 +137,26 @@ export const updateConfiguration = async (id: string, configData: Partial<Config
     if (updateData.frame_id === '') updateData.frame_id = null;
     if (updateData.suspension_id === '') updateData.suspension_id = null;
     if (updateData.wheel_id === '') updateData.wheel_id = null;
+
+    // Convert numeric fields
+    if (updateData.seat_height_mm !== undefined) {
+      updateData.seat_height_mm = updateData.seat_height_mm ? Number(updateData.seat_height_mm) : null;
+    }
+    if (updateData.weight_kg !== undefined) {
+      updateData.weight_kg = updateData.weight_kg ? Number(updateData.weight_kg) : null;
+    }
+    if (updateData.wheelbase_mm !== undefined) {
+      updateData.wheelbase_mm = updateData.wheelbase_mm ? Number(updateData.wheelbase_mm) : null;
+    }
+    if (updateData.fuel_capacity_l !== undefined) {
+      updateData.fuel_capacity_l = updateData.fuel_capacity_l ? Number(updateData.fuel_capacity_l) : null;
+    }
+    if (updateData.ground_clearance_mm !== undefined) {
+      updateData.ground_clearance_mm = updateData.ground_clearance_mm ? Number(updateData.ground_clearance_mm) : null;
+    }
+    if (updateData.price_premium_usd !== undefined) {
+      updateData.price_premium_usd = updateData.price_premium_usd ? Number(updateData.price_premium_usd) : null;
+    }
 
     const { data, error } = await supabase
       .from('model_configurations')
@@ -175,7 +201,7 @@ export const deleteConfiguration = async (id: string): Promise<boolean> => {
   }
 };
 
-// Clone a configuration with better error handling
+// Clone a configuration
 export const cloneConfiguration = async (sourceId: string, newName: string): Promise<Configuration | null> => {
   try {
     console.log("Cloning configuration:", sourceId, "with new name:", newName);

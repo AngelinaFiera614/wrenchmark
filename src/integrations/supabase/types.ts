@@ -1033,6 +1033,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_model_configurations_model_year"
+            columns: ["model_year_id"]
+            isOneToOne: false
+            referencedRelation: "model_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_model_configurations_suspension"
+            columns: ["suspension_id"]
+            isOneToOne: false
+            referencedRelation: "suspensions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "model_configurations_brake_system_id_fkey"
             columns: ["brake_system_id"]
             isOneToOne: false
