@@ -1,8 +1,10 @@
+
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
-import { deleteConfiguration } from "@/services/models/configurationService";
+import { deleteConfiguration, getAvailableTargetYears } from "@/services/models/configurationService";
+import { supabase } from "@/integrations/supabase/client";
 import TrimLevelEditor from "./TrimLevelEditor";
 import TrimLevelActions from "./trim-level/TrimLevelActions";
 import TrimLevelGrid from "./trim-level/TrimLevelGrid";

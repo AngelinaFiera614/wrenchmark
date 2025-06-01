@@ -5,6 +5,7 @@ import BasicInfoTab from "./BasicInfoTab";
 import ComponentsTab from "./ComponentsTab";
 import DimensionsTab from "./DimensionsTab";
 import MetricsTab from "./MetricsTab";
+import ColorManagementTab from "../colors/ColorManagementTab";
 
 interface TrimLevelEditorTabsProps {
   activeTab: string;
