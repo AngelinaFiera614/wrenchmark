@@ -19,24 +19,39 @@ import { useAuth } from "@/context/auth";
 import { Loader, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PasswordStrengthMeter } from "@/components/security/PasswordStrengthMeter";
+import { validatePassword } from "@/services/security/inputSanitizer";
 
-const authSchema = z.object({
+const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(1, "Password is required"),
 });
 
-type AuthFormValues = z.infer<typeof authSchema>;
+const signUpSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(12, "Password must be at least 12 characters")
+    .refine((password) => {
+      const validation = validatePassword(password);
+      return validation.isValid;
+    }, "Password must contain uppercase, lowercase, number, and special character"),
+});
+
+type SignInFormValues = z.infer<typeof signInSchema>;
+type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [passwordValue, setPasswordValue] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isLoading, authError: contextAuthError } = useAuth();
   
-  const form = useForm<AuthFormValues>({
-    resolver: zodResolver(authSchema),
+  const currentSchema = isLogin ? signInSchema : signUpSchema;
+  
+  const form = useForm<SignInFormValues | SignUpFormValues>({
+    resolver: zodResolver(currentSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -60,13 +75,20 @@ const Auth = () => {
     }
   }, [contextAuthError]);
 
+  // Reset form when switching between login/signup
+  useEffect(() => {
+    form.reset();
+    setPasswordValue("");
+    setAuthError(null);
+  }, [isLogin, form]);
+
   const handleRefreshPage = () => {
     window.location.reload();
   };
 
   const { signIn, signUp } = useAuth();
 
-  const onSubmit = async (values: AuthFormValues) => {
+  const onSubmit = async (values: SignInFormValues | SignUpFormValues) => {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
@@ -92,8 +114,6 @@ const Auth = () => {
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
-    setAuthError(null);
-    form.reset();
   };
 
   // Show loading while auth is initializing
@@ -158,9 +178,23 @@ const Auth = () => {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Password" {...field} />
+                      <Input 
+                        type="password" 
+                        placeholder="Password" 
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setPasswordValue(e.target.value);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
+                    {!isLogin && passwordValue && (
+                      <PasswordStrengthMeter 
+                        password={passwordValue}
+                        className="mt-2"
+                      />
+                    )}
                   </FormItem>
                 )}
               />

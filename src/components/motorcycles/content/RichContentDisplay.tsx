@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Edit, Code } from 'lucide-react';
 import { SecureContentRenderer } from '@/components/security/SecureContentRenderer';
 import { sanitizeUserInput } from '@/services/security/inputSanitizer';
+import { useSecureForm, commonValidationRules } from '@/hooks/useSecureForm';
 
 interface RichContentDisplayProps {
   content: string;
@@ -20,74 +21,86 @@ export default function RichContentDisplay({
   onEdit
 }: RichContentDisplayProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(content);
   const [viewMode, setViewMode] = useState<'rendered' | 'markdown'>('rendered');
 
-  const handleSave = () => {
-    const sanitizedContent = sanitizeUserInput(editContent, 10000);
-    onEdit?.(sanitizedContent);
-    setIsEditing(false);
+  const { formData, errors, updateField, handleSubmit, resetForm } = useSecureForm({
+    validationConfig: {
+      content: {
+        required: true,
+        maxLength: 10000,
+        sanitizer: (value: string) => sanitizeUserInput(value, 10000)
+      }
+    },
+    onSubmit: async (data) => {
+      onEdit?.(data.content);
+      setIsEditing(false);
+    },
+    logFormActivity: false
+  });
+
+  const handleEdit = () => {
+    updateField('content', content);
+    setIsEditing(true);
   };
 
   const handleCancel = () => {
-    setEditContent(content);
+    resetForm();
     setIsEditing(false);
-  };
-
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    if (value.length <= 10000) { // Prevent excessive input
-      setEditContent(value);
-    }
   };
 
   if (isEditing) {
     return (
-      <Card className="bg-explorer-card border-explorer-chrome/30">
+      <Card className="bg-card border-border/30">
         <CardContent className="p-6">
           {title && (
-            <h3 className="text-lg font-semibold text-explorer-text mb-4">{title}</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">{title}</h3>
           )}
-          <div className="space-y-4">
-            <textarea
-              value={editContent}
-              onChange={handleContentChange}
-              className="w-full h-64 bg-explorer-dark border border-explorer-chrome/30 rounded text-explorer-text p-3 resize-none focus:border-explorer-teal/50 focus:outline-none"
-              placeholder="Enter markdown content..."
-              maxLength={10000}
-            />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <textarea
+                value={formData.content || ''}
+                onChange={(e) => updateField('content', e.target.value)}
+                className="w-full h-64 bg-background border border-border rounded text-foreground p-3 resize-none focus:border-accent-teal/50 focus:outline-none"
+                placeholder="Enter markdown content..."
+                maxLength={10000}
+              />
+              {errors.content && (
+                <p className="text-sm text-red-500 mt-1">{errors.content}</p>
+              )}
+            </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-explorer-text-muted">
-                {editContent.length}/10000 characters
+              <span className="text-sm text-muted-foreground">
+                {(formData.content || '').length}/10000 characters
               </span>
               <div className="flex gap-2">
                 <Button
-                  onClick={handleSave}
-                  className="bg-explorer-teal text-explorer-dark hover:bg-explorer-teal/80"
+                  type="submit"
+                  className="bg-accent-teal text-background hover:bg-accent-teal/80"
                 >
                   Save
                 </Button>
                 <Button
+                  type="button"
                   onClick={handleCancel}
                   variant="outline"
-                  className="border-explorer-chrome/30 text-explorer-text hover:border-explorer-teal/50"
+                  className="border-border/30 text-foreground hover:border-accent-teal/50"
                 >
                   Cancel
                 </Button>
               </div>
             </div>
-          </div>
+          </form>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-explorer-card border-explorer-chrome/30">
+    <Card className="bg-card border-border/30">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           {title && (
-            <h3 className="text-lg font-semibold text-explorer-text">{title}</h3>
+            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
           )}
           <div className="flex items-center gap-2">
             {content && (
@@ -96,7 +109,7 @@ export default function RichContentDisplay({
                   variant="ghost"
                   size="sm"
                   onClick={() => setViewMode(viewMode === 'rendered' ? 'markdown' : 'rendered')}
-                  className="text-explorer-text-muted hover:text-explorer-text"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   {viewMode === 'rendered' ? (
                     <>
@@ -116,8 +129,8 @@ export default function RichContentDisplay({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsEditing(true)}
-                className="text-explorer-text-muted hover:text-explorer-text"
+                onClick={handleEdit}
+                className="text-muted-foreground hover:text-foreground"
               >
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
@@ -132,16 +145,16 @@ export default function RichContentDisplay({
               <SecureContentRenderer 
                 content={content}
                 type="markdown"
-                className="text-explorer-text"
+                className="text-foreground"
               />
             ) : (
-              <pre className="bg-explorer-dark-light p-4 rounded border border-explorer-chrome/20 text-sm text-explorer-text whitespace-pre-wrap">
+              <pre className="bg-muted p-4 rounded border border-border/20 text-sm text-foreground whitespace-pre-wrap">
                 {content}
               </pre>
             )}
           </div>
         ) : (
-          <p className="text-explorer-text-muted italic">No content available</p>
+          <p className="text-muted-foreground italic">No content available</p>
         )}
       </CardContent>
     </Card>

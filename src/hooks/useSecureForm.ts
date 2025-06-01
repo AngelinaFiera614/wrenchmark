@@ -6,7 +6,9 @@ import {
   validateEmail, 
   validateUrl, 
   validateNumericInput,
-  sanitizeFileName 
+  sanitizeFileName,
+  validatePassword,
+  validateFileUpload
 } from '@/services/security/inputSanitizer';
 import { auditLogger } from '@/services/security/auditLogger';
 
@@ -17,6 +19,7 @@ interface ValidationRule {
   pattern?: RegExp;
   custom?: (value: any) => string | null;
   sanitizer?: (value: string) => string;
+  type?: 'email' | 'password' | 'url' | 'filename' | 'search' | 'file';
 }
 
 interface FormValidationConfig {
@@ -27,12 +30,23 @@ interface UseSecureFormOptions {
   validationConfig: FormValidationConfig;
   onSubmit: (sanitizedData: any) => Promise<void> | void;
   logFormActivity?: boolean;
+  enableRateLimit?: boolean;
+  maxSubmissions?: number;
+  rateLimitWindow?: number;
 }
 
-export const useSecureForm = ({ validationConfig, onSubmit, logFormActivity = true }: UseSecureFormOptions) => {
+export const useSecureForm = ({ 
+  validationConfig, 
+  onSubmit, 
+  logFormActivity = true,
+  enableRateLimit = true,
+  maxSubmissions = 5,
+  rateLimitWindow = 60000 // 1 minute
+}: UseSecureFormOptions) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissions, setSubmissions] = useState<number[]>([]);
 
   const validateField = useCallback((fieldName: string, value: any): string | null => {
     const rule = validationConfig[fieldName];
@@ -46,6 +60,30 @@ export const useSecureForm = ({ validationConfig, onSubmit, logFormActivity = tr
     if (!value) return null; // Skip other validations if field is empty and not required
 
     const stringValue = value.toString();
+
+    // Type-specific validation
+    if (rule.type === 'email' && !validateEmail(stringValue)) {
+      return 'Please enter a valid email address';
+    }
+
+    if (rule.type === 'url' && stringValue && !validateUrl(stringValue)) {
+      return 'Please enter a valid URL';
+    }
+
+    if (rule.type === 'password') {
+      const passwordValidation = validatePassword(stringValue);
+      if (!passwordValidation.isValid) {
+        return passwordValidation.errors[0]; // Return first error
+      }
+    }
+
+    if (rule.type === 'file' && value instanceof File) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+      const fileValidation = validateFileUpload(value, allowedTypes);
+      if (!fileValidation.isValid) {
+        return fileValidation.errors[0];
+      }
+    }
 
     // Length validations
     if (rule.minLength && stringValue.length < rule.minLength) {
@@ -76,7 +114,24 @@ export const useSecureForm = ({ validationConfig, onSubmit, logFormActivity = tr
       return rule.sanitizer(value);
     }
     
-    // Default sanitization based on field name patterns
+    // Type-based sanitization
+    if (rule?.type === 'email') {
+      return value.trim().toLowerCase();
+    }
+    
+    if (rule?.type === 'search') {
+      return sanitizeSearchTerm(value);
+    }
+    
+    if (rule?.type === 'filename') {
+      return sanitizeFileName(value);
+    }
+    
+    if (rule?.type === 'url') {
+      return value.trim();
+    }
+    
+    // Fallback patterns based on field name
     if (fieldName.toLowerCase().includes('email')) {
       return value.trim().toLowerCase();
     }
@@ -96,6 +151,19 @@ export const useSecureForm = ({ validationConfig, onSubmit, logFormActivity = tr
     // Default text sanitization
     return sanitizeUserInput(value, rule?.maxLength || 1000);
   }, [validationConfig]);
+
+  const checkRateLimit = useCallback((): boolean => {
+    if (!enableRateLimit) return true;
+    
+    const now = Date.now();
+    const recentSubmissions = submissions.filter(time => now - time < rateLimitWindow);
+    
+    if (recentSubmissions.length >= maxSubmissions) {
+      return false;
+    }
+    
+    return true;
+  }, [submissions, enableRateLimit, maxSubmissions, rateLimitWindow]);
 
   const updateField = useCallback((fieldName: string, value: any) => {
     // Sanitize the input
@@ -141,6 +209,17 @@ export const useSecureForm = ({ validationConfig, onSubmit, logFormActivity = tr
 
     if (isSubmitting) return;
 
+    // Check rate limit
+    if (!checkRateLimit()) {
+      setErrors({ _form: 'Too many submissions. Please wait before trying again.' });
+      if (logFormActivity) {
+        await auditLogger.logSuspiciousActivity('rate_limit_exceeded', {
+          formFields: Object.keys(validationConfig)
+        });
+      }
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -161,6 +240,11 @@ export const useSecureForm = ({ validationConfig, onSubmit, logFormActivity = tr
         const value = formData[fieldName];
         sanitizedData[fieldName] = typeof value === 'string' ? sanitizeField(fieldName, value) : value;
       });
+
+      // Update rate limit tracking
+      if (enableRateLimit) {
+        setSubmissions(prev => [...prev, Date.now()]);
+      }
 
       if (logFormActivity) {
         await auditLogger.logSecurityEvent({
@@ -186,12 +270,13 @@ export const useSecureForm = ({ validationConfig, onSubmit, logFormActivity = tr
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateForm, sanitizeField, onSubmit, isSubmitting, validationConfig, errors, logFormActivity]);
+  }, [formData, validateForm, sanitizeField, onSubmit, isSubmitting, validationConfig, errors, logFormActivity, checkRateLimit, enableRateLimit]);
 
   const resetForm = useCallback(() => {
     setFormData({});
     setErrors({});
     setIsSubmitting(false);
+    setSubmissions([]);
   }, []);
 
   return {
@@ -202,45 +287,51 @@ export const useSecureForm = ({ validationConfig, onSubmit, logFormActivity = tr
     handleSubmit,
     validateForm,
     resetForm,
-    hasErrors: Object.keys(errors).length > 0
+    hasErrors: Object.keys(errors).length > 0,
+    canSubmit: checkRateLimit() && !isSubmitting
   };
 };
 
-// Pre-configured validation rules for common field types
+// Enhanced validation rules with security improvements
 export const commonValidationRules = {
   email: {
+    type: 'email' as const,
     required: true,
     maxLength: 254,
-    custom: (value: string) => validateEmail(value) ? null : 'Invalid email format',
     sanitizer: (value: string) => value.trim().toLowerCase()
   },
   
   password: {
+    type: 'password' as const,
     required: true,
-    minLength: 8,
-    maxLength: 128,
-    pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, // At least one lowercase, uppercase, and digit
+    minLength: 12,
+    maxLength: 128
   },
   
   url: {
+    type: 'url' as const,
     maxLength: 2048,
-    custom: (value: string) => value && !validateUrl(value) ? 'Invalid URL format' : null,
     sanitizer: (value: string) => value.trim()
   },
   
   searchTerm: {
-    maxLength: 100,
-    sanitizer: sanitizeSearchTerm
+    type: 'search' as const,
+    maxLength: 100
   },
   
   filename: {
+    type: 'filename' as const,
     required: true,
     maxLength: 255,
-    pattern: /^[a-zA-Z0-9._-]+$/,
-    sanitizer: sanitizeFileName
+    pattern: /^[a-zA-Z0-9._-]+$/
   },
   
   numericInput: {
     custom: (value: any) => validateNumericInput(value) ? null : 'Must be a valid number'
+  },
+  
+  fileUpload: {
+    type: 'file' as const,
+    required: true
   }
 };
