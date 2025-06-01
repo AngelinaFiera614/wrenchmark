@@ -70,3 +70,34 @@ export const deleteConfiguration = async (configId: string): Promise<boolean> =>
     throw error;
   }
 };
+
+export const fetchConfigurations = async (modelYearId: string): Promise<Configuration[]> => {
+  try {
+    console.log("Fetching configurations for model year:", modelYearId);
+    
+    const { data, error } = await supabase
+      .from('model_configurations')
+      .select(`
+        *,
+        engine:engines(*),
+        brakes:brake_systems(*),
+        frame:frames(*),
+        suspension:suspensions(*),
+        wheels:wheels(*),
+        color:color_variants(*)
+      `)
+      .eq('model_year_id', modelYearId)
+      .order('name');
+      
+    if (error) {
+      console.error("Error fetching configurations:", error);
+      throw new Error(`Failed to fetch configurations: ${error.message}`);
+    }
+    
+    console.log("Configurations fetched successfully:", data);
+    return data || [];
+  } catch (error) {
+    console.error("Error in fetchConfigurations:", error);
+    throw error;
+  }
+};
