@@ -1,4 +1,3 @@
-
 export type MotorcycleCategory = 
   | "Sport" 
   | "Cruiser" 
@@ -181,6 +180,8 @@ export interface Configuration {
   id: string;
   model_year_id: string;
   name?: string;
+  description?: string;
+  notes?: string;
   engine_id?: string;
   brake_system_id?: string;
   frame_id?: string;

@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, Car } from "lucide-react";
 
 interface EmptyTrimLevelStateProps {
-  onCreateNew: () => void;
+  onAdd: () => void;
 }
 
-const EmptyTrimLevelState = ({ onCreateNew }: EmptyTrimLevelStateProps) => {
+const EmptyTrimLevelState = ({ onAdd }: EmptyTrimLevelStateProps) => {
   return (
     <div className="text-center py-8">
       <Car className="h-16 w-16 text-explorer-text-muted mx-auto mb-4" />
@@ -18,7 +18,7 @@ const EmptyTrimLevelState = ({ onCreateNew }: EmptyTrimLevelStateProps) => {
         Create trim levels like "Base", "Sport", "Touring", or model-specific variants like "Fireball", "Stellar", "Supernova"
       </p>
       <Button
-        onClick={onCreateNew}
+        onClick={onAdd}
         variant="outline"
         className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
       >
