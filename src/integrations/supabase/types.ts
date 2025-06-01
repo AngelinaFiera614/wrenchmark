@@ -1245,6 +1245,7 @@ export type Database = {
           brake_system_id: string | null
           color_id: string | null
           created_at: string
+          description: string | null
           engine_id: string | null
           frame_id: string | null
           fuel_capacity_l: number | null
@@ -1255,6 +1256,7 @@ export type Database = {
           market_region: string | null
           model_year_id: string
           name: string | null
+          notes: string | null
           optional_equipment: string[] | null
           price_premium_usd: number | null
           seat_height_mm: number | null
@@ -1270,6 +1272,7 @@ export type Database = {
           brake_system_id?: string | null
           color_id?: string | null
           created_at?: string
+          description?: string | null
           engine_id?: string | null
           frame_id?: string | null
           fuel_capacity_l?: number | null
@@ -1280,6 +1283,7 @@ export type Database = {
           market_region?: string | null
           model_year_id: string
           name?: string | null
+          notes?: string | null
           optional_equipment?: string[] | null
           price_premium_usd?: number | null
           seat_height_mm?: number | null
@@ -1295,6 +1299,7 @@ export type Database = {
           brake_system_id?: string | null
           color_id?: string | null
           created_at?: string
+          description?: string | null
           engine_id?: string | null
           frame_id?: string | null
           fuel_capacity_l?: number | null
@@ -1305,6 +1310,7 @@ export type Database = {
           market_region?: string | null
           model_year_id?: string
           name?: string | null
+          notes?: string | null
           optional_equipment?: string[] | null
           price_premium_usd?: number | null
           seat_height_mm?: number | null

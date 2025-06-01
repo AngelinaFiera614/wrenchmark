@@ -2,52 +2,30 @@
 import { useState } from "react";
 import { Configuration } from "@/types/motorcycle";
 
-interface FormData {
-  name: string;
-  engine_id: string;
-  brake_system_id: string;
-  frame_id: string;
-  suspension_id: string;
-  wheel_id: string;
-  seat_height_mm: string | number;
-  weight_kg: string | number;
-  wheelbase_mm: string | number;
-  fuel_capacity_l: string | number;
-  ground_clearance_mm: string | number;
-  is_default: boolean;
-  market_region: string;
-  price_premium_usd: string | number;
-  model_year_id: string;
-}
-
-interface SelectedComponents {
-  engine: any;
-  brakes: any;
-  frame: any;
-  suspension: any;
-  wheels: any;
-}
-
 export const useTrimLevelForm = (modelYearId: string, configuration?: Configuration) => {
-  const [formData, setFormData] = useState<FormData>({
-    name: configuration?.name || "",
+  const [formData, setFormData] = useState({
+    model_year_id: modelYearId,
+    name: configuration?.name || "Standard",
+    description: configuration?.description || "",
+    notes: configuration?.notes || "",
     engine_id: configuration?.engine_id || "",
     brake_system_id: configuration?.brake_system_id || "",
     frame_id: configuration?.frame_id || "",
     suspension_id: configuration?.suspension_id || "",
     wheel_id: configuration?.wheel_id || "",
-    seat_height_mm: configuration?.seat_height_mm || "",
-    weight_kg: configuration?.weight_kg || "",
-    wheelbase_mm: configuration?.wheelbase_mm || "",
-    fuel_capacity_l: configuration?.fuel_capacity_l || "",
-    ground_clearance_mm: configuration?.ground_clearance_mm || "",
+    seat_height_mm: configuration?.seat_height_mm?.toString() || "",
+    weight_kg: configuration?.weight_kg?.toString() || "",
+    wheelbase_mm: configuration?.wheelbase_mm?.toString() || "",
+    fuel_capacity_l: configuration?.fuel_capacity_l?.toString() || "",
+    ground_clearance_mm: configuration?.ground_clearance_mm?.toString() || "",
     is_default: configuration?.is_default || false,
+    trim_level: configuration?.trim_level || "",
     market_region: configuration?.market_region || "",
-    price_premium_usd: configuration?.price_premium_usd || "",
-    model_year_id: modelYearId,
+    price_premium_usd: configuration?.price_premium_usd?.toString() || "",
+    color_id: configuration?.color_id || "",
   });
 
-  const [selectedComponents, setSelectedComponents] = useState<SelectedComponents>({
+  const [selectedComponents, setSelectedComponents] = useState({
     engine: configuration?.engine || null,
     brakes: configuration?.brakes || null,
     frame: configuration?.frame || null,
@@ -60,16 +38,16 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
   };
 
   const handleComponentSelect = (componentType: string, componentId: string, component: any) => {
-    console.log(`Selected ${componentType}:`, componentId, component);
     handleInputChange(`${componentType}_id`, componentId);
     setSelectedComponents(prev => ({ ...prev, [componentType]: component }));
   };
 
-  // Create a mock configuration for metrics calculation
   const getMockConfiguration = (): Configuration => ({
     id: configuration?.id || 'temp',
     model_year_id: modelYearId,
     name: formData.name,
+    description: formData.description,
+    notes: formData.notes,
     engine_id: formData.engine_id,
     brake_system_id: formData.brake_system_id,
     frame_id: formData.frame_id,
@@ -81,8 +59,10 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     fuel_capacity_l: Number(formData.fuel_capacity_l) || undefined,
     ground_clearance_mm: Number(formData.ground_clearance_mm) || undefined,
     is_default: formData.is_default,
+    trim_level: formData.trim_level,
     market_region: formData.market_region,
     price_premium_usd: Number(formData.price_premium_usd) || undefined,
+    color_id: formData.color_id,
     engine: selectedComponents.engine,
     brakes: selectedComponents.brakes,
     frame: selectedComponents.frame,
@@ -92,7 +72,9 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
 
   const getCleanConfigData = () => ({
     model_year_id: modelYearId,
-    name: formData.name.trim(),
+    name: formData.name,
+    description: formData.description || null,
+    notes: formData.notes || null,
     engine_id: formData.engine_id || null,
     brake_system_id: formData.brake_system_id || null,
     frame_id: formData.frame_id || null,
@@ -104,8 +86,10 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     fuel_capacity_l: formData.fuel_capacity_l ? Number(formData.fuel_capacity_l) : null,
     ground_clearance_mm: formData.ground_clearance_mm ? Number(formData.ground_clearance_mm) : null,
     is_default: formData.is_default,
+    trim_level: formData.trim_level || null,
     market_region: formData.market_region || null,
     price_premium_usd: formData.price_premium_usd ? Number(formData.price_premium_usd) : null,
+    color_id: formData.color_id || null,
   });
 
   return {

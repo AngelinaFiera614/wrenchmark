@@ -1,51 +1,38 @@
+
 import React from "react";
-import { CardContent } from "@/components/ui/card";
 import { Configuration } from "@/types/motorcycle";
-import TrimLevelCard from "./TrimLevelCard";
+import TrimLevelCardWithNotes from "./TrimLevelCardWithNotes";
 import EmptyTrimLevelState from "./EmptyTrimLevelState";
 
 interface TrimLevelGridProps {
   configurations: Configuration[];
-  selectedConfig: string | null;
-  deletingId: string | null;
-  onConfigSelect: (configId: string) => void;
   onEdit: (config: Configuration) => void;
-  onClone: (config: Configuration) => void;
-  onDelete: (config: Configuration) => void;
   onCopy: (config: Configuration) => void;
-  onCreateNew: () => void;
+  onPreview: (config: Configuration) => void;
+  onAdd: () => void;
 }
 
 const TrimLevelGrid = ({
   configurations,
-  selectedConfig,
-  deletingId,
-  onConfigSelect,
   onEdit,
-  onClone,
-  onDelete,
   onCopy,
-  onCreateNew
+  onPreview,
+  onAdd
 }: TrimLevelGridProps) => {
   if (configurations.length === 0) {
-    return <EmptyTrimLevelState onCreateNew={onCreateNew} />;
+    return <EmptyTrimLevelState onAdd={onAdd} />;
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {configurations.map((config) => (
-        <div key={config.id} className="group">
-          <TrimLevelCard
-            config={config}
-            isSelected={selectedConfig === config.id}
-            isDeleting={deletingId === config.id}
-            onClick={() => onConfigSelect(config.id)}
-            onEdit={onEdit}
-            onClone={onClone}
-            onDelete={onDelete}
-            onCopy={onCopy}
-          />
-        </div>
+        <TrimLevelCardWithNotes
+          key={config.id}
+          configuration={config}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onPreview={onPreview}
+        />
       ))}
     </div>
   );

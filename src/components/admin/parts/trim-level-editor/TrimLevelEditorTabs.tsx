@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BasicInfoTab from "./BasicInfoTab";
 import ComponentsTab from "./ComponentsTab";
 import DimensionsTab from "./DimensionsTab";
+import NotesTab from "./NotesTab";
 import MetricsTab from "./MetricsTab";
 import ColorManagementTab from "../colors/ColorManagementTab";
 
@@ -26,10 +27,11 @@ const TrimLevelEditorTabs = ({
 }: TrimLevelEditorTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange}>
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="basic">Basic Info</TabsTrigger>
         <TabsTrigger value="components">Components</TabsTrigger>
         <TabsTrigger value="dimensions">Dimensions</TabsTrigger>
+        <TabsTrigger value="notes">Notes</TabsTrigger>
         <TabsTrigger value="colors">Colors</TabsTrigger>
         <TabsTrigger value="metrics">Metrics</TabsTrigger>
       </TabsList>
@@ -50,6 +52,13 @@ const TrimLevelEditorTabs = ({
 
       <TabsContent value="dimensions" className="space-y-4">
         <DimensionsTab
+          formData={formData}
+          onInputChange={onInputChange}
+        />
+      </TabsContent>
+
+      <TabsContent value="notes" className="space-y-4">
+        <NotesTab
           formData={formData}
           onInputChange={onInputChange}
         />
