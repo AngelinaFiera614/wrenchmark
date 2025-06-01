@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, AlertCircle } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
 import { createConfiguration, updateConfiguration } from "@/services/models/configurationService";
 import { validateTrimLevelForm } from "./validation";
@@ -58,7 +57,6 @@ export const useTrimLevelSave = (
         toast({
           title: "Success!",
           description: `${formData.name} has been ${configuration ? 'updated' : 'created'} successfully.`,
-          action: <CheckCircle className="h-4 w-4 text-green-500" />
         });
         
         if (onSave) {
@@ -96,7 +94,6 @@ export const useTrimLevelSave = (
         variant: "destructive",
         title: "Error",
         description: errorMessage,
-        action: <AlertCircle className="h-4 w-4 text-red-500" />
       });
     } finally {
       setSaving(false);
