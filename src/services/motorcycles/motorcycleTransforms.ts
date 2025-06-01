@@ -17,8 +17,8 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   const defaultConfig = configurations.find(c => c.is_default) || configurations[0];
   console.log("Default configuration found:", defaultConfig);
   
-  // Extract engine data
-  let engineData = {};
+  // Extract engine data with proper type checking
+  let engineData: any = {};
   if (defaultConfig?.engines) {
     engineData = {
       engine_size: defaultConfig.engines.displacement_cc || rawData.engine_size,
@@ -32,8 +32,8 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     };
   }
   
-  // Extract brake data
-  let brakeData = {};
+  // Extract brake data with proper type checking
+  let brakeData: any = {};
   if (defaultConfig?.brake_systems) {
     brakeData = {
       abs: defaultConfig.brake_systems.has_traction_control || rawData.has_abs,
@@ -41,8 +41,8 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     };
   }
   
-  // Extract dimensions from configuration
-  let dimensionData = {};
+  // Extract dimensions from configuration with proper type checking
+  let dimensionData: any = {};
   if (defaultConfig) {
     dimensionData = {
       seat_height_mm: defaultConfig.seat_height_mm || rawData.seat_height_mm,
