@@ -77,8 +77,10 @@ const TrimLevelManagerEnhanced = ({
         .single();
         
       if (modelYear) {
-        const years = await getAvailableTargetYears(modelYear.motorcycle_id, config.name);
-        setAvailableYears(years.filter(y => y.id !== modelYearId)); // Exclude current year
+        // Get all years for this motorcycle (including ones with existing configs)
+        const years = await getAvailableTargetYears(modelYear.motorcycle_id);
+        // Exclude the current year from the list
+        setAvailableYears(years.filter(y => y.id !== modelYearId));
         setCopyDialogOpen(true);
       }
     } catch (error) {

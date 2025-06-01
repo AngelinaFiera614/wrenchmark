@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, Check, X, Eye, AlertTriangle } from "lucide-react";
+import { Copy, Check, X, Eye, AlertTriangle, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
-import { copyConfigurationToMultipleYears } from "@/services/models/configurationService";
+import { copyConfigurationToMultipleYears, getYearsWithExistingConfigs } from "@/services/models/configurationService";
 import { calculateFormCompleteness } from "./trim-level-editor/validationEnhanced";
 
 interface EnhancedCopyTrimLevelDialogProps {
@@ -25,6 +25,7 @@ interface CopyOptions {
   basicInfo: boolean;
   components: boolean;
   dimensions: boolean;
+  allowOverwrite: boolean;
   granularOptions: {
     name: boolean;
     marketRegion: boolean;
@@ -54,12 +55,13 @@ const EnhancedCopyTrimLevelDialog = ({
   const [copying, setCopying] = useState(false);
   const [activeTab, setActiveTab] = useState("quick");
   const [showPreview, setShowPreview] = useState(false);
-  const [conflicts, setConflicts] = useState<{[yearId: string]: string[]}>({});
+  const [yearsWithExisting, setYearsWithExisting] = useState<Set<string>>(new Set());
 
   const [copyOptions, setCopyOptions] = useState<CopyOptions>({
     basicInfo: true,
     components: true,
     dimensions: true,
+    allowOverwrite: false,
     granularOptions: {
       name: true,
       marketRegion: true,
@@ -79,26 +81,37 @@ const EnhancedCopyTrimLevelDialog = ({
 
   const completeness = calculateFormCompleteness(sourceConfiguration);
 
+  // Load existing configurations when dialog opens
+  useEffect(() => {
+    if (open && sourceConfiguration.name) {
+      loadExistingConfigs();
+    }
+  }, [open, sourceConfiguration.name, availableYears]);
+
+  const loadExistingConfigs = async () => {
+    if (!sourceConfiguration.name || availableYears.length === 0) return;
+    
+    try {
+      // Get the motorcycle ID from the first available year
+      const firstYear = availableYears[0];
+      if (firstYear?.motorcycle_id) {
+        const existing = await getYearsWithExistingConfigs(firstYear.motorcycle_id, sourceConfiguration.name);
+        setYearsWithExisting(existing);
+      }
+    } catch (error) {
+      console.error("Error loading existing configurations:", error);
+    }
+  };
+
   const handleYearToggle = (yearId: string) => {
     setSelectedYears(prev => 
       prev.includes(yearId) 
         ? prev.filter(id => id !== yearId)
         : [...prev, yearId]
     );
-    
-    // Check for potential conflicts
-    const year = availableYears.find(y => y.id === yearId);
-    if (year && sourceConfiguration.name) {
-      // In a real implementation, you'd check the database for existing configurations
-      // For now, we'll simulate potential conflicts
-      setConflicts(prev => ({
-        ...prev,
-        [yearId]: Math.random() > 0.7 ? [`Configuration "${sourceConfiguration.name}" may already exist`] : []
-      }));
-    }
   };
 
-  const handleQuickOptionChange = (option: keyof Pick<CopyOptions, 'basicInfo' | 'components' | 'dimensions'>, checked: boolean) => {
+  const handleQuickOptionChange = (option: keyof Pick<CopyOptions, 'basicInfo' | 'components' | 'dimensions' | 'allowOverwrite'>, checked: boolean) => {
     setCopyOptions(prev => ({ ...prev, [option]: checked }));
   };
 
@@ -121,6 +134,14 @@ const EnhancedCopyTrimLevelDialog = ({
     }
   };
 
+  const getYearActions = () => {
+    const actions = {
+      create: selectedYears.filter(yearId => !yearsWithExisting.has(yearId)),
+      update: selectedYears.filter(yearId => yearsWithExisting.has(yearId))
+    };
+    return actions;
+  };
+
   const handleCopy = async () => {
     if (selectedYears.length === 0) {
       toast({
@@ -131,18 +152,30 @@ const EnhancedCopyTrimLevelDialog = ({
       return;
     }
 
+    const actions = getYearActions();
+    if (actions.update.length > 0 && !copyOptions.allowOverwrite) {
+      toast({
+        variant: "destructive",
+        title: "Overwrite Required",
+        description: `${actions.update.length} year(s) have existing configurations. Enable "Allow Overwrite" to update them.`
+      });
+      return;
+    }
+
     setCopying(true);
     try {
       const options = activeTab === "quick" 
         ? {
             copyBasicInfo: copyOptions.basicInfo,
             copyComponents: copyOptions.components,
-            copyDimensions: copyOptions.dimensions
+            copyDimensions: copyOptions.dimensions,
+            allowOverwrite: copyOptions.allowOverwrite
           }
         : {
             copyBasicInfo: copyOptions.granularOptions.name || copyOptions.granularOptions.marketRegion || copyOptions.granularOptions.pricePremium,
             copyComponents: copyOptions.granularOptions.engine || copyOptions.granularOptions.brakes || copyOptions.granularOptions.frame || copyOptions.granularOptions.suspension || copyOptions.granularOptions.wheels,
-            copyDimensions: copyOptions.granularOptions.seatHeight || copyOptions.granularOptions.weight || copyOptions.granularOptions.wheelbase || copyOptions.granularOptions.fuelCapacity || copyOptions.granularOptions.groundClearance
+            copyDimensions: copyOptions.granularOptions.seatHeight || copyOptions.granularOptions.weight || copyOptions.granularOptions.wheelbase || copyOptions.granularOptions.fuelCapacity || copyOptions.granularOptions.groundClearance,
+            allowOverwrite: copyOptions.allowOverwrite
           };
 
       const results = await copyConfigurationToMultipleYears(
@@ -153,11 +186,25 @@ const EnhancedCopyTrimLevelDialog = ({
 
       const successful = results.filter(r => r.success).length;
       const failed = results.filter(r => !r.success).length;
+      const created = results.filter(r => r.success && r.action === 'created').length;
+      const updated = results.filter(r => r.success && r.action === 'updated').length;
 
       if (successful > 0) {
+        let message = `Successfully processed ${successful} year${successful > 1 ? 's' : ''}`;
+        if (created > 0 && updated > 0) {
+          message += ` (${created} created, ${updated} updated)`;
+        } else if (created > 0) {
+          message += ` (${created} created)`;
+        } else if (updated > 0) {
+          message += ` (${updated} updated)`;
+        }
+        if (failed > 0) {
+          message += `, ${failed} failed`;
+        }
+
         toast({
           title: "Success!",
-          description: `Copied trim level to ${successful} year${successful > 1 ? 's' : ''}${failed > 0 ? `, ${failed} failed` : ''}.`
+          description: message
         });
         onSuccess();
         onClose();
@@ -179,6 +226,8 @@ const EnhancedCopyTrimLevelDialog = ({
       setCopying(false);
     }
   };
+
+  const actions = getYearActions();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -264,56 +313,92 @@ const EnhancedCopyTrimLevelDialog = ({
                     </Label>
                     <Badge variant="secondary">{completeness.dimensions}%</Badge>
                   </div>
+                  <div className="flex items-center space-x-2 p-3 border rounded-lg bg-muted/30">
+                    <Checkbox
+                      id="allowOverwrite"
+                      checked={copyOptions.allowOverwrite}
+                      onCheckedChange={(checked) => handleQuickOptionChange('allowOverwrite', !!checked)}
+                    />
+                    <Label htmlFor="allowOverwrite" className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className="h-4 w-4" />
+                        Allow Overwrite
+                      </div>
+                      <span className="text-sm text-muted-foreground block">Update existing configurations with the same name</span>
+                    </Label>
+                    {yearsWithExisting.size > 0 && (
+                      <Badge variant="outline" className="text-xs">
+                        {yearsWithExisting.size} existing
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             </TabsContent>
 
             <TabsContent value="granular" className="space-y-4">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Basic Information</Label>
-                  {[
-                    { key: 'name', label: 'Name', value: sourceConfiguration.name },
-                    { key: 'marketRegion', label: 'Market Region', value: sourceConfiguration.market_region },
-                    { key: 'pricePremium', label: 'Price Premium', value: sourceConfiguration.price_premium_usd }
-                  ].map(({ key, label, value }) => (
-                    <div key={key} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={key}
-                        checked={copyOptions.granularOptions[key as keyof CopyOptions['granularOptions']]}
-                        onCheckedChange={(checked) => handleGranularOptionChange(key as keyof CopyOptions['granularOptions'], !!checked)}
-                      />
-                      <Label htmlFor={key} className="flex-1">
-                        {label}
-                        {value && <span className="text-xs text-muted-foreground block">{value}</span>}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Basic Information</Label>
+                    {[
+                      { key: 'name', label: 'Name', value: sourceConfiguration.name },
+                      { key: 'marketRegion', label: 'Market Region', value: sourceConfiguration.market_region },
+                      { key: 'pricePremium', label: 'Price Premium', value: sourceConfiguration.price_premium_usd }
+                    ].map(({ key, label, value }) => (
+                      <div key={key} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={key}
+                          checked={copyOptions.granularOptions[key as keyof CopyOptions['granularOptions']]}
+                          onCheckedChange={(checked) => handleGranularOptionChange(key as keyof CopyOptions['granularOptions'], !!checked)}
+                        />
+                        <Label htmlFor={key} className="flex-1">
+                          {label}
+                          {value && <span className="text-xs text-muted-foreground block">{value}</span>}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Components & Dimensions</Label>
-                  {[
-                    { key: 'engine', label: 'Engine' },
-                    { key: 'brakes', label: 'Brake System' },
-                    { key: 'frame', label: 'Frame' },
-                    { key: 'suspension', label: 'Suspension' },
-                    { key: 'wheels', label: 'Wheels' },
-                    { key: 'seatHeight', label: 'Seat Height' },
-                    { key: 'weight', label: 'Weight' },
-                    { key: 'wheelbase', label: 'Wheelbase' },
-                    { key: 'fuelCapacity', label: 'Fuel Capacity' },
-                    { key: 'groundClearance', label: 'Ground Clearance' }
-                  ].map(({ key, label }) => (
-                    <div key={key} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={key}
-                        checked={copyOptions.granularOptions[key as keyof CopyOptions['granularOptions']]}
-                        onCheckedChange={(checked) => handleGranularOptionChange(key as keyof CopyOptions['granularOptions'], !!checked)}
-                      />
-                      <Label htmlFor={key}>{label}</Label>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Components & Dimensions</Label>
+                    {[
+                      { key: 'engine', label: 'Engine' },
+                      { key: 'brakes', label: 'Brake System' },
+                      { key: 'frame', label: 'Frame' },
+                      { key: 'suspension', label: 'Suspension' },
+                      { key: 'wheels', label: 'Wheels' },
+                      { key: 'seatHeight', label: 'Seat Height' },
+                      { key: 'weight', label: 'Weight' },
+                      { key: 'wheelbase', label: 'Wheelbase' },
+                      { key: 'fuelCapacity', label: 'Fuel Capacity' },
+                      { key: 'groundClearance', label: 'Ground Clearance' }
+                    ].map(({ key, label }) => (
+                      <div key={key} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={key}
+                          checked={copyOptions.granularOptions[key as keyof CopyOptions['granularOptions']]}
+                          onCheckedChange={(checked) => handleGranularOptionChange(key as keyof CopyOptions['granularOptions'], !!checked)}
+                        />
+                        <Label htmlFor={key}>{label}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2 p-3 border rounded-lg bg-muted/30">
+                  <Checkbox
+                    id="allowOverwriteGranular"
+                    checked={copyOptions.allowOverwrite}
+                    onCheckedChange={(checked) => handleQuickOptionChange('allowOverwrite', !!checked)}
+                  />
+                  <Label htmlFor="allowOverwriteGranular" className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="h-4 w-4" />
+                      Allow Overwrite
                     </div>
-                  ))}
+                    <span className="text-sm text-muted-foreground block">Update existing configurations with the same name</span>
+                  </Label>
                 </div>
               </div>
             </TabsContent>
@@ -328,65 +413,95 @@ const EnhancedCopyTrimLevelDialog = ({
               </p>
             ) : (
               <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border rounded p-2">
-                {availableYears.map((year) => (
-                  <div
-                    key={year.id}
-                    className={`flex items-center space-x-2 p-2 border rounded hover:bg-muted cursor-pointer ${
-                      conflicts[year.id]?.length > 0 ? 'border-yellow-300 bg-yellow-50' : ''
-                    }`}
-                    onClick={() => handleYearToggle(year.id)}
-                  >
-                    <Checkbox
-                      checked={selectedYears.includes(year.id)}
-                      onChange={() => handleYearToggle(year.id)}
-                    />
-                    <Label className="cursor-pointer flex-1">
-                      {year.year}
-                      {year.marketing_tagline && (
-                        <span className="text-xs text-muted-foreground block">
-                          {year.marketing_tagline}
-                        </span>
-                      )}
-                      {conflicts[year.id]?.length > 0 && (
-                        <div className="flex items-center gap-1 text-xs text-yellow-600 mt-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          Potential conflict
+                {availableYears.map((year) => {
+                  const hasExisting = yearsWithExisting.has(year.id);
+                  const isSelected = selectedYears.includes(year.id);
+                  
+                  return (
+                    <div
+                      key={year.id}
+                      className={`flex items-center space-x-2 p-2 border rounded hover:bg-muted cursor-pointer ${
+                        hasExisting ? 'border-orange-300 bg-orange-50' : 'border-green-300 bg-green-50'
+                      } ${isSelected ? 'ring-2 ring-accent-teal' : ''}`}
+                      onClick={() => handleYearToggle(year.id)}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={() => handleYearToggle(year.id)}
+                      />
+                      <Label className="cursor-pointer flex-1">
+                        {year.year}
+                        {year.marketing_tagline && (
+                          <span className="text-xs text-muted-foreground block">
+                            {year.marketing_tagline}
+                          </span>
+                        )}
+                        <div className="flex items-center gap-1 mt-1">
+                          {hasExisting ? (
+                            <Badge variant="outline" className="text-xs bg-orange-100 text-orange-800">
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Will Update
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                              <Plus className="h-3 w-3 mr-1" />
+                              Will Create
+                            </Badge>
+                          )}
                         </div>
-                      )}
-                    </Label>
-                  </div>
-                ))}
+                      </Label>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* Selected Years Summary */}
+          {/* Actions Summary */}
           {selectedYears.length > 0 && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Selected years ({selectedYears.length}):</Label>
-              <div className="flex flex-wrap gap-1">
-                {selectedYears.map((yearId) => {
-                  const year = availableYears.find(y => y.id === yearId);
-                  const hasConflicts = conflicts[yearId]?.length > 0;
-                  return (
-                    <Badge 
-                      key={yearId} 
-                      variant="secondary" 
-                      className={`text-xs ${hasConflicts ? 'bg-yellow-100 text-yellow-800' : ''}`}
-                    >
-                      {year?.year}
-                      {hasConflicts && <AlertTriangle className="h-3 w-3 ml-1" />}
-                      <button
-                        onClick={() => handleYearToggle(yearId)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  );
-                })}
-              </div>
-            </div>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Action Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="flex items-center gap-2 font-medium text-green-600">
+                      <Plus className="h-4 w-4" />
+                      Create New ({actions.create.length})
+                    </div>
+                    {actions.create.length > 0 && (
+                      <div className="text-muted-foreground mt-1">
+                        {actions.create.map(yearId => {
+                          const year = availableYears.find(y => y.id === yearId);
+                          return year?.year;
+                        }).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 font-medium text-orange-600">
+                      <RefreshCw className="h-4 w-4" />
+                      Update Existing ({actions.update.length})
+                    </div>
+                    {actions.update.length > 0 && (
+                      <div className="text-muted-foreground mt-1">
+                        {actions.update.map(yearId => {
+                          const year = availableYears.find(y => y.id === yearId);
+                          return year?.year;
+                        }).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {actions.update.length > 0 && !copyOptions.allowOverwrite && (
+                  <div className="flex items-center gap-2 mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    Enable "Allow Overwrite" to update existing configurations
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {/* Actions */}
@@ -410,11 +525,11 @@ const EnhancedCopyTrimLevelDialog = ({
                 className="bg-accent-teal text-black hover:bg-accent-teal/80"
               >
                 {copying ? (
-                  <>Copying...</>
+                  <>Processing...</>
                 ) : (
                   <>
                     <Copy className="mr-2 h-4 w-4" />
-                    Copy to {selectedYears.length} Year{selectedYears.length !== 1 ? 's' : ''}
+                    Process {selectedYears.length} Year{selectedYears.length !== 1 ? 's' : ''}
                   </>
                 )}
               </Button>
@@ -425,22 +540,17 @@ const EnhancedCopyTrimLevelDialog = ({
           {showPreview && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Copy Preview</CardTitle>
+                <CardTitle className="text-lg">Operation Preview</CardTitle>
                 <CardDescription>
-                  Fields that will be copied: {getSelectedFieldsCount()}
+                  Fields to copy: {getSelectedFieldsCount()} • Years selected: {selectedYears.length}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-sm space-y-2">
                   <div><strong>Source:</strong> {sourceConfiguration.name}</div>
-                  <div><strong>Target Years:</strong> {selectedYears.length} selected</div>
+                  <div><strong>Actions:</strong> {actions.create.length} create, {actions.update.length} update</div>
                   <div><strong>Copy Mode:</strong> {activeTab === 'quick' ? 'Quick Copy' : 'Field Selection'}</div>
-                  {conflicts && Object.values(conflicts).some(c => c.length > 0) && (
-                    <div className="flex items-center gap-2 text-yellow-600">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>Some conflicts detected - review before copying</span>
-                    </div>
-                  )}
+                  <div><strong>Overwrite Enabled:</strong> {copyOptions.allowOverwrite ? 'Yes' : 'No'}</div>
                 </div>
               </CardContent>
             </Card>
