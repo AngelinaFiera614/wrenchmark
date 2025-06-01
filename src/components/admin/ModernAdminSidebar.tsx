@@ -46,6 +46,7 @@ const navigationGroups = [
       { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
       { name: "Models", href: "/admin/models", icon: Bike },
       { name: "Brands", href: "/admin/brands", icon: Building2 },
+      { name: "Configurations", href: "/admin/parts", icon: Settings },
     ]
   },
   {
@@ -75,7 +76,6 @@ const navigationGroups = [
       { name: "Frames", href: "/admin/frames", icon: Settings },
       { name: "Suspensions", href: "/admin/suspensions", icon: Zap },
       { name: "Wheels", href: "/admin/wheels", icon: Wrench },
-      { name: "Configurations", href: "/admin/parts", icon: Settings },
       { name: "Accessories", href: "/admin/accessories", icon: PaintBucket },
     ]
   },
