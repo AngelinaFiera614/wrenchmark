@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
@@ -42,6 +41,7 @@ const TrimLevelEditor = ({
     is_default: configuration?.is_default || false,
     market_region: configuration?.market_region || "",
     price_premium_usd: configuration?.price_premium_usd || "",
+    model_year_id: modelYearId, // Add this for the color management tab
   });
 
   const [selectedComponents, setSelectedComponents] = useState({

@@ -27,13 +27,15 @@ const TrimLevelActions = ({ onCreateNew, onRefresh }: TrimLevelActionsProps) => 
               <RefreshCw className="h-3 w-3" />
             </Button>
           </CardTitle>
-          <Button
-            onClick={onCreateNew}
-            className="bg-accent-teal text-black hover:bg-accent-teal/80"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Trim Level
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={onCreateNew}
+              className="bg-accent-teal text-black hover:bg-accent-teal/80"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New Trim Level
+            </Button>
+          </div>
         </div>
       </CardHeader>
     </Card>

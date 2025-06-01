@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, AlertCircle } from "lucide-react";
@@ -8,6 +7,7 @@ import TrimLevelEditor from "./TrimLevelEditor";
 import TrimLevelActions from "./trim-level/TrimLevelActions";
 import TrimLevelGrid from "./trim-level/TrimLevelGrid";
 import TrimLevelDetails from "./trim-level/TrimLevelDetails";
+import CopyTrimLevelDialog from "./CopyTrimLevelDialog";
 
 interface TrimLevelManagerProps {
   modelYearId: string;
@@ -28,6 +28,9 @@ const TrimLevelManager = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editingConfig, setEditingConfig] = useState<Configuration | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+  const [copyingConfig, setCopyingConfig] = useState<Configuration | null>(null);
+  const [availableYears, setAvailableYears] = useState<any[]>([]);
 
   const selectedConfigData = configurations.find(c => c.id === selectedConfig);
 
@@ -52,6 +55,33 @@ const TrimLevelManager = ({
     } as Configuration;
     setEditingConfig(clonedConfig);
     setIsEditing(true);
+  };
+
+  const handleCopy = async (config: Configuration) => {
+    try {
+      console.log("Opening copy dialog for config:", config);
+      setCopyingConfig(config);
+      
+      // Get the motorcycle ID from the model year
+      const { data: modelYear } = await supabase
+        .from('model_years')
+        .select('motorcycle_id')
+        .eq('id', modelYearId)
+        .single();
+        
+      if (modelYear) {
+        const years = await getAvailableTargetYears(modelYear.motorcycle_id, config.name);
+        setAvailableYears(years.filter(y => y.id !== modelYearId)); // Exclude current year
+        setCopyDialogOpen(true);
+      }
+    } catch (error) {
+      console.error("Error preparing copy dialog:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load available years for copying."
+      });
+    }
   };
 
   const handleDelete = async (config: Configuration) => {
@@ -141,6 +171,7 @@ const TrimLevelManager = ({
         onEdit={handleEdit}
         onClone={handleClone}
         onDelete={handleDelete}
+        onCopy={handleCopy}
         onCreateNew={handleCreateNew}
       />
 
@@ -149,6 +180,24 @@ const TrimLevelManager = ({
         <TrimLevelDetails
           selectedConfigData={selectedConfigData}
           onConfigChange={onConfigChange}
+        />
+      )}
+
+      {/* Copy Dialog */}
+      {copyDialogOpen && copyingConfig && (
+        <CopyTrimLevelDialog
+          open={copyDialogOpen}
+          onClose={() => {
+            setCopyDialogOpen(false);
+            setCopyingConfig(null);
+          }}
+          sourceConfiguration={copyingConfig}
+          availableYears={availableYears}
+          onSuccess={() => {
+            onConfigChange();
+            setCopyDialogOpen(false);
+            setCopyingConfig(null);
+          }}
         />
       )}
     </div>

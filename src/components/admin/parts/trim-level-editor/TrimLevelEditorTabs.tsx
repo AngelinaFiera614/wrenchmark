@@ -25,10 +25,11 @@ const TrimLevelEditorTabs = ({
 }: TrimLevelEditorTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange}>
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="basic">Basic Info</TabsTrigger>
         <TabsTrigger value="components">Components</TabsTrigger>
         <TabsTrigger value="dimensions">Dimensions</TabsTrigger>
+        <TabsTrigger value="colors">Colors</TabsTrigger>
         <TabsTrigger value="metrics">Metrics</TabsTrigger>
       </TabsList>
 
@@ -50,6 +51,12 @@ const TrimLevelEditorTabs = ({
         <DimensionsTab
           formData={formData}
           onInputChange={onInputChange}
+        />
+      </TabsContent>
+
+      <TabsContent value="colors" className="space-y-4">
+        <ColorManagementTab
+          modelYearId={formData.model_year_id}
         />
       </TabsContent>
 
