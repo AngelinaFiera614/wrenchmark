@@ -6,18 +6,28 @@ import EmptyTrimLevelState from "./EmptyTrimLevelState";
 
 interface TrimLevelGridProps {
   configurations: Configuration[];
+  selectedConfig?: string | null;
+  deletingId?: string | null;
+  onConfigSelect?: (configId: string) => void;
   onEdit: (config: Configuration) => void;
   onCopy: (config: Configuration) => void;
   onPreview: (config: Configuration) => void;
   onAdd: () => void;
+  onClone?: (config: Configuration) => void;
+  onDelete?: (config: Configuration) => void;
 }
 
 const TrimLevelGrid = ({
   configurations,
+  selectedConfig,
+  deletingId,
+  onConfigSelect,
   onEdit,
   onCopy,
   onPreview,
-  onAdd
+  onAdd,
+  onClone,
+  onDelete
 }: TrimLevelGridProps) => {
   if (configurations.length === 0) {
     return <EmptyTrimLevelState onAdd={onAdd} />;
