@@ -1,4 +1,3 @@
-
 import { Motorcycle } from "@/types";
 
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
@@ -16,42 +15,58 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   const configurations = rawData.configurations || [];
   const defaultConfig = configurations.find(c => c.is_default) || configurations[0];
   console.log("Default configuration found:", defaultConfig);
+  console.log("All configurations:", configurations);
   
-  // Extract engine data with proper type checking
+  // Extract engine data with proper type checking and null safety
   let engineData: any = {};
   if (defaultConfig?.engines) {
+    const engine = defaultConfig.engines;
     engineData = {
-      engine_size: defaultConfig.engines.displacement_cc || rawData.engine_size,
-      horsepower: defaultConfig.engines.power_hp || rawData.horsepower,
-      torque_nm: defaultConfig.engines.torque_nm || rawData.torque_nm,
-      engine_type: defaultConfig.engines.engine_type,
-      cylinder_count: defaultConfig.engines.cylinder_count,
-      cooling_system: defaultConfig.engines.cooling,
-      power_rpm: defaultConfig.engines.power_rpm,
-      torque_rpm: defaultConfig.engines.torque_rpm,
+      engine_size: engine.displacement_cc || rawData.engine_size || 0,
+      horsepower: engine.power_hp || rawData.horsepower || 0,
+      torque_nm: engine.torque_nm || rawData.torque_nm || 0,
+      engine_type: engine.engine_type || rawData.engine_type,
+      cylinder_count: engine.cylinder_count || rawData.cylinder_count,
+      cooling_system: engine.cooling || rawData.cooling_system,
+      power_rpm: engine.power_rpm || rawData.power_rpm,
+      torque_rpm: engine.torque_rpm || rawData.torque_rpm,
     };
+    console.log("Extracted engine data:", engineData);
+  } else {
+    console.log("No engine data found in configuration, using fallback");
   }
   
-  // Extract brake data with proper type checking
+  // Extract brake data with proper type checking and null safety
   let brakeData: any = {};
   if (defaultConfig?.brake_systems) {
+    const brakes = defaultConfig.brake_systems;
     brakeData = {
-      abs: defaultConfig.brake_systems.has_traction_control || rawData.has_abs,
-      brake_type: defaultConfig.brake_systems.type,
+      abs: brakes.has_traction_control || rawData.has_abs || false,
+      brake_type: brakes.type || rawData.brake_type,
     };
+    console.log("Extracted brake data:", brakeData);
+  } else {
+    console.log("No brake data found in configuration, using fallback");
   }
   
-  // Extract dimensions from configuration with proper type checking
+  // Extract dimensions from configuration with proper type checking and null safety
   let dimensionData: any = {};
   if (defaultConfig) {
     dimensionData = {
-      seat_height_mm: defaultConfig.seat_height_mm || rawData.seat_height_mm,
-      weight_kg: defaultConfig.weight_kg || rawData.weight_kg,
-      wheelbase_mm: defaultConfig.wheelbase_mm || rawData.wheelbase_mm,
-      ground_clearance_mm: defaultConfig.ground_clearance_mm || rawData.ground_clearance_mm,
-      fuel_capacity_l: defaultConfig.fuel_capacity_l || rawData.fuel_capacity_l,
+      seat_height_mm: defaultConfig.seat_height_mm || rawData.seat_height_mm || 0,
+      weight_kg: defaultConfig.weight_kg || rawData.weight_kg || 0,
+      wheelbase_mm: defaultConfig.wheelbase_mm || rawData.wheelbase_mm || 0,
+      ground_clearance_mm: defaultConfig.ground_clearance_mm || rawData.ground_clearance_mm || 0,
+      fuel_capacity_l: defaultConfig.fuel_capacity_l || rawData.fuel_capacity_l || 0,
     };
+    console.log("Extracted dimension data:", dimensionData);
+  } else {
+    console.log("No configuration found, using fallback dimensions");
   }
+  
+  // Get color options
+  const colorOptions = rawData.color_options || [];
+  console.log("Color options:", colorOptions);
   
   // Create the transformed motorcycle object
   const transformed: Motorcycle = {
@@ -119,11 +134,13 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       frame: defaultConfig?.frames,
       suspension: defaultConfig?.suspensions,
       wheels: defaultConfig?.wheels,
-      configurations: configurations
+      configurations: configurations,
+      colorOptions: colorOptions
     }
   };
   
   console.log("Transformed motorcycle:", transformed);
+  console.log("Component data included:", transformed._componentData);
   console.log("=== END transformMotorcycleData DEBUG ===");
   return transformed;
 };

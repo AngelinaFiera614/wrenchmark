@@ -190,7 +190,8 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
 
 export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | null> => {
   try {
-    console.log("Fetching motorcycle by slug with components:", slug);
+    console.log("=== STARTING getMotorcycleBySlug DEBUG ===");
+    console.log("Fetching motorcycle by slug:", slug);
     
     // First get the motorcycle model with brand info
     const { data: motorcycleData, error: motorcycleError } = await supabase
@@ -228,53 +229,81 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
 
     if (yearError) {
       console.error("Error fetching model years:", yearError);
-      // Continue without model year data
     }
 
     console.log("Found model years:", modelYears);
 
-    // If we have model years, get configurations for the most recent year
-    let configurations = [];
+    // Get configurations with full component data for all years
+    let allConfigurations = [];
     if (modelYears && modelYears.length > 0) {
-      const latestYear = modelYears[0];
-      
-      const { data: configData, error: configError } = await supabase
-        .from('model_configurations')
-        .select(`
-          *,
-          engines (*),
-          brake_systems (*),
-          frames (*),
-          suspensions (*),
-          wheels (*),
-          color_variants (*)
-        `)
-        .eq('model_year_id', latestYear.id)
-        .order('is_default', { ascending: false })
-        .order('name');
+      for (const year of modelYears) {
+        const { data: configData, error: configError } = await supabase
+          .from('model_configurations')
+          .select(`
+            *,
+            engines (*),
+            brake_systems (*),
+            frames (*),
+            suspensions (*),
+            wheels (*),
+            color_variants (*)
+          `)
+          .eq('model_year_id', year.id)
+          .order('is_default', { ascending: false });
 
-      if (configError) {
-        console.error("Error fetching configurations:", configError);
-        // Continue without configuration data
-      } else {
-        configurations = configData || [];
-        console.log("Found configurations:", configurations);
+        if (configError) {
+          console.error("Error fetching configurations for year", year.year, ":", configError);
+        } else {
+          const configurationsWithYear = (configData || []).map(config => ({
+            ...config,
+            model_year: year
+          }));
+          allConfigurations.push(...configurationsWithYear);
+        }
       }
     }
+
+    console.log("All configurations found:", allConfigurations);
+
+    // Get color options for all years
+    let colorOptions = [];
+    if (modelYears && modelYears.length > 0) {
+      for (const year of modelYears) {
+        const { data: colors, error: colorError } = await supabase
+          .from('color_options')
+          .select('*')
+          .eq('model_year_id', year.id);
+
+        if (!colorError && colors) {
+          colorOptions.push(...colors.map(color => ({ ...color, year: year.year })));
+        }
+      }
+    }
+
+    console.log("Color options found:", colorOptions);
 
     // Transform the data with enhanced component information
     const enhancedMotorcycleData = {
       ...motorcycleData,
       model_years: modelYears || [],
-      configurations: configurations
+      configurations: allConfigurations,
+      color_options: colorOptions
     };
 
+    console.log("Enhanced motorcycle data before transform:", enhancedMotorcycleData);
     const transformedData = transformMotorcycleData(enhancedMotorcycleData);
     
-    console.log("Transformed motorcycle data with components:", transformedData);
+    console.log("Final transformed motorcycle data:", transformedData);
+    console.log("=== END getMotorcycleBySlug DEBUG ===");
     return transformedData;
   } catch (error) {
+    console.error("=== ERROR in getMotorcycleBySlug ===");
     console.error("Failed to fetch motorcycle by slug:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     throw error;
   }
 };

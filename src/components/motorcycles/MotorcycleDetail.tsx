@@ -1,4 +1,3 @@
-
 import { Motorcycle } from "@/types";
 import { MotorcycleHeader } from "./MotorcycleHeader";
 import { PerformanceSpecifications } from "./PerformanceSpecifications";
@@ -10,8 +9,10 @@ import { MotorcycleDetailCTA } from "./MotorcycleDetailCTA";
 import { InteractiveSpecificationDisplay } from "./content";
 import { RelatedModelsSystem } from "./related";
 import { ComponentDetailCard } from "./components";
+import ConfigurationSelector from "./ConfigurationSelector";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Configuration } from "@/types/motorcycle";
 import { 
   Accordion,
   AccordionContent,
@@ -27,20 +28,43 @@ interface MotorcycleDetailProps {
 const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("specifications");
+  const [selectedConfiguration, setSelectedConfiguration] = useState<Configuration | null>(null);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+  };
+
+  const handleConfigurationSelect = (config: Configuration) => {
+    console.log("Selected configuration:", config);
+    setSelectedConfiguration(config);
   };
 
   useEffect(() => {
     console.log("MotorcycleDetail component mounted with motorcycle:", motorcycle.id, motorcycle.make, motorcycle.model);
     console.log("Component data available:", motorcycle._componentData);
     console.log("Is mobile view:", isMobile);
+    
+    // Auto-select default configuration or first available
+    const configurations = motorcycle._componentData?.configurations || [];
+    if (configurations.length > 0 && !selectedConfiguration) {
+      const defaultConfig = configurations.find(c => c.is_default) || configurations[0];
+      setSelectedConfiguration(defaultConfig);
+      console.log("Auto-selected configuration:", defaultConfig);
+    }
+    
     document.title = `${motorcycle.make} ${motorcycle.model} | Wrenchmark`;
   }, [motorcycle, isMobile]);
 
-  // Get component data from the motorcycle object
-  const componentData = motorcycle._componentData;
+  // Get component data from the selected configuration or fallback to motorcycle data
+  const componentData = selectedConfiguration ? {
+    engine: selectedConfiguration.engines || selectedConfiguration.engine,
+    brakes: selectedConfiguration.brake_systems || selectedConfiguration.brakes,
+    frame: selectedConfiguration.frames || selectedConfiguration.frame,
+    suspension: selectedConfiguration.suspensions || selectedConfiguration.suspension,
+    wheels: selectedConfiguration.wheels,
+    configurations: motorcycle._componentData?.configurations || []
+  } : motorcycle._componentData;
+
   const hasComponentData = componentData && (
     componentData.engine || 
     componentData.brakes || 
@@ -48,6 +72,9 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
     componentData.suspension || 
     componentData.wheels
   );
+
+  // Get configurations for the selector
+  const configurations = motorcycle._componentData?.configurations || [];
   
   // For mobile view, we'll use accordion for better space utilization
   if (isMobile) {
@@ -55,6 +82,14 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
       <div className="space-y-5 animate-in fade-in-0 duration-500 text-foreground">
         <MotorcycleHeader motorcycle={motorcycle} />
         <MotorcycleDetailCTA motorcycle={motorcycle} />
+        
+        {configurations.length > 0 && (
+          <ConfigurationSelector
+            configurations={configurations}
+            selectedConfigId={selectedConfiguration?.id}
+            onConfigurationSelect={handleConfigurationSelect}
+          />
+        )}
         
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="performance" className="border-border/30">
@@ -88,6 +123,11 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
             <AccordionItem value="components" className="border-border/30">
               <AccordionTrigger className="text-foreground hover:text-accent-teal">
                 Components & Systems
+                {selectedConfiguration && (
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    ({selectedConfiguration.name || 'Configuration'})
+                  </span>
+                )}
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-4">
@@ -177,6 +217,14 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
       <MotorcycleHeader motorcycle={motorcycle} />
       <MotorcycleDetailCTA motorcycle={motorcycle} />
       
+      {configurations.length > 0 && (
+        <ConfigurationSelector
+          configurations={configurations}
+          selectedConfigId={selectedConfiguration?.id}
+          onConfigurationSelect={handleConfigurationSelect}
+        />
+      )}
+      
       <div>
         <div className="border-b border-border/40 mb-6">
           <div className="flex flex-wrap -mb-px text-sm font-medium">
@@ -204,6 +252,11 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
                   : 'border-transparent hover:border-border/70 text-muted-foreground hover:text-foreground'}`}
               >
                 Components
+                {selectedConfiguration && (
+                  <span className="ml-1 text-xs opacity-75">
+                    ({selectedConfiguration.name || 'Config'})
+                  </span>
+                )}
               </button>
             )}
             <button 
@@ -253,42 +306,54 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
         )}
 
         {activeTab === 'components' && hasComponentData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {componentData?.engine && (
-              <ComponentDetailCard
-                type="engine"
-                title="Engine"
-                data={componentData.engine}
-              />
+          <div className="space-y-4">
+            {selectedConfiguration && (
+              <div className="mb-4 p-4 bg-card border border-border rounded-lg">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  {selectedConfiguration.name || `Configuration ${selectedConfiguration.id.slice(0, 8)}`}
+                </h3>
+                {selectedConfiguration.description && (
+                  <p className="text-muted-foreground">{selectedConfiguration.description}</p>
+                )}
+              </div>
             )}
-            {componentData?.brakes && (
-              <ComponentDetailCard
-                type="brake"
-                title="Brake System"
-                data={componentData.brakes}
-              />
-            )}
-            {componentData?.frame && (
-              <ComponentDetailCard
-                type="frame"
-                title="Frame"
-                data={componentData.frame}
-              />
-            )}
-            {componentData?.suspension && (
-              <ComponentDetailCard
-                type="suspension"
-                title="Suspension"
-                data={componentData.suspension}
-              />
-            )}
-            {componentData?.wheels && (
-              <ComponentDetailCard
-                type="wheel"
-                title="Wheels"
-                data={componentData.wheels}
-              />
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {componentData?.engine && (
+                <ComponentDetailCard
+                  type="engine"
+                  title="Engine"
+                  data={componentData.engine}
+                />
+              )}
+              {componentData?.brakes && (
+                <ComponentDetailCard
+                  type="brake"
+                  title="Brake System"
+                  data={componentData.brakes}
+                />
+              )}
+              {componentData?.frame && (
+                <ComponentDetailCard
+                  type="frame"
+                  title="Frame"
+                  data={componentData.frame}
+                />
+              )}
+              {componentData?.suspension && (
+                <ComponentDetailCard
+                  type="suspension"
+                  title="Suspension"
+                  data={componentData.suspension}
+                />
+              )}
+              {componentData?.wheels && (
+                <ComponentDetailCard
+                  type="wheel"
+                  title="Wheels"
+                  data={componentData.wheels}
+                />
+              )}
+            </div>
           </div>
         )}
 

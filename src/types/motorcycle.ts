@@ -87,6 +87,7 @@ export interface Motorcycle {
     suspension?: any;
     wheels?: any;
     configurations?: Configuration[];
+    colorOptions?: any[];
   };
 }
 
@@ -215,11 +216,19 @@ export interface Configuration {
   
   // Related components
   engine?: any;
+  engines?: any;
   brakes?: any;
+  brake_systems?: any;
   frame?: any;
+  frames?: any;
   suspension?: any;
+  suspensions?: any;
   wheels?: any;
   colors?: any[];
+  color_variants?: any;
+  
+  // Model year relationship for configuration selector
+  model_year?: ModelYear;
 }
 
 export interface ModelComparison {
