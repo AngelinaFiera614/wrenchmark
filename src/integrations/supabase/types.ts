@@ -90,6 +90,53 @@ export type Database = {
           },
         ]
       }
+      anomaly_detection_log: {
+        Row: {
+          anomaly_type: string
+          configuration_id: string | null
+          created_at: string | null
+          description: string
+          id: string
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          suggested_fix: string | null
+        }
+        Insert: {
+          anomaly_type: string
+          configuration_id?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          suggested_fix?: string | null
+        }
+        Update: {
+          anomaly_type?: string
+          configuration_id?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          suggested_fix?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anomaly_detection_log_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brake_systems: {
         Row: {
           brake_brand: string | null
@@ -296,6 +343,203 @@ export type Database = {
           },
         ]
       }
+      component_utilization: {
+        Row: {
+          component_id: string
+          component_type: string
+          configuration_id: string | null
+          created_by: string | null
+          id: string
+          usage_date: string | null
+        }
+        Insert: {
+          component_id: string
+          component_type: string
+          configuration_id?: string | null
+          created_by?: string | null
+          id?: string
+          usage_date?: string | null
+        }
+        Update: {
+          component_id?: string
+          component_type?: string
+          configuration_id?: string | null
+          created_by?: string | null
+          id?: string
+          usage_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_utilization_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuration_analytics: {
+        Row: {
+          action_type: string
+          configuration_id: string | null
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          configuration_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          configuration_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuration_analytics_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuration_templates: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+          success_rate: number | null
+          template_data: Json
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+          success_rate?: number | null
+          template_data: Json
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+          success_rate?: number | null
+          template_data?: Json
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      configuration_versions: {
+        Row: {
+          change_summary: string | null
+          configuration_id: string | null
+          created_at: string | null
+          created_by: string | null
+          data: Json
+          id: string
+          version_number: number
+        }
+        Insert: {
+          change_summary?: string | null
+          configuration_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data: Json
+          id?: string
+          version_number: number
+        }
+        Update: {
+          change_summary?: string | null
+          configuration_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          data?: Json
+          id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuration_versions_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuration_workflow: {
+        Row: {
+          approved_by: string | null
+          assigned_to: string | null
+          configuration_id: string | null
+          created_at: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          approved_by?: string | null
+          assigned_to?: string | null
+          configuration_id?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          approved_by?: string | null
+          assigned_to?: string | null
+          configuration_id?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuration_workflow_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_block_types: {
         Row: {
           created_at: string | null
@@ -358,6 +602,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      data_quality_metrics: {
+        Row: {
+          accuracy_score: number | null
+          calculated_at: string | null
+          completeness_score: number | null
+          configuration_id: string | null
+          consistency_score: number | null
+          id: string
+          issues: Json | null
+          overall_score: number | null
+        }
+        Insert: {
+          accuracy_score?: number | null
+          calculated_at?: string | null
+          completeness_score?: number | null
+          configuration_id?: string | null
+          consistency_score?: number | null
+          id?: string
+          issues?: Json | null
+          overall_score?: number | null
+        }
+        Update: {
+          accuracy_score?: number | null
+          calculated_at?: string | null
+          completeness_score?: number | null
+          configuration_id?: string | null
+          consistency_score?: number | null
+          id?: string
+          issues?: Json | null
+          overall_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_quality_metrics_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       engines: {
         Row: {
@@ -1956,6 +2241,42 @@ export type Database = {
           rear_travel_mm?: number | null
           rear_type?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_activity_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          duration_seconds: number | null
+          entity_id: string | null
+          entity_type: string | null
+          error_message: string | null
+          id: string
+          success: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string
+          success?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string
+          success?: boolean | null
+          user_id?: string | null
         }
         Relationships: []
       }
