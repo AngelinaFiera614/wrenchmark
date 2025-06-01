@@ -15,6 +15,7 @@ interface TrimLevelGridProps {
   onAdd: () => void;
   onClone?: (config: Configuration) => void;
   onDelete?: (config: Configuration) => void;
+  onCreateNew?: () => void;
 }
 
 const TrimLevelGrid = ({
@@ -27,7 +28,8 @@ const TrimLevelGrid = ({
   onPreview,
   onAdd,
   onClone,
-  onDelete
+  onDelete,
+  onCreateNew
 }: TrimLevelGridProps) => {
   if (configurations.length === 0) {
     return <EmptyTrimLevelState onAdd={onAdd} />;
