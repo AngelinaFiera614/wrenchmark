@@ -34,9 +34,20 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
 
   useEffect(() => {
     console.log("MotorcycleDetail component mounted with motorcycle:", motorcycle.id, motorcycle.make, motorcycle.model);
+    console.log("Component data available:", motorcycle._componentData);
     console.log("Is mobile view:", isMobile);
     document.title = `${motorcycle.make} ${motorcycle.model} | Wrenchmark`;
   }, [motorcycle, isMobile]);
+
+  // Get component data from the motorcycle object
+  const componentData = motorcycle._componentData;
+  const hasComponentData = componentData && (
+    componentData.engine || 
+    componentData.brakes || 
+    componentData.frame || 
+    componentData.suspension || 
+    componentData.wheels
+  );
   
   // For mobile view, we'll use accordion for better space utilization
   if (isMobile) {
@@ -72,6 +83,53 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
               <PhysicalDimensions motorcycle={motorcycle} />
             </AccordionContent>
           </AccordionItem>
+          
+          {hasComponentData && (
+            <AccordionItem value="components" className="border-border/30">
+              <AccordionTrigger className="text-foreground hover:text-accent-teal">
+                Components & Systems
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  {componentData?.engine && (
+                    <ComponentDetailCard
+                      type="engine"
+                      title="Engine"
+                      data={componentData.engine}
+                    />
+                  )}
+                  {componentData?.brakes && (
+                    <ComponentDetailCard
+                      type="brake"
+                      title="Brake System"
+                      data={componentData.brakes}
+                    />
+                  )}
+                  {componentData?.frame && (
+                    <ComponentDetailCard
+                      type="frame"
+                      title="Frame"
+                      data={componentData.frame}
+                    />
+                  )}
+                  {componentData?.suspension && (
+                    <ComponentDetailCard
+                      type="suspension"
+                      title="Suspension"
+                      data={componentData.suspension}
+                    />
+                  )}
+                  {componentData?.wheels && (
+                    <ComponentDetailCard
+                      type="wheel"
+                      title="Wheels"
+                      data={componentData.wheels}
+                    />
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
           
           <AccordionItem value="safety" className="border-border/30">
             <AccordionTrigger className="text-foreground hover:text-accent-teal">
@@ -138,14 +196,16 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
             >
               Interactive Specs
             </button>
-            <button 
-              onClick={() => handleTabChange("components")}
-              className={`mr-4 py-3 border-b-2 ${activeTab === 'components' 
-                ? 'border-accent-teal text-accent-teal' 
-                : 'border-transparent hover:border-border/70 text-muted-foreground hover:text-foreground'}`}
-            >
-              Components
-            </button>
+            {hasComponentData && (
+              <button 
+                onClick={() => handleTabChange("components")}
+                className={`mr-4 py-3 border-b-2 ${activeTab === 'components' 
+                  ? 'border-accent-teal text-accent-teal' 
+                  : 'border-transparent hover:border-border/70 text-muted-foreground hover:text-foreground'}`}
+              >
+                Components
+              </button>
+            )}
             <button 
               onClick={() => handleTabChange("features")}
               className={`mr-4 py-3 border-b-2 ${activeTab === 'features' 
@@ -192,46 +252,43 @@ const MotorcycleDetail = ({ motorcycle }: { motorcycle: Motorcycle }) => {
           <InteractiveSpecificationDisplay motorcycle={motorcycle} />
         )}
 
-        {activeTab === 'components' && (
+        {activeTab === 'components' && hasComponentData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <ComponentDetailCard
-              type="engine"
-              title="Engine"
-              data={{
-                displacement_cc: motorcycle.engine_size,
-                power_hp: motorcycle.horsepower,
-                torque_nm: motorcycle.torque_nm,
-                engine_type: 'Inline-4',
-                cylinder_count: 4,
-                cooling: motorcycle.cooling_system || 'Liquid',
-                fuel_system: 'Fuel Injection',
-                compression_ratio: '12.0:1'
-              }}
-            />
-            <ComponentDetailCard
-              type="brake"
-              title="Brake System"
-              data={{
-                type: 'Dual Disc',
-                brake_type_front: 'Disc',
-                brake_type_rear: 'Disc',
-                front_disc_size_mm: 320,
-                rear_disc_size_mm: 220,
-                brake_brand: 'Brembo',
-                has_traction_control: motorcycle.abs || false
-              }}
-            />
-            <ComponentDetailCard
-              type="frame"
-              title="Frame"
-              data={{
-                type: 'Aluminum Beam',
-                material: 'Aluminum',
-                construction_method: 'Twin Spar',
-                rake_degrees: 24.5,
-                trail_mm: 95
-              }}
-            />
+            {componentData?.engine && (
+              <ComponentDetailCard
+                type="engine"
+                title="Engine"
+                data={componentData.engine}
+              />
+            )}
+            {componentData?.brakes && (
+              <ComponentDetailCard
+                type="brake"
+                title="Brake System"
+                data={componentData.brakes}
+              />
+            )}
+            {componentData?.frame && (
+              <ComponentDetailCard
+                type="frame"
+                title="Frame"
+                data={componentData.frame}
+              />
+            )}
+            {componentData?.suspension && (
+              <ComponentDetailCard
+                type="suspension"
+                title="Suspension"
+                data={componentData.suspension}
+              />
+            )}
+            {componentData?.wheels && (
+              <ComponentDetailCard
+                type="wheel"
+                title="Wheels"
+                data={componentData.wheels}
+              />
+            )}
           </div>
         )}
 

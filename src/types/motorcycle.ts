@@ -78,6 +78,16 @@ export interface Motorcycle {
   ground_clearance_in?: number;
   fuel_capacity_gal?: number;
   top_speed_mph?: number;
+  
+  // Component data from configurations
+  _componentData?: {
+    engine?: any;
+    brakes?: any;
+    frame?: any;
+    suspension?: any;
+    wheels?: any;
+    configurations?: Configuration[];
+  };
 }
 
 export interface MotorcycleFilters {

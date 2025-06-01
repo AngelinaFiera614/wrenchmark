@@ -190,9 +190,10 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
 
 export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | null> => {
   try {
-    console.log("Fetching motorcycle by slug:", slug);
+    console.log("Fetching motorcycle by slug with components:", slug);
     
-    const { data, error } = await supabase
+    // First get the motorcycle model with brand info
+    const { data: motorcycleData, error: motorcycleError } = await supabase
       .from('motorcycle_models')
       .select(`
         *,
@@ -206,22 +207,71 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
       .eq('is_draft', false)
       .maybeSingle();
 
-    if (error) {
-      console.error("Error fetching motorcycle by slug:", error);
-      throw error;
+    if (motorcycleError) {
+      console.error("Error fetching motorcycle by slug:", motorcycleError);
+      throw motorcycleError;
     }
 
-    if (!data) {
+    if (!motorcycleData) {
       console.log("No motorcycle found with slug:", slug);
       return null;
     }
 
-    console.log("Raw motorcycle data by slug:", data);
+    console.log("Found motorcycle model:", motorcycleData);
     
-    // Transform the data to match the Motorcycle interface
-    const transformedData = transformMotorcycleData(data);
+    // Get model years for this motorcycle
+    const { data: modelYears, error: yearError } = await supabase
+      .from('model_years')
+      .select('*')
+      .eq('motorcycle_id', motorcycleData.id)
+      .order('year', { ascending: false });
+
+    if (yearError) {
+      console.error("Error fetching model years:", yearError);
+      // Continue without model year data
+    }
+
+    console.log("Found model years:", modelYears);
+
+    // If we have model years, get configurations for the most recent year
+    let configurations = [];
+    if (modelYears && modelYears.length > 0) {
+      const latestYear = modelYears[0];
+      
+      const { data: configData, error: configError } = await supabase
+        .from('model_configurations')
+        .select(`
+          *,
+          engines (*),
+          brake_systems (*),
+          frames (*),
+          suspensions (*),
+          wheels (*),
+          color_variants (*)
+        `)
+        .eq('model_year_id', latestYear.id)
+        .order('is_default', { ascending: false })
+        .order('name');
+
+      if (configError) {
+        console.error("Error fetching configurations:", configError);
+        // Continue without configuration data
+      } else {
+        configurations = configData || [];
+        console.log("Found configurations:", configurations);
+      }
+    }
+
+    // Transform the data with enhanced component information
+    const enhancedMotorcycleData = {
+      ...motorcycleData,
+      model_years: modelYears || [],
+      configurations: configurations
+    };
+
+    const transformedData = transformMotorcycleData(enhancedMotorcycleData);
     
-    console.log("Transformed motorcycle data by slug:", transformedData);
+    console.log("Transformed motorcycle data with components:", transformedData);
     return transformedData;
   } catch (error) {
     console.error("Failed to fetch motorcycle by slug:", error);
