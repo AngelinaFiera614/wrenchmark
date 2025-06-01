@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, AlertCircle } from "lucide-react";
@@ -56,6 +57,11 @@ const TrimLevelManagerEnhanced = ({
     } as Configuration;
     setEditingConfig(clonedConfig);
     setIsEditing(true);
+  };
+
+  const handlePreview = (config: Configuration) => {
+    console.log("Previewing trim level:", config);
+    onConfigSelect(config.id);
   };
 
   const handleCopy = async (config: Configuration) => {
@@ -170,9 +176,11 @@ const TrimLevelManagerEnhanced = ({
         deletingId={deletingId}
         onConfigSelect={onConfigSelect}
         onEdit={handleEdit}
+        onCopy={handleCopy}
+        onPreview={handlePreview}
+        onAdd={handleCreateNew}
         onClone={handleClone}
         onDelete={handleDelete}
-        onCopy={handleCopy}
         onCreateNew={handleCreateNew}
       />
 

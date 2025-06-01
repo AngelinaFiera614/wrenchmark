@@ -59,6 +59,11 @@ const TrimLevelManager = ({
     setIsEditing(true);
   };
 
+  const handlePreview = (config: Configuration) => {
+    console.log("Previewing trim level:", config);
+    onConfigSelect(config.id);
+  };
+
   const handleCopy = async (config: Configuration) => {
     try {
       console.log("Opening copy dialog for config:", config);
@@ -171,9 +176,11 @@ const TrimLevelManager = ({
         deletingId={deletingId}
         onConfigSelect={onConfigSelect}
         onEdit={handleEdit}
+        onCopy={handleCopy}
+        onPreview={handlePreview}
+        onAdd={handleCreateNew}
         onClone={handleClone}
         onDelete={handleDelete}
-        onCopy={handleCopy}
         onCreateNew={handleCreateNew}
       />
 
