@@ -5,6 +5,7 @@ import ConfigurationPreview from "@/components/admin/parts/ConfigurationPreview"
 import OptimizedNavigationColumn from "@/components/admin/parts/enhanced/OptimizedNavigationColumn";
 import DataGenerationPanel from "@/components/admin/parts/enhanced/DataGenerationPanel";
 import TrimLevelManagerEnhanced from "@/components/admin/parts/TrimLevelManagerEnhanced";
+import DataHealthDashboard from "@/components/admin/parts/DataHealthDashboard";
 import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -40,11 +41,16 @@ const AdminPartsAssignmentOptimized = () => {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="health-check">Data Health</TabsTrigger>
           <TabsTrigger value="navigator">Navigator</TabsTrigger>
           <TabsTrigger value="data-generation">Data Generation</TabsTrigger>
           <TabsTrigger value="trim-manager">Trim Manager</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="health-check" className="space-y-6">
+          <DataHealthDashboard />
+        </TabsContent>
 
         <TabsContent value="navigator" className="space-y-6">
           <OptimizedNavigationColumn
