@@ -10,7 +10,7 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
       .from('motorcycle_models')
       .select(`
         *,
-        brand:brands(*),
+        brands!motorcycle_models_brand_id_fkey(*),
         years:model_years(
           *,
           configurations:model_configurations(
@@ -42,7 +42,7 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
     // Transform the data to match our Motorcycle interface
     const motorcycle: Motorcycle = {
       id: data.id,
-      make: data.brand?.name || 'Unknown',
+      make: data.brands?.name || 'Unknown',
       model: data.name,
       year: data.years?.[0]?.year || new Date().getFullYear(),
       category: data.category || data.type || 'Standard',
@@ -103,7 +103,7 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
       .from('motorcycle_models')
       .select(`
         *,
-        brand:brands(*),
+        brands!motorcycle_models_brand_id_fkey(*),
         years:model_years(
           *,
           configurations:model_configurations(
@@ -147,7 +147,7 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
       
       const motorcycle: Motorcycle = {
         id: item.id,
-        make: item.brand?.name || 'Unknown',
+        make: item.brands?.name || 'Unknown',
         model: item.name,
         year: firstYear?.year || item.production_start_year || new Date().getFullYear(),
         category: item.category || item.type || 'Standard',
@@ -230,7 +230,7 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       .from('motorcycle_models')
       .select(`
         *,
-        brand:brands(*),
+        brands!motorcycle_models_brand_id_fkey(*),
         years:model_years(
           *,
           configurations:model_configurations(
@@ -241,7 +241,7 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
         )
       `)
       .ilike('name', `%${model}%`)
-      .eq('brand.name', make)
+      .eq('brands.name', make)
       .gte('production_start_year', year - 2)
       .lte('production_end_year', year + 2)
       .single();
@@ -257,7 +257,7 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
     
     return {
       id: data.id,
-      make: data.brand?.name || make,
+      make: data.brands?.name || make,
       model: data.name,
       year: firstYear?.year || year,
       category: data.category || data.type || 'Standard',
