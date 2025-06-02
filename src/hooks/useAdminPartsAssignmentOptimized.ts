@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
@@ -19,7 +18,7 @@ export const useAdminPartsAssignmentOptimized = () => {
     queryKey: ["admin-motorcycle-models-parts"],
     queryFn: fetchAllMotorcycleModels,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes (renamed from cacheTime)
   });
 
   // Optimized model years query with better caching
@@ -28,7 +27,7 @@ export const useAdminPartsAssignmentOptimized = () => {
     queryFn: () => selectedModel ? fetchModelYears(selectedModel) : [],
     enabled: !!selectedModel,
     staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes (renamed from cacheTime)
   });
 
   // Optimized configurations query
@@ -37,7 +36,7 @@ export const useAdminPartsAssignmentOptimized = () => {
     queryFn: () => selectedYear ? fetchConfigurations(selectedYear) : [],
     enabled: !!selectedYear,
     staleTime: 1 * 60 * 1000, // 1 minute
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
   });
 
   // Memoized derived data to prevent unnecessary recalculations
