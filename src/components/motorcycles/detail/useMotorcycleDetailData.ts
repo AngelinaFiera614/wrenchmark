@@ -26,26 +26,48 @@ export function useMotorcycleDetailData(motorcycle: Motorcycle) {
     document.title = `${motorcycle.make} ${motorcycle.model} | Wrenchmark`;
   }, [motorcycle, selectedConfiguration]);
 
-  // Get component data from the selected configuration or fallback to motorcycle data
-  const componentData = selectedConfiguration ? {
-    engine: selectedConfiguration.engines || selectedConfiguration.engine,
-    brakes: selectedConfiguration.brake_systems || selectedConfiguration.brakes,
-    frame: selectedConfiguration.frames || selectedConfiguration.frame,
-    suspension: selectedConfiguration.suspensions || selectedConfiguration.suspension,
-    wheels: selectedConfiguration.wheels,
-    configurations: motorcycle._componentData?.configurations || []
-  } : motorcycle._componentData;
+  // Enhanced component data extraction with better fallbacks
+  const getComponentData = () => {
+    const config = selectedConfiguration;
+    if (!config) {
+      return motorcycle._componentData;
+    }
 
+    return {
+      engine: config.engines || config.engine || motorcycle._componentData?.engine,
+      brakes: config.brake_systems || config.brakes || motorcycle._componentData?.brakes,
+      frame: config.frames || config.frame || motorcycle._componentData?.frame,
+      suspension: config.suspensions || config.suspension || motorcycle._componentData?.suspension,
+      wheels: config.wheels || motorcycle._componentData?.wheels,
+      configurations: motorcycle._componentData?.configurations || []
+    };
+  };
+
+  const componentData = getComponentData();
+
+  // Enhanced component data availability check
   const hasComponentData = componentData && (
     componentData.engine || 
     componentData.brakes || 
     componentData.frame || 
     componentData.suspension || 
-    componentData.wheels
+    componentData.wheels ||
+    // Also check if we have meaningful data in the main motorcycle object
+    motorcycle.engine_size > 0 ||
+    motorcycle.horsepower > 0 ||
+    motorcycle.weight_kg > 0 ||
+    motorcycle.seat_height_mm > 0
   );
 
   // Get configurations for the selector
   const configurations = motorcycle._componentData?.configurations || [];
+
+  console.log("useMotorcycleDetailData result:", {
+    selectedConfiguration,
+    componentData,
+    hasComponentData,
+    configurations: configurations.length
+  });
 
   return {
     selectedConfiguration,

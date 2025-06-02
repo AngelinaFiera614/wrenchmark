@@ -17,13 +17,15 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   console.log("Default configuration found:", defaultConfig);
   console.log("All configurations:", configurations);
   
-  // Extract engine data with proper type checking and null safety
+  // Enhanced engine data extraction with proper fallbacks
   let engineData: any = {};
   if (defaultConfig?.engines) {
     const engine = defaultConfig.engines;
     engineData = {
       engine_size: engine.displacement_cc || rawData.engine_size || 0,
+      displacement_cc: engine.displacement_cc || rawData.engine_size || 0,
       horsepower: engine.power_hp || rawData.horsepower || 0,
+      horsepower_hp: engine.power_hp || rawData.horsepower || 0,
       torque_nm: engine.torque_nm || rawData.torque_nm || 0,
       engine_type: engine.engine_type || rawData.engine_type,
       cylinder_count: engine.cylinder_count || rawData.cylinder_count,
@@ -34,22 +36,40 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     console.log("Extracted engine data:", engineData);
   } else {
     console.log("No engine data found in configuration, using fallback");
+    engineData = {
+      engine_size: rawData.engine_size || 0,
+      displacement_cc: rawData.engine_size || 0,
+      horsepower: rawData.horsepower || 0,
+      horsepower_hp: rawData.horsepower || 0,
+      torque_nm: rawData.torque_nm || 0,
+      engine_type: rawData.engine_type,
+      cylinder_count: rawData.cylinder_count,
+      cooling_system: rawData.cooling_system,
+      power_rpm: rawData.power_rpm,
+      torque_rpm: rawData.torque_rpm,
+    };
   }
   
-  // Extract brake data with proper type checking and null safety
+  // Enhanced brake data extraction with proper fallbacks
   let brakeData: any = {};
   if (defaultConfig?.brake_systems) {
     const brakes = defaultConfig.brake_systems;
     brakeData = {
       abs: brakes.has_traction_control || rawData.has_abs || false,
+      has_abs: brakes.has_traction_control || rawData.has_abs || false,
       brake_type: brakes.type || rawData.brake_type,
     };
     console.log("Extracted brake data:", brakeData);
   } else {
     console.log("No brake data found in configuration, using fallback");
+    brakeData = {
+      abs: rawData.has_abs || false,
+      has_abs: rawData.has_abs || false,
+      brake_type: rawData.brake_type,
+    };
   }
   
-  // Extract dimensions from configuration with proper type checking and null safety
+  // Enhanced dimensions from configuration with proper fallbacks and unit conversion
   let dimensionData: any = {};
   if (defaultConfig) {
     dimensionData = {
@@ -58,17 +78,42 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       wheelbase_mm: defaultConfig.wheelbase_mm || rawData.wheelbase_mm || 0,
       ground_clearance_mm: defaultConfig.ground_clearance_mm || rawData.ground_clearance_mm || 0,
       fuel_capacity_l: defaultConfig.fuel_capacity_l || rawData.fuel_capacity_l || 0,
+      // Add imperial conversions
+      seat_height_in: defaultConfig.seat_height_mm ? (defaultConfig.seat_height_mm / 25.4) : (rawData.seat_height_mm ? rawData.seat_height_mm / 25.4 : 0),
+      weight_lbs: defaultConfig.weight_kg ? (defaultConfig.weight_kg * 2.20462) : (rawData.weight_kg ? rawData.weight_kg * 2.20462 : 0),
+      wheelbase_in: defaultConfig.wheelbase_mm ? (defaultConfig.wheelbase_mm / 25.4) : (rawData.wheelbase_mm ? rawData.wheelbase_mm / 25.4 : 0),
+      ground_clearance_in: defaultConfig.ground_clearance_mm ? (defaultConfig.ground_clearance_mm / 25.4) : (rawData.ground_clearance_mm ? rawData.ground_clearance_mm / 25.4 : 0),
+      fuel_capacity_gal: defaultConfig.fuel_capacity_l ? (defaultConfig.fuel_capacity_l * 0.264172) : (rawData.fuel_capacity_l ? rawData.fuel_capacity_l * 0.264172 : 0),
     };
     console.log("Extracted dimension data:", dimensionData);
   } else {
     console.log("No configuration found, using fallback dimensions");
+    dimensionData = {
+      seat_height_mm: rawData.seat_height_mm || 0,
+      weight_kg: rawData.weight_kg || 0,
+      wheelbase_mm: rawData.wheelbase_mm || 0,
+      ground_clearance_mm: rawData.ground_clearance_mm || 0,
+      fuel_capacity_l: rawData.fuel_capacity_l || 0,
+      // Add imperial conversions for fallback data
+      seat_height_in: rawData.seat_height_mm ? (rawData.seat_height_mm / 25.4) : 0,
+      weight_lbs: rawData.weight_kg ? (rawData.weight_kg * 2.20462) : 0,
+      wheelbase_in: rawData.wheelbase_mm ? (rawData.wheelbase_mm / 25.4) : 0,
+      ground_clearance_in: rawData.ground_clearance_mm ? (rawData.ground_clearance_mm / 25.4) : 0,
+      fuel_capacity_gal: rawData.fuel_capacity_l ? (rawData.fuel_capacity_l * 0.264172) : 0,
+    };
   }
+  
+  // Enhanced speed data with proper conversions
+  const speedData = {
+    top_speed_kph: rawData.top_speed_kph || 0,
+    top_speed_mph: rawData.top_speed_kph ? (rawData.top_speed_kph * 0.621371) : (rawData.top_speed_mph || 0),
+  };
   
   // Get color options
   const colorOptions = rawData.color_options || [];
   console.log("Color options:", colorOptions);
   
-  // Create the transformed motorcycle object
+  // Create the transformed motorcycle object with enhanced data mapping
   const transformed: Motorcycle = {
     id: rawData.id,
     make: brandName,
@@ -80,19 +125,42 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     difficulty_level: rawData.difficulty_level || 3,
     image_url: rawData.default_image_url || '/placeholder.svg',
     
-    // Use component data if available, fallback to model data
-    engine_size: engineData.engine_size || rawData.engine_size || 0,
-    horsepower: engineData.horsepower || rawData.horsepower || 0,
-    torque_nm: engineData.torque_nm || rawData.torque_nm || 0,
-    weight_kg: dimensionData.weight_kg || rawData.weight_kg || 0,
-    seat_height_mm: dimensionData.seat_height_mm || rawData.seat_height_mm || 0,
-    wheelbase_mm: dimensionData.wheelbase_mm || rawData.wheelbase_mm || 0,
-    ground_clearance_mm: dimensionData.ground_clearance_mm || rawData.ground_clearance_mm || 0,
-    fuel_capacity_l: dimensionData.fuel_capacity_l || rawData.fuel_capacity_l || 0,
+    // Enhanced engine fields with configuration data prioritized
+    engine_size: engineData.engine_size,
+    engine_cc: engineData.engine_size,
+    displacement_cc: engineData.displacement_cc,
+    horsepower: engineData.horsepower,
+    horsepower_hp: engineData.horsepower_hp,
+    torque_nm: engineData.torque_nm,
+    engine_type: engineData.engine_type,
+    cylinder_count: engineData.cylinder_count,
+    power_rpm: engineData.power_rpm,
+    torque_rpm: engineData.torque_rpm,
+    cooling_system: engineData.cooling_system,
     
+    // Enhanced dimension fields with configuration data prioritized
+    weight_kg: dimensionData.weight_kg,
+    weight_lbs: dimensionData.weight_lbs,
+    seat_height_mm: dimensionData.seat_height_mm,
+    seat_height_in: dimensionData.seat_height_in,
+    wheelbase_mm: dimensionData.wheelbase_mm,
+    wheelbase_in: dimensionData.wheelbase_in,
+    ground_clearance_mm: dimensionData.ground_clearance_mm,
+    ground_clearance_in: dimensionData.ground_clearance_in,
+    fuel_capacity_l: dimensionData.fuel_capacity_l,
+    fuel_capacity_gal: dimensionData.fuel_capacity_gal,
+    
+    // Enhanced brake fields with configuration data prioritized
+    abs: brakeData.abs,
+    has_abs: brakeData.has_abs,
+    brake_type: brakeData.brake_type,
+    
+    // Enhanced speed fields
+    top_speed_kph: speedData.top_speed_kph,
+    top_speed_mph: speedData.top_speed_mph,
+    
+    // Other existing fields
     wet_weight_kg: rawData.wet_weight_kg,
-    abs: brakeData.abs || rawData.has_abs || false,
-    top_speed_kph: rawData.top_speed_kph || 0,
     smart_features: [],
     summary: rawData.summary || rawData.base_description || '',
     slug: rawData.slug,
@@ -100,32 +168,16 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     is_placeholder: false,
     migration_status: 'migrated',
     status: rawData.status || rawData.production_status,
-    engine: `${engineData.engine_size || rawData.engine_size || 0}cc`,
+    engine: `${engineData.engine_size || 0}cc`,
     is_draft: rawData.is_draft || false,
     
     // Enhanced technical fields from components
     transmission: rawData.transmission,
     drive_type: rawData.drive_type,
-    cooling_system: engineData.cooling_system || rawData.cooling_system,
     power_to_weight_ratio: rawData.power_to_weight_ratio,
     is_entry_level: rawData.is_entry_level,
     recommended_license_level: rawData.recommended_license_level,
     use_cases: rawData.use_cases || [],
-    
-    // Compatibility aliases for legacy code
-    engine_cc: engineData.engine_size || rawData.engine_size,
-    displacement_cc: engineData.engine_size || rawData.engine_size,
-    horsepower_hp: engineData.horsepower || rawData.horsepower,
-    
-    // Enhanced engine information from components
-    power_rpm: engineData.power_rpm,
-    torque_rpm: engineData.torque_rpm,
-    engine_type: engineData.engine_type,
-    cylinder_count: engineData.cylinder_count,
-    
-    // Enhanced brake system information from components
-    brake_type: brakeData.brake_type,
-    has_abs: brakeData.abs || rawData.has_abs,
     
     // Store component references for detailed views
     _componentData: {
