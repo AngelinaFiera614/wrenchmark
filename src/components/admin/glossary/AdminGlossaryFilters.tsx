@@ -72,7 +72,7 @@ export function AdminGlossaryFilters({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Categories</label>
                 <MultiSelect
-                  options={categories.map(cat => ({ value: cat, label: cat }))}
+                  options={categories}
                   selected={selectedCategories}
                   onChange={onCategoriesChange}
                   placeholder="Select categories..."
