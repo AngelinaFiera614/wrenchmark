@@ -88,6 +88,7 @@ export interface Motorcycle {
     wheels?: any;
     configurations?: Configuration[];
     colorOptions?: any[];
+    selectedConfiguration?: Configuration;
   };
 }
 
