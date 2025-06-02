@@ -11,7 +11,7 @@ import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycl
 import DeleteConfirmationDialog from "@/components/admin/models/DeleteConfirmationDialog";
 import BulkPublishingControls from "@/components/admin/models/BulkPublishingControls";
 import { Motorcycle } from "@/types";
-import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/motorcycleQueries";
+import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
 import { transformMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
 import { deleteMotorcycleModelCascade } from "@/services/models/modelQueries";
 import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
