@@ -10,44 +10,63 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash, Search, ImageOff } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Pencil, Trash, ImageOff } from "lucide-react";
 import { format } from "date-fns";
+import { SmartSearchInput } from "./SmartSearchInput";
+import { DefinitionDisplay } from "./DefinitionDisplay";
 
 interface AdminGlossaryListProps {
   terms: GlossaryTerm[];
+  allTerms: GlossaryTerm[];
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onEdit: (term: GlossaryTerm) => void;
   onDelete: (term: GlossaryTerm) => void;
+  selectedTerms: string[];
+  onSelectionChange: (termIds: string[]) => void;
 }
 
 export function AdminGlossaryList({
   terms,
+  allTerms,
   searchTerm,
   onSearchChange,
   onEdit,
   onDelete,
+  selectedTerms,
+  onSelectionChange,
 }: AdminGlossaryListProps) {
+  const handleSelectTerm = (termId: string, checked: boolean) => {
+    if (checked) {
+      onSelectionChange([...selectedTerms, termId]);
+    } else {
+      onSelectionChange(selectedTerms.filter(id => id !== termId));
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search terms..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      <SmartSearchInput
+        value={searchTerm}
+        onChange={onSearchChange}
+        terms={allTerms}
+        placeholder="Search terms, definitions, categories..."
+      />
       
       {terms.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {terms.map((term) => (
             <Card key={term.id} className="flex flex-col">
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg">{term.term}</CardTitle>
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedTerms.includes(term.id)}
+                      onCheckedChange={(checked) => handleSelectTerm(term.id, checked as boolean)}
+                    />
+                    <CardTitle className="text-lg">{term.term}</CardTitle>
+                  </div>
                   <CardDescription className="text-xs font-mono">
                     {term.slug}
                   </CardDescription>
@@ -68,9 +87,11 @@ export function AdminGlossaryList({
                   </div>
                 )}
                 
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {term.definition}
-                </p>
+                <DefinitionDisplay 
+                  definition={term.definition}
+                  maxLength={120}
+                  className="text-sm text-muted-foreground"
+                />
                 
                 {term.category && term.category.length > 0 && (
                   <div className="flex flex-wrap gap-1">

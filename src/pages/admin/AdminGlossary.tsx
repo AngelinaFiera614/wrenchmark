@@ -8,10 +8,14 @@ import { AdminGlossaryTable } from '@/components/admin/glossary/AdminGlossaryTab
 import { AdminGlossaryList } from '@/components/admin/glossary/AdminGlossaryList';
 import { AdminGlossaryEmptyState } from '@/components/admin/glossary/AdminGlossaryEmptyState';
 import { GlossaryDeleteDialog } from '@/components/admin/glossary/GlossaryDeleteDialog';
+import { BulkOperationsToolbar } from '@/components/admin/glossary/BulkOperationsToolbar';
+import { QuickActionsPanel } from '@/components/admin/glossary/QuickActionsPanel';
+import { FilterPreset } from '@/components/admin/glossary/FilterPresets';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/context/auth';
 import { InlineGlossaryForm } from '@/components/admin/glossary/InlineGlossaryForm';
 import { ColumnVisibility, DEFAULT_VISIBILITY } from '@/components/admin/glossary/ColumnVisibilityControls';
+import { exportGlossaryTerms } from '@/utils/glossaryExport';
 
 const AdminGlossary: React.FC = () => {
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -20,6 +24,8 @@ const AdminGlossary: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>(DEFAULT_VISIBILITY);
+  const [selectedTerms, setSelectedTerms] = useState<string[]>([]);
+  const [activePreset, setActivePreset] = useState<string>('');
   const { isAdmin } = useAuth();
 
   // Load column visibility from localStorage on mount
@@ -72,6 +78,7 @@ const AdminGlossary: React.FC = () => {
       toast.success(`"${term.term}" has been deleted`);
       setIsDeleteDialogOpen(false);
       setCurrentTerm(null);
+      setSelectedTerms(prev => prev.filter(id => id !== term.id));
     } catch (error) {
       console.error("Error deleting term:", error);
       toast.error("Failed to delete term. Please try again.");
@@ -83,6 +90,64 @@ const AdminGlossary: React.FC = () => {
   const handleCloseForm = (refresh?: boolean) => {
     setIsFormOpen(false);
   };
+
+  const handleBulkDelete = async (termIds: string[]) => {
+    try {
+      await Promise.all(termIds.map(id => deleteTerm(id)));
+      toast.success(`${termIds.length} terms deleted successfully`);
+      setSelectedTerms([]);
+    } catch (error) {
+      console.error("Error deleting terms:", error);
+      toast.error("Failed to delete some terms. Please try again.");
+    }
+  };
+
+  const handleBulkExport = (termsToExport: GlossaryTerm[]) => {
+    exportGlossaryTerms(termsToExport, {
+      format: 'csv',
+      columnVisibility,
+    });
+    toast.success(`Exported ${termsToExport.length} terms`);
+  };
+
+  const handleBulkCategoryAssign = (termIds: string[]) => {
+    // TODO: Implement bulk category assignment dialog
+    toast.info("Bulk category assignment coming soon!");
+  };
+
+  const handleDuplicateTerm = (term: GlossaryTerm) => {
+    setCurrentTerm({
+      ...term,
+      id: '',
+      term: `${term.term} (Copy)`,
+      slug: `${term.slug}-copy`,
+    } as GlossaryTerm);
+    setIsFormOpen(true);
+  };
+
+  const handleApplyPreset = (preset: FilterPreset) => {
+    setActivePreset(preset.id);
+    
+    // Apply preset filters
+    if (preset.filters.categories) {
+      setSelectedCategories(preset.filters.categories);
+    }
+    if (preset.filters.search) {
+      setSearch(preset.filters.search);
+    }
+    if (preset.filters.recentlyUpdated) {
+      setSortBy('updated-desc');
+    }
+    
+    toast.success(`Applied "${preset.name}" filter`);
+  };
+
+  // Get recent terms for quick actions
+  const recentTerms = React.useMemo(() => 
+    allTerms
+      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .slice(0, 5)
+  , [allTerms]);
 
   if (!isAdmin) {
     return (
@@ -115,8 +180,13 @@ const AdminGlossary: React.FC = () => {
             onCategoriesChange={setSelectedCategories}
             sortBy={sortBy}
             onSortChange={setSortBy}
-            onClearFilters={clearFilters}
+            onClearFilters={() => {
+              clearFilters();
+              setActivePreset('');
+            }}
             hasActiveFilters={hasActiveFilters}
+            onApplyPreset={handleApplyPreset}
+            activePreset={activePreset}
           />
           
           {!isLoading && terms.length === 0 ? (
@@ -126,23 +196,44 @@ const AdminGlossary: React.FC = () => {
               {viewMode === "table" ? (
                 <AdminGlossaryTable
                   terms={terms}
+                  allTerms={allTerms}
                   searchTerm={search}
                   onSearchChange={setSearch}
                   onEdit={handleEditTerm}
                   onDelete={handleDeleteTerm}
                   columnVisibility={columnVisibility}
+                  selectedTerms={selectedTerms}
+                  onSelectionChange={setSelectedTerms}
                 />
               ) : (
                 <AdminGlossaryList
                   terms={terms}
+                  allTerms={allTerms}
                   searchTerm={search}
                   onSearchChange={setSearch}
                   onEdit={handleEditTerm}
                   onDelete={handleDeleteTerm}
+                  selectedTerms={selectedTerms}
+                  onSelectionChange={setSelectedTerms}
                 />
               )}
             </>
           )}
+
+          <BulkOperationsToolbar
+            selectedTerms={selectedTerms}
+            terms={terms}
+            onClearSelection={() => setSelectedTerms([])}
+            onBulkDelete={handleBulkDelete}
+            onBulkExport={handleBulkExport}
+            onBulkCategoryAssign={handleBulkCategoryAssign}
+          />
+
+          <QuickActionsPanel
+            onAddTerm={handleAddTerm}
+            onDuplicateTerm={handleDuplicateTerm}
+            recentTerms={recentTerms}
+          />
         </>
       ) : (
         <InlineGlossaryForm

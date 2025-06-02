@@ -1,6 +1,7 @@
 
 import { GlossaryTerm } from "@/types/glossary";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -10,45 +11,75 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Pencil, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { ColumnVisibility } from "./ColumnVisibilityControls";
+import { SmartSearchInput } from "./SmartSearchInput";
+import { DefinitionDisplay } from "./DefinitionDisplay";
 
 interface AdminGlossaryTableProps {
   terms: GlossaryTerm[];
+  allTerms: GlossaryTerm[];
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onEdit: (term: GlossaryTerm) => void;
   onDelete: (term: GlossaryTerm) => void;
   columnVisibility: ColumnVisibility;
+  selectedTerms: string[];
+  onSelectionChange: (termIds: string[]) => void;
 }
 
 export function AdminGlossaryTable({
   terms,
+  allTerms,
   searchTerm,
   onSearchChange,
   onEdit,
   onDelete,
   columnVisibility,
+  selectedTerms,
+  onSelectionChange,
 }: AdminGlossaryTableProps) {
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      onSelectionChange(terms.map(term => term.id));
+    } else {
+      onSelectionChange([]);
+    }
+  };
+
+  const handleSelectTerm = (termId: string, checked: boolean) => {
+    if (checked) {
+      onSelectionChange([...selectedTerms, termId]);
+    } else {
+      onSelectionChange(selectedTerms.filter(id => id !== termId));
+    }
+  };
+
+  const isAllSelected = terms.length > 0 && selectedTerms.length === terms.length;
+  const isPartiallySelected = selectedTerms.length > 0 && selectedTerms.length < terms.length;
+
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search terms..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
-        />
-      </div>
+      <SmartSearchInput
+        value={searchTerm}
+        onChange={onSearchChange}
+        terms={allTerms}
+        placeholder="Search terms, definitions, categories..."
+      />
       
       {terms.length > 0 ? (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={isAllSelected}
+                    indeterminate={isPartiallySelected}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
                 {columnVisibility.term && <TableHead>Term</TableHead>}
                 {columnVisibility.definition && <TableHead>Definition</TableHead>}
                 {columnVisibility.categories && <TableHead>Categories</TableHead>}
@@ -60,6 +91,12 @@ export function AdminGlossaryTable({
             <TableBody>
               {terms.map((term) => (
                 <TableRow key={term.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedTerms.includes(term.id)}
+                      onCheckedChange={(checked) => handleSelectTerm(term.id, checked as boolean)}
+                    />
+                  </TableCell>
                   {columnVisibility.term && (
                     <TableCell className="font-medium">
                       <div className="space-y-1">
@@ -72,10 +109,11 @@ export function AdminGlossaryTable({
                   )}
                   {columnVisibility.definition && (
                     <TableCell>
-                      <div className="text-sm max-w-md">
-                        {term.definition.substring(0, 100)}
-                        {term.definition.length > 100 ? "..." : ""}
-                      </div>
+                      <DefinitionDisplay 
+                        definition={term.definition}
+                        maxLength={100}
+                        className="text-sm max-w-md"
+                      />
                     </TableCell>
                   )}
                   {columnVisibility.categories && (

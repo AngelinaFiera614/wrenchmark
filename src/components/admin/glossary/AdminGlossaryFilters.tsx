@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect } from './MultiSelect';
+import { FilterPresets, FilterPreset } from './FilterPresets';
 import { X, SlidersHorizontal } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -29,6 +30,8 @@ interface AdminGlossaryFiltersProps {
   onSortChange: (sort: string) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
+  onApplyPreset?: (preset: FilterPreset) => void;
+  activePreset?: string;
 }
 
 export function AdminGlossaryFilters({
@@ -38,9 +41,11 @@ export function AdminGlossaryFilters({
   sortBy,
   onSortChange,
   onClearFilters,
-  hasActiveFilters
+  hasActiveFilters,
+  onApplyPreset,
+  activePreset
 }: AdminGlossaryFiltersProps) {
-  const [isOpen, setIsOpen] = React.useState(true); // Changed to true for default open
+  const [isOpen, setIsOpen] = React.useState(true);
 
   return (
     <Card className="border-border/50">
@@ -67,6 +72,14 @@ export function AdminGlossaryFilters({
         
         <CollapsibleContent>
           <CardContent className="pt-0 space-y-4">
+            {/* Filter Presets */}
+            {onApplyPreset && (
+              <FilterPresets 
+                onApplyPreset={onApplyPreset}
+                activePreset={activePreset}
+              />
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Category Filter */}
               <div className="space-y-2">
