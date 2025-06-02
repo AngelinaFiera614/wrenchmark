@@ -1,12 +1,8 @@
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { Motorcycle } from "@/types";
 import { MotorcycleImageCarousel } from "./MotorcycleImageCarousel";
 import { EnhancedImageCarousel } from "./EnhancedImageCarousel";
-import { useComparison } from "@/context/ComparisonContext";
-import { useNavigate } from "react-router-dom";
 import { MeasurementToggle } from "@/components/theme/MeasurementToggle";
 
 interface MotorcycleHeaderProps {
@@ -24,9 +20,6 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
     image_url,
     summary
   } = motorcycle;
-  
-  const { addToComparison, isInComparison } = useComparison();
-  const navigate = useNavigate();
 
   // Get motorcycle-specific images based on make and model
   // Instead of hardcoded placeholders, we use model-specific URLs when available
@@ -62,30 +55,6 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
   };
 
   const difficultyColor = `difficulty-${difficulty_level}`;
-
-  const handleSaveBike = () => {
-    toast.success("Motorcycle saved", {
-      description: `${make} ${model} has been saved to your collection`
-    });
-  };
-
-  const handleCompare = () => {
-    if (isInComparison(motorcycle.id)) {
-      toast.info("Already in comparison", {
-        description: `${make} ${model} is already in your comparison list`
-      });
-      return;
-    }
-    
-    addToComparison(motorcycle);
-    toast.success("Added to comparison", {
-      description: `${make} ${model} added to your comparison list`,
-      action: {
-        label: "View Comparison",
-        onClick: () => navigate("/compare")
-      }
-    });
-  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -135,15 +104,6 @@ export function MotorcycleHeader({ motorcycle }: MotorcycleHeaderProps) {
             </div>
             <span className="text-sm ml-2">{difficulty_level}/5</span>
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2 pt-4 animate-in slide-in-from-right-5 duration-300 delay-350">
-          <Button onClick={handleSaveBike} className="group">
-            <span className="relative inline-block">Save this bike</span>
-          </Button>
-          <Button variant="outline" onClick={handleCompare}>
-            Compare
-          </Button>
         </div>
       </div>
     </div>

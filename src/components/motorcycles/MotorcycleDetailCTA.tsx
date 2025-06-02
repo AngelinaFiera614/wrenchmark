@@ -46,18 +46,16 @@ export function MotorcycleDetailCTA({ motorcycle }: MotorcycleDetailCTAProps) {
   };
   
   return (
-    <div className="flex items-center justify-between gap-3 py-2 px-1 sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border/30">
-      <div className="flex items-center gap-3">
-        <Button variant="teal" size="sm" onClick={handleSaveBike} className="text-xs">
-          <BookmarkPlus className="h-3.5 w-3.5 mr-1" />
-          Save this Bike
-        </Button>
-        
-        <Button variant="outline" size="sm" onClick={handleShare} className="text-xs">
-          <Share2 className="h-3.5 w-3.5 mr-1" />
-          Share
-        </Button>
-      </div>
+    <div className="flex flex-wrap items-center justify-center gap-3 py-4 px-1 border-b border-border/30">
+      <Button variant="teal" size="sm" onClick={handleSaveBike} className="text-xs">
+        <BookmarkPlus className="h-3.5 w-3.5 mr-1" />
+        Save this Bike
+      </Button>
+      
+      <Button variant="outline" size="sm" onClick={handleShare} className="text-xs">
+        <Share2 className="h-3.5 w-3.5 mr-1" />
+        Share
+      </Button>
       
       <Button 
         variant="outline" 
