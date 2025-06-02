@@ -40,7 +40,7 @@ export function AdminGlossaryFilters({
   onClearFilters,
   hasActiveFilters
 }: AdminGlossaryFiltersProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(true); // Changed to true for default open
 
   return (
     <Card className="border-border/50">

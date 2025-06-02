@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
 import { GlossaryTerm } from '@/types/glossary';
 import { AdminGlossaryHeader } from '@/components/admin/glossary/AdminGlossaryHeader';
@@ -8,10 +8,10 @@ import { AdminGlossaryTable } from '@/components/admin/glossary/AdminGlossaryTab
 import { AdminGlossaryList } from '@/components/admin/glossary/AdminGlossaryList';
 import { AdminGlossaryEmptyState } from '@/components/admin/glossary/AdminGlossaryEmptyState';
 import { GlossaryDeleteDialog } from '@/components/admin/glossary/GlossaryDeleteDialog';
-import BrandsMobileViewToggle from '@/components/admin/brands/BrandsMobileViewToggle';
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/context/auth';
 import { InlineGlossaryForm } from '@/components/admin/glossary/InlineGlossaryForm';
+import { ColumnVisibility, DEFAULT_VISIBILITY } from '@/components/admin/glossary/ColumnVisibilityControls';
 
 const AdminGlossary: React.FC = () => {
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -19,7 +19,20 @@ const AdminGlossary: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>(DEFAULT_VISIBILITY);
   const { isAdmin } = useAuth();
+
+  // Load column visibility from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('glossary-column-visibility');
+    if (saved) {
+      try {
+        setColumnVisibility(JSON.parse(saved));
+      } catch (error) {
+        console.error('Failed to parse saved column visibility:', error);
+      }
+    }
+  }, []);
 
   const {
     terms,
@@ -88,7 +101,12 @@ const AdminGlossary: React.FC = () => {
         <>
           <AdminGlossaryHeader 
             onAddTerm={handleAddTerm}
-            termCount={terms.length} 
+            termCount={terms.length}
+            terms={terms}
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={setColumnVisibility}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
           />
           
           <AdminGlossaryFilters
@@ -105,13 +123,6 @@ const AdminGlossary: React.FC = () => {
             <AdminGlossaryEmptyState onAddTerm={handleAddTerm} />
           ) : (
             <>
-              <div className="flex justify-end">
-                <BrandsMobileViewToggle
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                />
-              </div>
-          
               {viewMode === "table" ? (
                 <AdminGlossaryTable
                   terms={terms}
@@ -119,6 +130,7 @@ const AdminGlossary: React.FC = () => {
                   onSearchChange={setSearch}
                   onEdit={handleEditTerm}
                   onDelete={handleDeleteTerm}
+                  columnVisibility={columnVisibility}
                 />
               ) : (
                 <AdminGlossaryList
