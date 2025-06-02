@@ -71,6 +71,3 @@ export const queryMotorcycleByDetails = async (make: string, model: string, year
 
   return data;
 };
-
-// Re-export admin function to maintain compatibility
-export { fetchAllMotorcyclesForAdmin } from './adminQueries';
