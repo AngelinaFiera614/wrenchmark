@@ -46,7 +46,7 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
       model: data.name,
       year: data.years?.[0]?.year || new Date().getFullYear(),
       category: data.category || data.type || 'Standard',
-      style_tags: [], // Default empty array
+      style_tags: [],
       difficulty_level: data.difficulty_level || 1,
       image_url: data.default_image_url || '',
       engine_size: data.engine_size || 0,
@@ -60,7 +60,7 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
       wheelbase_mm: data.wheelbase_mm || 0,
       ground_clearance_mm: data.ground_clearance_mm || 0,
       fuel_capacity_l: data.fuel_capacity_l || 0,
-      smart_features: [], // Default empty array
+      smart_features: [],
       summary: data.summary || data.base_description || '',
       slug: data.slug,
       created_at: data.created_at,
@@ -77,8 +77,11 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
       recommended_license_level: data.recommended_license_level,
       use_cases: data.use_cases || [],
       
-      // Add configurations for the detail components
-      configurations: data.years?.[0]?.configurations || []
+      // Add configurations using _componentData
+      _componentData: {
+        configurations: data.years?.[0]?.configurations || [],
+        selectedConfiguration: data.years?.[0]?.configurations?.[0] || null
+      }
     };
     
     console.log("Final motorcycle object:", motorcycle);
@@ -113,7 +116,7 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
       model: item.name,
       year: item.production_start_year || new Date().getFullYear(),
       category: item.category || item.type || 'Standard',
-      style_tags: [], // Default empty array
+      style_tags: [],
       difficulty_level: item.difficulty_level || 1,
       image_url: item.default_image_url || '',
       engine_size: item.engine_size || 0,
@@ -127,7 +130,7 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
       wheelbase_mm: item.wheelbase_mm || 0,
       ground_clearance_mm: item.ground_clearance_mm || 0,
       fuel_capacity_l: item.fuel_capacity_l || 0,
-      smart_features: [], // Default empty array
+      smart_features: [],
       summary: item.summary || item.base_description || '',
       slug: item.slug,
       created_at: item.created_at,
@@ -174,7 +177,7 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       model: data.name,
       year,
       category: data.category || data.type || 'Standard',
-      style_tags: [], // Default empty array
+      style_tags: [],
       difficulty_level: data.difficulty_level || 1,
       image_url: data.default_image_url || '',
       engine_size: data.engine_size || 0,
@@ -188,7 +191,7 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       wheelbase_mm: data.wheelbase_mm || 0,
       ground_clearance_mm: data.ground_clearance_mm || 0,
       fuel_capacity_l: data.fuel_capacity_l || 0,
-      smart_features: [], // Default empty array
+      smart_features: [],
       summary: data.summary || data.base_description || '',
       slug: data.slug,
       created_at: data.created_at,
@@ -265,7 +268,7 @@ export const createPlaceholderMotorcycle = async (params: {
       model: params.model,
       year: params.year,
       category: motorcycle.category || 'Standard',
-      style_tags: [], // Default empty array
+      style_tags: [],
       difficulty_level: motorcycle.difficulty_level || 1,
       image_url: motorcycle.default_image_url || '',
       engine_size: motorcycle.engine_size || 0,
@@ -279,7 +282,7 @@ export const createPlaceholderMotorcycle = async (params: {
       wheelbase_mm: motorcycle.wheelbase_mm || 0,
       ground_clearance_mm: motorcycle.ground_clearance_mm || 0,
       fuel_capacity_l: motorcycle.fuel_capacity_l || 0,
-      smart_features: [], // Default empty array
+      smart_features: [],
       summary: motorcycle.summary || motorcycle.base_description || '',
       slug: motorcycle.slug,
       created_at: motorcycle.created_at,
