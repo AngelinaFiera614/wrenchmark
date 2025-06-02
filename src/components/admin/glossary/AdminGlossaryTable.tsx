@@ -57,7 +57,6 @@ export function AdminGlossaryTable({
   };
 
   const isAllSelected = terms.length > 0 && selectedTerms.length === terms.length;
-  const isPartiallySelected = selectedTerms.length > 0 && selectedTerms.length < terms.length;
 
   return (
     <div className="space-y-4">
@@ -76,7 +75,6 @@ export function AdminGlossaryTable({
                 <TableHead className="w-12">
                   <Checkbox
                     checked={isAllSelected}
-                    indeterminate={isPartiallySelected}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
