@@ -13,26 +13,22 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash, Search, ImageOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { useSearchFilter } from "@/hooks/useSearchFilter";
 
 interface AdminGlossaryListProps {
   terms: GlossaryTerm[];
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
   onEdit: (term: GlossaryTerm) => void;
   onDelete: (term: GlossaryTerm) => void;
 }
 
 export function AdminGlossaryList({
   terms,
+  searchTerm,
+  onSearchChange,
   onEdit,
   onDelete,
 }: AdminGlossaryListProps) {
-  const { searchTerm, handleSearchChange } = useSearchFilter();
-  
-  const filteredTerms = terms.filter((term) =>
-    term.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    term.definition.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -40,14 +36,14 @@ export function AdminGlossaryList({
         <Input
           placeholder="Search terms..."
           value={searchTerm}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(e) => onSearchChange(e.target.value)}
           className="pl-10"
         />
       </div>
       
-      {filteredTerms.length > 0 ? (
+      {terms.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTerms.map((term) => (
+          {terms.map((term) => (
             <Card key={term.id} className="flex flex-col">
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-0">
                 <div>

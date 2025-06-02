@@ -2,12 +2,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchGlossaryTerms, fetchGlossaryTermBySlug, deleteTerm } from "@/services/glossary/termService";
 import { generateUniqueSlug, checkSlugExists } from "@/services/glossary/slugService";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { GlossaryTerm } from "@/types/glossary";
 
 export function useGlossaryTerms() {
   const [search, setSearch] = useState<string>("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>("term-asc");
   
   const { data, isLoading, error } = useQuery({
     queryKey: ["glossaryTerms"],
@@ -15,27 +16,63 @@ export function useGlossaryTerms() {
   });
 
   // Get all unique categories from terms
-  const categories = data 
-    ? [...new Set(data.flatMap(term => term.category || []))].sort()
-    : [];
+  const categories = useMemo(() => 
+    data ? [...new Set(data.flatMap(term => term.category || []))].sort() : []
+  , [data]);
 
-  const terms = data || [];
+  const allTerms = data || [];
 
-  // Filter terms based on search and categories
-  const filteredTerms = terms.filter(term => {
-    const matchesSearch = !search || 
-      term.term.toLowerCase().includes(search.toLowerCase()) ||
-      term.definition.toLowerCase().includes(search.toLowerCase());
+  // Apply filtering and sorting
+  const filteredAndSortedTerms = useMemo(() => {
+    let filtered = allTerms.filter(term => {
+      const matchesSearch = !search || 
+        term.term.toLowerCase().includes(search.toLowerCase()) ||
+        term.definition.toLowerCase().includes(search.toLowerCase());
 
-    const matchesCategories = selectedCategories.length === 0 || 
-      (term.category && term.category.some(cat => selectedCategories.includes(cat)));
+      const matchesCategories = selectedCategories.length === 0 || 
+        (term.category && term.category.some(cat => selectedCategories.includes(cat)));
 
-    return matchesSearch && matchesCategories;
-  });
+      return matchesSearch && matchesCategories;
+    });
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'term-desc':
+        filtered.sort((a, b) => b.term.localeCompare(a.term));
+        break;
+      case 'updated-desc':
+        filtered.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+        break;
+      case 'updated-asc':
+        filtered.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime());
+        break;
+      case 'category-asc':
+        filtered.sort((a, b) => {
+          const catA = a.category?.[0] || '';
+          const catB = b.category?.[0] || '';
+          return catA.localeCompare(catB);
+        });
+        break;
+      case 'term-asc':
+      default:
+        filtered.sort((a, b) => a.term.localeCompare(b.term));
+        break;
+    }
+
+    return filtered;
+  }, [allTerms, search, selectedCategories, sortBy]);
+
+  const hasActiveFilters = selectedCategories.length > 0 || sortBy !== 'term-asc' || search.length > 0;
+
+  const clearFilters = () => {
+    setSearch("");
+    setSelectedCategories([]);
+    setSortBy("term-asc");
+  };
 
   return {
-    terms: filteredTerms,
-    allTerms: terms,
+    terms: filteredAndSortedTerms,
+    allTerms,
     isLoading,
     error,
     search,
@@ -43,6 +80,10 @@ export function useGlossaryTerms() {
     categories,
     selectedCategories,
     setSelectedCategories,
+    sortBy,
+    setSortBy,
+    hasActiveFilters,
+    clearFilters,
     deleteTerm
   };
 }

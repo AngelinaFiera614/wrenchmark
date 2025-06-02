@@ -13,26 +13,22 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { useSearchFilter } from "@/hooks/useSearchFilter";
 
 interface AdminGlossaryTableProps {
   terms: GlossaryTerm[];
+  searchTerm: string;
+  onSearchChange: (term: string) => void;
   onEdit: (term: GlossaryTerm) => void;
   onDelete: (term: GlossaryTerm) => void;
 }
 
 export function AdminGlossaryTable({
   terms,
+  searchTerm,
+  onSearchChange,
   onEdit,
   onDelete,
 }: AdminGlossaryTableProps) {
-  const { searchTerm, handleSearchChange } = useSearchFilter();
-  
-  const filteredTerms = terms.filter((term) =>
-    term.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    term.definition.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -40,12 +36,12 @@ export function AdminGlossaryTable({
         <Input
           placeholder="Search terms..."
           value={searchTerm}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(e) => onSearchChange(e.target.value)}
           className="pl-10"
         />
       </div>
       
-      {filteredTerms.length > 0 ? (
+      {terms.length > 0 ? (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -57,7 +53,7 @@ export function AdminGlossaryTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTerms.map((term) => (
+              {terms.map((term) => (
                 <TableRow key={term.id}>
                   <TableCell className="font-medium">
                     <div className="space-y-1">

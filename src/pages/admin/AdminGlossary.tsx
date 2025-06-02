@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { useGlossaryTerms } from '@/hooks/useGlossaryTerms';
 import { GlossaryTerm } from '@/types/glossary';
 import { AdminGlossaryHeader } from '@/components/admin/glossary/AdminGlossaryHeader';
+import { AdminGlossaryFilters } from '@/components/admin/glossary/AdminGlossaryFilters';
 import { AdminGlossaryTable } from '@/components/admin/glossary/AdminGlossaryTable';
 import { AdminGlossaryList } from '@/components/admin/glossary/AdminGlossaryList';
 import { AdminGlossaryEmptyState } from '@/components/admin/glossary/AdminGlossaryEmptyState';
@@ -23,6 +25,15 @@ const AdminGlossary: React.FC = () => {
     terms,
     allTerms,
     isLoading,
+    search,
+    setSearch,
+    categories,
+    selectedCategories,
+    setSelectedCategories,
+    sortBy,
+    setSortBy,
+    hasActiveFilters,
+    clearFilters,
     deleteTerm
   } = useGlossaryTerms();
 
@@ -80,6 +91,16 @@ const AdminGlossary: React.FC = () => {
             termCount={terms.length} 
           />
           
+          <AdminGlossaryFilters
+            categories={categories}
+            selectedCategories={selectedCategories}
+            onCategoriesChange={setSelectedCategories}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            onClearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
+          
           {!isLoading && terms.length === 0 ? (
             <AdminGlossaryEmptyState onAddTerm={handleAddTerm} />
           ) : (
@@ -94,12 +115,16 @@ const AdminGlossary: React.FC = () => {
               {viewMode === "table" ? (
                 <AdminGlossaryTable
                   terms={terms}
+                  searchTerm={search}
+                  onSearchChange={setSearch}
                   onEdit={handleEditTerm}
                   onDelete={handleDeleteTerm}
                 />
               ) : (
                 <AdminGlossaryList
                   terms={terms}
+                  searchTerm={search}
+                  onSearchChange={setSearch}
                   onEdit={handleEditTerm}
                   onDelete={handleDeleteTerm}
                 />
