@@ -4,10 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface Configuration {
+  id: string;
+  name?: string;
+  is_default?: boolean;
+  engines?: {
+    displacement_cc?: number;
+    power_hp?: number;
+  };
+  seat_height_mm?: number;
+  weight_kg?: number;
+  modelYear?: {
+    year: number;
+  };
+}
+
 interface ConfigurationSelectorProps {
-  configurations: any[];
+  configurations: Configuration[];
   selectedConfigId?: string;
-  onConfigurationSelect: (config: any) => void;
+  onConfigurationSelect: (config: Configuration) => void;
 }
 
 const ConfigurationSelector = ({ 
@@ -25,7 +40,7 @@ const ConfigurationSelector = ({
     if (!acc[year]) acc[year] = [];
     acc[year].push(config);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, Configuration[]>);
 
   return (
     <Card className="mb-6">
@@ -45,8 +60,8 @@ const ConfigurationSelector = ({
               )}
               <div className="flex flex-wrap gap-2">
                 {yearConfigs.map((config) => {
-                  const hasEngineData = config.engines && config.engines.displacement_cc > 0;
-                  const hasDimensionData = config.seat_height_mm > 0 && config.weight_kg > 0;
+                  const hasEngineData = config.engines && config.engines.displacement_cc && config.engines.displacement_cc > 0;
+                  const hasDimensionData = config.seat_height_mm && config.seat_height_mm > 0 && config.weight_kg && config.weight_kg > 0;
                   
                   return (
                     <Button
