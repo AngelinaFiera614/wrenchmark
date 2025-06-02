@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Motorcycle } from "@/types";
 
@@ -222,7 +223,15 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       .from('motorcycle_models')
       .select(`
         *,
-        brand:brands(*)
+        brand:brands(*),
+        years:model_years(
+          *,
+          configurations:model_configurations(
+            *,
+            engines(*),
+            brake_systems(*)
+          )
+        )
       `)
       .ilike('name', `%${model}%`)
       .eq('brand.name', make)
@@ -234,26 +243,31 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       return null;
     }
     
+    const firstYear = data.years?.[0];
+    const defaultConfig = firstYear?.configurations?.find(config => config.is_default) || firstYear?.configurations?.[0];
+    const engineData = defaultConfig?.engines;
+    const brakeData = defaultConfig?.brake_systems;
+    
     return {
       id: data.id,
       make: data.brand?.name || make,
       model: data.name,
-      year,
+      year: firstYear?.year || year,
       category: data.category || data.type || 'Standard',
       style_tags: [],
       difficulty_level: data.difficulty_level || 1,
       image_url: data.default_image_url || '',
-      engine_size: data.engine_size || 0,
-      horsepower: data.horsepower || 0,
-      weight_kg: data.weight_kg || 0,
+      engine_size: engineData?.displacement_cc || data.engine_size || 0,
+      horsepower: engineData?.power_hp || data.horsepower || 0,
+      weight_kg: defaultConfig?.weight_kg || data.weight_kg || 0,
       wet_weight_kg: data.wet_weight_kg,
-      seat_height_mm: data.seat_height_mm || 0,
-      abs: data.has_abs || false,
+      seat_height_mm: defaultConfig?.seat_height_mm || data.seat_height_mm || 0,
+      abs: brakeData?.type?.toLowerCase().includes('abs') || data.has_abs || false,
       top_speed_kph: data.top_speed_kph || 0,
-      torque_nm: data.torque_nm || 0,
-      wheelbase_mm: data.wheelbase_mm || 0,
-      ground_clearance_mm: data.ground_clearance_mm || 0,
-      fuel_capacity_l: data.fuel_capacity_l || 0,
+      torque_nm: engineData?.torque_nm || data.torque_nm || 0,
+      wheelbase_mm: defaultConfig?.wheelbase_mm || data.wheelbase_mm || 0,
+      ground_clearance_mm: defaultConfig?.ground_clearance_mm || data.ground_clearance_mm || 0,
+      fuel_capacity_l: defaultConfig?.fuel_capacity_l || data.fuel_capacity_l || 0,
       smart_features: [],
       summary: data.summary || data.base_description || '',
       slug: data.slug,
@@ -269,7 +283,13 @@ export const findMotorcycleByDetails = async (make: string, model: string, year:
       power_to_weight_ratio: data.power_to_weight_ratio,
       is_entry_level: data.is_entry_level,
       recommended_license_level: data.recommended_license_level,
-      use_cases: data.use_cases || []
+      use_cases: data.use_cases || [],
+      
+      // Store configuration data for detail pages
+      _componentData: {
+        configurations: firstYear?.configurations || [],
+        selectedConfiguration: defaultConfig || null
+      }
     };
   } catch (error) {
     console.error("Error in findMotorcycleByDetails:", error);
@@ -324,6 +344,33 @@ export const createPlaceholderMotorcycle = async (params: {
       .single();
       
     if (error) throw error;
+    
+    // Create a model year for this placeholder
+    const { data: modelYear, error: yearError } = await supabase
+      .from('model_years')
+      .insert({
+        motorcycle_id: motorcycle.id,
+        year: params.year,
+        changes: 'Placeholder model year',
+        is_available: true
+      })
+      .select()
+      .single();
+      
+    if (yearError) throw yearError;
+    
+    // Create a basic configuration
+    const { data: config, error: configError } = await supabase
+      .from('model_configurations')
+      .insert({
+        model_year_id: modelYear.id,
+        name: 'Standard',
+        is_default: true
+      })
+      .select()
+      .single();
+      
+    if (configError) throw configError;
     
     return {
       id: motorcycle.id,
