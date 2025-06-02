@@ -12,48 +12,60 @@ import {
 export function usePerformanceData(motorcycle: Motorcycle) {
   const { unit } = useMeasurement();
   
-  // Enhanced data extraction with configuration fallbacks
+  // Enhanced data extraction with better configuration fallbacks
   const getEngineData = () => {
-    // Try configuration data first, then fallback to motorcycle data
-    const configEngine = motorcycle._componentData?.engine;
-    return {
-      engine_cc: configEngine?.displacement_cc || motorcycle.engine_cc || motorcycle.displacement_cc || motorcycle.engine_size || 0,
-      displacement_cc: configEngine?.displacement_cc || motorcycle.displacement_cc || motorcycle.engine_cc || motorcycle.engine_size || 0,
-      horsepower_hp: configEngine?.power_hp || motorcycle.horsepower_hp || motorcycle.horsepower || 0,
-      power_rpm: configEngine?.power_rpm || motorcycle.power_rpm,
-      torque_nm: configEngine?.torque_nm || motorcycle.torque_nm || 0,
-      torque_rpm: configEngine?.torque_rpm || motorcycle.torque_rpm,
-      engine_type: configEngine?.engine_type || motorcycle.engine_type,
-      cylinder_count: configEngine?.cylinder_count || motorcycle.cylinder_count
+    console.log("Getting engine data for performance specs");
+    console.log("Motorcycle base data:", {
+      engine_size: motorcycle.engine_size,
+      horsepower: motorcycle.horsepower,
+      torque_nm: motorcycle.torque_nm
+    });
+    
+    // Use the already transformed data from the motorcycle object first
+    const engineData = {
+      engine_cc: motorcycle.engine_size || motorcycle.displacement_cc || motorcycle.engine_cc || 0,
+      displacement_cc: motorcycle.displacement_cc || motorcycle.engine_size || motorcycle.engine_cc || 0,
+      horsepower_hp: motorcycle.horsepower_hp || motorcycle.horsepower || 0,
+      power_rpm: motorcycle.power_rpm,
+      torque_nm: motorcycle.torque_nm || 0,
+      torque_rpm: motorcycle.torque_rpm,
+      engine_type: motorcycle.engine_type,
+      cylinder_count: motorcycle.cylinder_count
     };
+    
+    console.log("Final engine data for performance:", engineData);
+    return engineData;
   };
 
   const getBrakeData = () => {
-    // Try configuration data first, then fallback to motorcycle data
-    const configBrakes = motorcycle._componentData?.brakes;
-    return {
-      brake_type: configBrakes?.type || motorcycle.brake_type,
-      has_abs: configBrakes?.has_traction_control ?? motorcycle.has_abs ?? motorcycle.abs ?? false
+    console.log("Getting brake data for performance specs");
+    const brakeData = {
+      brake_type: motorcycle.brake_type,
+      has_abs: motorcycle.has_abs ?? motorcycle.abs ?? false
     };
+    
+    console.log("Final brake data for performance:", brakeData);
+    return brakeData;
   };
 
   const getSpeedData = () => {
-    return {
+    const speedData = {
       top_speed_kph: motorcycle.top_speed_kph || 0,
       top_speed_mph: motorcycle.top_speed_mph || (motorcycle.top_speed_kph ? motorcycle.top_speed_kph * 0.621371 : 0)
     };
+    
+    console.log("Speed data for performance:", speedData);
+    return speedData;
   };
 
   const engineData = getEngineData();
   const brakeData = getBrakeData();
   const speedData = getSpeedData();
 
-  console.log("Performance data extraction:", {
+  console.log("Performance data extraction complete:", {
     engineData,
     brakeData,
-    speedData,
-    configEngine: motorcycle._componentData?.engine,
-    configBrakes: motorcycle._componentData?.brakes
+    speedData
   });
 
   return {

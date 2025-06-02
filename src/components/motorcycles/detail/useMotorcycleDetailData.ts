@@ -17,10 +17,12 @@ export function useMotorcycleDetailData(motorcycle: Motorcycle) {
     
     // Auto-select default configuration or first available
     const configurations = motorcycle._componentData?.configurations || [];
+    console.log("Available configurations:", configurations.length);
+    
     if (configurations.length > 0 && !selectedConfiguration) {
       const defaultConfig = configurations.find(c => c.is_default) || configurations[0];
       setSelectedConfiguration(defaultConfig);
-      console.log("Auto-selected configuration:", defaultConfig);
+      console.log("Auto-selected configuration:", defaultConfig?.name || defaultConfig?.id);
     }
     
     document.title = `${motorcycle.make} ${motorcycle.model} | Wrenchmark`;
@@ -30,14 +32,16 @@ export function useMotorcycleDetailData(motorcycle: Motorcycle) {
   const getComponentData = () => {
     const config = selectedConfiguration;
     if (!config) {
+      console.log("No configuration selected, using base component data");
       return motorcycle._componentData;
     }
 
+    console.log("Using selected configuration data:", config.name || config.id);
     return {
-      engine: config.engines || config.engine || motorcycle._componentData?.engine,
-      brakes: config.brake_systems || config.brakes || motorcycle._componentData?.brakes,
-      frame: config.frames || config.frame || motorcycle._componentData?.frame,
-      suspension: config.suspensions || config.suspension || motorcycle._componentData?.suspension,
+      engine: config.engines || motorcycle._componentData?.engine,
+      brakes: config.brake_systems || motorcycle._componentData?.brakes,
+      frame: config.frames || motorcycle._componentData?.frame,
+      suspension: config.suspensions || motorcycle._componentData?.suspension,
       wheels: config.wheels || motorcycle._componentData?.wheels,
       configurations: motorcycle._componentData?.configurations || []
     };
@@ -63,10 +67,16 @@ export function useMotorcycleDetailData(motorcycle: Motorcycle) {
   const configurations = motorcycle._componentData?.configurations || [];
 
   console.log("useMotorcycleDetailData result:", {
-    selectedConfiguration,
-    componentData,
+    selectedConfiguration: selectedConfiguration?.name || selectedConfiguration?.id,
+    componentData: !!componentData,
     hasComponentData,
-    configurations: configurations.length
+    configurations: configurations.length,
+    hasSpecs: {
+      engine_size: motorcycle.engine_size,
+      horsepower: motorcycle.horsepower,
+      weight_kg: motorcycle.weight_kg,
+      seat_height_mm: motorcycle.seat_height_mm
+    }
   });
 
   return {

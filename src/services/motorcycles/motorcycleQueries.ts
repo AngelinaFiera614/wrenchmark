@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 const MOTORCYCLE_MODEL_SELECT_QUERY = `
@@ -60,6 +61,109 @@ const DETAILED_MOTORCYCLE_MODEL_SELECT_QUERY = `
       description,
       color_hex,
       icon
+    )
+  ),
+  model_years!model_years_motorcycle_id_fkey(
+    id,
+    year,
+    changes,
+    image_url,
+    msrp_usd,
+    marketing_tagline,
+    is_available,
+    created_at,
+    updated_at,
+    model_configurations!model_configurations_model_year_id_fkey(
+      id,
+      name,
+      description,
+      notes,
+      seat_height_mm,
+      weight_kg,
+      wheelbase_mm,
+      fuel_capacity_l,
+      ground_clearance_mm,
+      is_default,
+      trim_level,
+      market_region,
+      price_premium_usd,
+      image_url,
+      optional_equipment,
+      special_features,
+      engines!model_configurations_engine_id_fkey(
+        id,
+        name,
+        displacement_cc,
+        power_hp,
+        torque_nm,
+        engine_type,
+        power_rpm,
+        torque_rpm,
+        valve_count,
+        cylinder_count,
+        cooling,
+        fuel_system,
+        stroke_type,
+        bore_mm,
+        stroke_mm,
+        compression_ratio,
+        valves_per_cylinder
+      ),
+      brake_systems!model_configurations_brake_system_id_fkey(
+        id,
+        type,
+        has_traction_control,
+        brake_type_front,
+        brake_type_rear,
+        front_disc_size_mm,
+        rear_disc_size_mm,
+        brake_brand,
+        caliper_type,
+        notes
+      ),
+      frames!model_configurations_frame_id_fkey(
+        id,
+        type,
+        material,
+        notes,
+        rake_degrees,
+        trail_mm,
+        construction_method
+      ),
+      suspensions!model_configurations_suspension_id_fkey(
+        id,
+        front_type,
+        rear_type,
+        brand,
+        adjustability,
+        front_travel_mm,
+        rear_travel_mm,
+        front_brand,
+        rear_brand
+      ),
+      wheels!model_configurations_wheel_id_fkey(
+        id,
+        type,
+        front_size,
+        rear_size,
+        front_tire_size,
+        rear_tire_size,
+        rim_material,
+        spoke_count_front,
+        spoke_count_rear,
+        notes
+      ),
+      color_variants!model_configurations_color_id_fkey(
+        id,
+        name,
+        hex_code,
+        color_code,
+        description,
+        image_url,
+        is_metallic,
+        is_pearl,
+        is_matte
+      )
     )
   )
 `;
@@ -129,12 +233,23 @@ export const fetchAllMotorcyclesForAdmin = async () => {
 };
 
 export const fetchMotorcycleBySlug = async (slug: string) => {
+  console.log("=== STARTING fetchMotorcycleBySlug DEBUG ===");
+  console.log("Fetching motorcycle by slug:", slug);
+  
   const { data, error } = await supabase
     .from('motorcycle_models')
     .select(DETAILED_MOTORCYCLE_MODEL_SELECT_QUERY)
     .eq('slug', slug)
     .eq('is_draft', false)
     .maybeSingle();
+    
+  console.log("Raw query result:", { data, error });
+  console.log("Model years found:", data?.model_years?.length || 0);
+  if (data?.model_years?.[0]) {
+    console.log("First model year configurations:", data.model_years[0].model_configurations?.length || 0);
+    console.log("Sample configuration:", data.model_years[0].model_configurations?.[0]);
+  }
+  console.log("=== END fetchMotorcycleBySlug DEBUG ===");
     
   return { data, error };
 };
