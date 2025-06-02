@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Motorcycle } from "@/types";
 
@@ -139,6 +138,13 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
       const engineData = defaultConfig?.engines;
       const brakeData = defaultConfig?.brake_systems;
       
+      // Use configuration data first, then fall back to model-level data
+      const finalEngineSize = engineData?.displacement_cc || item.engine_size || 0;
+      const finalHorsepower = engineData?.power_hp || item.horsepower || 0;
+      const finalWeight = defaultConfig?.weight_kg || item.weight_kg || 0;
+      const finalSeatHeight = defaultConfig?.seat_height_mm || item.seat_height_mm || 0;
+      const finalTorque = engineData?.torque_nm || item.torque_nm || 0;
+      
       const motorcycle: Motorcycle = {
         id: item.id,
         make: item.brand?.name || 'Unknown',
@@ -149,15 +155,15 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
         difficulty_level: item.difficulty_level || 1,
         image_url: item.default_image_url || '',
         
-        // Use configuration data first, then fall back to model-level data
-        engine_size: engineData?.displacement_cc || item.engine_size || 0,
-        horsepower: engineData?.power_hp || item.horsepower || 0,
-        weight_kg: defaultConfig?.weight_kg || item.weight_kg || 0,
+        // Prioritize configuration data, then model data
+        engine_size: finalEngineSize,
+        horsepower: finalHorsepower,
+        weight_kg: finalWeight,
         wet_weight_kg: item.wet_weight_kg,
-        seat_height_mm: defaultConfig?.seat_height_mm || item.seat_height_mm || 0,
+        seat_height_mm: finalSeatHeight,
         abs: brakeData?.type?.toLowerCase().includes('abs') || item.has_abs || false,
         top_speed_kph: item.top_speed_kph || 0,
-        torque_nm: engineData?.torque_nm || item.torque_nm || 0,
+        torque_nm: finalTorque,
         wheelbase_mm: defaultConfig?.wheelbase_mm || item.wheelbase_mm || 0,
         ground_clearance_mm: defaultConfig?.ground_clearance_mm || item.ground_clearance_mm || 0,
         fuel_capacity_l: defaultConfig?.fuel_capacity_l || item.fuel_capacity_l || 0,
@@ -180,9 +186,9 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
         use_cases: item.use_cases || [],
         
         // Additional engine fields from configuration
-        engine_cc: engineData?.displacement_cc,
-        displacement_cc: engineData?.displacement_cc,
-        horsepower_hp: engineData?.power_hp,
+        engine_cc: finalEngineSize,
+        displacement_cc: finalEngineSize,
+        horsepower_hp: finalHorsepower,
         power_rpm: engineData?.power_rpm,
         torque_rpm: engineData?.torque_rpm,
         engine_type: engineData?.engine_type,
@@ -208,6 +214,7 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
     console.log("Total motorcycles processed:", transformedMotorcycles.length);
     console.log("Motorcycles with engine data:", transformedMotorcycles.filter(m => m.engine_size > 0).length);
     console.log("Motorcycles with horsepower data:", transformedMotorcycles.filter(m => m.horsepower > 0).length);
+    console.log("Motorcycles with weight data:", transformedMotorcycles.filter(m => m.weight_kg > 0).length);
     console.log("=== END getAllMotorcycles DEBUG ===");
     
     return transformedMotorcycles;
