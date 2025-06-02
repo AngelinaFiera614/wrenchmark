@@ -7,11 +7,11 @@ import { useFilteringState } from "./filters/useFilteringState";
 export const initialFilters: MotorcycleFilters = {
   categories: [],
   make: "",
-  yearRange: [1980, 2025],
-  engineSizeRange: [0, 2000],
+  yearRange: [1950, 2025], // Expanded range
+  engineSizeRange: [0, 3000], // Expanded range to include larger engines
   difficultyLevel: 5, // Set to max level so it doesn't filter out anything
-  weightRange: [0, 500], // Increased max weight range
-  seatHeightRange: [600, 1000], // Increased seat height range
+  weightRange: [0, 800], // Expanded weight range to accommodate all motorcycles
+  seatHeightRange: [500, 1200], // Expanded seat height range
   abs: null, // Changed to null so it doesn't filter
   searchTerm: "",
   styleTags: [],
@@ -19,15 +19,15 @@ export const initialFilters: MotorcycleFilters = {
   skillLevel: [],
   transmission: [],
   driveType: [],
-  powerToWeightRange: [0, 5.0], // Increased range
+  powerToWeightRange: [0, 10.0], // Expanded power-to-weight range
   isEntryLevel: null,
   coolingSystem: [],
   licenseLevelFilter: [],
-  priceRange: [0, 100000], // Increased price range
+  priceRange: [0, 200000], // Expanded price range
   hasSmartFeatures: null,
-  fuelCapacityRange: [0, 50], // Increased fuel capacity range
-  topSpeedRange: [0, 400], // Increased top speed range
-  torqueRange: [0, 500], // Increased torque range
+  fuelCapacityRange: [0, 100], // Expanded fuel capacity range
+  topSpeedRange: [0, 500], // Expanded top speed range
+  torqueRange: [0, 1000], // Expanded torque range
   advancedSearch: {
     engineType: [],
     cylinderCount: [],
@@ -43,6 +43,7 @@ export function useMotorcycleFilters(
 ) {
   console.log("=== MOTORCYCLE FILTERS HOOK DEBUG ===");
   console.log("Input motorcycles count:", motorcycles.length);
+  console.log("Sample motorcycle with specs:", motorcycles.find(m => m.engine_size > 0));
   console.log("Starting filters:", startingFilters);
 
   const {
@@ -64,6 +65,7 @@ export function useMotorcycleFilters(
 
   console.log("=== FILTERING DEBUG END ===");
   console.log("Filtered motorcycles count:", filteredMotorcycles.length);
+  console.log("Sample filtered motorcycle:", filteredMotorcycles[0]);
 
   return {
     filters,

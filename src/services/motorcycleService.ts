@@ -95,12 +95,26 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
 };
 
 export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
+  console.log("=== getAllMotorcycles DEBUG ===");
+  console.log("Fetching all motorcycles with complete relational data");
+  
   try {
     const { data, error } = await supabase
       .from('motorcycle_models')
       .select(`
         *,
-        brand:brands(*)
+        brand:brands(*),
+        years:model_years(
+          *,
+          configurations:model_configurations(
+            *,
+            engines(*),
+            brake_systems(*),
+            frames(*),
+            suspensions(*),
+            wheels(*)
+          )
+        )
       `)
       .eq('is_draft', false)
       .order('name');
@@ -110,43 +124,92 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
       throw error;
     }
     
-    return data.map(item => ({
-      id: item.id,
-      make: item.brand?.name || 'Unknown',
-      model: item.name,
-      year: item.production_start_year || new Date().getFullYear(),
-      category: item.category || item.type || 'Standard',
-      style_tags: [],
-      difficulty_level: item.difficulty_level || 1,
-      image_url: item.default_image_url || '',
-      engine_size: item.engine_size || 0,
-      horsepower: item.horsepower || 0,
-      weight_kg: item.weight_kg || 0,
-      wet_weight_kg: item.wet_weight_kg,
-      seat_height_mm: item.seat_height_mm || 0,
-      abs: item.has_abs || false,
-      top_speed_kph: item.top_speed_kph || 0,
-      torque_nm: item.torque_nm || 0,
-      wheelbase_mm: item.wheelbase_mm || 0,
-      ground_clearance_mm: item.ground_clearance_mm || 0,
-      fuel_capacity_l: item.fuel_capacity_l || 0,
-      smart_features: [],
-      summary: item.summary || item.base_description || '',
-      slug: item.slug,
-      created_at: item.created_at,
-      is_placeholder: false,
-      brand_id: item.brand_id,
-      is_draft: item.is_draft,
+    console.log("Raw motorcycles data count:", data.length);
+    console.log("Sample raw motorcycle data:", data[0]);
+    
+    const transformedMotorcycles = data.map(item => {
+      // Get the first year and its default or first configuration
+      const firstYear = item.years?.[0];
+      const defaultConfig = firstYear?.configurations?.find(config => config.is_default) || firstYear?.configurations?.[0];
       
-      // Enhanced technical fields
-      transmission: item.transmission,
-      drive_type: item.drive_type,
-      cooling_system: item.cooling_system,
-      power_to_weight_ratio: item.power_to_weight_ratio,
-      is_entry_level: item.is_entry_level,
-      recommended_license_level: item.recommended_license_level,
-      use_cases: item.use_cases || []
-    }));
+      console.log(`Processing ${item.name}: ${firstYear?.configurations?.length || 0} configurations, using config:`, defaultConfig?.name || 'none');
+      
+      // Extract engine data from configuration
+      const engineData = defaultConfig?.engines;
+      const brakeData = defaultConfig?.brake_systems;
+      
+      const motorcycle: Motorcycle = {
+        id: item.id,
+        make: item.brand?.name || 'Unknown',
+        model: item.name,
+        year: firstYear?.year || item.production_start_year || new Date().getFullYear(),
+        category: item.category || item.type || 'Standard',
+        style_tags: [],
+        difficulty_level: item.difficulty_level || 1,
+        image_url: item.default_image_url || '',
+        
+        // Use configuration data first, then fall back to model-level data
+        engine_size: engineData?.displacement_cc || item.engine_size || 0,
+        horsepower: engineData?.power_hp || item.horsepower || 0,
+        weight_kg: defaultConfig?.weight_kg || item.weight_kg || 0,
+        wet_weight_kg: item.wet_weight_kg,
+        seat_height_mm: defaultConfig?.seat_height_mm || item.seat_height_mm || 0,
+        abs: brakeData?.type?.toLowerCase().includes('abs') || item.has_abs || false,
+        top_speed_kph: item.top_speed_kph || 0,
+        torque_nm: engineData?.torque_nm || item.torque_nm || 0,
+        wheelbase_mm: defaultConfig?.wheelbase_mm || item.wheelbase_mm || 0,
+        ground_clearance_mm: defaultConfig?.ground_clearance_mm || item.ground_clearance_mm || 0,
+        fuel_capacity_l: defaultConfig?.fuel_capacity_l || item.fuel_capacity_l || 0,
+        
+        smart_features: [],
+        summary: item.summary || item.base_description || '',
+        slug: item.slug,
+        created_at: item.created_at,
+        is_placeholder: false,
+        brand_id: item.brand_id,
+        is_draft: item.is_draft,
+        
+        // Enhanced technical fields
+        transmission: item.transmission,
+        drive_type: item.drive_type,
+        cooling_system: item.cooling_system,
+        power_to_weight_ratio: item.power_to_weight_ratio,
+        is_entry_level: item.is_entry_level,
+        recommended_license_level: item.recommended_license_level,
+        use_cases: item.use_cases || [],
+        
+        // Additional engine fields from configuration
+        engine_cc: engineData?.displacement_cc,
+        displacement_cc: engineData?.displacement_cc,
+        horsepower_hp: engineData?.power_hp,
+        power_rpm: engineData?.power_rpm,
+        torque_rpm: engineData?.torque_rpm,
+        engine_type: engineData?.engine_type,
+        cylinder_count: engineData?.cylinder_count,
+        
+        // Brake system information
+        brake_type: brakeData?.type,
+        has_abs: brakeData?.type?.toLowerCase().includes('abs') || item.has_abs || false,
+        
+        // Store configuration data for detail pages
+        _componentData: {
+          configurations: firstYear?.configurations || [],
+          selectedConfiguration: defaultConfig || null
+        }
+      };
+      
+      console.log(`Transformed ${motorcycle.make} ${motorcycle.model}: engine=${motorcycle.engine_size}cc, hp=${motorcycle.horsepower}, weight=${motorcycle.weight_kg}kg`);
+      
+      return motorcycle;
+    });
+    
+    console.log("=== getAllMotorcycles SUMMARY ===");
+    console.log("Total motorcycles processed:", transformedMotorcycles.length);
+    console.log("Motorcycles with engine data:", transformedMotorcycles.filter(m => m.engine_size > 0).length);
+    console.log("Motorcycles with horsepower data:", transformedMotorcycles.filter(m => m.horsepower > 0).length);
+    console.log("=== END getAllMotorcycles DEBUG ===");
+    
+    return transformedMotorcycles;
   } catch (error) {
     console.error("Error in getAllMotorcycles:", error);
     throw error;
