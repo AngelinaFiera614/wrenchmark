@@ -1,105 +1,11 @@
-
 import { Motorcycle } from "@/types";
 
-export const transformMotorcycleData = (rawData: any): Motorcycle => {
-  console.log("=== STARTING transformMotorcycleData DEBUG ===");
-  console.log("Raw motorcycle data:", rawData);
+// Enhanced data extraction utilities
+const extractEngineData = (configuration: any, fallbackData: any = {}) => {
+  const engine = configuration?.engines;
   
-  // Handle brand data - it should come from the brands relationship
-  const brandData = rawData.brands || {};
-  console.log("Brand data from relationship:", brandData);
-  
-  const brandName = brandData.name || rawData.brand_name || 'Unknown Brand';
-  console.log("Resolved brand name:", brandName);
-  
-  // Extract model years and configurations
-  const modelYears = rawData.model_years || [];
-  console.log("Model years found:", modelYears.length);
-  
-  // Find the best configuration to use for base data
-  let bestConfiguration = null;
-  let allConfigurations = [];
-  
-  for (const modelYear of modelYears) {
-    const configs = modelYear.model_configurations || [];
-    allConfigurations.push(...configs.map(config => ({
-      ...config,
-      model_year: modelYear
-    })));
-  }
-  
-  console.log("All configurations found:", allConfigurations.length);
-  console.log("Configuration details:", allConfigurations.map(c => ({
-    id: c.id,
-    name: c.name,
-    is_default: c.is_default,
-    hasEngine: !!c.engines,
-    hasDimensions: !!(c.seat_height_mm && c.weight_kg),
-    engineData: c.engines ? {
-      displacement_cc: c.engines.displacement_cc,
-      power_hp: c.engines.power_hp,
-      torque_nm: c.engines.torque_nm
-    } : null,
-    dimensionData: {
-      seat_height_mm: c.seat_height_mm,
-      weight_kg: c.weight_kg,
-      wheelbase_mm: c.wheelbase_mm,
-      ground_clearance_mm: c.ground_clearance_mm,
-      fuel_capacity_l: c.fuel_capacity_l
-    }
-  })));
-  
-  // Select best configuration - prioritize those with complete data
-  if (allConfigurations.length > 0) {
-    // First try to find configuration with complete dimension AND engine data
-    bestConfiguration = allConfigurations.find(c => 
-      c.engines && 
-      c.engines.displacement_cc > 0 && 
-      c.engines.power_hp > 0 &&
-      c.seat_height_mm > 0 &&
-      c.weight_kg > 0
-    );
-    
-    // If no complete configuration, try dimension data only
-    if (!bestConfiguration) {
-      bestConfiguration = allConfigurations.find(c => 
-        c.seat_height_mm > 0 && c.weight_kg > 0
-      );
-    }
-    
-    // If still no good config, try engine data only
-    if (!bestConfiguration) {
-      bestConfiguration = allConfigurations.find(c => 
-        c.engines && c.engines.displacement_cc > 0 && c.engines.power_hp > 0
-      );
-    }
-    
-    // If no configuration with good data, try default
-    if (!bestConfiguration) {
-      bestConfiguration = allConfigurations.find(c => c.is_default);
-    }
-    
-    // If no default, use the first one
-    if (!bestConfiguration) {
-      bestConfiguration = allConfigurations[0];
-    }
-    
-    console.log("Selected best configuration:", {
-      id: bestConfiguration?.id,
-      name: bestConfiguration?.name,
-      is_default: bestConfiguration?.is_default,
-      hasEngineData: !!(bestConfiguration?.engines?.displacement_cc),
-      hasDimensionData: !!(bestConfiguration?.seat_height_mm && bestConfiguration?.weight_kg)
-    });
-  }
-  
-  // Enhanced engine data extraction with proper field mapping
-  let engineData: any = {};
-  if (bestConfiguration?.engines) {
-    const engine = bestConfiguration.engines;
-    console.log("Engine data from configuration:", engine);
-    
-    engineData = {
+  if (engine) {
+    return {
       engine_size: engine.displacement_cc || 0,
       displacement_cc: engine.displacement_cc || 0,
       engine_cc: engine.displacement_cc || 0,
@@ -112,98 +18,129 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       power_rpm: engine.power_rpm || null,
       torque_rpm: engine.torque_rpm || null,
     };
-    
-    console.log("Mapped engine data:", engineData);
-  } else {
-    console.log("No engine data in configuration, using fallback");
-    engineData = {
-      engine_size: rawData.engine_size || 0,
-      displacement_cc: rawData.engine_size || 0,
-      engine_cc: rawData.engine_size || 0,
-      horsepower: rawData.horsepower || 0,
-      horsepower_hp: rawData.horsepower || 0,
-      torque_nm: rawData.torque_nm || 0,
-      engine_type: rawData.engine_type || null,
-      cylinder_count: rawData.cylinder_count || null,
-      cooling_system: rawData.cooling_system || null,
-      power_rpm: rawData.power_rpm || null,
-      torque_rpm: rawData.torque_rpm || null,
-    };
   }
+
+  // Fallback to model-level data
+  return {
+    engine_size: fallbackData.engine_size || 0,
+    displacement_cc: fallbackData.engine_size || 0,
+    engine_cc: fallbackData.engine_size || 0,
+    horsepower: fallbackData.horsepower || 0,
+    horsepower_hp: fallbackData.horsepower || 0,
+    torque_nm: fallbackData.torque_nm || 0,
+    engine_type: fallbackData.engine_type || null,
+    cylinder_count: fallbackData.cylinder_count || null,
+    cooling_system: fallbackData.cooling_system || null,
+    power_rpm: fallbackData.power_rpm || null,
+    torque_rpm: fallbackData.torque_rpm || null,
+  };
+};
+
+const extractBrakeData = (configuration: any, fallbackData: any = {}) => {
+  const brakes = configuration?.brake_systems;
   
-  // Enhanced brake data extraction
-  let brakeData: any = {};
-  if (bestConfiguration?.brake_systems) {
-    const brakes = bestConfiguration.brake_systems;
-    console.log("Brake data from configuration:", brakes);
-    
-    brakeData = {
+  if (brakes) {
+    return {
       abs: brakes.has_traction_control || false,
       has_abs: brakes.has_traction_control || false,
       brake_type: brakes.type || null,
     };
-  } else {
-    brakeData = {
-      abs: rawData.has_abs || false,
-      has_abs: rawData.has_abs || false,
-      brake_type: rawData.brake_type || null,
-    };
   }
-  
-  console.log("Final brake data:", brakeData);
-  
-  // Enhanced dimensions from configuration with proper field mapping
-  let dimensionData: any = {};
-  if (bestConfiguration) {
-    console.log("Dimension data from configuration:", {
-      seat_height_mm: bestConfiguration.seat_height_mm,
-      weight_kg: bestConfiguration.weight_kg,
-      wheelbase_mm: bestConfiguration.wheelbase_mm,
-      ground_clearance_mm: bestConfiguration.ground_clearance_mm,
-      fuel_capacity_l: bestConfiguration.fuel_capacity_l
-    });
-    
-    dimensionData = {
-      seat_height_mm: bestConfiguration.seat_height_mm || rawData.seat_height_mm || 0,
-      weight_kg: bestConfiguration.weight_kg || rawData.weight_kg || 0,
-      wheelbase_mm: bestConfiguration.wheelbase_mm || rawData.wheelbase_mm || 0,
-      ground_clearance_mm: bestConfiguration.ground_clearance_mm || rawData.ground_clearance_mm || 0,
-      fuel_capacity_l: bestConfiguration.fuel_capacity_l || rawData.fuel_capacity_l || 0,
-      // Add imperial conversions
-      seat_height_in: (bestConfiguration.seat_height_mm || rawData.seat_height_mm) ? 
-        ((bestConfiguration.seat_height_mm || rawData.seat_height_mm) / 25.4) : 0,
-      weight_lbs: (bestConfiguration.weight_kg || rawData.weight_kg) ? 
-        ((bestConfiguration.weight_kg || rawData.weight_kg) * 2.20462) : 0,
-      wheelbase_in: (bestConfiguration.wheelbase_mm || rawData.wheelbase_mm) ? 
-        ((bestConfiguration.wheelbase_mm || rawData.wheelbase_mm) / 25.4) : 0,
-      ground_clearance_in: (bestConfiguration.ground_clearance_mm || rawData.ground_clearance_mm) ? 
-        ((bestConfiguration.ground_clearance_mm || rawData.ground_clearance_mm) / 25.4) : 0,
-      fuel_capacity_gal: (bestConfiguration.fuel_capacity_l || rawData.fuel_capacity_l) ? 
-        ((bestConfiguration.fuel_capacity_l || rawData.fuel_capacity_l) * 0.264172) : 0,
-    };
-  } else {
-    dimensionData = {
-      seat_height_mm: rawData.seat_height_mm || 0,
-      weight_kg: rawData.weight_kg || 0,
-      wheelbase_mm: rawData.wheelbase_mm || 0,
-      ground_clearance_mm: rawData.ground_clearance_mm || 0,
-      fuel_capacity_l: rawData.fuel_capacity_l || 0,
-      seat_height_in: rawData.seat_height_mm ? (rawData.seat_height_mm / 25.4) : 0,
-      weight_lbs: rawData.weight_kg ? (rawData.weight_kg * 2.20462) : 0,
-      wheelbase_in: rawData.wheelbase_mm ? (rawData.wheelbase_mm / 25.4) : 0,
-      ground_clearance_in: rawData.ground_clearance_mm ? (rawData.ground_clearance_mm / 25.4) : 0,
-      fuel_capacity_gal: rawData.fuel_capacity_l ? (rawData.fuel_capacity_l * 0.264172) : 0,
-    };
-  }
-  
-  console.log("Final dimension data:", dimensionData);
-  
-  // Enhanced speed data with proper conversions
-  const speedData = {
-    top_speed_kph: rawData.top_speed_kph || 0,
-    top_speed_mph: rawData.top_speed_kph ? (rawData.top_speed_kph * 0.621371) : (rawData.top_speed_mph || 0),
+
+  return {
+    abs: fallbackData.has_abs || false,
+    has_abs: fallbackData.has_abs || false,
+    brake_type: fallbackData.brake_type || null,
   };
+};
+
+const extractDimensionData = (configuration: any, fallbackData: any = {}) => {
+  const dimensions = {
+    seat_height_mm: configuration?.seat_height_mm || fallbackData.seat_height_mm || 0,
+    weight_kg: configuration?.weight_kg || fallbackData.weight_kg || 0,
+    wheelbase_mm: configuration?.wheelbase_mm || fallbackData.wheelbase_mm || 0,
+    ground_clearance_mm: configuration?.ground_clearance_mm || fallbackData.ground_clearance_mm || 0,
+    fuel_capacity_l: configuration?.fuel_capacity_l || fallbackData.fuel_capacity_l || 0,
+  };
+
+  // Add imperial conversions
+  return {
+    ...dimensions,
+    seat_height_in: dimensions.seat_height_mm ? (dimensions.seat_height_mm / 25.4) : 0,
+    weight_lbs: dimensions.weight_kg ? (dimensions.weight_kg * 2.20462) : 0,
+    wheelbase_in: dimensions.wheelbase_mm ? (dimensions.wheelbase_mm / 25.4) : 0,
+    ground_clearance_in: dimensions.ground_clearance_mm ? (dimensions.ground_clearance_mm / 25.4) : 0,
+    fuel_capacity_gal: dimensions.fuel_capacity_l ? (dimensions.fuel_capacity_l * 0.264172) : 0,
+  };
+};
+
+const selectBestConfiguration = (configurations: any[]) => {
+  if (!configurations || configurations.length === 0) {
+    return null;
+  }
+
+  // Priority order for configuration selection
+  // 1. Configuration with complete engine AND dimension data
+  let best = configurations.find(c => 
+    c.engines?.displacement_cc > 0 && 
+    c.engines?.power_hp > 0 &&
+    c.seat_height_mm > 0 &&
+    c.weight_kg > 0
+  );
+
+  // 2. Configuration with complete dimension data
+  if (!best) {
+    best = configurations.find(c => 
+      c.seat_height_mm > 0 && c.weight_kg > 0
+    );
+  }
+
+  // 3. Configuration with engine data
+  if (!best) {
+    best = configurations.find(c => 
+      c.engines?.displacement_cc > 0 && c.engines?.power_hp > 0
+    );
+  }
+
+  // 4. Default configuration
+  if (!best) {
+    best = configurations.find(c => c.is_default);
+  }
+
+  // 5. First configuration
+  return best || configurations[0];
+};
+
+export const transformMotorcycleData = (rawData: any): Motorcycle => {
+  console.log("=== transformMotorcycleData ===");
+  console.log("Processing motorcycle:", rawData.name);
   
+  // Extract brand data
+  const brandName = rawData.brands?.name || 'Unknown Brand';
+  
+  // Process model years and configurations
+  const modelYears = rawData.years || [];
+  const allConfigurations = modelYears.flatMap(year => 
+    (year.model_configurations || []).map(config => ({
+      ...config,
+      model_year: year
+    }))
+  );
+  
+  console.log(`Found ${allConfigurations.length} configurations for ${rawData.name}`);
+  
+  // Select the best configuration
+  const bestConfiguration = selectBestConfiguration(allConfigurations);
+  
+  if (bestConfiguration) {
+    console.log(`Selected configuration: ${bestConfiguration.name || bestConfiguration.id}`);
+  }
+
+  // Extract enhanced data using the best configuration
+  const engineData = extractEngineData(bestConfiguration, rawData);
+  const brakeData = extractBrakeData(bestConfiguration, rawData);
+  const dimensionData = extractDimensionData(bestConfiguration, rawData);
+
   // Create the transformed motorcycle object
   const transformed: Motorcycle = {
     id: rawData.id,
@@ -216,41 +153,20 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     difficulty_level: rawData.difficulty_level || 3,
     image_url: rawData.default_image_url || '/placeholder.svg',
     
-    // Enhanced engine fields with configuration data prioritized
-    engine_size: engineData.engine_size,
-    engine_cc: engineData.engine_cc,
-    displacement_cc: engineData.displacement_cc,
-    horsepower: engineData.horsepower,
-    horsepower_hp: engineData.horsepower_hp,
-    torque_nm: engineData.torque_nm,
-    engine_type: engineData.engine_type,
-    cylinder_count: engineData.cylinder_count,
-    power_rpm: engineData.power_rpm,
-    torque_rpm: engineData.torque_rpm,
-    cooling_system: engineData.cooling_system,
+    // Enhanced engine fields
+    ...engineData,
     
-    // Enhanced dimension fields with configuration data prioritized
-    weight_kg: dimensionData.weight_kg,
-    weight_lbs: dimensionData.weight_lbs,
-    seat_height_mm: dimensionData.seat_height_mm,
-    seat_height_in: dimensionData.seat_height_in,
-    wheelbase_mm: dimensionData.wheelbase_mm,
-    wheelbase_in: dimensionData.wheelbase_in,
-    ground_clearance_mm: dimensionData.ground_clearance_mm,
-    ground_clearance_in: dimensionData.ground_clearance_in,
-    fuel_capacity_l: dimensionData.fuel_capacity_l,
-    fuel_capacity_gal: dimensionData.fuel_capacity_gal,
+    // Enhanced dimension fields
+    ...dimensionData,
     
-    // Enhanced brake fields with configuration data prioritized
-    abs: brakeData.abs,
-    has_abs: brakeData.has_abs,
-    brake_type: brakeData.brake_type,
+    // Enhanced brake fields
+    ...brakeData,
     
-    // Enhanced speed fields
-    top_speed_kph: speedData.top_speed_kph,
-    top_speed_mph: speedData.top_speed_mph,
+    // Speed data with conversions
+    top_speed_kph: rawData.top_speed_kph || 0,
+    top_speed_mph: rawData.top_speed_kph ? (rawData.top_speed_kph * 0.621371) : 0,
     
-    // Other existing fields
+    // Other fields
     wet_weight_kg: rawData.wet_weight_kg,
     smart_features: [],
     summary: rawData.summary || rawData.base_description || '',
@@ -268,7 +184,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     recommended_license_level: rawData.recommended_license_level,
     use_cases: rawData.use_cases || [],
     
-    // Store component references for detailed views with the actual selected configuration
+    // Store component references
     _componentData: {
       engine: bestConfiguration?.engines,
       brakes: bestConfiguration?.brake_systems,
@@ -281,23 +197,13 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     }
   };
   
-  console.log("Final transformed motorcycle with actual specs:", {
-    id: transformed.id,
+  console.log(`Transformed ${transformed.make} ${transformed.model}:`, {
     engine_size: transformed.engine_size,
     horsepower: transformed.horsepower,
-    torque_nm: transformed.torque_nm,
     weight_kg: transformed.weight_kg,
-    seat_height_mm: transformed.seat_height_mm,
-    has_valid_specs: {
-      engine: transformed.engine_size > 0,
-      power: transformed.horsepower > 0,
-      dimensions: transformed.seat_height_mm > 0
-    },
-    configurations: transformed._componentData?.configurations?.length,
-    selectedConfig: bestConfiguration?.name
+    seat_height_mm: transformed.seat_height_mm
   });
   
-  console.log("=== END transformMotorcycleData DEBUG ===");
   return transformed;
 };
 
@@ -318,7 +224,7 @@ export const createPlaceholderMotorcycleData = (input: {
     default_image_url: '/placeholder.svg',
     slug: slug,
     is_draft: input.isDraft || false,
-    // Basic technical data with defaults
+    // Basic technical data with realistic defaults
     engine_size: 600,
     horsepower: 50,
     torque_nm: 45,
