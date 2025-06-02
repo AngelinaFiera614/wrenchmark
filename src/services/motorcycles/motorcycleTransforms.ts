@@ -34,23 +34,47 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     name: c.name,
     is_default: c.is_default,
     hasEngine: !!c.engines,
+    hasDimensions: !!(c.seat_height_mm && c.weight_kg),
     engineData: c.engines ? {
       displacement_cc: c.engines.displacement_cc,
       power_hp: c.engines.power_hp,
       torque_nm: c.engines.torque_nm
     } : null,
-    seat_height_mm: c.seat_height_mm,
-    weight_kg: c.weight_kg
+    dimensionData: {
+      seat_height_mm: c.seat_height_mm,
+      weight_kg: c.weight_kg,
+      wheelbase_mm: c.wheelbase_mm,
+      ground_clearance_mm: c.ground_clearance_mm,
+      fuel_capacity_l: c.fuel_capacity_l
+    }
   })));
   
-  // Select best configuration - prioritize those with actual data over defaults
+  // Select best configuration - prioritize those with complete data
   if (allConfigurations.length > 0) {
-    // First try to find configuration with complete engine data
+    // First try to find configuration with complete dimension AND engine data
     bestConfiguration = allConfigurations.find(c => 
-      c.engines && c.engines.displacement_cc > 0 && c.engines.power_hp > 0
+      c.engines && 
+      c.engines.displacement_cc > 0 && 
+      c.engines.power_hp > 0 &&
+      c.seat_height_mm > 0 &&
+      c.weight_kg > 0
     );
     
-    // If no configuration with engine data, try default
+    // If no complete configuration, try dimension data only
+    if (!bestConfiguration) {
+      bestConfiguration = allConfigurations.find(c => 
+        c.seat_height_mm > 0 && c.weight_kg > 0
+      );
+    }
+    
+    // If still no good config, try engine data only
+    if (!bestConfiguration) {
+      bestConfiguration = allConfigurations.find(c => 
+        c.engines && c.engines.displacement_cc > 0 && c.engines.power_hp > 0
+      );
+    }
+    
+    // If no configuration with good data, try default
     if (!bestConfiguration) {
       bestConfiguration = allConfigurations.find(c => c.is_default);
     }
@@ -64,7 +88,8 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       id: bestConfiguration?.id,
       name: bestConfiguration?.name,
       is_default: bestConfiguration?.is_default,
-      hasEngineData: !!(bestConfiguration?.engines?.displacement_cc)
+      hasEngineData: !!(bestConfiguration?.engines?.displacement_cc),
+      hasDimensionData: !!(bestConfiguration?.seat_height_mm && bestConfiguration?.weight_kg)
     });
   }
   
