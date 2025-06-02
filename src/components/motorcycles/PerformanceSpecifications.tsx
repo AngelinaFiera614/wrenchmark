@@ -7,10 +7,11 @@ import { usePerformanceData } from "./performance/usePerformanceData";
 
 interface PerformanceSpecificationsProps {
   motorcycle: Motorcycle;
+  selectedConfiguration?: any;
 }
 
-export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificationsProps) {
-  const { engineType, horsepower, torque, topSpeed, brakeSystem, unit } = usePerformanceData(motorcycle);
+export function PerformanceSpecifications({ motorcycle, selectedConfiguration }: PerformanceSpecificationsProps) {
+  const { engineType, horsepower, torque, topSpeed, brakeSystem, unit } = usePerformanceData(motorcycle, selectedConfiguration);
   
   return (
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-100 shadow-md">
@@ -18,6 +19,11 @@ export function PerformanceSpecifications({ motorcycle }: PerformanceSpecificati
         <CardTitle className="flex items-center gap-2 text-foreground">
           <GaugeCircle className="h-5 w-5 text-accent-teal" />
           <span>Performance Specifications</span>
+          {selectedConfiguration && (
+            <span className="text-sm text-muted-foreground font-normal">
+              ({selectedConfiguration.name || 'Configuration'})
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       

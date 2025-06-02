@@ -3,12 +3,11 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Configuration } from "@/types/motorcycle";
 
 interface ConfigurationSelectorProps {
-  configurations: Configuration[];
+  configurations: any[];
   selectedConfigId?: string;
-  onConfigurationSelect: (config: Configuration) => void;
+  onConfigurationSelect: (config: any) => void;
 }
 
 const ConfigurationSelector = ({ 
@@ -20,13 +19,13 @@ const ConfigurationSelector = ({
     return null;
   }
 
-  // Group configurations by year if they have model_year data
+  // Group configurations by year if they have model year data
   const configsByYear = configurations.reduce((acc, config) => {
-    const year = config.model_year?.year || 'Unknown';
+    const year = config.modelYear?.year || 'Unknown';
     if (!acc[year]) acc[year] = [];
     acc[year].push(config);
     return acc;
-  }, {} as Record<string, Configuration[]>);
+  }, {} as Record<string, any[]>);
 
   return (
     <Card className="mb-6">
@@ -45,25 +44,48 @@ const ConfigurationSelector = ({
                 </h4>
               )}
               <div className="flex flex-wrap gap-2">
-                {yearConfigs.map((config) => (
-                  <Button
-                    key={config.id}
-                    variant={selectedConfigId === config.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => onConfigurationSelect(config)}
-                    className="relative"
-                  >
-                    {config.name || `Configuration ${config.id.slice(0, 8)}`}
-                    {config.is_default && (
-                      <Badge 
-                        variant="secondary" 
-                        className="ml-2 text-xs bg-accent-teal/20 text-accent-teal"
-                      >
-                        Default
-                      </Badge>
-                    )}
-                  </Button>
-                ))}
+                {yearConfigs.map((config) => {
+                  const hasEngineData = config.engines && config.engines.displacement_cc > 0;
+                  const hasDimensionData = config.seat_height_mm > 0 && config.weight_kg > 0;
+                  
+                  return (
+                    <Button
+                      key={config.id}
+                      variant={selectedConfigId === config.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => onConfigurationSelect(config)}
+                      className="relative"
+                    >
+                      {config.name || `Configuration ${config.id.slice(0, 8)}`}
+                      <div className="flex gap-1 ml-2">
+                        {config.is_default && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs bg-accent-teal/20 text-accent-teal"
+                          >
+                            Default
+                          </Badge>
+                        )}
+                        {hasEngineData && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs bg-green-500/20 text-green-600"
+                          >
+                            Engine
+                          </Badge>
+                        )}
+                        {hasDimensionData && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs bg-blue-500/20 text-blue-600"
+                          >
+                            Specs
+                          </Badge>
+                        )}
+                      </div>
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           ))}

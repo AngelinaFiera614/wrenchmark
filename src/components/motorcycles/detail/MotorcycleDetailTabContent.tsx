@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Motorcycle } from "@/types";
-import { Configuration } from "@/types/motorcycle";
 import { PerformanceSpecifications } from "../PerformanceSpecifications";
 import { PhysicalDimensions } from "../PhysicalDimensions";
 import { FeaturesList } from "../FeaturesList";
@@ -16,7 +15,7 @@ interface MotorcycleDetailTabContentProps {
   motorcycle: Motorcycle;
   hasComponentData: boolean;
   componentData: any;
-  selectedConfiguration: Configuration | null;
+  selectedConfiguration: any;
 }
 
 export function MotorcycleDetailTabContent({
@@ -30,8 +29,14 @@ export function MotorcycleDetailTabContent({
     case 'specifications':
       return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PerformanceSpecifications motorcycle={motorcycle} />
-          <PhysicalDimensions motorcycle={motorcycle} />
+          <PerformanceSpecifications 
+            motorcycle={motorcycle} 
+            selectedConfiguration={selectedConfiguration}
+          />
+          <PhysicalDimensions 
+            motorcycle={motorcycle} 
+            selectedConfiguration={selectedConfiguration}
+          />
         </div>
       );
 
@@ -53,39 +58,39 @@ export function MotorcycleDetailTabContent({
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {componentData?.engine && (
+            {selectedConfiguration?.engines && (
               <ComponentDetailCard
                 type="engine"
                 title="Engine"
-                data={componentData.engine}
+                data={selectedConfiguration.engines}
               />
             )}
-            {componentData?.brakes && (
+            {selectedConfiguration?.brake_systems && (
               <ComponentDetailCard
                 type="brake"
                 title="Brake System"
-                data={componentData.brakes}
+                data={selectedConfiguration.brake_systems}
               />
             )}
-            {componentData?.frame && (
+            {selectedConfiguration?.frames && (
               <ComponentDetailCard
                 type="frame"
                 title="Frame"
-                data={componentData.frame}
+                data={selectedConfiguration.frames}
               />
             )}
-            {componentData?.suspension && (
+            {selectedConfiguration?.suspensions && (
               <ComponentDetailCard
                 type="suspension"
                 title="Suspension"
-                data={componentData.suspension}
+                data={selectedConfiguration.suspensions}
               />
             )}
-            {componentData?.wheels && (
+            {selectedConfiguration?.wheels && (
               <ComponentDetailCard
                 type="wheel"
                 title="Wheels"
-                data={componentData.wheels}
+                data={selectedConfiguration.wheels}
               />
             )}
           </div>

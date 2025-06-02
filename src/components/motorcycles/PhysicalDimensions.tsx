@@ -7,10 +7,11 @@ import { useDimensionData } from "./dimensions/useDimensionData";
 
 interface PhysicalDimensionsProps {
   motorcycle: Motorcycle;
+  selectedConfiguration?: any;
 }
 
-export function PhysicalDimensions({ motorcycle }: PhysicalDimensionsProps) {
-  const { weight, seatHeight, wheelbase, groundClearance, fuelCapacity, unit } = useDimensionData(motorcycle);
+export function PhysicalDimensions({ motorcycle, selectedConfiguration }: PhysicalDimensionsProps) {
+  const { weight, seatHeight, wheelbase, groundClearance, fuelCapacity, unit } = useDimensionData(motorcycle, selectedConfiguration);
   
   return (
     <Card className="border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-5 duration-500 delay-150 shadow-md">
@@ -18,6 +19,11 @@ export function PhysicalDimensions({ motorcycle }: PhysicalDimensionsProps) {
         <CardTitle className="flex items-center gap-2 text-foreground">
           <MoveUp className="h-5 w-5 text-accent-teal" />
           <span>Physical Dimensions</span>
+          {selectedConfiguration && (
+            <span className="text-sm text-muted-foreground font-normal">
+              ({selectedConfiguration.name || 'Configuration'})
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       
