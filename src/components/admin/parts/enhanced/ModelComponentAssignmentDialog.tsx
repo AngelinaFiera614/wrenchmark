@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wrench, Inheritance, Settings, AlertTriangle } from "lucide-react";
+import { Wrench, ArrowDown, Settings, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -223,7 +223,7 @@ const ModelComponentAssignmentDialog = ({
           <TabsContent value="assignments" className="space-y-6">
             <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <Inheritance className="h-5 w-5 text-blue-600 mt-0.5" />
+                <ArrowDown className="h-5 w-5 text-blue-600 mt-0.5" />
                 <div>
                   <h4 className="font-medium text-blue-800 dark:text-blue-200">
                     Model-Level Assignment
@@ -245,7 +245,7 @@ const ModelComponentAssignmentDialog = ({
             <Card className="bg-explorer-card border-explorer-chrome/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Inheritance className="h-5 w-5" />
+                  <ArrowDown className="h-5 w-5" />
                   How Component Inheritance Works
                 </CardTitle>
               </CardHeader>

@@ -8,7 +8,7 @@ import {
   createBrakeSystem, 
   createFrame, 
   createSuspension, 
-  createWheels 
+  createWheel 
 } from "@/services/componentService";
 import { useQueryClient } from "@tanstack/react-query";
 

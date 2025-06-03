@@ -190,7 +190,10 @@ export const canDeleteComponent = async (
   // Check model assignments
   const { data: modelAssignments } = await supabase
     .from('model_component_assignments')
-    .select('model_id, motorcycle_models(name)')
+    .select(`
+      model_id,
+      motorcycle_models!inner(name)
+    `)
     .eq('component_type', componentType)
     .eq('component_id', componentId);
     
@@ -198,11 +201,19 @@ export const canDeleteComponent = async (
   const componentField = `${componentType}_id`;
   const { data: trimAssignments } = await supabase
     .from('model_configurations')
-    .select('id, name, model_years(motorcycle_models(name))')
+    .select(`
+      id, 
+      name,
+      model_years!inner(
+        motorcycle_models!inner(name)
+      )
+    `)
     .eq(componentField, componentId);
     
   const modelNames = modelAssignments?.map(a => a.motorcycle_models?.name).filter(Boolean) || [];
-  const trimNames = trimAssignments?.map(t => `${t.model_years?.motorcycle_models?.name} - ${t.name}`).filter(Boolean) || [];
+  const trimNames = trimAssignments?.map(t => 
+    `${t.model_years?.motorcycle_models?.name} - ${t.name}`
+  ).filter(Boolean) || [];
   
   const totalUsage = (modelAssignments?.length || 0) + (trimAssignments?.length || 0);
   

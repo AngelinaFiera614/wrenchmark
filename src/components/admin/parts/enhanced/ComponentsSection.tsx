@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wrench, Zap, Disc, Frame, Cog, Circle, Unlink, Inheritance, Settings, Eye } from "lucide-react";
+import { Wrench, Zap, Disc, Frame, Cog, Circle, Unlink, ArrowDown, Settings, Eye } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -198,7 +198,7 @@ const ComponentsSection = ({
         <CardContent>
           <div className="mb-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
             <div className="flex items-start gap-2">
-              <Inheritance className="h-4 w-4 text-blue-600 mt-0.5" />
+              <ArrowDown className="h-4 w-4 text-blue-600 mt-0.5" />
               <div className="text-sm">
                 <div className="font-medium text-blue-800 dark:text-blue-200">Component Inheritance</div>
                 <div className="text-blue-700 dark:text-blue-300">
@@ -255,7 +255,7 @@ const ComponentsSection = ({
                           ID: {component.effectiveId}
                           {isInherited && (
                             <div className="flex items-center gap-1 mt-1">
-                              <Inheritance className="h-3 w-3 text-blue-500" />
+                              <ArrowDown className="h-3 w-3 text-blue-500" />
                               <span className="text-blue-500">From model assignment</span>
                             </div>
                           )}
@@ -277,7 +277,7 @@ const ComponentsSection = ({
                               disabled={isUnlinking}
                               className="flex-1 text-blue-400 border-blue-400/30 hover:bg-blue-400/20"
                             >
-                              <Inheritance className="h-3 w-3 mr-1" />
+                              <ArrowDown className="h-3 w-3 mr-1" />
                               {isUnlinking ? "..." : "Inherit"}
                             </Button>
                           )}
@@ -317,7 +317,7 @@ const ComponentsSection = ({
           open={modelAssignmentDialog}
           onClose={() => setModelAssignmentDialog(false)}
           modelId={selectedConfig.model_year?.motorcycle_id || ''}
-          modelName={selectedConfig.model_year?.motorcycle_model?.name || 'Unknown Model'}
+          modelName="Unknown Model"
           onSuccess={() => {
             refetchEffective();
             onRefresh();
