@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pin, Calendar, Settings, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { Pin, Calendar, Settings, CheckCircle, AlertCircle, Clock, PinOff, Eye } from "lucide-react";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
 import { usePinnedModels } from "@/hooks/usePinnedModels";
 
@@ -54,7 +54,7 @@ const ContextSidebar = ({
 
   return (
     <div className="space-y-6 h-full">
-      {/* Pinned Models */}
+      {/* Enhanced Pinned Models Section */}
       <Card className="bg-explorer-card border-explorer-chrome/30">
         <CardHeader className="pb-3">
           <CardTitle className="text-explorer-text flex items-center gap-2">
@@ -75,12 +75,11 @@ const ContextSidebar = ({
               {pinnedModels.map((model) => (
                 <div
                   key={model.id}
-                  className={`group flex items-center justify-between p-3 rounded-md border transition-colors cursor-pointer ${
+                  className={`group flex items-center justify-between p-3 rounded-md border transition-colors ${
                     selectedModel === model.id
                       ? 'bg-accent-teal/20 border-accent-teal/30'
                       : 'bg-explorer-dark hover:bg-explorer-chrome/10 border-explorer-chrome/20'
                   }`}
-                  onClick={() => handleModelSelect(model.id)}
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {getStatusIcon(model, 'model')}
@@ -92,6 +91,27 @@ const ContextSidebar = ({
                         {model.type} • {model.production_status}
                       </div>
                     </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleModelSelect(model.id)}
+                      className="h-6 w-6 opacity-70 hover:opacity-100"
+                      title="Select this model"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => unpinModel(model.id)}
+                      className="h-6 w-6 opacity-70 hover:opacity-100 text-orange-400 hover:text-orange-300"
+                      title="Unpin this model"
+                    >
+                      <PinOff className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
               ))}

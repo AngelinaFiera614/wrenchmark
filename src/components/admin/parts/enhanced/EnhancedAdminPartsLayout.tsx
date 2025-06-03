@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Settings, Eye, EyeOff, RotateCcw } from "lucide-react";
-import { useAdminPartsAssignment } from "@/hooks/useAdminPartsAssignment";
+import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
 import ContextSidebar from "./ContextSidebar";
 import ModelNavigatorEnhanced from "./ModelNavigatorEnhanced";
 import SplitViewTrimManager from "./SplitViewTrimManager";
@@ -17,7 +17,7 @@ const EnhancedAdminPartsLayout = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   
-  const adminData = useAdminPartsAssignment();
+  const adminData = useAdminPartsAssignmentOptimized();
 
   const handleRunValidation = () => {
     console.log("Running full validation...");
