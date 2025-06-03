@@ -12,6 +12,7 @@ interface TrimSectionProps {
   selectedConfig: string | null;
   onConfigSelect: (configId: string) => void;
   onConfigChange: () => void;
+  onAddTrim: () => void;
 }
 
 const TrimSection = ({
@@ -19,7 +20,8 @@ const TrimSection = ({
   selectedYear,
   selectedConfig,
   onConfigSelect,
-  onConfigChange
+  onConfigChange,
+  onAddTrim
 }: TrimSectionProps) => {
   if (!selectedYear) {
     return (
@@ -48,6 +50,7 @@ const TrimSection = ({
           </div>
           <Button
             size="sm"
+            onClick={onAddTrim}
             className="bg-accent-teal text-black hover:bg-accent-teal/80"
           >
             <Plus className="h-4 w-4 mr-2" />

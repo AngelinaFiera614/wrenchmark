@@ -4,6 +4,7 @@ import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
 import { fetchModelYears, deleteModelYear } from "@/services/models/modelYearService";
 import { fetchConfigurations } from "@/services/models/configurationService";
 import { toast } from "sonner";
+import { Configuration } from "@/types/motorcycle";
 
 export const useAdminPartsAssignmentOptimized = () => {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
@@ -11,6 +12,8 @@ export const useAdminPartsAssignmentOptimized = () => {
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("navigator");
   const [showPreview, setShowPreview] = useState(false);
+  const [isEditingTrim, setIsEditingTrim] = useState(false);
+  const [editingTrimConfig, setEditingTrimConfig] = useState<Configuration | undefined>(undefined);
   
   const queryClient = useQueryClient();
 
@@ -93,6 +96,38 @@ export const useAdminPartsAssignmentOptimized = () => {
     setShowPreview(true);
   };
 
+  // New trim level editor handlers
+  const handleAddTrim = () => {
+    if (!selectedYear) {
+      toast.error("Please select a model year first");
+      return;
+    }
+    setEditingTrimConfig(undefined);
+    setIsEditingTrim(true);
+  };
+
+  const handleEditTrim = (config: Configuration) => {
+    setEditingTrimConfig(config);
+    setIsEditingTrim(true);
+  };
+
+  const handleCloseTrimEditor = () => {
+    setIsEditingTrim(false);
+    setEditingTrimConfig(undefined);
+  };
+
+  const handleSaveTrim = (config: Configuration) => {
+    // Auto-select the newly created/edited configuration
+    setSelectedConfig(config.id);
+    setIsEditingTrim(false);
+    setEditingTrimConfig(undefined);
+    
+    // Refresh configurations
+    refreshConfigurations();
+    
+    toast.success(editingTrimConfig ? "Trim level updated successfully" : "Trim level created successfully");
+  };
+
   const handleComponentLinked = () => {
     // Invalidate only the specific queries that need refreshing
     queryClient.invalidateQueries({ 
@@ -143,6 +178,8 @@ export const useAdminPartsAssignmentOptimized = () => {
     selectedConfig,
     activeTab,
     showPreview,
+    isEditingTrim,
+    editingTrimConfig,
     setActiveTab,
     setShowPreview,
     
@@ -168,5 +205,9 @@ export const useAdminPartsAssignmentOptimized = () => {
     handleComponentLinked,
     refreshConfigurations,
     handleYearDelete,
+    handleAddTrim,
+    handleEditTrim,
+    handleCloseTrimEditor,
+    handleSaveTrim,
   };
 };
