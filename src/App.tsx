@@ -34,7 +34,7 @@ import AdminManuals from "@/pages/admin/AdminManuals";
 import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
 import AdminCourses from "@/pages/admin/AdminCourses";
 import AdminGlossary from "@/pages/admin/AdminGlossary";
-import AdminPartsAssignment from "@/pages/admin/AdminPartsAssignment";
+import AdminPartsAssignmentOptimized from "@/pages/admin/AdminPartsAssignmentOptimized";
 import AdminAccessories from "@/pages/admin/AdminAccessories";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminEnhancedMedia from "@/pages/admin/AdminEnhancedMedia";
@@ -84,7 +84,7 @@ function App() {
             <Route path="riding-skills" element={<AdminRidingSkills />} />
             <Route path="courses" element={<AdminCourses />} />
             <Route path="glossary" element={<AdminGlossary />} />
-            <Route path="parts" element={<AdminPartsAssignment />} />
+            <Route path="parts" element={<AdminPartsAssignmentOptimized />} />
             <Route path="accessories" element={<AdminAccessories />} />
             <Route path="users" element={<AdminUsers />} />
           </Route>
