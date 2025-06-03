@@ -215,6 +215,42 @@ export type Database = {
           },
         ]
       }
+      component_usage_stats: {
+        Row: {
+          component_id: string
+          component_type: string
+          created_at: string
+          id: string
+          last_used_at: string | null
+          model_count: number | null
+          trim_count: number | null
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          component_id: string
+          component_type: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          model_count?: number | null
+          trim_count?: number | null
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          component_id?: string
+          component_type?: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          model_count?: number | null
+          trim_count?: number | null
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       content_block_types: {
         Row: {
           created_at: string | null
@@ -669,14 +705,55 @@ export type Database = {
           },
         ]
       }
+      model_component_assignments: {
+        Row: {
+          component_id: string
+          component_type: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          model_id: string
+          updated_at: string
+        }
+        Insert: {
+          component_id: string
+          component_type: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          model_id: string
+          updated_at?: string
+        }
+        Update: {
+          component_id?: string
+          component_type?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          model_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_component_assignments_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       model_configurations: {
         Row: {
           brake_system_id: string | null
+          brake_system_override: boolean | null
           color_id: string | null
           created_at: string
           description: string | null
           engine_id: string | null
+          engine_override: boolean | null
           frame_id: string | null
+          frame_override: boolean | null
           fuel_capacity_l: number | null
           ground_clearance_mm: number | null
           id: string
@@ -692,19 +769,24 @@ export type Database = {
           seat_height_mm: number | null
           special_features: string[] | null
           suspension_id: string | null
+          suspension_override: boolean | null
           trim_level: string | null
           updated_at: string
           weight_kg: number | null
           wheel_id: string | null
+          wheel_override: boolean | null
           wheelbase_mm: number | null
         }
         Insert: {
           brake_system_id?: string | null
+          brake_system_override?: boolean | null
           color_id?: string | null
           created_at?: string
           description?: string | null
           engine_id?: string | null
+          engine_override?: boolean | null
           frame_id?: string | null
+          frame_override?: boolean | null
           fuel_capacity_l?: number | null
           ground_clearance_mm?: number | null
           id?: string
@@ -720,19 +802,24 @@ export type Database = {
           seat_height_mm?: number | null
           special_features?: string[] | null
           suspension_id?: string | null
+          suspension_override?: boolean | null
           trim_level?: string | null
           updated_at?: string
           weight_kg?: number | null
           wheel_id?: string | null
+          wheel_override?: boolean | null
           wheelbase_mm?: number | null
         }
         Update: {
           brake_system_id?: string | null
+          brake_system_override?: boolean | null
           color_id?: string | null
           created_at?: string
           description?: string | null
           engine_id?: string | null
+          engine_override?: boolean | null
           frame_id?: string | null
+          frame_override?: boolean | null
           fuel_capacity_l?: number | null
           ground_clearance_mm?: number | null
           id?: string
@@ -748,10 +835,12 @@ export type Database = {
           seat_height_mm?: number | null
           special_features?: string[] | null
           suspension_id?: string | null
+          suspension_override?: boolean | null
           trim_level?: string | null
           updated_at?: string
           weight_kg?: number | null
           wheel_id?: string | null
+          wheel_override?: boolean | null
           wheelbase_mm?: number | null
         }
         Relationships: [
@@ -1856,6 +1945,21 @@ export type Database = {
           total_lessons: number
           completed_lessons: number
           progress_percentage: number
+        }[]
+      }
+      get_effective_components: {
+        Args: { config_id: string }
+        Returns: {
+          engine_id: string
+          brake_system_id: string
+          frame_id: string
+          suspension_id: string
+          wheel_id: string
+          engine_inherited: boolean
+          brake_system_inherited: boolean
+          frame_inherited: boolean
+          suspension_inherited: boolean
+          wheel_inherited: boolean
         }[]
       }
       get_motorcycle_model_relations: {

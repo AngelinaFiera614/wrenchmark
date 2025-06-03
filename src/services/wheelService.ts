@@ -8,7 +8,7 @@ export const fetchWheels = async (): Promise<WheelOption[]> => {
     const { data, error } = await supabase
       .from('wheels')
       .select('*')
-      .order('type');
+      .order('created_at', { ascending: false });
       
     if (error) {
       console.error("Error fetching wheels:", error);
@@ -17,7 +17,7 @@ export const fetchWheels = async (): Promise<WheelOption[]> => {
     
     return data.map(wheel => ({
       id: wheel.id,
-      name: `${wheel.front_size || ''} / ${wheel.rear_size || ''} ${wheel.type || 'Wheels'}`.trim(),
+      name: wheel.type || 'Unknown Wheel',
       type: wheel.type,
       front_size: wheel.front_size,
       rear_size: wheel.rear_size,
@@ -35,7 +35,7 @@ export const fetchWheels = async (): Promise<WheelOption[]> => {
 };
 
 // Create a new wheel
-export const createWheels = async (wheelData: Omit<WheelOption, 'id' | 'name'>): Promise<WheelOption | null> => {
+export const createWheel = async (wheelData: Omit<WheelOption, 'id' | 'name'>): Promise<WheelOption | null> => {
   try {
     const { data, error } = await supabase
       .from('wheels')
@@ -60,7 +60,7 @@ export const createWheels = async (wheelData: Omit<WheelOption, 'id' | 'name'>):
     
     return {
       id: data.id,
-      name: `${data.front_size || ''} / ${data.rear_size || ''} ${data.type || 'Wheels'}`.trim(),
+      name: data.type || 'Unknown Wheel',
       type: data.type,
       front_size: data.front_size,
       rear_size: data.rear_size,
@@ -72,7 +72,7 @@ export const createWheels = async (wheelData: Omit<WheelOption, 'id' | 'name'>):
       notes: data.notes
     };
   } catch (error) {
-    console.error("Error in createWheels:", error);
+    console.error("Error in createWheel:", error);
     return null;
   }
 };
@@ -104,7 +104,7 @@ export const updateWheel = async (id: string, wheelData: Omit<WheelOption, 'id' 
     
     return {
       id: data.id,
-      name: `${data.front_size || ''} / ${data.rear_size || ''} ${data.type || 'Wheels'}`.trim(),
+      name: data.type || 'Unknown Wheel',
       type: data.type,
       front_size: data.front_size,
       rear_size: data.rear_size,
