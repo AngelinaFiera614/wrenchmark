@@ -7,7 +7,7 @@ export const fetchAllMotorcycleModels = async () => {
       .from('motorcycle_models')
       .select(`
         *,
-        brands!motorcycle_models_brand_id_fkey(
+        brand:brands!motorcycle_models_brand_id_fkey(
           id,
           name,
           slug
@@ -32,7 +32,7 @@ export const fetchMotorcycleModelBySlug = async (slug: string) => {
       .from('motorcycle_models')
       .select(`
         *,
-        brands!motorcycle_models_brand_id_fkey(
+        brand:brands!motorcycle_models_brand_id_fkey(
           id,
           name,
           slug
@@ -58,7 +58,7 @@ export const fetchModelsForComparison = async (slugs: string[]) => {
       .from('motorcycle_models')
       .select(`
         *,
-        brands!motorcycle_models_brand_id_fkey(
+        brand:brands!motorcycle_models_brand_id_fkey(
           id,
           name,
           slug
