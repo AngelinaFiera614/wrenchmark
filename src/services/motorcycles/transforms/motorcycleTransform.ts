@@ -1,3 +1,4 @@
+
 import { Database } from "@/integrations/supabase/types";
 import { Motorcycle } from "@/types";
 import { extractEngineData } from "./engineDataExtractor";
@@ -85,7 +86,9 @@ export const transformToMotorcycle = (
     model: model.name,
     year: latestYear?.year || new Date().getFullYear(),
     slug: model.slug,
-    type: model.type || "Standard",
+    category: model.type || "Standard", // Changed from 'type' to 'category'
+    style_tags: [],
+    difficulty_level: 1,
     image_url: model.default_image_url || latestYear?.image_url,
     
     // Engine specifications
@@ -93,12 +96,9 @@ export const transformToMotorcycle = (
     horsepower: engineData.power_hp,
     torque_nm: engineData.torque_nm,
     engine: engineData.engine_type,
-    fuel_system: engineData.fuel_system,
-    cooling: engineData.cooling,
     
     // Brake data
-    has_abs: brakeData.has_abs,
-    brake_type: brakeData.brake_type,
+    abs: brakeData.has_abs,
     
     // Dimensions
     seat_height_mm: dimensionData.seat_height_mm,
@@ -106,6 +106,8 @@ export const transformToMotorcycle = (
     wheelbase_mm: dimensionData.wheelbase_mm,
     fuel_capacity_l: dimensionData.fuel_capacity_l,
     ground_clearance_mm: dimensionData.ground_clearance_mm,
+    top_speed_kph: 0,
+    smart_features: [],
 
     // Metadata
     is_placeholder: false,
