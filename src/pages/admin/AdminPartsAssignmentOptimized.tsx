@@ -2,21 +2,18 @@
 import React from "react";
 import AdminPartsAssignmentHeader from "@/components/admin/parts/AdminPartsAssignmentHeader";
 import ConfigurationPreview from "@/components/admin/parts/ConfigurationPreview";
-import OptimizedNavigationColumn from "@/components/admin/parts/enhanced/OptimizedNavigationColumn";
-import DataGenerationPanel from "@/components/admin/parts/enhanced/DataGenerationPanel";
-import TrimLevelManagerEnhanced from "@/components/admin/parts/TrimLevelManagerEnhanced";
-import DataHealthDashboard from "@/components/admin/parts/DataHealthDashboard";
+import ModelNavigatorSection from "@/components/admin/parts/enhanced/ModelNavigatorSection";
+import YearsSection from "@/components/admin/parts/enhanced/YearsSection";
+import TrimSection from "@/components/admin/parts/enhanced/TrimSection";
+import ComponentsSection from "@/components/admin/parts/enhanced/ComponentsSection";
 import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminPartsAssignmentOptimized = () => {
   const {
     selectedModel,
     selectedYear,
     selectedConfig,
-    activeTab,
     showPreview,
-    setActiveTab,
     setShowPreview,
     models,
     modelYears,
@@ -29,7 +26,6 @@ const AdminPartsAssignmentOptimized = () => {
     handleYearSelect,
     handleConfigSelect,
     handlePreviewConfig,
-    handleComponentLinked,
     refreshConfigurations,
   } = useAdminPartsAssignmentOptimized();
 
@@ -40,76 +36,38 @@ const AdminPartsAssignmentOptimized = () => {
         onPreviewConfig={handlePreviewConfig}
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="health-check">Data Health</TabsTrigger>
-          <TabsTrigger value="navigator">Navigator</TabsTrigger>
-          <TabsTrigger value="data-generation">Data Generation</TabsTrigger>
-          <TabsTrigger value="trim-manager">Trim Manager</TabsTrigger>
-        </TabsList>
+      {/* Model Navigator Section - Teal Outlined, Full Width */}
+      <ModelNavigatorSection
+        models={models || []}
+        selectedModel={selectedModel}
+        onModelSelect={handleModelSelect}
+        isLoading={isLoading}
+      />
 
-        <TabsContent value="health-check" className="space-y-6">
-          <DataHealthDashboard />
-        </TabsContent>
+      {/* Years Section */}
+      <YearsSection
+        modelYears={modelYears || []}
+        selectedModel={selectedModel}
+        selectedYear={selectedYear}
+        selectedModelData={selectedModelData}
+        onYearSelect={handleYearSelect}
+        isLoading={isLoading}
+      />
 
-        <TabsContent value="navigator" className="space-y-6">
-          <OptimizedNavigationColumn
-            models={models || []}
-            modelYears={modelYears || []}
-            configurations={configurations || []}
-            selectedModel={selectedModel}
-            selectedYear={selectedYear}
-            selectedConfig={selectedConfig}
-            onModelSelect={handleModelSelect}
-            onYearSelect={handleYearSelect}
-            onConfigSelect={handleConfigSelect}
-            isLoading={isLoading}
-            onRefresh={refreshConfigurations}
-          />
-        </TabsContent>
+      {/* Trim Section */}
+      <TrimSection
+        configurations={configurations || []}
+        selectedYear={selectedYear}
+        selectedConfig={selectedConfig}
+        onConfigSelect={handleConfigSelect}
+        onConfigChange={refreshConfigurations}
+      />
 
-        <TabsContent value="data-generation" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <OptimizedNavigationColumn
-              models={models || []}
-              modelYears={modelYears || []}
-              configurations={configurations || []}
-              selectedModel={selectedModel}
-              selectedYear={selectedYear}
-              selectedConfig={selectedConfig}
-              onModelSelect={handleModelSelect}
-              onYearSelect={handleYearSelect}
-              onConfigSelect={handleConfigSelect}
-              isLoading={isLoading}
-              onRefresh={refreshConfigurations}
-            />
-            
-            <DataGenerationPanel
-              selectedModel={selectedModelData}
-              modelYears={modelYears || []}
-              onDataGenerated={refreshConfigurations}
-            />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="trim-manager" className="space-y-6">
-          {selectedYear ? (
-            <TrimLevelManagerEnhanced
-              modelYearId={selectedYear}
-              configurations={configurations || []}
-              selectedConfig={selectedConfig}
-              onConfigSelect={handleConfigSelect}
-              onConfigChange={refreshConfigurations}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-explorer-text-muted">
-                Select a model year to manage trim levels
-              </p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Components Section */}
+      <ComponentsSection
+        selectedConfig={selectedConfigData}
+        onRefresh={refreshConfigurations}
+      />
 
       {/* Configuration Preview Modal */}
       {showPreview && selectedConfigData && (
