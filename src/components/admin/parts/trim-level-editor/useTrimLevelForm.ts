@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Configuration } from "@/types/motorcycle";
+import { checkForExistingDefault } from "@/services/models/configurationService";
 
 export const useTrimLevelForm = (modelYearId: string, configuration?: Configuration) => {
   const [formData, setFormData] = useState({
     model_year_id: modelYearId,
-    name: configuration?.name || "Standard",
+    name: configuration?.name || "",
     description: configuration?.description || "",
     notes: configuration?.notes || "",
     engine_id: configuration?.engine_id || "",
@@ -18,7 +19,7 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     wheelbase_mm: configuration?.wheelbase_mm?.toString() || "",
     fuel_capacity_l: configuration?.fuel_capacity_l?.toString() || "",
     ground_clearance_mm: configuration?.ground_clearance_mm?.toString() || "",
-    is_default: configuration?.is_default || false,
+    is_default: configuration?.is_default || false, // Default to false for new trims
     trim_level: configuration?.trim_level || "",
     market_region: configuration?.market_region || "",
     price_premium_usd: configuration?.price_premium_usd?.toString() || "",
@@ -32,6 +33,32 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     suspension: configuration?.suspension || null,
     wheels: configuration?.wheels || null,
   });
+
+  const [existingDefault, setExistingDefault] = useState<Configuration | null>(null);
+  const [hasCheckedDefault, setHasCheckedDefault] = useState(false);
+
+  // Check for existing default configuration when component loads
+  useEffect(() => {
+    const checkDefault = async () => {
+      if (!hasCheckedDefault && modelYearId) {
+        try {
+          const existing = await checkForExistingDefault(modelYearId);
+          setExistingDefault(existing);
+          setHasCheckedDefault(true);
+          
+          // If no default exists and this is the first trim, suggest making it default
+          if (!existing && !configuration) {
+            console.log("No default configuration exists, suggesting this as default");
+          }
+        } catch (error) {
+          console.error("Error checking for existing default:", error);
+          setHasCheckedDefault(true);
+        }
+      }
+    };
+    
+    checkDefault();
+  }, [modelYearId, configuration, hasCheckedDefault]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -95,6 +122,8 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
   return {
     formData,
     selectedComponents,
+    existingDefault,
+    hasCheckedDefault,
     handleInputChange,
     handleComponentSelect,
     getMockConfiguration,

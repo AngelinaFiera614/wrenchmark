@@ -26,6 +26,8 @@ const TrimLevelEditor = ({
   const {
     formData,
     selectedComponents,
+    existingDefault,
+    hasCheckedDefault,
     handleInputChange,
     handleComponentSelect,
     getMockConfiguration,
@@ -71,6 +73,7 @@ const TrimLevelEditor = ({
         onInputChange={handleInputChangeWithErrorClear}
         onComponentSelect={handleComponentSelect}
         metrics={metrics}
+        existingDefault={existingDefault}
       />
     </div>
   );

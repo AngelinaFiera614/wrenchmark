@@ -15,6 +15,21 @@ export const createConfiguration = async (configData: Partial<Configuration>): P
       throw new Error("Configuration name is required");
     }
     
+    // If this is being set as default, first unset any existing default for this model year
+    if (configData.is_default) {
+      console.log("Unsetting existing default configurations for model year:", configData.model_year_id);
+      const { error: unsetError } = await supabase
+        .from('model_configurations')
+        .update({ is_default: false })
+        .eq('model_year_id', configData.model_year_id)
+        .eq('is_default', true);
+        
+      if (unsetError) {
+        console.error("Error unsetting existing default:", unsetError);
+        throw new Error(`Failed to unset existing default: ${unsetError.message}`);
+      }
+    }
+    
     const { data, error } = await supabase
       .from('model_configurations')
       .insert([configData])
@@ -37,6 +52,33 @@ export const createConfiguration = async (configData: Partial<Configuration>): P
 export const updateConfiguration = async (configId: string, updateData: Partial<Configuration>): Promise<Configuration | null> => {
   try {
     console.log("Updating configuration:", configId, "with data:", updateData);
+    
+    // If this is being set as default, first unset any existing default for this model year
+    if (updateData.is_default) {
+      // First get the model_year_id for this configuration
+      const { data: configData, error: fetchError } = await supabase
+        .from('model_configurations')
+        .select('model_year_id')
+        .eq('id', configId)
+        .single();
+        
+      if (fetchError) {
+        throw new Error(`Failed to fetch configuration: ${fetchError.message}`);
+      }
+      
+      console.log("Unsetting existing default configurations for model year:", configData.model_year_id);
+      const { error: unsetError } = await supabase
+        .from('model_configurations')
+        .update({ is_default: false })
+        .eq('model_year_id', configData.model_year_id)
+        .eq('is_default', true)
+        .neq('id', configId); // Don't unset the one we're updating
+        
+      if (unsetError) {
+        console.error("Error unsetting existing default:", unsetError);
+        throw new Error(`Failed to unset existing default: ${unsetError.message}`);
+      }
+    }
     
     const { data, error } = await supabase
       .from('model_configurations')
@@ -130,5 +172,98 @@ export const getAvailableTargetYears = async (motorcycleId: string) => {
   } catch (error) {
     console.error("Error in getAvailableTargetYears:", error);
     throw error;
+  }
+};
+
+// Add missing exports to fix build errors
+export const cloneConfiguration = async (sourceConfigId: string, targetModelYearId: string): Promise<Configuration | null> => {
+  try {
+    // Get the source configuration
+    const { data: sourceConfig, error: fetchError } = await supabase
+      .from('model_configurations')
+      .select('*')
+      .eq('id', sourceConfigId)
+      .single();
+      
+    if (fetchError || !sourceConfig) {
+      throw new Error('Source configuration not found');
+    }
+    
+    // Create new configuration data (excluding id and timestamps)
+    const newConfigData = {
+      ...sourceConfig,
+      id: undefined,
+      created_at: undefined,
+      updated_at: undefined,
+      model_year_id: targetModelYearId,
+      is_default: false, // Don't clone as default to avoid conflicts
+    };
+    
+    return await createConfiguration(newConfigData);
+  } catch (error) {
+    console.error("Error cloning configuration:", error);
+    throw error;
+  }
+};
+
+export const copyConfigurationToMultipleYears = async (sourceConfigId: string, targetYearIds: string[]): Promise<Configuration[]> => {
+  try {
+    const results: Configuration[] = [];
+    
+    for (const yearId of targetYearIds) {
+      const cloned = await cloneConfiguration(sourceConfigId, yearId);
+      if (cloned) {
+        results.push(cloned);
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error("Error copying configuration to multiple years:", error);
+    throw error;
+  }
+};
+
+export const getYearsWithExistingConfigs = async (motorcycleId: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('model_configurations')
+      .select('model_year_id')
+      .in('model_year_id', 
+        await supabase
+          .from('model_years')
+          .select('id')
+          .eq('motorcycle_id', motorcycleId)
+          .then(res => res.data?.map(y => y.id) || [])
+      );
+      
+    if (error) {
+      throw new Error(`Failed to fetch existing configurations: ${error.message}`);
+    }
+    
+    return data?.map(config => config.model_year_id) || [];
+  } catch (error) {
+    console.error("Error getting years with existing configs:", error);
+    throw error;
+  }
+};
+
+export const checkForExistingDefault = async (modelYearId: string): Promise<Configuration | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('model_configurations')
+      .select('*')
+      .eq('model_year_id', modelYearId)
+      .eq('is_default', true)
+      .single();
+      
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      throw error;
+    }
+    
+    return data || null;
+  } catch (error) {
+    console.error("Error checking for existing default:", error);
+    return null;
   }
 };
