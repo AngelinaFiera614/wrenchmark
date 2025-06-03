@@ -74,7 +74,7 @@ const SplitViewTrimManager = ({
               </div>
             )}
           </CardHeader>
-        </CardContent>
+        </Card>
 
         {isPreviewMode && selectedConfigData ? (
           <LiveMotorcyclePreview 
