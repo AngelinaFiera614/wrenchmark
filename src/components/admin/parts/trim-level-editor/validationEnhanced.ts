@@ -12,6 +12,7 @@ export interface ValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
+  suggestions: string[];
 }
 
 export const calculateFormCompleteness = (config: Configuration): FormCompleteness => {
@@ -62,6 +63,7 @@ export const calculateFormCompleteness = (config: Configuration): FormCompletene
 export const validateTrimLevelFormEnhanced = (formData: any, modelYearId: string): ValidationResult => {
   const errors: string[] = [];
   const warnings: string[] = [];
+  const suggestions: string[] = [];
 
   // Required field validation
   if (!formData.name || formData.name.trim() === '') {
@@ -114,9 +116,33 @@ export const validateTrimLevelFormEnhanced = (formData: any, modelYearId: string
     errors.push('Ground clearance must be positive');
   }
 
+  // Suggestions for improvement
+  if (!formData.market_region) {
+    suggestions.push('Consider adding a market region for better categorization');
+  }
+
+  if (!formData.price_premium_usd && formData.price_premium_usd !== 0) {
+    suggestions.push('Adding price premium information helps with market positioning');
+  }
+
+  if (formData.seat_height_mm && formData.weight_kg) {
+    // Add performance-based suggestions
+    const seatHeight = Number(formData.seat_height_mm);
+    const weight = Number(formData.weight_kg);
+    
+    if (seatHeight < 780) {
+      suggestions.push('Low seat height detected - consider adding beginner-friendly tags');
+    }
+    
+    if (weight > 250) {
+      suggestions.push('Heavy motorcycle detected - consider noting handling characteristics');
+    }
+  }
+
   return {
     isValid: errors.length === 0,
     errors,
-    warnings
+    warnings,
+    suggestions
   };
 };
