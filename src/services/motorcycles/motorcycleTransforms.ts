@@ -1,10 +1,13 @@
+
 import { Motorcycle } from "@/types";
 
 // Enhanced data extraction utilities
 const extractEngineData = (configuration: any, fallbackData: any = {}) => {
-  const engine = configuration?.engines;
+  console.log("Extracting engine data from configuration:", configuration);
+  const engine = configuration?.engines || configuration?.engine;
   
-  if (engine) {
+  if (engine && engine.id) {
+    console.log("Found engine data:", engine);
     return {
       engine_size: engine.displacement_cc || 0,
       displacement_cc: engine.displacement_cc || 0,
@@ -20,6 +23,7 @@ const extractEngineData = (configuration: any, fallbackData: any = {}) => {
     };
   }
 
+  console.log("No engine data found, using fallback");
   // Fallback to model-level data
   return {
     engine_size: fallbackData.engine_size || 0,
@@ -37,9 +41,11 @@ const extractEngineData = (configuration: any, fallbackData: any = {}) => {
 };
 
 const extractBrakeData = (configuration: any, fallbackData: any = {}) => {
-  const brakes = configuration?.brake_systems;
+  console.log("Extracting brake data from configuration:", configuration);
+  const brakes = configuration?.brake_systems || configuration?.brakes;
   
-  if (brakes) {
+  if (brakes && brakes.id) {
+    console.log("Found brake data:", brakes);
     return {
       abs: brakes.has_traction_control || false,
       has_abs: brakes.has_traction_control || false,
@@ -47,6 +53,7 @@ const extractBrakeData = (configuration: any, fallbackData: any = {}) => {
     };
   }
 
+  console.log("No brake data found, using fallback");
   return {
     abs: fallbackData.has_abs || false,
     has_abs: fallbackData.has_abs || false,
@@ -55,6 +62,7 @@ const extractBrakeData = (configuration: any, fallbackData: any = {}) => {
 };
 
 const extractDimensionData = (configuration: any, fallbackData: any = {}) => {
+  console.log("Extracting dimension data from configuration:", configuration);
   const dimensions = {
     seat_height_mm: configuration?.seat_height_mm || fallbackData.seat_height_mm || 0,
     weight_kg: configuration?.weight_kg || fallbackData.weight_kg || 0,
@@ -76,29 +84,31 @@ const extractDimensionData = (configuration: any, fallbackData: any = {}) => {
 
 const selectBestConfiguration = (configurations: any[]) => {
   if (!configurations || configurations.length === 0) {
+    console.log("No configurations available");
     return null;
   }
 
-  // Priority order for configuration selection
-  // 1. Configuration with complete engine AND dimension data
-  let best = configurations.find(c => 
-    c.engines?.displacement_cc > 0 && 
-    c.engines?.power_hp > 0 &&
-    c.seat_height_mm > 0 &&
-    c.weight_kg > 0
-  );
+  console.log(`Selecting best configuration from ${configurations.length} options`);
 
-  // 2. Configuration with complete dimension data
+  // Priority order for configuration selection
+  // 1. Configuration with complete engine data
+  let best = configurations.find(c => {
+    const engine = c.engines || c.engine;
+    return engine && engine.displacement_cc > 0 && engine.power_hp > 0;
+  });
+
+  // 2. Configuration with any engine data
   if (!best) {
-    best = configurations.find(c => 
-      c.seat_height_mm > 0 && c.weight_kg > 0
-    );
+    best = configurations.find(c => {
+      const engine = c.engines || c.engine;
+      return engine && (engine.displacement_cc > 0 || engine.power_hp > 0);
+    });
   }
 
-  // 3. Configuration with engine data
+  // 3. Configuration with dimension data
   if (!best) {
     best = configurations.find(c => 
-      c.engines?.displacement_cc > 0 && c.engines?.power_hp > 0
+      c.seat_height_mm > 0 || c.weight_kg > 0
     );
   }
 
@@ -108,12 +118,21 @@ const selectBestConfiguration = (configurations: any[]) => {
   }
 
   // 5. First configuration
-  return best || configurations[0];
+  const selected = best || configurations[0];
+  
+  console.log("Selected configuration:", selected?.name || selected?.id);
+  return selected;
 };
 
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
   console.log("=== transformMotorcycleData ===");
   console.log("Processing motorcycle:", rawData.name);
+  console.log("Raw data structure:", {
+    id: rawData.id,
+    name: rawData.name,
+    years: rawData.years?.length || 0,
+    firstYearConfigs: rawData.years?.[0]?.configurations?.length || 0
+  });
   
   // Extract brand data
   const brandName = rawData.brands?.name || 'Unknown Brand';
@@ -121,7 +140,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   // Process model years and configurations
   const modelYears = rawData.years || [];
   const allConfigurations = modelYears.flatMap(year => 
-    (year.model_configurations || []).map(config => ({
+    (year.configurations || []).map(config => ({
       ...config,
       model_year: year
     }))
@@ -134,12 +153,26 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   
   if (bestConfiguration) {
     console.log(`Selected configuration: ${bestConfiguration.name || bestConfiguration.id}`);
+    console.log("Configuration details:", {
+      engine: bestConfiguration.engines || bestConfiguration.engine,
+      brakes: bestConfiguration.brake_systems || bestConfiguration.brakes,
+      hasEngineId: !!(bestConfiguration.engines?.id || bestConfiguration.engine?.id),
+      hasBrakeId: !!(bestConfiguration.brake_systems?.id || bestConfiguration.brakes?.id)
+    });
+  } else {
+    console.log("No configuration selected - using fallback");
   }
 
   // Extract enhanced data using the best configuration
   const engineData = extractEngineData(bestConfiguration, rawData);
   const brakeData = extractBrakeData(bestConfiguration, rawData);
   const dimensionData = extractDimensionData(bestConfiguration, rawData);
+
+  console.log("Extracted data:", {
+    engineData: { displacement: engineData.engine_size, horsepower: engineData.horsepower },
+    brakeData: { abs: brakeData.has_abs, type: brakeData.brake_type },
+    dimensionData: { weight: dimensionData.weight_kg, seatHeight: dimensionData.seat_height_mm }
+  });
 
   // Create the transformed motorcycle object
   const transformed: Motorcycle = {
@@ -186,11 +219,11 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     
     // Store component references
     _componentData: {
-      engine: bestConfiguration?.engines,
-      brakes: bestConfiguration?.brake_systems,
-      frame: bestConfiguration?.frames,
-      suspension: bestConfiguration?.suspensions,
-      wheels: bestConfiguration?.wheels,
+      engine: bestConfiguration?.engines || bestConfiguration?.engine,
+      brakes: bestConfiguration?.brake_systems || bestConfiguration?.brakes,
+      frame: bestConfiguration?.frames || bestConfiguration?.frame,
+      suspension: bestConfiguration?.suspensions || bestConfiguration?.suspension,
+      wheels: bestConfiguration?.wheels || bestConfiguration?.wheel,
       configurations: allConfigurations,
       colorOptions: [],
       selectedConfiguration: bestConfiguration
@@ -201,7 +234,9 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     engine_size: transformed.engine_size,
     horsepower: transformed.horsepower,
     weight_kg: transformed.weight_kg,
-    seat_height_mm: transformed.seat_height_mm
+    seat_height_mm: transformed.seat_height_mm,
+    hasComponentEngine: !!transformed._componentData?.engine,
+    hasComponentBrakes: !!transformed._componentData?.brakes
   });
   
   return transformed;

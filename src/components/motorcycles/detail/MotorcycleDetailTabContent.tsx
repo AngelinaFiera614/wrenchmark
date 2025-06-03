@@ -25,6 +25,13 @@ export function MotorcycleDetailTabContent({
   componentData,
   selectedConfiguration
 }: MotorcycleDetailTabContentProps) {
+  console.log("MotorcycleDetailTabContent render:", {
+    activeTab,
+    hasComponentData,
+    selectedConfiguration: selectedConfiguration?.id,
+    componentKeys: selectedConfiguration ? Object.keys(selectedConfiguration) : []
+  });
+
   switch (activeTab) {
     case 'specifications':
       return (
@@ -44,7 +51,24 @@ export function MotorcycleDetailTabContent({
       return <InteractiveSpecificationDisplay motorcycle={motorcycle} />;
 
     case 'components':
-      if (!hasComponentData) return null;
+      if (!hasComponentData) {
+        console.log("No component data available for components tab");
+        return (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Component data is not available for this motorcycle configuration.</p>
+            <p className="text-sm mt-2">This could mean the components haven't been assigned to this model yet.</p>
+          </div>
+        );
+      }
+      
+      console.log("Rendering components tab with data:", {
+        engines: selectedConfiguration?.engines || selectedConfiguration?.engine,
+        brake_systems: selectedConfiguration?.brake_systems || selectedConfiguration?.brakes,
+        frames: selectedConfiguration?.frames || selectedConfiguration?.frame,
+        suspensions: selectedConfiguration?.suspensions || selectedConfiguration?.suspension,
+        wheels: selectedConfiguration?.wheels || selectedConfiguration?.wheel
+      });
+
       return (
         <div className="space-y-4">
           {selectedConfiguration && (
@@ -58,39 +82,39 @@ export function MotorcycleDetailTabContent({
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {selectedConfiguration?.engines && (
+            {(selectedConfiguration?.engines || selectedConfiguration?.engine) && (
               <ComponentDetailCard
                 type="engine"
                 title="Engine"
-                data={selectedConfiguration.engines}
+                data={selectedConfiguration.engines || selectedConfiguration.engine}
               />
             )}
-            {selectedConfiguration?.brake_systems && (
+            {(selectedConfiguration?.brake_systems || selectedConfiguration?.brakes) && (
               <ComponentDetailCard
                 type="brake"
                 title="Brake System"
-                data={selectedConfiguration.brake_systems}
+                data={selectedConfiguration.brake_systems || selectedConfiguration.brakes}
               />
             )}
-            {selectedConfiguration?.frames && (
+            {(selectedConfiguration?.frames || selectedConfiguration?.frame) && (
               <ComponentDetailCard
                 type="frame"
                 title="Frame"
-                data={selectedConfiguration.frames}
+                data={selectedConfiguration.frames || selectedConfiguration.frame}
               />
             )}
-            {selectedConfiguration?.suspensions && (
+            {(selectedConfiguration?.suspensions || selectedConfiguration?.suspension) && (
               <ComponentDetailCard
                 type="suspension"
                 title="Suspension"
-                data={selectedConfiguration.suspensions}
+                data={selectedConfiguration.suspensions || selectedConfiguration.suspension}
               />
             )}
-            {selectedConfiguration?.wheels && (
+            {(selectedConfiguration?.wheels || selectedConfiguration?.wheel) && (
               <ComponentDetailCard
                 type="wheel"
                 title="Wheels"
-                data={selectedConfiguration.wheels}
+                data={selectedConfiguration.wheels || selectedConfiguration.wheel}
               />
             )}
           </div>

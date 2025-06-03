@@ -24,9 +24,9 @@ export function usePerformanceData(motorcycle: Motorcycle, selectedConfiguration
   if (selectedConfiguration) {
     console.log("Using configuration data:", selectedConfiguration);
     
-    // Engine data from configuration
-    if (selectedConfiguration.engines) {
-      const engine = selectedConfiguration.engines;
+    // Engine data from configuration - handle both naming conventions
+    const engine = selectedConfiguration.engines || selectedConfiguration.engine;
+    if (engine) {
       engineData = {
         displacement_cc: engine.displacement_cc || 0,
         horsepower_hp: engine.power_hp || 0,
@@ -36,15 +36,17 @@ export function usePerformanceData(motorcycle: Motorcycle, selectedConfiguration
         engine_type: engine.engine_type,
         cylinder_count: engine.cylinder_count
       };
+      console.log("Found engine data in configuration:", engineData);
     }
     
-    // Brake data from configuration
-    if (selectedConfiguration.brake_systems) {
-      const brakes = selectedConfiguration.brake_systems;
+    // Brake data from configuration - handle both naming conventions
+    const brakes = selectedConfiguration.brake_systems || selectedConfiguration.brakes;
+    if (brakes) {
       brakeData = {
         brake_type: brakes.type,
         has_abs: brakes.has_traction_control || false
       };
+      console.log("Found brake data in configuration:", brakeData);
     }
     
     // Speed data - usually from the motorcycle model, not configuration
