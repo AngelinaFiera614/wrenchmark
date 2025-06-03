@@ -15,7 +15,7 @@ export const validateTrimLevelForm = (formData: any, modelYearId: string) => {
     { field: 'wheelbase_mm', label: 'Wheelbase' },
     { field: 'fuel_capacity_l', label: 'Fuel capacity' },
     { field: 'ground_clearance_mm', label: 'Ground clearance' },
-    { field: 'price_premium_usd', label: 'Price premium' }
+    { field: 'msrp_usd', label: 'MSRP' }
   ];
 
   for (const { field, label } of numericFields) {
@@ -25,10 +25,10 @@ export const validateTrimLevelForm = (formData: any, modelYearId: string) => {
       if (isNaN(numValue)) {
         throw new Error(`${label} must be a valid number`);
       }
-      if (field !== 'price_premium_usd' && numValue <= 0) {
+      if (field !== 'msrp_usd' && numValue <= 0) {
         throw new Error(`${label} must be a positive number`);
       }
-      if (field === 'price_premium_usd' && numValue < 0) {
+      if (field === 'msrp_usd' && numValue < 0) {
         throw new Error(`${label} cannot be negative`);
       }
     }

@@ -19,10 +19,10 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     wheelbase_mm: configuration?.wheelbase_mm?.toString() || "",
     fuel_capacity_l: configuration?.fuel_capacity_l?.toString() || "",
     ground_clearance_mm: configuration?.ground_clearance_mm?.toString() || "",
-    is_default: configuration?.is_default || false, // Default to false for new trims
+    is_default: configuration?.is_default || false,
     trim_level: configuration?.trim_level || "",
     market_region: configuration?.market_region || "",
-    price_premium_usd: configuration?.price_premium_usd?.toString() || "",
+    msrp_usd: configuration?.msrp_usd?.toString() || configuration?.price_premium_usd?.toString() || "",
     color_id: configuration?.color_id || "",
   });
 
@@ -88,7 +88,7 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     is_default: formData.is_default,
     trim_level: formData.trim_level,
     market_region: formData.market_region,
-    price_premium_usd: Number(formData.price_premium_usd) || undefined,
+    msrp_usd: Number(formData.msrp_usd) || undefined,
     color_id: formData.color_id,
     engine: selectedComponents.engine,
     brakes: selectedComponents.brakes,
@@ -115,7 +115,7 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     is_default: formData.is_default,
     trim_level: formData.trim_level || null,
     market_region: formData.market_region || null,
-    price_premium_usd: formData.price_premium_usd ? Number(formData.price_premium_usd) : null,
+    msrp_usd: formData.msrp_usd ? Number(formData.msrp_usd) : null,
     color_id: formData.color_id || null,
   });
 

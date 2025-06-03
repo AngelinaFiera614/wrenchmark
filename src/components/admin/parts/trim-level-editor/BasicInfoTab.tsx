@@ -16,7 +16,7 @@ interface BasicInfoTabProps {
     is_default: boolean;
     trim_level: string;
     market_region: string;
-    price_premium_usd: string;
+    msrp_usd: string;
   };
   onInputChange: (field: string, value: any) => void;
   existingDefault?: any;
@@ -90,20 +90,20 @@ const BasicInfoTab = ({ formData, onInputChange, existingDefault }: BasicInfoTab
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price_premium_usd" className="text-explorer-text">
-              Price Premium (USD)
+            <Label htmlFor="msrp_usd" className="text-explorer-text">
+              MSRP (USD)
             </Label>
             <Input
-              id="price_premium_usd"
+              id="msrp_usd"
               type="number"
               min="0"
-              value={formData.price_premium_usd}
-              onChange={(e) => onInputChange("price_premium_usd", e.target.value)}
-              placeholder="0"
+              value={formData.msrp_usd}
+              onChange={(e) => onInputChange("msrp_usd", e.target.value)}
+              placeholder="12995"
               className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
             />
             <p className="text-xs text-explorer-text-muted">
-              Additional cost above base model price
+              Manufacturer's Suggested Retail Price for this configuration
             </p>
           </div>
         </CardContent>

@@ -1,4 +1,3 @@
-
 import { Configuration } from "@/types/motorcycle";
 
 export interface FormCompleteness {
@@ -20,7 +19,7 @@ export const calculateFormCompleteness = (config: Configuration): FormCompletene
   const basicInfoFields = [
     config.name,
     config.market_region,
-    config.price_premium_usd
+    config.msrp_usd
   ];
   const basicInfoComplete = basicInfoFields.filter(field => field !== null && field !== undefined && field !== '').length;
   const basicInfo = Math.round((basicInfoComplete / basicInfoFields.length) * 100);
@@ -121,8 +120,8 @@ export const validateTrimLevelFormEnhanced = (formData: any, modelYearId: string
     suggestions.push('Consider adding a market region for better categorization');
   }
 
-  if (!formData.price_premium_usd && formData.price_premium_usd !== 0) {
-    suggestions.push('Adding price premium information helps with market positioning');
+  if (!formData.msrp_usd && formData.msrp_usd !== 0) {
+    suggestions.push('Adding MSRP information helps with market positioning and customer expectations');
   }
 
   if (formData.seat_height_mm && formData.weight_kg) {

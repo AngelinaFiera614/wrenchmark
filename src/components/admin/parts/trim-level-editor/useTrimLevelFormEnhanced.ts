@@ -17,7 +17,7 @@ interface FormData {
   ground_clearance_mm: string | number;
   is_default: boolean;
   market_region: string;
-  price_premium_usd: string | number;
+  msrp_usd: string | number;
   model_year_id: string;
 }
 
@@ -44,7 +44,7 @@ export const useTrimLevelFormEnhanced = (modelYearId: string, configuration?: Co
     ground_clearance_mm: configuration?.ground_clearance_mm || "",
     is_default: configuration?.is_default || false,
     market_region: configuration?.market_region || "",
-    price_premium_usd: configuration?.price_premium_usd || "",
+    msrp_usd: configuration?.msrp_usd || configuration?.price_premium_usd || "",
     model_year_id: modelYearId,
   });
 
@@ -79,7 +79,7 @@ export const useTrimLevelFormEnhanced = (modelYearId: string, configuration?: Co
       ground_clearance_mm: Number(formData.ground_clearance_mm) || undefined,
       is_default: formData.is_default,
       market_region: formData.market_region,
-      price_premium_usd: Number(formData.price_premium_usd) || undefined,
+      msrp_usd: Number(formData.msrp_usd) || undefined,
       engine: selectedComponents.engine,
       brakes: selectedComponents.brakes,
       frame: selectedComponents.frame,
@@ -116,7 +116,7 @@ export const useTrimLevelFormEnhanced = (modelYearId: string, configuration?: Co
     ground_clearance_mm: Number(formData.ground_clearance_mm) || undefined,
     is_default: formData.is_default,
     market_region: formData.market_region,
-    price_premium_usd: Number(formData.price_premium_usd) || undefined,
+    msrp_usd: Number(formData.msrp_usd) || undefined,
     engine: selectedComponents.engine,
     brakes: selectedComponents.brakes,
     frame: selectedComponents.frame,
@@ -139,7 +139,7 @@ export const useTrimLevelFormEnhanced = (modelYearId: string, configuration?: Co
     ground_clearance_mm: formData.ground_clearance_mm ? Number(formData.ground_clearance_mm) : null,
     is_default: formData.is_default,
     market_region: formData.market_region || null,
-    price_premium_usd: formData.price_premium_usd ? Number(formData.price_premium_usd) : null,
+    msrp_usd: formData.msrp_usd ? Number(formData.msrp_usd) : null,
   });
 
   return {

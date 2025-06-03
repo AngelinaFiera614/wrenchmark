@@ -684,6 +684,7 @@ export type Database = {
           is_default: boolean | null
           market_region: string | null
           model_year_id: string
+          msrp_usd: number | null
           name: string | null
           notes: string | null
           optional_equipment: string[] | null
@@ -711,6 +712,7 @@ export type Database = {
           is_default?: boolean | null
           market_region?: string | null
           model_year_id: string
+          msrp_usd?: number | null
           name?: string | null
           notes?: string | null
           optional_equipment?: string[] | null
@@ -738,6 +740,7 @@ export type Database = {
           is_default?: boolean | null
           market_region?: string | null
           model_year_id?: string
+          msrp_usd?: number | null
           name?: string | null
           notes?: string | null
           optional_equipment?: string[] | null
