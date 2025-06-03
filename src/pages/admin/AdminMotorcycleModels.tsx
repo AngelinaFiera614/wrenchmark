@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2, FileText, Eye } from "lucide-react";
+import { PlusCircle, Loader2, FileText, Eye, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -23,18 +22,49 @@ const AdminMotorcycleModels = () => {
   const [deleteModel, setDeleteModel] = useState<Motorcycle | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch motorcycle models with admin permissions and proper error handling
+  // Fetch motorcycle models with admin permissions and enhanced error handling
   const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-motorcycle-models"],
     queryFn: async () => {
       try {
+        console.log("=== ADMIN: Fetching motorcycle models ===");
         const rawData = await fetchAllMotorcyclesForAdmin();
         
-        // Transform the raw data to match the Motorcycle interface
-        const transformedData = rawData.map(transformMotorcycleData);
+        if (!rawData || rawData.length === 0) {
+          console.log("=== ADMIN: No motorcycle models found ===");
+          return [];
+        }
+        
+        // Transform the raw data to match the Motorcycle interface with error handling
+        const transformedData: Motorcycle[] = [];
+        const errors: string[] = [];
+        
+        for (const item of rawData) {
+          try {
+            const transformed = transformMotorcycleData(item);
+            transformedData.push(transformed);
+          } catch (transformError) {
+            console.error(`Admin: Failed to transform motorcycle ${item.name}:`, transformError);
+            errors.push(`${item.name}: ${transformError instanceof Error ? transformError.message : 'Unknown error'}`);
+          }
+        }
+        
+        console.log("=== ADMIN: Transformation complete ===");
+        console.log("Successfully transformed:", transformedData.length);
+        console.log("Transformation errors:", errors.length);
+        
+        if (errors.length > 0) {
+          console.log("Admin transformation errors:", errors);
+          toast({
+            variant: "destructive",
+            title: "Data Issues Found",
+            description: `${errors.length} motorcycles have data issues. Check console for details.`,
+          });
+        }
         
         return transformedData;
       } catch (error) {
+        console.error("=== ADMIN: Error fetching motorcycles ===", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -159,12 +189,19 @@ const AdminMotorcycleModels = () => {
         <Card>
           <CardContent className="p-8 text-center">
             <div className="space-y-4">
+              <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
               <div className="text-destructive font-medium">
                 Failed to load motorcycle models
               </div>
               <div className="text-muted-foreground">
-                There was an error loading the motorcycle data. Please check your admin permissions and try again.
+                There was an error loading the motorcycle data. This could be due to:
               </div>
+              <ul className="text-sm text-muted-foreground text-left max-w-md mx-auto space-y-1">
+                <li>• Database connection issues</li>
+                <li>• Missing admin permissions</li>
+                <li>• Corrupted motorcycle data</li>
+                <li>• Invalid component relationships</li>
+              </ul>
               <Button variant="outline" onClick={() => refetch()}>
                 Try Again
               </Button>
@@ -177,6 +214,7 @@ const AdminMotorcycleModels = () => {
 
   const publishedModels = models?.filter(m => !m.is_draft) || [];
   const draftModels = models?.filter(m => m.is_draft) || [];
+  const placeholderModels = models?.filter(m => m.is_placeholder) || [];
 
   return (
     <div className="space-y-6">
@@ -196,9 +234,9 @@ const AdminMotorcycleModels = () => {
         </Button>
       </div>
 
-      {/* Summary Stats */}
+      {/* Enhanced Summary Stats */}
       {models && models.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Models</CardTitle>
@@ -213,7 +251,7 @@ const AdminMotorcycleModels = () => {
               <CardTitle className="text-sm font-medium">Published</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{publishedModels.length}</div>
+              <div className="text-2xl font-bold text-green-600">{publishedModels.length}</div>
             </CardContent>
           </Card>
           
@@ -228,6 +266,15 @@ const AdminMotorcycleModels = () => {
           
           <Card>
             <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Data Issues</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{placeholderModels.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Active Production</CardTitle>
             </CardHeader>
             <CardContent>
@@ -237,6 +284,23 @@ const AdminMotorcycleModels = () => {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Data Issues Warning */}
+      {placeholderModels.length > 0 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="font-medium">
+                {placeholderModels.length} motorcycles have data transformation issues
+              </span>
+            </div>
+            <p className="text-red-700 text-sm mt-2">
+              These motorcycles failed to load properly and may have missing component data or invalid relationships.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Models List */}
@@ -259,6 +323,12 @@ const AdminMotorcycleModels = () => {
                             <FileText className="mr-1 h-3 w-3" />
                             Draft
                           </Badge>
+                          {motorcycle.is_placeholder && (
+                            <Badge variant="destructive">
+                              <AlertTriangle className="mr-1 h-3 w-3" />
+                              Data Issue
+                            </Badge>
+                          )}
                           <div>
                             <h3 className="font-medium">{motorcycle.make} {motorcycle.model}</h3>
                             <p className="text-sm text-muted-foreground">
@@ -316,6 +386,12 @@ const AdminMotorcycleModels = () => {
                             <Eye className="mr-1 h-3 w-3" />
                             Published
                           </Badge>
+                          {motorcycle.is_placeholder && (
+                            <Badge variant="destructive">
+                              <AlertTriangle className="mr-1 h-3 w-3" />
+                              Data Issue
+                            </Badge>
+                          )}
                           <div>
                             <h3 className="font-medium">{motorcycle.make} {motorcycle.model}</h3>
                             <p className="text-sm text-muted-foreground">

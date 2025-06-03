@@ -25,7 +25,8 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
     return motorcycle;
   } catch (error) {
     console.error("Error in getMotorcycleBySlug:", error);
-    throw error;
+    // Don't throw - let the UI handle gracefully
+    return null;
   }
 };
 
@@ -35,10 +36,34 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
   try {
     const data = await queryAllMotorcycles();
     
-    const transformedMotorcycles = data.map(item => transformMotorcycleData(item));
+    if (!data || data.length === 0) {
+      console.log("No motorcycles found in database");
+      return [];
+    }
+    
+    const transformedMotorcycles: Motorcycle[] = [];
+    const errors: string[] = [];
+    
+    for (const item of data) {
+      try {
+        const transformed = transformMotorcycleData(item);
+        transformedMotorcycles.push(transformed);
+      } catch (transformError) {
+        console.error(`Failed to transform motorcycle ${item.name}:`, transformError);
+        errors.push(`${item.name}: ${transformError instanceof Error ? transformError.message : 'Unknown error'}`);
+      }
+    }
     
     console.log("=== getAllMotorcycles SUMMARY ===");
-    console.log("Total motorcycles processed:", transformedMotorcycles.length);
+    console.log("Total raw motorcycles:", data.length);
+    console.log("Successfully transformed:", transformedMotorcycles.length);
+    console.log("Transformation errors:", errors.length);
+    if (errors.length > 0) {
+      console.log("Errors:", errors);
+    }
+    
+    const validMotorcycles = transformedMotorcycles.filter(m => !m.is_placeholder);
+    console.log("Valid motorcycles (non-placeholder):", validMotorcycles.length);
     console.log("Motorcycles with engine data:", transformedMotorcycles.filter(m => m.engine_size > 0).length);
     console.log("Motorcycles with horsepower data:", transformedMotorcycles.filter(m => m.horsepower > 0).length);
     console.log("Motorcycles with weight data:", transformedMotorcycles.filter(m => m.weight_kg > 0).length);
@@ -46,7 +71,8 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
     return transformedMotorcycles;
   } catch (error) {
     console.error("Error in getAllMotorcycles:", error);
-    throw error;
+    // Return empty array instead of throwing to prevent complete failure
+    return [];
   }
 };
 

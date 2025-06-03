@@ -1,7 +1,6 @@
-
 import { Motorcycle } from "@/types";
 
-// Enhanced data extraction utilities
+// Enhanced data extraction utilities with better error handling
 const extractEngineData = (configuration: any, fallbackData: any = {}) => {
   console.log("Extracting engine data from configuration:", configuration);
   const engine = configuration?.engines || configuration?.engine;
@@ -82,6 +81,13 @@ const extractDimensionData = (configuration: any, fallbackData: any = {}) => {
   };
 };
 
+const extractColorOptions = (modelYears: any[]) => {
+  console.log("Extracting color options from model years:", modelYears);
+  const allColors = modelYears.flatMap(year => year.color_options || []);
+  console.log("Found color options:", allColors.length);
+  return allColors;
+};
+
 const selectBestConfiguration = (configurations: any[]) => {
   if (!configurations || configurations.length === 0) {
     console.log("No configurations available");
@@ -124,122 +130,180 @@ const selectBestConfiguration = (configurations: any[]) => {
   return selected;
 };
 
+const validateComponentData = (component: any, componentType: string) => {
+  if (!component) {
+    console.log(`No ${componentType} component found`);
+    return null;
+  }
+
+  if (!component.id) {
+    console.log(`${componentType} component missing ID:`, component);
+    return null;
+  }
+
+  console.log(`Valid ${componentType} component found:`, component.id);
+  return component;
+};
+
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
   console.log("=== transformMotorcycleData ===");
   console.log("Processing motorcycle:", rawData.name);
-  console.log("Raw data structure:", {
-    id: rawData.id,
-    name: rawData.name,
-    years: rawData.years?.length || 0,
-    firstYearConfigs: rawData.years?.[0]?.configurations?.length || 0
-  });
   
-  // Extract brand data
-  const brandName = rawData.brands?.name || 'Unknown Brand';
-  
-  // Process model years and configurations
-  const modelYears = rawData.years || [];
-  const allConfigurations = modelYears.flatMap(year => 
-    (year.configurations || []).map(config => ({
-      ...config,
-      model_year: year
-    }))
-  );
-  
-  console.log(`Found ${allConfigurations.length} configurations for ${rawData.name}`);
-  
-  // Select the best configuration
-  const bestConfiguration = selectBestConfiguration(allConfigurations);
-  
-  if (bestConfiguration) {
-    console.log(`Selected configuration: ${bestConfiguration.name || bestConfiguration.id}`);
-    console.log("Configuration details:", {
-      engine: bestConfiguration.engines || bestConfiguration.engine,
-      brakes: bestConfiguration.brake_systems || bestConfiguration.brakes,
-      hasEngineId: !!(bestConfiguration.engines?.id || bestConfiguration.engine?.id),
-      hasBrakeId: !!(bestConfiguration.brake_systems?.id || bestConfiguration.brakes?.id)
-    });
-  } else {
-    console.log("No configuration selected - using fallback");
-  }
-
-  // Extract enhanced data using the best configuration
-  const engineData = extractEngineData(bestConfiguration, rawData);
-  const brakeData = extractBrakeData(bestConfiguration, rawData);
-  const dimensionData = extractDimensionData(bestConfiguration, rawData);
-
-  console.log("Extracted data:", {
-    engineData: { displacement: engineData.engine_size, horsepower: engineData.horsepower },
-    brakeData: { abs: brakeData.has_abs, type: brakeData.brake_type },
-    dimensionData: { weight: dimensionData.weight_kg, seatHeight: dimensionData.seat_height_mm }
-  });
-
-  // Create the transformed motorcycle object
-  const transformed: Motorcycle = {
-    id: rawData.id,
-    make: brandName,
-    brand_id: rawData.brand_id,
-    model: rawData.name || 'Unknown Model',
-    year: rawData.production_start_year || new Date().getFullYear(),
-    category: rawData.category || rawData.type || 'Standard',
-    style_tags: [],
-    difficulty_level: rawData.difficulty_level || 3,
-    image_url: rawData.default_image_url || '/placeholder.svg',
+  try {
+    // Extract brand data with fallback
+    const brandName = rawData.brands?.name || 'Unknown Brand';
     
-    // Enhanced engine fields
-    ...engineData,
+    // Process model years and configurations with validation
+    const modelYears = rawData.years || [];
+    console.log(`Found ${modelYears.length} model years for ${rawData.name}`);
     
-    // Enhanced dimension fields
-    ...dimensionData,
+    const allConfigurations = modelYears.flatMap(year => 
+      (year.configurations || []).map(config => ({
+        ...config,
+        model_year: year
+      }))
+    );
     
-    // Enhanced brake fields
-    ...brakeData,
+    console.log(`Found ${allConfigurations.length} configurations for ${rawData.name}`);
     
-    // Speed data with conversions
-    top_speed_kph: rawData.top_speed_kph || 0,
-    top_speed_mph: rawData.top_speed_kph ? (rawData.top_speed_kph * 0.621371) : 0,
+    // Select the best configuration
+    const bestConfiguration = selectBestConfiguration(allConfigurations);
     
-    // Other fields
-    wet_weight_kg: rawData.wet_weight_kg,
-    smart_features: [],
-    summary: rawData.summary || rawData.base_description || '',
-    slug: rawData.slug,
-    created_at: rawData.created_at,
-    is_placeholder: false,
-    migration_status: 'migrated',
-    status: rawData.status || rawData.production_status,
-    engine: `${engineData.engine_size || 0}cc`,
-    is_draft: rawData.is_draft || false,
-    transmission: rawData.transmission,
-    drive_type: rawData.drive_type,
-    power_to_weight_ratio: rawData.power_to_weight_ratio,
-    is_entry_level: rawData.is_entry_level,
-    recommended_license_level: rawData.recommended_license_level,
-    use_cases: rawData.use_cases || [],
-    
-    // Store component references
-    _componentData: {
-      engine: bestConfiguration?.engines || bestConfiguration?.engine,
-      brakes: bestConfiguration?.brake_systems || bestConfiguration?.brakes,
-      frame: bestConfiguration?.frames || bestConfiguration?.frame,
-      suspension: bestConfiguration?.suspensions || bestConfiguration?.suspension,
-      wheels: bestConfiguration?.wheels || bestConfiguration?.wheel,
-      configurations: allConfigurations,
-      colorOptions: [],
-      selectedConfiguration: bestConfiguration
+    if (bestConfiguration) {
+      console.log(`Selected configuration: ${bestConfiguration.name || bestConfiguration.id}`);
+    } else {
+      console.log("No configuration selected - using fallback");
     }
-  };
-  
-  console.log(`Transformed ${transformed.make} ${transformed.model}:`, {
-    engine_size: transformed.engine_size,
-    horsepower: transformed.horsepower,
-    weight_kg: transformed.weight_kg,
-    seat_height_mm: transformed.seat_height_mm,
-    hasComponentEngine: !!transformed._componentData?.engine,
-    hasComponentBrakes: !!transformed._componentData?.brakes
-  });
-  
-  return transformed;
+
+    // Extract enhanced data using the best configuration with validation
+    const engineData = extractEngineData(bestConfiguration, rawData);
+    const brakeData = extractBrakeData(bestConfiguration, rawData);
+    const dimensionData = extractDimensionData(bestConfiguration, rawData);
+    const colorOptions = extractColorOptions(modelYears);
+
+    // Validate component data
+    const validatedComponents = {
+      engine: validateComponentData(bestConfiguration?.engines || bestConfiguration?.engine, 'engine'),
+      brakes: validateComponentData(bestConfiguration?.brake_systems || bestConfiguration?.brakes, 'brake'),
+      frame: validateComponentData(bestConfiguration?.frames || bestConfiguration?.frame, 'frame'),
+      suspension: validateComponentData(bestConfiguration?.suspensions || bestConfiguration?.suspension, 'suspension'),
+      wheels: validateComponentData(bestConfiguration?.wheels || bestConfiguration?.wheel, 'wheel')
+    };
+
+    console.log("Validated components:", {
+      hasEngine: !!validatedComponents.engine,
+      hasBrakes: !!validatedComponents.brakes,
+      hasFrame: !!validatedComponents.frame,
+      hasSuspension: !!validatedComponents.suspension,
+      hasWheels: !!validatedComponents.wheels
+    });
+
+    // Create the transformed motorcycle object with enhanced error handling
+    const transformed: Motorcycle = {
+      id: rawData.id,
+      make: brandName,
+      brand_id: rawData.brand_id,
+      model: rawData.name || 'Unknown Model',
+      year: rawData.production_start_year || new Date().getFullYear(),
+      category: rawData.category || rawData.type || 'Standard',
+      style_tags: [],
+      difficulty_level: rawData.difficulty_level || 3,
+      image_url: rawData.default_image_url || '/placeholder.svg',
+      
+      // Enhanced engine fields
+      ...engineData,
+      
+      // Enhanced dimension fields
+      ...dimensionData,
+      
+      // Enhanced brake fields
+      ...brakeData,
+      
+      // Speed data with conversions
+      top_speed_kph: rawData.top_speed_kph || 0,
+      top_speed_mph: rawData.top_speed_kph ? (rawData.top_speed_kph * 0.621371) : 0,
+      
+      // Other fields with fallbacks
+      wet_weight_kg: rawData.wet_weight_kg || null,
+      smart_features: [],
+      summary: rawData.summary || rawData.base_description || '',
+      slug: rawData.slug,
+      created_at: rawData.created_at,
+      is_placeholder: false,
+      migration_status: 'migrated',
+      status: rawData.status || rawData.production_status || 'active',
+      engine: `${engineData.engine_size || 0}cc`,
+      is_draft: rawData.is_draft || false,
+      transmission: rawData.transmission,
+      drive_type: rawData.drive_type,
+      power_to_weight_ratio: rawData.power_to_weight_ratio,
+      is_entry_level: rawData.is_entry_level,
+      recommended_license_level: rawData.recommended_license_level,
+      use_cases: rawData.use_cases || [],
+      
+      // Store validated component references
+      _componentData: {
+        engine: validatedComponents.engine,
+        brakes: validatedComponents.brakes,
+        frame: validatedComponents.frame,
+        suspension: validatedComponents.suspension,
+        wheels: validatedComponents.wheels,
+        configurations: allConfigurations,
+        colorOptions: colorOptions,
+        selectedConfiguration: bestConfiguration
+      }
+    };
+    
+    console.log(`Successfully transformed ${transformed.make} ${transformed.model}:`, {
+      engine_size: transformed.engine_size,
+      horsepower: transformed.horsepower,
+      weight_kg: transformed.weight_kg,
+      seat_height_mm: transformed.seat_height_mm,
+      hasValidComponents: Object.values(validatedComponents).some(c => c !== null)
+    });
+    
+    return transformed;
+  } catch (error) {
+    console.error(`Error transforming motorcycle data for ${rawData.name}:`, error);
+    
+    // Return a minimal motorcycle object in case of errors
+    return {
+      id: rawData.id,
+      make: rawData.brands?.name || 'Unknown Brand',
+      brand_id: rawData.brand_id,
+      model: rawData.name || 'Unknown Model',
+      year: rawData.production_start_year || new Date().getFullYear(),
+      category: rawData.category || rawData.type || 'Standard',
+      style_tags: [],
+      difficulty_level: rawData.difficulty_level || 3,
+      image_url: rawData.default_image_url || '/placeholder.svg',
+      engine_size: rawData.engine_size || 0,
+      horsepower: rawData.horsepower || 0,
+      weight_kg: rawData.weight_kg || 0,
+      seat_height_mm: rawData.seat_height_mm || 0,
+      abs: rawData.has_abs || false,
+      top_speed_kph: rawData.top_speed_kph || 0,
+      torque_nm: rawData.torque_nm || 0,
+      wheelbase_mm: rawData.wheelbase_mm || 0,
+      ground_clearance_mm: rawData.ground_clearance_mm || 0,
+      fuel_capacity_l: rawData.fuel_capacity_l || 0,
+      smart_features: [],
+      summary: rawData.summary || rawData.base_description || '',
+      slug: rawData.slug,
+      created_at: rawData.created_at,
+      is_placeholder: true,
+      migration_status: 'error',
+      status: rawData.status || 'active',
+      engine: `${rawData.engine_size || 0}cc`,
+      is_draft: rawData.is_draft || false,
+      use_cases: [],
+      _componentData: {
+        configurations: [],
+        colorOptions: [],
+        selectedConfiguration: null
+      }
+    };
+  }
 };
 
 export const createPlaceholderMotorcycleData = (input: {

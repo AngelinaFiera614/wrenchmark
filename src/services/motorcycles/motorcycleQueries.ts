@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const MOTORCYCLE_SELECT_QUERY = `
@@ -65,14 +66,14 @@ export const MOTORCYCLE_SELECT_QUERY = `
         rear_tire_size,
         spoke_count_front,
         spoke_count_rear
-      ),
-      color_variants:color_id(
-        id,
-        name,
-        color_code,
-        hex_code,
-        description
       )
+    ),
+    color_options(
+      id,
+      name,
+      hex_code,
+      image_url,
+      is_limited
     )
   )
 `;
@@ -81,57 +82,90 @@ export const queryMotorcycleBySlug = async (slug: string) => {
   console.log("=== queryMotorcycleBySlug ===");
   console.log("Fetching motorcycle with slug:", slug);
 
-  const { data, error } = await supabase
-    .from('motorcycle_models')
-    .select(MOTORCYCLE_SELECT_QUERY)
-    .eq('slug', slug)
-    .eq('is_draft', false)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(MOTORCYCLE_SELECT_QUERY)
+      .eq('slug', slug)
+      .eq('is_draft', false)
+      .single();
 
-  if (error) {
-    console.error("Error fetching motorcycle by slug:", error);
+    if (error) {
+      console.error("Database error fetching motorcycle by slug:", error);
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw new Error(`Failed to fetch motorcycle: ${error.message}`);
+    }
+
+    if (!data) {
+      console.log("No motorcycle found with slug:", slug);
+      return null;
+    }
+
+    console.log("Raw motorcycle data for slug:", data);
+    console.log("Years data:", data?.years);
+    console.log("Configurations data:", data?.years?.[0]?.configurations);
+    console.log("Engine data:", data?.years?.[0]?.configurations?.[0]?.engines);
+    
+    return data;
+  } catch (error) {
+    console.error("Error in queryMotorcycleBySlug:", error);
     throw error;
   }
-
-  console.log("Raw motorcycle data for slug:", data);
-  console.log("Years data:", data?.years);
-  console.log("Configurations data:", data?.years?.[0]?.configurations);
-  console.log("Engine data:", data?.years?.[0]?.configurations?.[0]?.engines);
-  
-  return data;
 };
 
 export const queryAllMotorcycles = async () => {
   console.log("=== queryAllMotorcycles ===");
   
-  const { data, error } = await supabase
-    .from('motorcycle_models')
-    .select(MOTORCYCLE_SELECT_QUERY)
-    .eq('is_draft', false)
-    .order('name');
+  try {
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(MOTORCYCLE_SELECT_QUERY)
+      .eq('is_draft', false)
+      .order('name');
 
-  if (error) {
-    console.error("Error fetching all motorcycles:", error);
+    if (error) {
+      console.error("Database error fetching all motorcycles:", error);
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw new Error(`Failed to fetch motorcycles: ${error.message}`);
+    }
+
+    console.log("Raw motorcycles data count:", data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error("Error in queryAllMotorcycles:", error);
     throw error;
   }
-
-  console.log("Raw motorcycles data count:", data?.length || 0);
-  return data || [];
 };
 
 export const queryMotorcycleByDetails = async (make: string, model: string, year: number) => {
-  const { data, error } = await supabase
-    .from('motorcycle_models')
-    .select(MOTORCYCLE_SELECT_QUERY)
-    .ilike('name', `%${model}%`)
-    .eq('brands.name', make)
-    .gte('production_start_year', year - 2)
-    .lte('production_end_year', year + 2)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(MOTORCYCLE_SELECT_QUERY)
+      .ilike('name', `%${model}%`)
+      .eq('brands.name', make)
+      .gte('production_start_year', year - 2)
+      .lte('production_end_year', year + 2)
+      .single();
 
-  if (error || !data) {
+    if (error && error.code !== 'PGRST116') {
+      console.error("Database error in queryMotorcycleByDetails:", error);
+      throw new Error(`Failed to fetch motorcycle by details: ${error.message}`);
+    }
+
+    return data || null;
+  } catch (error) {
+    console.error("Error in queryMotorcycleByDetails:", error);
     return null;
   }
-
-  return data;
 };

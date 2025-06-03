@@ -7,9 +7,9 @@ import SmartRecommendations from "@/components/motorcycles/SmartRecommendations"
 import { useMotorcycleFilters, initialFilters } from "@/hooks/useMotorcycleFilters";
 import { syncFiltersToUrl, parseFiltersFromUrl } from "@/lib/filter-utils";
 import { Button } from "@/components/ui/button";
-import { X, Sparkles, RefreshCw } from "lucide-react";
+import { X, Sparkles, RefreshCw, AlertTriangle } from "lucide-react";
 import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator";
-import { getAllMotorcycles } from "@/services/motorcycleService";
+import { getAllMotorcycles } from "@/services/motorcycles/motorcycleOperations";
 import { Motorcycle } from "@/types";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ export default function Motorcycles() {
   const [error, setError] = useState<string | null>(null);
   const [showRecommendations, setShowRecommendations] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
+  const [hasDataIssues, setHasDataIssues] = useState(false);
   
   // Fetch motorcycles from Supabase
   useEffect(() => {
@@ -27,23 +28,41 @@ export default function Motorcycles() {
       try {
         setIsLoading(true);
         setError(null);
+        setHasDataIssues(false);
         console.log("=== MOTORCYCLES PAGE: Starting motorcycle fetch ===");
         
         const data = await getAllMotorcycles();
         console.log("=== MOTORCYCLES PAGE: Motorcycles fetched ===", data.length, "motorcycles");
-        console.log("=== MOTORCYCLES PAGE: Sample motorcycle ===", data[0]);
-        setMotorcycles(data);
         
         if (data.length === 0) {
           console.log("=== MOTORCYCLES PAGE: No motorcycles found ===");
-          toast.info("No published motorcycles found. Some sample data may have been published for testing.");
+          setError("No motorcycles available. Please check with the administrator.");
+          toast.error("No published motorcycles found in the database");
         } else {
+          setMotorcycles(data);
+          
+          // Check for data quality issues
+          const placeholderCount = data.filter(m => m.is_placeholder).length;
+          const missingDataCount = data.filter(m => !m.engine_size || !m.horsepower).length;
+          
+          if (placeholderCount > 0 || missingDataCount > 0) {
+            setHasDataIssues(true);
+            console.log("=== DATA QUALITY ISSUES ===");
+            console.log("Placeholder motorcycles:", placeholderCount);
+            console.log("Motorcycles missing engine data:", missingDataCount);
+          }
+          
           console.log("=== MOTORCYCLES PAGE: Success ===");
           toast.success(`Loaded ${data.length} motorcycles successfully`);
+          
+          if (hasDataIssues) {
+            toast.warning("Some motorcycles have incomplete data. Contact admin to review.");
+          }
         }
       } catch (error) {
         console.error("=== MOTORCYCLES PAGE: ERROR ===", error);
-        setError(`Failed to load motorcycles data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        setError(`Failed to load motorcycles: ${errorMessage}`);
         toast.error("Failed to load motorcycles data");
       } finally {
         setIsLoading(false);
@@ -71,6 +90,7 @@ export default function Motorcycles() {
   console.log("Filtered motorcycles:", filteredMotorcycles.length);
   console.log("Is loading:", isLoading);
   console.log("Error:", error);
+  console.log("Has data issues:", hasDataIssues);
 
   // Sync filters to URL when they change
   useEffect(() => {
@@ -94,7 +114,10 @@ export default function Motorcycles() {
       <div className="flex-1">
         <div className="container px-4 md:px-6 py-8">
           <div className="text-center max-w-md mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Error Loading Motorcycles</h1>
+            <div className="mb-4">
+              <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-4">Error Loading Motorcycles</h1>
+            </div>
             <p className="text-muted-foreground mb-6">{error}</p>
             <div className="space-y-3">
               <Button onClick={handleRetry} className="w-full">
@@ -105,9 +128,14 @@ export default function Motorcycles() {
                 Refresh Page
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              If this problem persists, there may be an issue with the database connection or motorcycle data setup.
-            </p>
+            <div className="mt-6 p-4 bg-muted rounded-lg text-left">
+              <h3 className="font-semibold text-sm mb-2">Troubleshooting Tips:</h3>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• Check database connection</li>
+                <li>• Verify motorcycle data is published</li>
+                <li>• Contact administrator if issue persists</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -129,6 +157,18 @@ export default function Motorcycles() {
         <div className="space-y-6">
           <div className="flex flex-col gap-4">
             <h1 className="text-3xl font-bold">Motorcycles</h1>
+            
+            {/* Data quality warning */}
+            {hasDataIssues && motorcycles.length > 0 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-orange-800">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    Some motorcycles have incomplete data. Contact an administrator to review the database.
+                  </span>
+                </div>
+              </div>
+            )}
             
             {/* Enhanced Search Bar */}
             <SmartSearchBar
