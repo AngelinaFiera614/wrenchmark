@@ -29,7 +29,7 @@ export function useMotorcycleDetailData(motorcycle: Motorcycle) {
           brakes: preSelected.brake_systems || preSelected.brakes,
           frame: preSelected.frames || preSelected.frame,
           suspension: preSelected.suspensions || preSelected.suspension,
-          wheels: preSelected.wheels || preSelected.wheel
+          wheels: preSelected.wheels || preSelected.wheels
         });
       } else {
         // Fallback to first configuration
@@ -55,7 +55,7 @@ export function useMotorcycleDetailData(motorcycle: Motorcycle) {
     // Check for suspension data
     (selectedConfiguration.suspensions?.id || selectedConfiguration.suspension?.id) ||
     // Check for wheel data
-    (selectedConfiguration.wheels?.id || selectedConfiguration.wheel?.id) ||
+    (selectedConfiguration.wheels?.id || selectedConfiguration.wheels?.id) ||
     // Fallback to basic motorcycle data
     selectedConfiguration.seat_height_mm > 0 ||
     selectedConfiguration.weight_kg > 0 ||
