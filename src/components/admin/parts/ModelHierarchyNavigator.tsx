@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
 import ModelsColumn from "./hierarchy/ModelsColumn";
-import ModelYearsColumn from "./hierarchy/ModelYearsColumn";
 import TrimLevelsColumn from "./hierarchy/TrimLevelsColumn";
+import YearsSection from "./enhanced/YearsSection";
 import { useHierarchyActions } from "./hierarchy/useHierarchyActions";
 
 interface ModelHierarchyNavigatorProps {
@@ -59,15 +59,12 @@ const ModelHierarchyNavigator = ({
         onSearchChange={setSearchQuery}
       />
 
-      <ModelYearsColumn
+      <YearsSection
         modelYears={modelYears}
         selectedModel={selectedModel}
         selectedYear={selectedYear}
         selectedModelData={selectedModelData}
         onYearSelect={onYearSelect}
-        onRetryModelYears={() => handleRetryModelYears(selectedModel, onModelSelect)}
-        onGenerateModelYears={() => handleGenerateModelYears(selectedModel, onModelSelect)}
-        generatingYears={generatingYears}
         isLoading={isLoading}
       />
 

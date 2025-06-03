@@ -1,106 +1,110 @@
+
 import React from "react";
+import { useAdminPartsAssignment } from "@/hooks/useAdminPartsAssignment";
 import AdminPartsAssignmentHeader from "@/components/admin/parts/AdminPartsAssignmentHeader";
+import AdminPartsAssignmentTabs from "@/components/admin/parts/AdminPartsAssignmentTabs";
+import ModelHierarchyNavigator from "@/components/admin/parts/ModelHierarchyNavigator";
+import ComponentAssignmentGrid from "@/components/admin/parts/ComponentAssignmentGrid";
+import TrimLevelManagerEnhanced from "@/components/admin/parts/TrimLevelManagerEnhanced";
 import ConfigurationPreview from "@/components/admin/parts/ConfigurationPreview";
-import ModelNavigatorSection from "@/components/admin/parts/enhanced/ModelNavigatorSection";
-import YearsSection from "@/components/admin/parts/enhanced/YearsSection";
-import TrimSection from "@/components/admin/parts/enhanced/TrimSection";
-import ComponentsSection from "@/components/admin/parts/enhanced/ComponentsSection";
-import TrimLevelEditor from "@/components/admin/parts/TrimLevelEditor";
-import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
-import { Configuration } from "@/types/motorcycle";
+import PinnedModelsPanel from "@/components/admin/parts/PinnedModelsPanel";
 
 const AdminPartsAssignmentOptimized = () => {
   const {
     selectedModel,
     selectedYear,
     selectedConfig,
+    activeTab,
     showPreview,
-    isEditingTrim,
-    editingTrimConfig,
-    setShowPreview,
     models,
     modelYears,
     configurations,
     selectedModelData,
     selectedYearData,
     selectedConfigData,
-    isLoading,
+    modelsLoading,
+    yearsLoading,
+    configsLoading,
     handleModelSelect,
     handleYearSelect,
     handleConfigSelect,
     handlePreviewConfig,
+    handleComponentLinked,
     refreshConfigurations,
-    handleYearDelete,
-    handleAddTrim,
-    handleEditTrim,
-    handleDeleteTrim,
-    handleCloseTrimEditor,
-    handleSaveTrim,
-  } = useAdminPartsAssignmentOptimized();
+    setActiveTab,
+    setShowPreview,
+  } = useAdminPartsAssignment();
 
   return (
-    <div className="space-y-6">
-      <AdminPartsAssignmentHeader 
-        selectedConfig={selectedConfig}
-        onPreviewConfig={handlePreviewConfig}
-      />
-
-      {/* Model Navigator Section - Teal Outlined, Full Width */}
-      <ModelNavigatorSection
-        models={models || []}
-        selectedModel={selectedModel}
-        onModelSelect={handleModelSelect}
-        isLoading={isLoading}
-      />
-
-      {/* Years Section */}
-      <YearsSection
-        modelYears={modelYears || []}
-        selectedModel={selectedModel}
-        selectedYear={selectedYear}
-        selectedModelData={selectedModelData}
-        onYearSelect={handleYearSelect}
-        onYearDelete={handleYearDelete}
-        isLoading={isLoading}
-      />
-
-      {/* Enhanced Trim Section with Edit/Delete */}
-      <TrimSection
-        modelYearId={selectedYear}
-        configurations={configurations || []}
-        selectedConfig={selectedConfig}
-        onConfigSelect={handleConfigSelect}
-        onConfigChange={refreshConfigurations}
-      />
-
-      {/* Components Section */}
-      <ComponentsSection
-        selectedConfig={selectedConfigData}
-        onRefresh={refreshConfigurations}
-      />
-
-      {/* Configuration Preview Modal */}
-      {showPreview && selectedConfigData && (
-        <ConfigurationPreview
-          configuration={selectedConfigData}
-          isOpen={showPreview}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
-
-      {/* Trim Level Editor Modal */}
-      {isEditingTrim && selectedYear && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-explorer-card border border-explorer-chrome/30 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <TrimLevelEditor
-              modelYearId={selectedYear}
-              configuration={editingTrimConfig}
-              onSave={handleSaveTrim}
-              onCancel={handleCloseTrimEditor}
+    <div className="min-h-screen bg-explorer-dark text-explorer-text">
+      <AdminPartsAssignmentHeader />
+      
+      <div className="container mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* Left Sidebar - Pinned Models */}
+          <div className="xl:col-span-1">
+            <PinnedModelsPanel
+              models={models || []}
+              selectedModel={selectedModel}
+              onModelSelect={handleModelSelect}
             />
           </div>
+
+          {/* Main Content */}
+          <div className="xl:col-span-3">
+            <AdminPartsAssignmentTabs
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              showPreview={showPreview}
+              onTogglePreview={() => setShowPreview(!showPreview)}
+            />
+
+            <div className="space-y-6">
+              {activeTab === "navigator" && (
+                <ModelHierarchyNavigator
+                  models={models || []}
+                  modelYears={modelYears || []}
+                  configurations={configurations || []}
+                  selectedModel={selectedModel}
+                  selectedYear={selectedYear}
+                  selectedConfig={selectedConfig}
+                  onModelSelect={handleModelSelect}
+                  onYearSelect={handleYearSelect}
+                  onConfigSelect={handleConfigSelect}
+                  isLoading={modelsLoading || yearsLoading || configsLoading}
+                />
+              )}
+
+              {activeTab === "components" && selectedModel && (
+                <ComponentAssignmentGrid
+                  modelId={selectedModel}
+                  selectedModelData={selectedModelData}
+                  onComponentLinked={handleComponentLinked}
+                />
+              )}
+
+              {activeTab === "configurations" && selectedYear && (
+                <TrimLevelManagerEnhanced
+                  modelYearId={selectedYear}
+                  configurations={configurations || []}
+                  selectedConfig={selectedConfig}
+                  onConfigSelect={handleConfigSelect}
+                  onConfigChange={refreshConfigurations}
+                />
+              )}
+
+              {showPreview && selectedConfigData && (
+                <ConfigurationPreview
+                  configuration={selectedConfigData}
+                  modelData={selectedModelData}
+                  yearData={selectedYearData}
+                  onClose={() => setShowPreview(false)}
+                />
+              )}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

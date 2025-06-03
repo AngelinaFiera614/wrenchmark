@@ -5,15 +5,13 @@ import { PlusCircle, Loader2, FileText, Eye, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycles/adminQueries";
+import { publishMotorcycle, unpublishMotorcycle, fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
 import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycleDialog";
 import DeleteConfirmationDialog from "@/components/admin/models/DeleteConfirmationDialog";
 import BulkPublishingControls from "@/components/admin/models/BulkPublishingControls";
 import { DataCompletenessIndicator } from "@/components/motorcycles/DataCompletenessIndicator";
 import { calculateDataCompleteness } from "@/utils/dataCompleteness";
 import { Motorcycle } from "@/types";
-import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
-import { getAllMotorcycles } from "@/services/motorcycles/motorcycleOperations";
 import { deleteMotorcycleModelCascade } from "@/services/models/modelQueries";
 import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
 
@@ -27,30 +25,7 @@ const AdminMotorcycleModels = () => {
   // Fetch motorcycle models with admin permissions and enhanced error handling
   const { data: models, isLoading, error, refetch } = useQuery({
     queryKey: ["admin-motorcycle-models"],
-    queryFn: async () => {
-      try {
-        console.log("=== ADMIN: Fetching motorcycle models ===");
-        const motorcycles = await getAllMotorcycles();
-        
-        if (!motorcycles || motorcycles.length === 0) {
-          console.log("=== ADMIN: No motorcycle models found ===");
-          return [];
-        }
-        
-        console.log("=== ADMIN: Fetch complete ===");
-        console.log("Successfully loaded:", motorcycles.length);
-        
-        return motorcycles;
-      } catch (error) {
-        console.error("=== ADMIN: Error fetching motorcycles ===", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load motorcycle models. Please check your admin permissions.",
-        });
-        throw error;
-      }
-    }
+    queryFn: fetchAllMotorcyclesForAdmin
   });
 
   const handleCreateModel = () => {

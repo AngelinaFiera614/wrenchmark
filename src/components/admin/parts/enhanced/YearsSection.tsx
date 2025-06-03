@@ -3,9 +3,13 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Trash2 } from "lucide-react";
+import { AlertCircle, Trash2, Plus, RefreshCw } from "lucide-react";
 import { ModelYear, MotorcycleModel } from "@/types/motorcycle";
+import { useToast } from "@/hooks/use-toast";
+import { generateModelYears, deleteModelYear } from "@/services/models/modelYearService";
+import { useQueryClient } from "@tanstack/react-query";
 import DeleteYearDialog from "@/components/admin/models/DeleteYearDialog";
+import AdminModelYearDialog from "@/components/admin/models/AdminModelYearDialog";
 
 interface YearsSectionProps {
   modelYears: ModelYear[];
@@ -13,7 +17,6 @@ interface YearsSectionProps {
   selectedYear: string | null;
   selectedModelData?: MotorcycleModel;
   onYearSelect: (yearId: string) => void;
-  onYearDelete: (yearId: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -23,9 +26,11 @@ const YearsSection = ({
   selectedYear,
   selectedModelData,
   onYearSelect,
-  onYearDelete,
   isLoading
 }: YearsSectionProps) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     yearData: { id: string; year: number; brandName?: string; modelName?: string } | null;
@@ -34,15 +39,17 @@ const YearsSection = ({
     yearData: null
   });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [addYearDialogOpen, setAddYearDialogOpen] = useState(false);
 
   const handleDeleteClick = (year: ModelYear, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the year selection
+    e.stopPropagation();
     setDeleteDialog({
       open: true,
       yearData: {
         id: year.id,
         year: year.year,
-        brandName: selectedModelData?.brand?.name,
+        brandName: selectedModelData?.brands?.name,
         modelName: selectedModelData?.name
       }
     });
@@ -53,10 +60,23 @@ const YearsSection = ({
     
     setIsDeleting(true);
     try {
-      await onYearDelete(deleteDialog.yearData.id);
-      setDeleteDialog({ open: false, yearData: null });
+      const success = await deleteModelYear(deleteDialog.yearData.id);
+      if (success) {
+        toast({
+          title: "Year deleted",
+          description: `${deleteDialog.yearData.year} model year has been removed.`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["model-years", selectedModel] });
+        setDeleteDialog({ open: false, yearData: null });
+      } else {
+        throw new Error("Delete failed");
+      }
     } catch (error) {
-      console.error("Error deleting year:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete model year. Please try again.",
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -64,6 +84,32 @@ const YearsSection = ({
 
   const handleDeleteCancel = () => {
     setDeleteDialog({ open: false, yearData: null });
+  };
+
+  const handleGenerateYears = async () => {
+    if (!selectedModel) return;
+    
+    setIsGenerating(true);
+    try {
+      const success = await generateModelYears(selectedModel);
+      if (success) {
+        toast({
+          title: "Years generated",
+          description: "Model years have been generated based on production data.",
+        });
+        queryClient.invalidateQueries({ queryKey: ["model-years", selectedModel] });
+      } else {
+        throw new Error("Generation failed");
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to generate model years. Please try again.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   if (!selectedModel) {
@@ -89,13 +135,38 @@ const YearsSection = ({
             Model Years
             {selectedModelData && (
               <Badge variant="outline" className="text-xs">
-                {selectedModelData.brand?.name} {selectedModelData.name}
+                {selectedModelData.brands?.name} {selectedModelData.name}
               </Badge>
             )}
             <Badge variant="secondary" className="ml-auto">
               {modelYears.length} years
             </Badge>
           </CardTitle>
+          
+          {/* Year Management Actions */}
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAddYearDialogOpen(true)}
+              className="text-accent-teal border-accent-teal/30 hover:bg-accent-teal/10"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add Year
+            </Button>
+            {modelYears.length === 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateYears}
+                disabled={isGenerating}
+                className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
+              >
+                <RefreshCw className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                Generate Years
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -108,7 +179,7 @@ const YearsSection = ({
               <AlertCircle className="h-12 w-12 text-orange-400 mx-auto mb-4" />
               <p className="text-explorer-text-muted mb-2">No model years found</p>
               <p className="text-xs text-explorer-text-muted">
-                This model may need year generation
+                Add years manually or generate them from production data
               </p>
             </div>
           ) : (
@@ -171,6 +242,12 @@ const YearsSection = ({
         onConfirm={handleDeleteConfirm}
         yearData={deleteDialog.yearData}
         isDeleting={isDeleting}
+      />
+
+      <AdminModelYearDialog
+        open={addYearDialogOpen}
+        model={selectedModelData}
+        onClose={() => setAddYearDialogOpen(false)}
       />
     </>
   );

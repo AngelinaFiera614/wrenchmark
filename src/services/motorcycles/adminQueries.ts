@@ -1,85 +1,88 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import { Motorcycle } from "@/types";
 
-// Simplified admin query that gets essential data without complex joins
-export const ADMIN_MOTORCYCLE_SELECT_QUERY = `
-  *,
-  brands!motorcycle_models_brand_id_fkey(
-    id,
-    name,
-    slug
-  )
-`;
-
-export const fetchAllMotorcyclesForAdmin = async () => {
-  console.log("=== fetchAllMotorcyclesForAdmin ===");
-  
+export const fetchAllMotorcyclesForAdmin = async (): Promise<Motorcycle[]> => {
   try {
-    const { data, error } = await supabase
+    console.log("=== ADMIN: Fetching motorcycles with proper brand data ===");
+
+    // Fetch motorcycle models with proper brand relationship
+    const { data: models, error: modelsError } = await supabase
       .from('motorcycle_models')
-      .select(ADMIN_MOTORCYCLE_SELECT_QUERY)
-      .order('name');
+      .select(`
+        *,
+        brands!motorcycle_models_brand_id_fkey(
+          id,
+          name,
+          slug
+        )
+      `)
+      .order('name', { ascending: true });
 
-    if (error) {
-      console.error("Database error fetching motorcycles for admin:", error);
-      throw new Error(`Admin query failed: ${error.message}`);
+    if (modelsError) {
+      console.error("Error fetching models:", modelsError);
+      throw modelsError;
     }
 
-    console.log("Admin motorcycles data count:", data?.length || 0);
-    return data || [];
+    if (!models || models.length === 0) {
+      console.log("No models found");
+      return [];
+    }
+
+    // Transform to motorcycle format with proper brand data
+    const motorcycles: Motorcycle[] = models.map(model => ({
+      id: model.id,
+      make: model.brands?.name || "Unknown Brand",
+      brand_id: model.brand_id,
+      model: model.name,
+      year: new Date().getFullYear(), // Default year for admin display
+      category: model.type || "Standard",
+      style_tags: [],
+      difficulty_level: model.difficulty_level || 1,
+      image_url: model.default_image_url || '',
+      engine_size: model.engine_size || 0,
+      horsepower: model.horsepower || 0,
+      weight_kg: model.weight_kg || 0,
+      seat_height_mm: model.seat_height_mm || 0,
+      abs: model.has_abs || false,
+      top_speed_kph: model.top_speed_kph || 0,
+      torque_nm: 0,
+      wheelbase_mm: model.wheelbase_mm || 0,
+      ground_clearance_mm: model.ground_clearance_mm || 0,
+      fuel_capacity_l: model.fuel_capacity_l || 0,
+      smart_features: [],
+      summary: model.summary || model.base_description || '',
+      slug: model.slug,
+      created_at: model.created_at,
+      is_draft: model.is_draft,
+      status: model.status || 'active'
+    }));
+
+    console.log("=== ADMIN: Transform complete ===", {
+      total_models: models.length,
+      with_brands: motorcycles.filter(m => m.make !== "Unknown Brand").length
+    });
+
+    return motorcycles;
+
   } catch (error) {
-    console.error("Error in fetchAllMotorcyclesForAdmin:", error);
-    throw error;
-  }
-};
-
-export const fetchMotorcycleForAdminEdit = async (id: string) => {
-  console.log("=== fetchMotorcycleForAdminEdit ===");
-  console.log("Fetching motorcycle with ID:", id);
-
-  try {
-    const { data, error } = await supabase
-      .from('motorcycle_models')
-      .select(ADMIN_MOTORCYCLE_SELECT_QUERY)
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error("Database error fetching motorcycle for edit:", error);
-      throw new Error(`Failed to fetch motorcycle for editing: ${error.message}`);
-    }
-
-    if (!data) {
-      console.log("No motorcycle found with ID:", id);
-      return null;
-    }
-
-    console.log("Admin edit motorcycle data:", data);
-    return data;
-  } catch (error) {
-    console.error("Error in fetchMotorcycleForAdminEdit:", error);
+    console.error("=== ADMIN: Fatal error ===", error);
     throw error;
   }
 };
 
 export const publishMotorcycle = async (motorcycleId: string): Promise<boolean> => {
-  console.log("=== publishMotorcycle ===");
-  console.log("Publishing motorcycle with ID:", motorcycleId);
-
   try {
     const { error } = await supabase
       .from('motorcycle_models')
-      .update({ 
-        is_draft: false, 
-        updated_at: new Date().toISOString() 
-      })
+      .update({ is_draft: false })
       .eq('id', motorcycleId);
 
     if (error) {
-      console.error("Database error publishing motorcycle:", error);
-      throw new Error(`Failed to publish motorcycle: ${error.message}`);
+      console.error("Error publishing motorcycle:", error);
+      return false;
     }
 
-    console.log("Successfully published motorcycle:", motorcycleId);
     return true;
   } catch (error) {
     console.error("Error in publishMotorcycle:", error);
@@ -88,24 +91,17 @@ export const publishMotorcycle = async (motorcycleId: string): Promise<boolean> 
 };
 
 export const unpublishMotorcycle = async (motorcycleId: string): Promise<boolean> => {
-  console.log("=== unpublishMotorcycle ===");
-  console.log("Unpublishing motorcycle with ID:", motorcycleId);
-
   try {
     const { error } = await supabase
       .from('motorcycle_models')
-      .update({ 
-        is_draft: true, 
-        updated_at: new Date().toISOString() 
-      })
+      .update({ is_draft: true })
       .eq('id', motorcycleId);
 
     if (error) {
-      console.error("Database error unpublishing motorcycle:", error);
-      throw new Error(`Failed to unpublish motorcycle: ${error.message}`);
+      console.error("Error unpublishing motorcycle:", error);
+      return false;
     }
 
-    console.log("Successfully unpublished motorcycle:", motorcycleId);
     return true;
   } catch (error) {
     console.error("Error in unpublishMotorcycle:", error);

@@ -1,12 +1,12 @@
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Wrench } from "lucide-react";
+import { Search, Pin, PinOff } from "lucide-react";
 import { MotorcycleModel } from "@/types/motorcycle";
-import ModelSearchInput from "../ModelSearchInput";
+import { usePinnedModels } from "@/hooks/usePinnedModels";
 
 interface ModelsColumnProps {
   models: MotorcycleModel[];
@@ -23,104 +23,100 @@ const ModelsColumn = ({
   searchQuery,
   onSearchChange
 }: ModelsColumnProps) => {
-  // Filter and group models based on search query
-  const filteredModelsByBrand = useMemo(() => {
-    let filteredModels = models;
+  const { pinModel, unpinModel, isPinned, canPin } = usePinnedModels();
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filteredModels = models.filter((model) => {
-        const brandName = model.brand?.name?.toLowerCase() || "";
-        const modelName = model.name?.toLowerCase() || "";
-        const modelType = model.type?.toLowerCase() || "";
-        
-        return (
-          brandName.includes(query) ||
-          modelName.includes(query) ||
-          modelType.includes(query)
-        );
-      });
+  const filteredModels = models?.filter(model => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      model.name.toLowerCase().includes(query) ||
+      (model.brands?.name || '').toLowerCase().includes(query) ||
+      model.type.toLowerCase().includes(query)
+    );
+  }) || [];
+
+  const handlePinToggle = (modelId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPinned(modelId)) {
+      unpinModel(modelId);
+    } else if (canPin()) {
+      pinModel(modelId);
     }
-
-    // Group filtered models by brand
-    return filteredModels.reduce((acc, model) => {
-      const brandName = model.brand?.name || "Unknown Brand";
-      if (!acc[brandName]) {
-        acc[brandName] = [];
-      }
-      acc[brandName].push(model);
-      return acc;
-    }, {} as Record<string, MotorcycleModel[]>);
-  }, [models, searchQuery]);
-
-  const totalFilteredModels = Object.values(filteredModelsByBrand).reduce(
-    (sum, brandModels) => sum + brandModels.length,
-    0
-  );
+  };
 
   return (
     <Card className="bg-explorer-card border-explorer-chrome/30">
-      <CardHeader className="space-y-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-explorer-text flex items-center gap-2">
-            <Wrench className="h-5 w-5" />
-            Models
-          </CardTitle>
-          <Badge variant="secondary" className="text-xs">
-            {searchQuery ? `${totalFilteredModels} filtered` : `${models.length} total`}
+      <CardHeader>
+        <CardTitle className="text-explorer-text">
+          Motorcycle Models
+          <Badge variant="secondary" className="ml-2">
+            {filteredModels.length}
           </Badge>
+        </CardTitle>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-explorer-text-muted h-4 w-4" />
+          <Input
+            placeholder="Search models..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10 bg-explorer-dark border-explorer-chrome/30"
+          />
         </div>
-        
-        <ModelSearchInput
-          searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
-          placeholder="Search models, brands, types..."
-        />
       </CardHeader>
-      <CardContent className="p-0">
-        {Object.keys(filteredModelsByBrand).length === 0 ? (
-          <div className="p-8 text-center text-explorer-text-muted">
-            {searchQuery ? "No models found matching your search" : "No models available"}
-          </div>
-        ) : (
-          <div className="max-h-96 overflow-y-auto">
-            {Object.entries(filteredModelsByBrand).map(([brandName, brandModels]) => (
-              <Collapsible key={brandName} defaultOpen>
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-explorer-chrome/10 border-b border-explorer-chrome/20">
-                  <span className="font-medium text-explorer-text">{brandName}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {brandModels.length}
-                    </Badge>
-                    <ChevronDown className="h-4 w-4 text-explorer-text-muted" />
+      <CardContent>
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {filteredModels.map((model) => (
+            <div
+              key={model.id}
+              className={`group relative p-3 rounded-md border transition-colors cursor-pointer ${
+                selectedModel === model.id
+                  ? 'bg-accent-teal/20 border-accent-teal/30'
+                  : 'bg-explorer-dark hover:bg-explorer-chrome/10 border-explorer-chrome/20'
+              }`}
+              onClick={() => onModelSelect(model.id)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">
+                    {model.brands?.name || 'Unknown'} {model.name}
                   </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  {brandModels.map((model) => (
-                    <Button
-                      key={model.id}
-                      variant="ghost"
-                      onClick={() => onModelSelect(model.id)}
-                      className={`w-full justify-start text-left p-3 h-auto ${
-                        selectedModel === model.id
-                          ? 'bg-accent-teal/20 text-accent-teal border-accent-teal/30'
-                          : 'text-explorer-text hover:bg-explorer-chrome/10'
-                      }`}
-                    >
-                      <div>
-                        <div className="font-medium">{model.name}</div>
-                        <div className="text-xs text-explorer-text-muted">
-                          {model.type} • {model.production_start_year}
-                          {model.production_end_year && ` - ${model.production_end_year}`}
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
-          </div>
-        )}
+                  <div className="text-sm text-explorer-text-muted">
+                    {model.type} • {model.production_status}
+                  </div>
+                  {model.production_start_year && (
+                    <div className="text-xs text-explorer-text-muted">
+                      {model.production_start_year}
+                      {model.production_end_year && ` - ${model.production_end_year}`}
+                    </div>
+                  )}
+                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => handlePinToggle(model.id, e)}
+                  className={`h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ${
+                    isPinned(model.id) 
+                      ? 'text-accent-teal' 
+                      : canPin() 
+                        ? 'text-explorer-text-muted hover:text-accent-teal' 
+                        : 'text-explorer-text-muted/50 cursor-not-allowed'
+                  }`}
+                  disabled={!isPinned(model.id) && !canPin()}
+                  title={
+                    isPinned(model.id) 
+                      ? 'Unpin model' 
+                      : canPin() 
+                        ? 'Pin model for quick access' 
+                        : 'Maximum 5 models can be pinned'
+                  }
+                >
+                  {isPinned(model.id) ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
