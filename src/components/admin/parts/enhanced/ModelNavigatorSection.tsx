@@ -53,18 +53,18 @@ const ModelNavigatorSection = ({
 
   return (
     <Card className="border-2 border-accent-teal bg-explorer-card">
-      <CardHeader>
-        <CardTitle className="text-explorer-text flex items-center gap-2">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-explorer-text flex items-center gap-2 text-lg">
           Model Navigator
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-          <Badge variant="secondary" className="ml-auto">
+          <Badge variant="secondary" className="ml-auto text-xs">
             {filteredModels.length} models
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Filter Controls - Always Visible */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <CardContent className="space-y-3">
+        {/* Filter Controls - Compact Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-explorer-text-muted" />
@@ -72,44 +72,67 @@ const ModelNavigatorSection = ({
               placeholder="Search models..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-explorer-dark border-explorer-chrome/30"
+              className="pl-10 bg-explorer-dark border-explorer-chrome/30 h-9"
             />
           </div>
 
           {/* Brand Filter */}
           <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-            <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
-              <SelectValue placeholder="All Brands" />
+            <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30 h-9">
+              <SelectValue placeholder={isLoading ? "Loading brands..." : "All Brands"} />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Brands</SelectItem>
+            <SelectContent className="bg-explorer-dark border-explorer-chrome/30 z-50">
+              <SelectItem value="all" className="text-explorer-text hover:bg-explorer-chrome/10">
+                All Brands ({brands.length})
+              </SelectItem>
               {brands.map(brand => (
-                <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                <SelectItem 
+                  key={brand} 
+                  value={brand}
+                  className="text-explorer-text hover:bg-explorer-chrome/10"
+                >
+                  {brand}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           {/* Category Filter */}
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+            <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30 h-9">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+            <SelectContent className="bg-explorer-dark border-explorer-chrome/30 z-50">
+              <SelectItem value="all" className="text-explorer-text hover:bg-explorer-chrome/10">
+                All Categories
+              </SelectItem>
               {categories.map(category => (
-                <SelectItem key={category} value={category}>{category}</SelectItem>
+                <SelectItem 
+                  key={category} 
+                  value={category}
+                  className="text-explorer-text hover:bg-explorer-chrome/10"
+                >
+                  {category}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* Models Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+        {/* Models Grid - Reduced Height */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto">
           {filteredModels.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-explorer-text-muted">
-              {searchQuery || selectedBrand !== "all" || selectedCategory !== "all" 
-                ? "No models match your filters" 
-                : "No models available"}
+            <div className="col-span-full text-center py-6 text-explorer-text-muted">
+              {isLoading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span>Loading models...</span>
+                </div>
+              ) : searchQuery || selectedBrand !== "all" || selectedCategory !== "all" ? (
+                "No models match your filters"
+              ) : (
+                "No models available"
+              )}
             </div>
           ) : (
             filteredModels.map((model) => (
@@ -117,17 +140,17 @@ const ModelNavigatorSection = ({
                 key={model.id}
                 variant="ghost"
                 onClick={() => onModelSelect(model.id)}
-                className={`h-auto p-4 text-left ${
+                className={`h-auto p-3 text-left justify-start ${
                   selectedModel === model.id
                     ? 'bg-accent-teal/20 text-accent-teal border-accent-teal/30 border'
                     : 'bg-explorer-dark hover:bg-explorer-chrome/10 border border-explorer-chrome/20'
                 }`}
               >
                 <div className="w-full">
-                  <div className="font-medium text-sm mb-1">
+                  <div className="font-medium text-sm mb-1 line-clamp-1">
                     {model.brand?.name} {model.name}
                   </div>
-                  <div className="text-xs text-explorer-text-muted">
+                  <div className="text-xs text-explorer-text-muted line-clamp-1">
                     {model.type} • {model.production_start_year}
                     {model.production_end_year && ` - ${model.production_end_year}`}
                   </div>
