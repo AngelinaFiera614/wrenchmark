@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Configuration } from "@/types/motorcycle";
 
@@ -134,8 +133,7 @@ export const fetchConfigurations = async (modelYearId: string): Promise<Configur
         brakes:brake_systems(*),
         frame:frames(*),
         suspension:suspensions(*),
-        wheels:wheels(*),
-        color:color_variants(*)
+        wheels:wheels(*)
       `)
       .eq('model_year_id', modelYearId)
       .order('name');

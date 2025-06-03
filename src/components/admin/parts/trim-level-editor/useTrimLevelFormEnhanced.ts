@@ -1,7 +1,7 @@
 
 import { useState, useMemo } from "react";
 import { Configuration } from "@/types/motorcycle";
-import { validateTrimLevelFormEnhanced, calculateFormCompleteness } from "./validationEnhanced";
+import { validateTrimLevelFormEnhanced, calculateFormCompleteness, FormCompleteness, ValidationResult } from "./validationEnhanced";
 
 interface FormData {
   name: string;
@@ -57,14 +57,37 @@ export const useTrimLevelFormEnhanced = (modelYearId: string, configuration?: Co
   });
 
   // Enhanced validation with real-time feedback
-  const validation = useMemo(() => {
+  const validation: ValidationResult = useMemo(() => {
     return validateTrimLevelFormEnhanced(formData, modelYearId);
   }, [formData, modelYearId]);
 
-  // Completeness calculation
-  const completeness = useMemo(() => {
-    return calculateFormCompleteness(formData);
-  }, [formData]);
+  // Completeness calculation - create a mock configuration for the calculation
+  const completeness: FormCompleteness = useMemo(() => {
+    const mockConfig: Configuration = {
+      id: configuration?.id || 'temp',
+      model_year_id: modelYearId,
+      name: formData.name,
+      engine_id: formData.engine_id,
+      brake_system_id: formData.brake_system_id,
+      frame_id: formData.frame_id,
+      suspension_id: formData.suspension_id,
+      wheel_id: formData.wheel_id,
+      seat_height_mm: Number(formData.seat_height_mm) || undefined,
+      weight_kg: Number(formData.weight_kg) || undefined,
+      wheelbase_mm: Number(formData.wheelbase_mm) || undefined,
+      fuel_capacity_l: Number(formData.fuel_capacity_l) || undefined,
+      ground_clearance_mm: Number(formData.ground_clearance_mm) || undefined,
+      is_default: formData.is_default,
+      market_region: formData.market_region,
+      price_premium_usd: Number(formData.price_premium_usd) || undefined,
+      engine: selectedComponents.engine,
+      brakes: selectedComponents.brakes,
+      frame: selectedComponents.frame,
+      suspension: selectedComponents.suspension,
+      wheels: selectedComponents.wheels,
+    };
+    return calculateFormCompleteness(mockConfig);
+  }, [formData, selectedComponents, modelYearId, configuration?.id]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
