@@ -29,6 +29,91 @@ export const getConfigurations = async (modelYearId: string): Promise<Configurat
   }
 };
 
+// Alias for backward compatibility
+export const fetchConfigurations = getConfigurations;
+
+export const createConfiguration = async (configData: Partial<Configuration>): Promise<Configuration | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('model_configurations')
+      .insert(configData)
+      .select(`
+        *,
+        engines(*),
+        brake_systems(*),
+        frames(*),
+        suspensions(*),
+        wheels(*)
+      `)
+      .single();
+
+    if (error) {
+      console.error("Error creating configuration:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in createConfiguration:", error);
+    throw error;
+  }
+};
+
+export const checkForExistingDefault = async (modelYearId: string): Promise<Configuration | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('model_configurations')
+      .select(`
+        *,
+        engines(*),
+        brake_systems(*),
+        frames(*),
+        suspensions(*),
+        wheels(*)
+      `)
+      .eq('model_year_id', modelYearId)
+      .eq('is_default', true)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error("Error checking for existing default:", error);
+      throw error;
+    }
+
+    return data || null;
+  } catch (error) {
+    console.error("Error in checkForExistingDefault:", error);
+    throw error;
+  }
+};
+
+export const cloneConfiguration = async (configId: string, newName: string): Promise<Configuration | null> => {
+  try {
+    // First, fetch the original configuration
+    const { data: original, error: fetchError } = await supabase
+      .from('model_configurations')
+      .select('*')
+      .eq('id', configId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching original configuration:", fetchError);
+      throw fetchError;
+    }
+
+    // Remove the id and update the name
+    const { id, created_at, updated_at, ...configData } = original;
+    configData.name = newName;
+    configData.is_default = false; // Clones are never default
+
+    // Create the new configuration
+    return await createConfiguration(configData);
+  } catch (error) {
+    console.error("Error in cloneConfiguration:", error);
+    throw error;
+  }
+};
+
 export const deleteConfiguration = async (configId: string): Promise<boolean> => {
   try {
     const { error } = await supabase

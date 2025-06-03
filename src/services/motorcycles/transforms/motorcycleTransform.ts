@@ -116,10 +116,6 @@ export const transformToMotorcycle = (
     // Component inheritance metadata
     _componentData: {
       configurations: latestConfigurations,
-      modelAssignments: componentData.model_assignments.filter(
-        assignment => assignment.model_id === model.id
-      ),
-      inheritanceSource: defaultConfig ? 'configuration' : 'model',
       resolvedComponents
     }
   };

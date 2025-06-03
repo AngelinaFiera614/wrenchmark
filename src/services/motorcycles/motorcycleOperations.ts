@@ -127,6 +127,132 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
   }
 };
 
+export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | null> => {
+  try {
+    // Fetch the motorcycle model by slug
+    const { data: model, error: modelError } = await supabase
+      .from('motorcycle_models')
+      .select(`
+        *,
+        brands!motorcycle_models_brand_id_fkey(
+          id,
+          name,
+          slug
+        )
+      `)
+      .eq('slug', slug)
+      .single();
+
+    if (modelError) {
+      if (modelError.code === 'PGRST116') {
+        return null; // Not found
+      }
+      throw modelError;
+    }
+
+    // Fetch model years for this model
+    const { data: modelYears, error: yearsError } = await supabase
+      .from('model_years')
+      .select('*')
+      .eq('motorcycle_id', model.id)
+      .order('year', { ascending: false });
+
+    if (yearsError) {
+      throw yearsError;
+    }
+
+    if (!modelYears || modelYears.length === 0) {
+      console.warn(`No model years found for model: ${model.name}`);
+      return null;
+    }
+
+    // Fetch configurations for these model years
+    const yearIds = modelYears.map(y => y.id);
+    const { data: configurations, error: configError } = await supabase
+      .from('model_configurations')
+      .select('*')
+      .in('model_year_id', yearIds);
+
+    if (configError) {
+      throw configError;
+    }
+
+    // Fetch model component assignments
+    const { data: modelAssignments, error: assignmentsError } = await supabase
+      .from('model_component_assignments')
+      .select('*')
+      .eq('model_id', model.id);
+
+    if (assignmentsError) {
+      throw assignmentsError;
+    }
+
+    // Fetch all component data
+    const componentData = await fetchAllComponents();
+
+    // Build the component data structure
+    const fullComponentData: ComponentData = {
+      configurations: configurations || [],
+      components: componentData.components,
+      model_assignments: modelAssignments || []
+    };
+
+    // Transform to motorcycle
+    return transformToMotorcycle(model, modelYears, fullComponentData);
+
+  } catch (error) {
+    console.error(`Error fetching motorcycle by slug ${slug}:`, error);
+    throw error;
+  }
+};
+
+export const findMotorcycleByDetails = async (
+  make: string, 
+  model: string, 
+  year?: number
+): Promise<Motorcycle | null> => {
+  try {
+    // Build the query
+    let query = supabase
+      .from('motorcycle_models')
+      .select(`
+        *,
+        brands!motorcycle_models_brand_id_fkey(
+          id,
+          name,
+          slug
+        ),
+        model_years(*)
+      `)
+      .eq('name', model)
+      .eq('brands.name', make);
+
+    if (year) {
+      query = query.eq('model_years.year', year);
+    }
+
+    const { data: models, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    if (!models || models.length === 0) {
+      return null;
+    }
+
+    // Use the first match
+    const matchedModel = models[0];
+    
+    // Get the motorcycle by slug (which will do the full transformation)
+    return await getMotorcycleBySlug(matchedModel.slug);
+
+  } catch (error) {
+    console.error(`Error finding motorcycle by details ${make} ${model} ${year}:`, error);
+    throw error;
+  }
+};
+
 // Fetch all component data in parallel
 async function fetchAllComponents() {
   const [engines, brakes, frames, suspensions, wheels] = await Promise.all([
