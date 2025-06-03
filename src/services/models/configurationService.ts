@@ -2,222 +2,97 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Configuration } from "@/types/motorcycle";
 
-export const getConfigurations = async (modelYearId: string): Promise<Configuration[]> => {
+// Fetch configurations for a specific model year
+export const fetchConfigurations = async (modelYearId: string): Promise<Configuration[]> => {
   try {
+    console.log("Fetching configurations for model year ID:", modelYearId);
+    
     const { data, error } = await supabase
       .from('model_configurations')
       .select(`
         *,
-        engines(*),
-        brake_systems(*),
-        frames(*),
-        suspensions(*),
-        wheels(*)
+        engine:engines(*),
+        brake_systems:brake_systems(*),
+        frame:frames(*),
+        suspension:suspensions(*),
+        wheels:wheels(*),
+        color_variants:color_variants(*)
       `)
       .eq('model_year_id', modelYearId)
       .order('name', { ascending: true });
-
+      
     if (error) {
       console.error("Error fetching configurations:", error);
-      throw error;
+      return [];
     }
-
+    
+    console.log("Fetched configurations:", data);
     return data || [];
   } catch (error) {
-    console.error("Error in getConfigurations:", error);
-    throw error;
+    console.error("Error in fetchConfigurations:", error);
+    return [];
   }
 };
 
-// Alias for backward compatibility
-export const fetchConfigurations = getConfigurations;
-
-export const createConfiguration = async (configData: Partial<Configuration>): Promise<Configuration | null> => {
+// Create a new configuration
+export const createConfiguration = async (configData: Omit<Configuration, 'id'>): Promise<Configuration | null> => {
   try {
     const { data, error } = await supabase
       .from('model_configurations')
       .insert(configData)
-      .select(`
-        *,
-        engines(*),
-        brake_systems(*),
-        frames(*),
-        suspensions(*),
-        wheels(*)
-      `)
+      .select()
       .single();
-
+      
     if (error) {
       console.error("Error creating configuration:", error);
-      throw error;
+      return null;
     }
-
+    
     return data;
   } catch (error) {
     console.error("Error in createConfiguration:", error);
-    throw error;
+    return null;
   }
 };
 
-export const checkForExistingDefault = async (modelYearId: string): Promise<Configuration | null> => {
+// Update an existing configuration
+export const updateConfiguration = async (id: string, configData: Partial<Configuration>): Promise<Configuration | null> => {
   try {
     const { data, error } = await supabase
       .from('model_configurations')
-      .select(`
-        *,
-        engines(*),
-        brake_systems(*),
-        frames(*),
-        suspensions(*),
-        wheels(*)
-      `)
-      .eq('model_year_id', modelYearId)
-      .eq('is_default', true)
+      .update(configData)
+      .eq('id', id)
+      .select()
       .single();
-
-    if (error && error.code !== 'PGRST116') {
-      console.error("Error checking for existing default:", error);
-      throw error;
+      
+    if (error) {
+      console.error("Error updating configuration:", error);
+      return null;
     }
-
-    return data || null;
+    
+    return data;
   } catch (error) {
-    console.error("Error in checkForExistingDefault:", error);
-    throw error;
+    console.error("Error in updateConfiguration:", error);
+    return null;
   }
 };
 
-export const cloneConfiguration = async (configId: string, newName: string): Promise<Configuration | null> => {
-  try {
-    // First, fetch the original configuration
-    const { data: original, error: fetchError } = await supabase
-      .from('model_configurations')
-      .select('*')
-      .eq('id', configId)
-      .single();
-
-    if (fetchError) {
-      console.error("Error fetching original configuration:", fetchError);
-      throw fetchError;
-    }
-
-    // Remove the id and update the name
-    const { id, created_at, updated_at, ...configData } = original;
-    configData.name = newName;
-    configData.is_default = false; // Clones are never default
-
-    // Create the new configuration
-    return await createConfiguration(configData);
-  } catch (error) {
-    console.error("Error in cloneConfiguration:", error);
-    throw error;
-  }
-};
-
-export const deleteConfiguration = async (configId: string): Promise<boolean> => {
+// Delete a configuration
+export const deleteConfiguration = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('model_configurations')
       .delete()
-      .eq('id', configId);
-
+      .eq('id', id);
+      
     if (error) {
       console.error("Error deleting configuration:", error);
-      throw error;
+      return false;
     }
-
+    
     return true;
   } catch (error) {
     console.error("Error in deleteConfiguration:", error);
-    throw error;
-  }
-};
-
-export const getAvailableTargetYears = async (motorcycleId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('model_years')
-      .select(`
-        *,
-        motorcycle_models!inner(name)
-      `)
-      .eq('motorcycle_id', motorcycleId)
-      .order('year', { ascending: false });
-
-    if (error) {
-      console.error("Error fetching target years:", error);
-      throw error;
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error("Error in getAvailableTargetYears:", error);
-    throw error;
-  }
-};
-
-// Update configuration with component inheritance support
-export const updateConfiguration = async (
-  configId: string, 
-  updates: Partial<Configuration>
-): Promise<Configuration | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('model_configurations')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', configId)
-      .select(`
-        *,
-        engines(*),
-        brake_systems(*),
-        frames(*),
-        suspensions(*),
-        wheels(*)
-      `)
-      .single();
-
-    if (error) {
-      console.error("Error updating configuration:", error);
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error in updateConfiguration:", error);
-    throw error;
-  }
-};
-
-// Set component override for a configuration
-export const setComponentOverride = async (
-  configId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
-  componentId: string | null
-): Promise<boolean> => {
-  try {
-    const overrideField = `${componentType}_override`;
-    const componentField = `${componentType}_id`;
-    
-    const { error } = await supabase
-      .from('model_configurations')
-      .update({
-        [overrideField]: componentId !== null,
-        [componentField]: componentId,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', configId);
-
-    if (error) {
-      console.error("Error setting component override:", error);
-      throw error;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error in setComponentOverride:", error);
-    throw error;
+    return false;
   }
 };

@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye } from "lucide-react";
+import { ValidationResult } from "../validation/ValidationEngine";
 import TrimLevelManagerEnhanced from "../TrimLevelManagerEnhanced";
 import LiveMotorcyclePreview from "./LiveMotorcyclePreview";
 
@@ -19,6 +20,8 @@ interface SplitViewTrimManagerProps {
   isPreviewMode: boolean;
   onTogglePreview: () => void;
   onTogglePreviewMode: () => void;
+  activeSectionTab: string;
+  validation: ValidationResult;
 }
 
 const SplitViewTrimManager = ({
@@ -33,7 +36,9 @@ const SplitViewTrimManager = ({
   showPreview,
   isPreviewMode,
   onTogglePreview,
-  onTogglePreviewMode
+  onTogglePreviewMode,
+  activeSectionTab,
+  validation
 }: SplitViewTrimManagerProps) => {
   if (!selectedYear) {
     return (
@@ -69,7 +74,7 @@ const SplitViewTrimManager = ({
               </div>
             )}
           </CardHeader>
-        </Card>
+        </CardContent>
 
         {isPreviewMode && selectedConfigData ? (
           <LiveMotorcyclePreview 
@@ -85,6 +90,8 @@ const SplitViewTrimManager = ({
             selectedConfig={selectedConfig}
             onConfigSelect={handleConfigSelect}
             onConfigChange={refreshConfigurations}
+            activeSectionTab={activeSectionTab}
+            validation={validation}
           />
         )}
       </div>

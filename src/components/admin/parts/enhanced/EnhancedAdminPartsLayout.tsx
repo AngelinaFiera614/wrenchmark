@@ -5,23 +5,34 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Settings, Eye, EyeOff, RotateCcw } from "lucide-react";
 import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
+import { validateConfiguration } from "../validation/ValidationEngine";
 import ContextSidebar from "./ContextSidebar";
 import ModelNavigatorEnhanced from "./ModelNavigatorEnhanced";
 import SplitViewTrimManager from "./SplitViewTrimManager";
 import ComponentLibraryEnhanced from "./ComponentLibraryEnhanced";
+import StickyNavigationTabs from "../navigation/StickyNavigationTabs";
 
 type AdminMode = "navigator" | "trim-manager" | "component-library";
 
 const EnhancedAdminPartsLayout = () => {
   const [activeMode, setActiveMode] = useState<AdminMode>("navigator");
+  const [activeSectionTab, setActiveSectionTab] = useState("basic");
   const [showPreview, setShowPreview] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   
   const adminData = useAdminPartsAssignmentOptimized();
 
+  // Validation for current configuration
+  const validation = validateConfiguration(
+    adminData.selectedConfigData,
+    adminData.selectedModelData,
+    adminData.selectedYearData,
+    adminData.configurations
+  );
+
   const handleRunValidation = () => {
     console.log("Running full validation...");
-    // TODO: Implement comprehensive validation
+    console.log("Validation results:", validation);
   };
 
   const handleTogglePreview = () => {
@@ -79,6 +90,16 @@ const EnhancedAdminPartsLayout = () => {
         </div>
       </div>
 
+      {/* Sticky Section Navigation - Only show in trim manager mode */}
+      {activeMode === "trim-manager" && adminData.selectedConfig && (
+        <StickyNavigationTabs
+          activeTab={activeSectionTab}
+          onTabChange={setActiveSectionTab}
+          sectionStatus={validation.sectionStatus}
+          completeness={validation.completeness}
+        />
+      )}
+
       <div className="container mx-auto px-6 py-6">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
           {/* Left Sidebar - Context Sensitive */}
@@ -125,6 +146,8 @@ const EnhancedAdminPartsLayout = () => {
                       isPreviewMode={isPreviewMode}
                       onTogglePreview={handleTogglePreview}
                       onTogglePreviewMode={handleTogglePreviewMode}
+                      activeSectionTab={activeSectionTab}
+                      validation={validation}
                     />
                   </TabsContent>
                   

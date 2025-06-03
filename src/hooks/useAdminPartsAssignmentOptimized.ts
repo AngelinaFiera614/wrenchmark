@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchMotorcycleModels } from "@/services/models/modelService";
+import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
 import { fetchModelYears } from "@/services/models/modelYearService";
 import { fetchConfigurations } from "@/services/models/configurationService";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
@@ -20,19 +20,19 @@ export const useAdminPartsAssignmentOptimized = () => {
   const [activeTab, setActiveTab] = useState("navigator");
   const [showPreview, setShowPreview] = useState(false);
 
-  // Data queries
+  // Data queries with proper typing
   const { 
     data: models = [], 
     isLoading: modelsLoading 
-  } = useQuery({
+  } = useQuery<MotorcycleModel[]>({
     queryKey: ["motorcycle-models"],
-    queryFn: fetchMotorcycleModels,
+    queryFn: fetchAllMotorcycleModels,
   });
 
   const { 
     data: modelYears = [], 
     isLoading: yearsLoading 
-  } = useQuery({
+  } = useQuery<ModelYear[]>({
     queryKey: ["model-years", selectedModel],
     queryFn: () => selectedModel ? fetchModelYears(selectedModel) : Promise.resolve([]),
     enabled: !!selectedModel,
@@ -41,13 +41,13 @@ export const useAdminPartsAssignmentOptimized = () => {
   const { 
     data: configurations = [], 
     isLoading: configsLoading 
-  } = useQuery({
+  } = useQuery<Configuration[]>({
     queryKey: ["configurations", selectedYear],
     queryFn: () => selectedYear ? fetchConfigurations(selectedYear) : Promise.resolve([]),
     enabled: !!selectedYear,
   });
 
-  // Derived data
+  // Derived data with proper typing
   const selectedModelData = models.find(m => m.id === selectedModel);
   const selectedYearData = modelYears.find(y => y.id === selectedYear);
   const selectedConfigData = configurations.find(c => c.id === selectedConfig);
