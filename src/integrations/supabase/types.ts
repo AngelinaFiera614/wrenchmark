@@ -1597,6 +1597,48 @@ export type Database = {
         }
         Relationships: []
       }
+      trim_color_assignments: {
+        Row: {
+          color_option_id: string
+          configuration_id: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          color_option_id: string
+          configuration_id: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          color_option_id?: string
+          configuration_id?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trim_color_assignments_color_option_id_fkey"
+            columns: ["color_option_id"]
+            isOneToOne: false
+            referencedRelation: "color_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trim_color_assignments_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_glossary_terms: {
         Row: {
           id: string
