@@ -1,9 +1,9 @@
 
 import React from "react";
-import AdminPartsAssignmentOptimized from "./AdminPartsAssignmentOptimized";
+import EnhancedAdminPartsLayout from "../components/admin/parts/enhanced/EnhancedAdminPartsLayout";
 
 const AdminParts = () => {
-  return <AdminPartsAssignmentOptimized />;
+  return <EnhancedAdminPartsLayout />;
 };
 
 export default AdminParts;
