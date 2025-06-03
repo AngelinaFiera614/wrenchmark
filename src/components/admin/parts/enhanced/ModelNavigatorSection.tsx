@@ -25,9 +25,18 @@ const ModelNavigatorSection = ({
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Get unique brands and categories for filters
+  // Get unique brands and categories for filters - Fixed brand extraction
   const brands = useMemo(() => {
-    const uniqueBrands = [...new Set(models.map(m => m.brand?.name).filter(Boolean))];
+    console.log("Models data for brand extraction:", models?.slice(0, 2)); // Debug log
+    const uniqueBrands = [...new Set(
+      models.map(m => {
+        // Try multiple possible data structures
+        const brandName = m.brands?.name || m.brand?.name || null;
+        console.log("Extracting brand from model:", m.name, "Brand:", brandName); // Debug log
+        return brandName;
+      }).filter(Boolean)
+    )];
+    console.log("Extracted brands:", uniqueBrands); // Debug log
     return uniqueBrands.sort();
   }, [models]);
 
@@ -36,15 +45,17 @@ const ModelNavigatorSection = ({
     return uniqueCategories.sort();
   }, [models]);
 
-  // Filter models based on search and filters
+  // Filter models based on search and filters - Fixed brand comparison
   const filteredModels = useMemo(() => {
     return models.filter(model => {
+      const brandName = model.brands?.name || model.brand?.name || "";
+      
       const matchesSearch = !searchQuery.trim() || 
         model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        model.brand?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         model.type.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesBrand = selectedBrand === "all" || model.brand?.name === selectedBrand;
+      const matchesBrand = selectedBrand === "all" || brandName === selectedBrand;
       const matchesCategory = selectedCategory === "all" || model.type === selectedCategory;
 
       return matchesSearch && matchesBrand && matchesCategory;
@@ -135,28 +146,31 @@ const ModelNavigatorSection = ({
               )}
             </div>
           ) : (
-            filteredModels.map((model) => (
-              <Button
-                key={model.id}
-                variant="ghost"
-                onClick={() => onModelSelect(model.id)}
-                className={`h-auto p-3 text-left justify-start ${
-                  selectedModel === model.id
-                    ? 'bg-accent-teal/20 text-accent-teal border-accent-teal/30 border'
-                    : 'bg-explorer-dark hover:bg-explorer-chrome/10 border border-explorer-chrome/20'
-                }`}
-              >
-                <div className="w-full">
-                  <div className="font-medium text-sm mb-1 line-clamp-1">
-                    {model.brand?.name} {model.name}
+            filteredModels.map((model) => {
+              const brandName = model.brands?.name || model.brand?.name || "Unknown Brand";
+              return (
+                <Button
+                  key={model.id}
+                  variant="ghost"
+                  onClick={() => onModelSelect(model.id)}
+                  className={`h-auto p-3 text-left justify-start ${
+                    selectedModel === model.id
+                      ? 'bg-accent-teal/20 text-accent-teal border-accent-teal/30 border'
+                      : 'bg-explorer-dark hover:bg-explorer-chrome/10 border border-explorer-chrome/20'
+                  }`}
+                >
+                  <div className="w-full">
+                    <div className="font-medium text-sm mb-1 line-clamp-1">
+                      {brandName} {model.name}
+                    </div>
+                    <div className="text-xs text-explorer-text-muted line-clamp-1">
+                      {model.type} • {model.production_start_year}
+                      {model.production_end_year && ` - ${model.production_end_year}`}
+                    </div>
                   </div>
-                  <div className="text-xs text-explorer-text-muted line-clamp-1">
-                    {model.type} • {model.production_start_year}
-                    {model.production_end_year && ` - ${model.production_end_year}`}
-                  </div>
-                </div>
-              </Button>
-            ))
+                </Button>
+              );
+            })
           )}
         </div>
       </CardContent>
