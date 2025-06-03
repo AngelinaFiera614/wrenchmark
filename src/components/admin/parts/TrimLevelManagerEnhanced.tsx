@@ -10,6 +10,9 @@ import TrimLevelActions from "./trim-level/TrimLevelActions";
 import TrimLevelGrid from "./trim-level/TrimLevelGrid";
 import TrimLevelDetails from "./trim-level/TrimLevelDetails";
 import EnhancedCopyTrimLevelDialog from "./EnhancedCopyTrimLevelDialog";
+import EnhancedDeleteTrimDialog from "./enhanced/EnhancedDeleteTrimDialog";
+import QuickCopyDialog from "./enhanced/QuickCopyDialog";
+import EnhancedTrimLevelActions from "./enhanced/EnhancedTrimLevelActions";
 
 interface TrimLevelManagerEnhancedProps {
   modelYearId: string;
@@ -29,10 +32,13 @@ const TrimLevelManagerEnhanced = ({
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [editingConfig, setEditingConfig] = useState<Configuration | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [copyingConfig, setCopyingConfig] = useState<Configuration | null>(null);
   const [availableYears, setAvailableYears] = useState<any[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingConfig, setDeletingConfig] = useState<Configuration | null>(null);
+  const [quickCopyOpen, setQuickCopyOpen] = useState(false);
+  const [quickCopyType, setQuickCopyType] = useState<'components' | 'dimensions' | 'colors' | 'all'>('all');
 
   const selectedConfigData = configurations.find(c => c.id === selectedConfig);
 
@@ -93,42 +99,24 @@ const TrimLevelManagerEnhanced = ({
     }
   };
 
-  const handleDelete = async (config: Configuration) => {
-    if (!confirm(`Are you sure you want to delete the "${config.name}" trim level? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDelete = (config: Configuration) => {
+    console.log("Opening delete dialog for config:", config);
+    setDeletingConfig(config);
+    setDeleteDialogOpen(true);
+  };
 
-    setDeletingId(config.id);
-    
-    try {
-      console.log("Deleting trim level:", config.id);
-      const success = await deleteConfiguration(config.id);
-      
-      if (success) {
-        toast({
-          title: "Success!",
-          description: `Trim level "${config.name}" has been deleted successfully.`,
-          action: <CheckCircle className="h-4 w-4 text-green-500" />
-        });
-        
-        // If the deleted config was selected, clear selection
-        if (selectedConfig === config.id) {
-          onConfigSelect('');
-        }
-        
-        onConfigChange();
-      }
-    } catch (error: any) {
-      console.error("Error deleting trim level:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to delete trim level: ${error.message}`,
-        action: <AlertCircle className="h-4 w-4 text-red-500" />
-      });
-    } finally {
-      setDeletingId(null);
+  const handleDeleteSuccess = () => {
+    if (deletingConfig && selectedConfig === deletingConfig.id) {
+      onConfigSelect('');
     }
+    onConfigChange();
+    setDeletingConfig(null);
+  };
+
+  const handleQuickCopy = (type: 'components' | 'dimensions' | 'colors' | 'all') => {
+    if (!selectedConfigData) return;
+    setQuickCopyType(type);
+    setQuickCopyOpen(true);
   };
 
   const handleEditorClose = (refreshData = false) => {
@@ -165,9 +153,14 @@ const TrimLevelManagerEnhanced = ({
 
   return (
     <div className="space-y-6">
-      {/* Trim Level Actions */}
-      <TrimLevelActions 
+      {/* Enhanced Trim Level Actions */}
+      <EnhancedTrimLevelActions
+        selectedConfig={selectedConfigData}
+        configurations={configurations}
         onCreateNew={handleCreateNew}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onQuickCopy={handleQuickCopy}
         onRefresh={onConfigChange}
       />
 
@@ -175,7 +168,6 @@ const TrimLevelManagerEnhanced = ({
       <TrimLevelGrid
         configurations={configurations}
         selectedConfig={selectedConfig}
-        deletingId={deletingId}
         onConfigSelect={onConfigSelect}
         onEdit={handleEdit}
         onCopy={handleCopy}
@@ -208,6 +200,34 @@ const TrimLevelManagerEnhanced = ({
             onConfigChange();
             setCopyDialogOpen(false);
             setCopyingConfig(null);
+          }}
+        />
+      )}
+
+      {/* Enhanced Delete Dialog */}
+      {deleteDialogOpen && deletingConfig && (
+        <EnhancedDeleteTrimDialog
+          open={deleteDialogOpen}
+          onClose={() => {
+            setDeleteDialogOpen(false);
+            setDeletingConfig(null);
+          }}
+          configuration={deletingConfig}
+          onSuccess={handleDeleteSuccess}
+        />
+      )}
+
+      {/* Quick Copy Dialog */}
+      {quickCopyOpen && selectedConfigData && (
+        <QuickCopyDialog
+          open={quickCopyOpen}
+          onClose={() => setQuickCopyOpen(false)}
+          targetConfiguration={selectedConfigData}
+          availableConfigurations={configurations}
+          defaultCopyType={quickCopyType}
+          onSuccess={() => {
+            onConfigChange();
+            setQuickCopyOpen(false);
           }}
         />
       )}
