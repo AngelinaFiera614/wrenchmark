@@ -1,3 +1,4 @@
+
 import { Motorcycle } from "@/types";
 
 // Enhanced data extraction utilities with better error handling
@@ -229,13 +230,14 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       summary: rawData.summary || rawData.base_description || '',
       slug: rawData.slug,
       created_at: rawData.created_at,
-      is_placeholder: false,
+      is_placeholder: false, // Never mark as placeholder - show incomplete data instead
       migration_status: 'migrated',
       status: rawData.status || rawData.production_status || 'active',
       engine: `${engineData.engine_size || 0}cc`,
       is_draft: rawData.is_draft || false,
       transmission: rawData.transmission,
       drive_type: rawData.drive_type,
+      cooling_system: rawData.cooling_system,
       power_to_weight_ratio: rawData.power_to_weight_ratio,
       is_entry_level: rawData.is_entry_level,
       recommended_license_level: rawData.recommended_license_level,
@@ -266,7 +268,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   } catch (error) {
     console.error(`Error transforming motorcycle data for ${rawData.name}:`, error);
     
-    // Return a minimal motorcycle object in case of errors
+    // Return a motorcycle with clear incomplete data indicators instead of placeholder
     return {
       id: rawData.id,
       make: rawData.brands?.name || 'Unknown Brand',
@@ -291,8 +293,8 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       summary: rawData.summary || rawData.base_description || '',
       slug: rawData.slug,
       created_at: rawData.created_at,
-      is_placeholder: true,
-      migration_status: 'error',
+      is_placeholder: false, // Show as incomplete rather than placeholder
+      migration_status: 'incomplete_data',
       status: rawData.status || 'active',
       engine: `${rawData.engine_size || 0}cc`,
       is_draft: rawData.is_draft || false,

@@ -5,10 +5,12 @@ import { PlusCircle, Loader2, FileText, Eye, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycleService";
+import { publishMotorcycle, unpublishMotorcycle } from "@/services/motorcycles/adminQueries";
 import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycleDialog";
 import DeleteConfirmationDialog from "@/components/admin/models/DeleteConfirmationDialog";
 import BulkPublishingControls from "@/components/admin/models/BulkPublishingControls";
+import { DataCompletenessIndicator } from "@/components/motorcycles/DataCompletenessIndicator";
+import { calculateDataCompleteness } from "@/utils/dataCompleteness";
 import { Motorcycle } from "@/types";
 import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
 import { transformMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
@@ -92,7 +94,6 @@ const AdminMotorcycleModels = () => {
         : await unpublishMotorcycle(motorcycle.id);
 
       if (success) {
-        // Log admin action
         await logAdminAction({
           action: motorcycle.is_draft ? auditActions.MOTORCYCLE_PUBLISH : auditActions.MOTORCYCLE_UNPUBLISH,
           tableName: 'motorcycle_models',
@@ -129,7 +130,6 @@ const AdminMotorcycleModels = () => {
       const success = await deleteMotorcycleModelCascade(deleteModel.id);
 
       if (success) {
-        // Log admin action
         await logAdminAction({
           action: auditActions.MOTORCYCLE_DELETE,
           tableName: 'motorcycle_models',
@@ -214,7 +214,10 @@ const AdminMotorcycleModels = () => {
 
   const publishedModels = models?.filter(m => !m.is_draft) || [];
   const draftModels = models?.filter(m => m.is_draft) || [];
-  const placeholderModels = models?.filter(m => m.is_placeholder) || [];
+  const incompleteModels = models?.filter(m => {
+    const completeness = calculateDataCompleteness(m);
+    return completeness.completionPercentage < 100;
+  }) || [];
 
   return (
     <div className="space-y-6">
@@ -266,10 +269,10 @@ const AdminMotorcycleModels = () => {
           
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Data Issues</CardTitle>
+              <CardTitle className="text-sm font-medium">Incomplete Data</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{placeholderModels.length}</div>
+              <div className="text-2xl font-bold text-red-600">{incompleteModels.length}</div>
             </CardContent>
           </Card>
           
@@ -286,18 +289,18 @@ const AdminMotorcycleModels = () => {
         </div>
       )}
 
-      {/* Data Issues Warning */}
-      {placeholderModels.length > 0 && (
-        <Card className="border-red-200 bg-red-50">
+      {/* Data Completeness Warning */}
+      {incompleteModels.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-red-800">
+            <div className="flex items-center gap-2 text-orange-800">
               <AlertTriangle className="h-4 w-4" />
               <span className="font-medium">
-                {placeholderModels.length} motorcycles have data transformation issues
+                {incompleteModels.length} motorcycles have incomplete component data
               </span>
             </div>
-            <p className="text-red-700 text-sm mt-2">
-              These motorcycles failed to load properly and may have missing component data or invalid relationships.
+            <p className="text-orange-700 text-sm mt-2">
+              These motorcycles are missing some component assignments. They will still appear to users but with "data not available" indicators.
             </p>
           </CardContent>
         </Card>
@@ -314,57 +317,58 @@ const AdminMotorcycleModels = () => {
                 Draft Models ({draftModels.length})
               </h2>
               <div className="grid gap-4">
-                {draftModels.map((motorcycle) => (
-                  <Card key={motorcycle.id} className="border-orange-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                            <FileText className="mr-1 h-3 w-3" />
-                            Draft
-                          </Badge>
-                          {motorcycle.is_placeholder && (
-                            <Badge variant="destructive">
-                              <AlertTriangle className="mr-1 h-3 w-3" />
-                              Data Issue
+                {draftModels.map((motorcycle) => {
+                  const dataCompleteness = calculateDataCompleteness(motorcycle);
+                  return (
+                    <Card key={motorcycle.id} className="border-orange-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                              <FileText className="mr-1 h-3 w-3" />
+                              Draft
                             </Badge>
-                          )}
-                          <div>
-                            <h3 className="font-medium">{motorcycle.make} {motorcycle.model}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {motorcycle.year} • {motorcycle.category}
-                            </p>
+                            <DataCompletenessIndicator 
+                              status={dataCompleteness} 
+                              variant="admin" 
+                            />
+                            <div>
+                              <h3 className="font-medium">{motorcycle.make} {motorcycle.model}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {motorcycle.year} • {motorcycle.category}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleTogglePublishStatus(motorcycle)}
+                            >
+                              <Eye className="mr-1 h-3 w-3" />
+                              Publish
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditModel(motorcycle)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteClick(motorcycle)}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              Delete
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleTogglePublishStatus(motorcycle)}
-                          >
-                            <Eye className="mr-1 h-3 w-3" />
-                            Publish
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditModel(motorcycle)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteClick(motorcycle)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -377,57 +381,58 @@ const AdminMotorcycleModels = () => {
                 Published Models ({publishedModels.length})
               </h2>
               <div className="grid gap-4">
-                {publishedModels.map((motorcycle) => (
-                  <Card key={motorcycle.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            <Eye className="mr-1 h-3 w-3" />
-                            Published
-                          </Badge>
-                          {motorcycle.is_placeholder && (
-                            <Badge variant="destructive">
-                              <AlertTriangle className="mr-1 h-3 w-3" />
-                              Data Issue
+                {publishedModels.map((motorcycle) => {
+                  const dataCompleteness = calculateDataCompleteness(motorcycle);
+                  return (
+                    <Card key={motorcycle.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Badge variant="secondary" className="bg-green-100 text-green-800">
+                              <Eye className="mr-1 h-3 w-3" />
+                              Published
                             </Badge>
-                          )}
-                          <div>
-                            <h3 className="font-medium">{motorcycle.make} {motorcycle.model}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {motorcycle.year} • {motorcycle.category}
-                            </p>
+                            <DataCompletenessIndicator 
+                              status={dataCompleteness} 
+                              variant="admin" 
+                            />
+                            <div>
+                              <h3 className="font-medium">{motorcycle.make} {motorcycle.model}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {motorcycle.year} • {motorcycle.category}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleTogglePublishStatus(motorcycle)}
+                            >
+                              <FileText className="mr-1 h-3 w-3" />
+                              Unpublish
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditModel(motorcycle)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteClick(motorcycle)}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              Delete
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleTogglePublishStatus(motorcycle)}
-                          >
-                            <FileText className="mr-1 h-3 w-3" />
-                            Unpublish
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditModel(motorcycle)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteClick(motorcycle)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -448,14 +453,13 @@ const AdminMotorcycleModels = () => {
         </Card>
       )}
 
-      {/* Dialog */}
+      {/* Dialogs */}
       <AdminMotorcycleDialog 
         open={isCreateModelOpen}
         motorcycle={editModel}
         onClose={handleDialogClose}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={!!deleteModel}
         onClose={() => setDeleteModel(null)}

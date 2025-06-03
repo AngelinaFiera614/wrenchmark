@@ -8,7 +8,11 @@ import { SafetyNotesSection } from "../SafetyNotesSection";
 import { InteractiveSpecificationDisplay } from "../content";
 import { RelatedModelsSystem } from "../related";
 import { ComponentDetailCard } from "../components";
+import { ComponentStatusCard } from "../components/ComponentStatusCard";
+import { DataCompletenessIndicator } from "../DataCompletenessIndicator";
+import { calculateDataCompleteness } from "@/utils/dataCompleteness";
 import ManualsList from "../ManualsList";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MotorcycleDetailTabContentProps {
   activeTab: string;
@@ -32,18 +36,40 @@ export function MotorcycleDetailTabContent({
     componentKeys: selectedConfiguration ? Object.keys(selectedConfiguration) : []
   });
 
+  const dataCompleteness = calculateDataCompleteness(motorcycle, selectedConfiguration);
+
   switch (activeTab) {
     case 'specifications':
       return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PerformanceSpecifications 
-            motorcycle={motorcycle} 
-            selectedConfiguration={selectedConfiguration}
-          />
-          <PhysicalDimensions 
-            motorcycle={motorcycle} 
-            selectedConfiguration={selectedConfiguration}
-          />
+        <div className="space-y-6">
+          {dataCompleteness.completionPercentage < 100 && (
+            <Card className="border-orange-200 bg-orange-50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <DataCompletenessIndicator 
+                      status={dataCompleteness} 
+                      variant="detail" 
+                      showDetails 
+                    />
+                    <p className="text-sm text-orange-700 mt-2">
+                      Some specifications may be incomplete. Missing: {dataCompleteness.missingComponents.join(', ')}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PerformanceSpecifications 
+              motorcycle={motorcycle} 
+              selectedConfiguration={selectedConfiguration}
+            />
+            <PhysicalDimensions 
+              motorcycle={motorcycle} 
+              selectedConfiguration={selectedConfiguration}
+            />
+          </div>
         </div>
       );
 
@@ -51,24 +77,6 @@ export function MotorcycleDetailTabContent({
       return <InteractiveSpecificationDisplay motorcycle={motorcycle} />;
 
     case 'components':
-      if (!hasComponentData) {
-        console.log("No component data available for components tab");
-        return (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>Component data is not available for this motorcycle configuration.</p>
-            <p className="text-sm mt-2">This could mean the components haven't been assigned to this model yet.</p>
-          </div>
-        );
-      }
-      
-      console.log("Rendering components tab with data:", {
-        engines: selectedConfiguration?.engines || selectedConfiguration?.engine,
-        brake_systems: selectedConfiguration?.brake_systems || selectedConfiguration?.brakes,
-        frames: selectedConfiguration?.frames || selectedConfiguration?.frame,
-        suspensions: selectedConfiguration?.suspensions || selectedConfiguration?.suspension,
-        wheels: selectedConfiguration?.wheels || selectedConfiguration?.wheel
-      });
-
       return (
         <div className="space-y-4">
           {selectedConfiguration && (
@@ -79,44 +87,88 @@ export function MotorcycleDetailTabContent({
               {selectedConfiguration.description && (
                 <p className="text-muted-foreground">{selectedConfiguration.description}</p>
               )}
+              {dataCompleteness.completionPercentage < 100 && (
+                <div className="mt-3">
+                  <DataCompletenessIndicator 
+                    status={dataCompleteness} 
+                    variant="detail" 
+                    showDetails 
+                  />
+                </div>
+              )}
             </div>
           )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(selectedConfiguration?.engines || selectedConfiguration?.engine) && (
-              <ComponentDetailCard
-                type="engine"
-                title="Engine"
-                data={selectedConfiguration.engines || selectedConfiguration.engine}
-              />
-            )}
-            {(selectedConfiguration?.brake_systems || selectedConfiguration?.brakes) && (
-              <ComponentDetailCard
-                type="brake"
-                title="Brake System"
-                data={selectedConfiguration.brake_systems || selectedConfiguration.brakes}
-              />
-            )}
-            {(selectedConfiguration?.frames || selectedConfiguration?.frame) && (
-              <ComponentDetailCard
-                type="frame"
-                title="Frame"
-                data={selectedConfiguration.frames || selectedConfiguration.frame}
-              />
-            )}
-            {(selectedConfiguration?.suspensions || selectedConfiguration?.suspension) && (
-              <ComponentDetailCard
-                type="suspension"
-                title="Suspension"
-                data={selectedConfiguration.suspensions || selectedConfiguration.suspension}
-              />
-            )}
-            {(selectedConfiguration?.wheels || selectedConfiguration?.wheel) && (
-              <ComponentDetailCard
-                type="wheel"
-                title="Wheels"
-                data={selectedConfiguration.wheels || selectedConfiguration.wheel}
-              />
-            )}
+            <ComponentStatusCard
+              title="Engine"
+              data={selectedConfiguration?.engines || selectedConfiguration?.engine}
+              isAvailable={dataCompleteness.hasEngine}
+            >
+              {(selectedConfiguration?.engines || selectedConfiguration?.engine) && (
+                <ComponentDetailCard
+                  type="engine"
+                  title="Engine"
+                  data={selectedConfiguration.engines || selectedConfiguration.engine}
+                />
+              )}
+            </ComponentStatusCard>
+
+            <ComponentStatusCard
+              title="Brake System"
+              data={selectedConfiguration?.brake_systems || selectedConfiguration?.brakes}
+              isAvailable={dataCompleteness.hasBrakes}
+            >
+              {(selectedConfiguration?.brake_systems || selectedConfiguration?.brakes) && (
+                <ComponentDetailCard
+                  type="brake"
+                  title="Brake System"
+                  data={selectedConfiguration.brake_systems || selectedConfiguration.brakes}
+                />
+              )}
+            </ComponentStatusCard>
+
+            <ComponentStatusCard
+              title="Frame"
+              data={selectedConfiguration?.frames || selectedConfiguration?.frame}
+              isAvailable={dataCompleteness.hasFrame}
+            >
+              {(selectedConfiguration?.frames || selectedConfiguration?.frame) && (
+                <ComponentDetailCard
+                  type="frame"
+                  title="Frame"
+                  data={selectedConfiguration.frames || selectedConfiguration.frame}
+                />
+              )}
+            </ComponentStatusCard>
+
+            <ComponentStatusCard
+              title="Suspension"
+              data={selectedConfiguration?.suspensions || selectedConfiguration?.suspension}
+              isAvailable={dataCompleteness.hasSuspension}
+            >
+              {(selectedConfiguration?.suspensions || selectedConfiguration?.suspension) && (
+                <ComponentDetailCard
+                  type="suspension"
+                  title="Suspension"
+                  data={selectedConfiguration.suspensions || selectedConfiguration.suspension}
+                />
+              )}
+            </ComponentStatusCard>
+
+            <ComponentStatusCard
+              title="Wheels"
+              data={selectedConfiguration?.wheels || selectedConfiguration?.wheel}
+              isAvailable={dataCompleteness.hasWheels}
+            >
+              {(selectedConfiguration?.wheels || selectedConfiguration?.wheel) && (
+                <ComponentDetailCard
+                  type="wheel"
+                  title="Wheels"
+                  data={selectedConfiguration.wheels || selectedConfiguration.wheel}
+                />
+              )}
+            </ComponentStatusCard>
           </div>
         </div>
       );
