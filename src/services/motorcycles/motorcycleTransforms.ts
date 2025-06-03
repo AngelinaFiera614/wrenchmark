@@ -1,110 +1,71 @@
-
 import { Motorcycle } from "@/types";
 
-// Enhanced data extraction utilities with better error handling
+// Simplified data extraction with better fallbacks
 const extractEngineData = (configuration: any, fallbackData: any = {}) => {
-  console.log("Extracting engine data from configuration:", configuration);
   const engine = configuration?.engines || configuration?.engine;
   
-  if (engine && engine.id) {
-    console.log("Found engine data:", engine);
-    return {
-      engine_size: engine.displacement_cc || 0,
-      displacement_cc: engine.displacement_cc || 0,
-      engine_cc: engine.displacement_cc || 0,
-      horsepower: engine.power_hp || 0,
-      horsepower_hp: engine.power_hp || 0,
-      torque_nm: engine.torque_nm || 0,
-      engine_type: engine.engine_type || null,
-      cylinder_count: engine.cylinder_count || null,
-      cooling_system: engine.cooling || null,
-      power_rpm: engine.power_rpm || null,
-      torque_rpm: engine.torque_rpm || null,
-    };
-  }
-
-  console.log("No engine data found, using fallback");
-  // Fallback to model-level data
+  // Use component data if available, otherwise fallback to model-level data
+  const displacement = engine?.displacement_cc || fallbackData.engine_size || 0;
+  const power = engine?.power_hp || fallbackData.horsepower || 0;
+  const torque = engine?.torque_nm || fallbackData.torque_nm || 0;
+  
   return {
-    engine_size: fallbackData.engine_size || 0,
-    displacement_cc: fallbackData.engine_size || 0,
-    engine_cc: fallbackData.engine_size || 0,
-    horsepower: fallbackData.horsepower || 0,
-    horsepower_hp: fallbackData.horsepower || 0,
-    torque_nm: fallbackData.torque_nm || 0,
-    engine_type: fallbackData.engine_type || null,
-    cylinder_count: fallbackData.cylinder_count || null,
-    cooling_system: fallbackData.cooling_system || null,
-    power_rpm: fallbackData.power_rpm || null,
-    torque_rpm: fallbackData.torque_rpm || null,
+    engine_size: displacement,
+    displacement_cc: displacement,
+    engine_cc: displacement,
+    horsepower: power,
+    horsepower_hp: power,
+    torque_nm: torque,
+    engine_type: engine?.engine_type || fallbackData.engine_type || null,
+    cylinder_count: engine?.cylinder_count || fallbackData.cylinder_count || null,
+    cooling_system: engine?.cooling || fallbackData.cooling_system || null,
+    power_rpm: engine?.power_rpm || fallbackData.power_rpm || null,
+    torque_rpm: engine?.torque_rpm || fallbackData.torque_rpm || null,
   };
 };
 
 const extractBrakeData = (configuration: any, fallbackData: any = {}) => {
-  console.log("Extracting brake data from configuration:", configuration);
   const brakes = configuration?.brake_systems || configuration?.brakes;
   
-  if (brakes && brakes.id) {
-    console.log("Found brake data:", brakes);
-    return {
-      abs: brakes.has_traction_control || false,
-      has_abs: brakes.has_traction_control || false,
-      brake_type: brakes.type || null,
-    };
-  }
-
-  console.log("No brake data found, using fallback");
   return {
-    abs: fallbackData.has_abs || false,
-    has_abs: fallbackData.has_abs || false,
-    brake_type: fallbackData.brake_type || null,
+    abs: brakes?.has_traction_control || fallbackData.has_abs || false,
+    has_abs: brakes?.has_traction_control || fallbackData.has_abs || false,
+    brake_type: brakes?.type || fallbackData.brake_type || null,
   };
 };
 
 const extractDimensionData = (configuration: any, fallbackData: any = {}) => {
-  console.log("Extracting dimension data from configuration:", configuration);
-  const dimensions = {
-    seat_height_mm: configuration?.seat_height_mm || fallbackData.seat_height_mm || 0,
-    weight_kg: configuration?.weight_kg || fallbackData.weight_kg || 0,
-    wheelbase_mm: configuration?.wheelbase_mm || fallbackData.wheelbase_mm || 0,
-    ground_clearance_mm: configuration?.ground_clearance_mm || fallbackData.ground_clearance_mm || 0,
-    fuel_capacity_l: configuration?.fuel_capacity_l || fallbackData.fuel_capacity_l || 0,
-  };
+  // Prefer configuration data, fallback to model-level data
+  const seat_height_mm = configuration?.seat_height_mm || fallbackData.seat_height_mm || 0;
+  const weight_kg = configuration?.weight_kg || fallbackData.weight_kg || 0;
+  const wheelbase_mm = configuration?.wheelbase_mm || fallbackData.wheelbase_mm || 0;
+  const ground_clearance_mm = configuration?.ground_clearance_mm || fallbackData.ground_clearance_mm || 0;
+  const fuel_capacity_l = configuration?.fuel_capacity_l || fallbackData.fuel_capacity_l || 0;
 
-  // Add imperial conversions
   return {
-    ...dimensions,
-    seat_height_in: dimensions.seat_height_mm ? (dimensions.seat_height_mm / 25.4) : 0,
-    weight_lbs: dimensions.weight_kg ? (dimensions.weight_kg * 2.20462) : 0,
-    wheelbase_in: dimensions.wheelbase_mm ? (dimensions.wheelbase_mm / 25.4) : 0,
-    ground_clearance_in: dimensions.ground_clearance_mm ? (dimensions.ground_clearance_mm / 25.4) : 0,
-    fuel_capacity_gal: dimensions.fuel_capacity_l ? (dimensions.fuel_capacity_l * 0.264172) : 0,
+    seat_height_mm,
+    weight_kg,
+    wheelbase_mm,
+    ground_clearance_mm,
+    fuel_capacity_l,
+    // Imperial conversions
+    seat_height_in: seat_height_mm ? (seat_height_mm / 25.4) : 0,
+    weight_lbs: weight_kg ? (weight_kg * 2.20462) : 0,
+    wheelbase_in: wheelbase_mm ? (wheelbase_mm / 25.4) : 0,
+    ground_clearance_in: ground_clearance_mm ? (ground_clearance_mm / 25.4) : 0,
+    fuel_capacity_gal: fuel_capacity_l ? (fuel_capacity_l * 0.264172) : 0,
   };
-};
-
-const extractColorOptions = (modelYears: any[]) => {
-  console.log("Extracting color options from model years:", modelYears);
-  const allColors = modelYears.flatMap(year => year.color_options || []);
-  console.log("Found color options:", allColors.length);
-  return allColors;
 };
 
 const selectBestConfiguration = (configurations: any[]) => {
   if (!configurations || configurations.length === 0) {
-    console.log("No configurations available");
     return null;
   }
 
-  console.log(`Selecting best configuration from ${configurations.length} options`);
-
-  // Priority order for configuration selection
-  // 1. Configuration with complete engine data
-  let best = configurations.find(c => {
-    const engine = c.engines || c.engine;
-    return engine && engine.displacement_cc > 0 && engine.power_hp > 0;
-  });
-
-  // 2. Configuration with any engine data
+  // Find default configuration first
+  let best = configurations.find(c => c.is_default);
+  
+  // If no default, find one with most complete data
   if (!best) {
     best = configurations.find(c => {
       const engine = c.engines || c.engine;
@@ -112,38 +73,8 @@ const selectBestConfiguration = (configurations: any[]) => {
     });
   }
 
-  // 3. Configuration with dimension data
-  if (!best) {
-    best = configurations.find(c => 
-      c.seat_height_mm > 0 || c.weight_kg > 0
-    );
-  }
-
-  // 4. Default configuration
-  if (!best) {
-    best = configurations.find(c => c.is_default);
-  }
-
-  // 5. First configuration
-  const selected = best || configurations[0];
-  
-  console.log("Selected configuration:", selected?.name || selected?.id);
-  return selected;
-};
-
-const validateComponentData = (component: any, componentType: string) => {
-  if (!component) {
-    console.log(`No ${componentType} component found`);
-    return null;
-  }
-
-  if (!component.id) {
-    console.log(`${componentType} component missing ID:`, component);
-    return null;
-  }
-
-  console.log(`Valid ${componentType} component found:`, component.id);
-  return component;
+  // Fallback to first configuration
+  return best || configurations[0];
 };
 
 export const transformMotorcycleData = (rawData: any): Motorcycle => {
@@ -154,10 +85,8 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     // Extract brand data with fallback
     const brandName = rawData.brands?.name || 'Unknown Brand';
     
-    // Process model years and configurations with validation
+    // Process model years and configurations
     const modelYears = rawData.years || [];
-    console.log(`Found ${modelYears.length} model years for ${rawData.name}`);
-    
     const allConfigurations = modelYears.flatMap(year => 
       (year.configurations || []).map(config => ({
         ...config,
@@ -165,41 +94,16 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       }))
     );
     
-    console.log(`Found ${allConfigurations.length} configurations for ${rawData.name}`);
-    
     // Select the best configuration
     const bestConfiguration = selectBestConfiguration(allConfigurations);
     
-    if (bestConfiguration) {
-      console.log(`Selected configuration: ${bestConfiguration.name || bestConfiguration.id}`);
-    } else {
-      console.log("No configuration selected - using fallback");
-    }
-
-    // Extract enhanced data using the best configuration with validation
+    // Extract data using the best configuration with fallbacks to model-level data
     const engineData = extractEngineData(bestConfiguration, rawData);
     const brakeData = extractBrakeData(bestConfiguration, rawData);
     const dimensionData = extractDimensionData(bestConfiguration, rawData);
-    const colorOptions = extractColorOptions(modelYears);
+    const colorOptions = modelYears.flatMap(year => year.color_options || []);
 
-    // Validate component data
-    const validatedComponents = {
-      engine: validateComponentData(bestConfiguration?.engines || bestConfiguration?.engine, 'engine'),
-      brakes: validateComponentData(bestConfiguration?.brake_systems || bestConfiguration?.brakes, 'brake'),
-      frame: validateComponentData(bestConfiguration?.frames || bestConfiguration?.frame, 'frame'),
-      suspension: validateComponentData(bestConfiguration?.suspensions || bestConfiguration?.suspension, 'suspension'),
-      wheels: validateComponentData(bestConfiguration?.wheels || bestConfiguration?.wheel, 'wheel')
-    };
-
-    console.log("Validated components:", {
-      hasEngine: !!validatedComponents.engine,
-      hasBrakes: !!validatedComponents.brakes,
-      hasFrame: !!validatedComponents.frame,
-      hasSuspension: !!validatedComponents.suspension,
-      hasWheels: !!validatedComponents.wheels
-    });
-
-    // Create the transformed motorcycle object with enhanced error handling
+    // Create the transformed motorcycle object
     const transformed: Motorcycle = {
       id: rawData.id,
       make: brandName,
@@ -230,7 +134,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       summary: rawData.summary || rawData.base_description || '',
       slug: rawData.slug,
       created_at: rawData.created_at,
-      is_placeholder: false, // Never mark as placeholder - show incomplete data instead
+      is_placeholder: false,
       migration_status: 'migrated',
       status: rawData.status || rawData.production_status || 'active',
       engine: `${engineData.engine_size || 0}cc`,
@@ -243,32 +147,25 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       recommended_license_level: rawData.recommended_license_level,
       use_cases: rawData.use_cases || [],
       
-      // Store validated component references
+      // Store component data for detailed views
       _componentData: {
-        engine: validatedComponents.engine,
-        brakes: validatedComponents.brakes,
-        frame: validatedComponents.frame,
-        suspension: validatedComponents.suspension,
-        wheels: validatedComponents.wheels,
+        engine: bestConfiguration?.engines || bestConfiguration?.engine,
+        brakes: bestConfiguration?.brake_systems || bestConfiguration?.brakes,
+        frame: bestConfiguration?.frames || bestConfiguration?.frame,
+        suspension: bestConfiguration?.suspensions || bestConfiguration?.suspension,
+        wheels: bestConfiguration?.wheels || bestConfiguration?.wheel,
         configurations: allConfigurations,
         colorOptions: colorOptions,
         selectedConfiguration: bestConfiguration
       }
     };
     
-    console.log(`Successfully transformed ${transformed.make} ${transformed.model}:`, {
-      engine_size: transformed.engine_size,
-      horsepower: transformed.horsepower,
-      weight_kg: transformed.weight_kg,
-      seat_height_mm: transformed.seat_height_mm,
-      hasValidComponents: Object.values(validatedComponents).some(c => c !== null)
-    });
-    
+    console.log(`Successfully transformed ${transformed.make} ${transformed.model}`);
     return transformed;
   } catch (error) {
     console.error(`Error transforming motorcycle data for ${rawData.name}:`, error);
     
-    // Return a motorcycle with clear incomplete data indicators instead of placeholder
+    // Return a basic motorcycle with minimal data instead of failing
     return {
       id: rawData.id,
       make: rawData.brands?.name || 'Unknown Brand',
@@ -293,7 +190,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       summary: rawData.summary || rawData.base_description || '',
       slug: rawData.slug,
       created_at: rawData.created_at,
-      is_placeholder: false, // Show as incomplete rather than placeholder
+      is_placeholder: false,
       migration_status: 'incomplete_data',
       status: rawData.status || 'active',
       engine: `${rawData.engine_size || 0}cc`,

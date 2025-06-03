@@ -1,9 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Simplified query that focuses on essential data and handles missing components gracefully
 export const MOTORCYCLE_SELECT_QUERY = `
   *,
-  brands!motorcycle_models_brand_id_fkey(*),
+  brands!motorcycle_models_brand_id_fkey(
+    id,
+    name,
+    slug
+  ),
   years:model_years(
     *,
     configurations:model_configurations(
@@ -19,61 +24,38 @@ export const MOTORCYCLE_SELECT_QUERY = `
         torque_rpm,
         cylinder_count,
         cooling,
-        fuel_system,
-        compression_ratio,
-        bore_mm,
-        stroke_mm,
-        valves_per_cylinder,
-        valve_count
+        fuel_system
       ),
       brake_systems:brake_system_id(
         id,
         type,
         brake_type_front,
         brake_type_rear,
-        has_traction_control,
-        front_disc_size_mm,
-        rear_disc_size_mm,
-        brake_brand,
-        caliper_type
+        has_traction_control
       ),
       frames:frame_id(
         id,
         type,
-        material,
-        construction_method,
-        rake_degrees,
-        trail_mm
+        material
       ),
       suspensions:suspension_id(
         id,
         front_type,
         rear_type,
-        brand,
-        adjustability,
-        front_brand,
-        rear_brand,
-        front_travel_mm,
-        rear_travel_mm
+        brand
       ),
       wheels:wheel_id(
         id,
         type,
         front_size,
         rear_size,
-        rim_material,
-        front_tire_size,
-        rear_tire_size,
-        spoke_count_front,
-        spoke_count_rear
+        rim_material
       )
     ),
     color_options(
       id,
       name,
-      hex_code,
-      image_url,
-      is_limited
+      hex_code
     )
   )
 `;
@@ -88,16 +70,10 @@ export const queryMotorcycleBySlug = async (slug: string) => {
       .select(MOTORCYCLE_SELECT_QUERY)
       .eq('slug', slug)
       .eq('is_draft', false)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Database error fetching motorcycle by slug:", error);
-      console.error("Error details:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
       throw new Error(`Failed to fetch motorcycle: ${error.message}`);
     }
 
@@ -106,11 +82,7 @@ export const queryMotorcycleBySlug = async (slug: string) => {
       return null;
     }
 
-    console.log("Raw motorcycle data for slug:", data);
-    console.log("Years data:", data?.years);
-    console.log("Configurations data:", data?.years?.[0]?.configurations);
-    console.log("Engine data:", data?.years?.[0]?.configurations?.[0]?.engines);
-    
+    console.log("Successfully fetched motorcycle data for slug:", slug);
     return data;
   } catch (error) {
     console.error("Error in queryMotorcycleBySlug:", error);
@@ -130,16 +102,10 @@ export const queryAllMotorcycles = async () => {
 
     if (error) {
       console.error("Database error fetching all motorcycles:", error);
-      console.error("Error details:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
       throw new Error(`Failed to fetch motorcycles: ${error.message}`);
     }
 
-    console.log("Raw motorcycles data count:", data?.length || 0);
+    console.log("Successfully fetched motorcycles, count:", data?.length || 0);
     return data || [];
   } catch (error) {
     console.error("Error in queryAllMotorcycles:", error);
@@ -156,7 +122,7 @@ export const queryMotorcycleByDetails = async (make: string, model: string, year
       .eq('brands.name', make)
       .gte('production_start_year', year - 2)
       .lte('production_end_year', year + 2)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       console.error("Database error in queryMotorcycleByDetails:", error);

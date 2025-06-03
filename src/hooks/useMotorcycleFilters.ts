@@ -4,15 +4,15 @@ import { useFilterState } from "./filters/useFilterState";
 import { useMotorcycleFiltering } from "./filters/useMotorcycleFiltering";
 import { useFilteringState } from "./filters/useFilteringState";
 
-// Updated filters to be more inclusive of the populated data
+// Updated filters to be more inclusive of incomplete data
 export const initialFilters: MotorcycleFilters = {
   categories: [],
   make: "",
   yearRange: [1950, 2025],
-  engineSizeRange: [0, 1500], // Realistic max for motorcycles
+  engineSizeRange: [0, 2000], // Increased max to be more inclusive
   difficultyLevel: 5,
-  weightRange: [0, 400], // Realistic motorcycle weight range
-  seatHeightRange: [600, 1000], // Realistic seat height range
+  weightRange: [0, 500], // Increased max for heavier bikes
+  seatHeightRange: [500, 1200], // More inclusive range
   abs: null,
   searchTerm: "",
   styleTags: [],
@@ -20,15 +20,15 @@ export const initialFilters: MotorcycleFilters = {
   skillLevel: [],
   transmission: [],
   driveType: [],
-  powerToWeightRange: [0, 2.0], // More realistic power-to-weight ratios
+  powerToWeightRange: [0, 3.0], // More inclusive range
   isEntryLevel: null,
   coolingSystem: [],
   licenseLevelFilter: [],
-  priceRange: [0, 50000], // More realistic price range
+  priceRange: [0, 100000], // More inclusive price range
   hasSmartFeatures: null,
-  fuelCapacityRange: [0, 30], // Realistic fuel tank sizes
-  topSpeedRange: [0, 350], // Realistic top speed range
-  torqueRange: [0, 200], // Realistic torque range
+  fuelCapacityRange: [0, 50], // More inclusive fuel range
+  topSpeedRange: [0, 400], // More inclusive speed range
+  torqueRange: [0, 300], // More inclusive torque range
   advancedSearch: {
     engineType: [],
     cylinderCount: [],
@@ -45,20 +45,21 @@ export function useMotorcycleFilters(
   console.log("=== MOTORCYCLE FILTERS HOOK DEBUG ===");
   console.log("Input motorcycles count:", motorcycles.length);
   
-  // Log sample of motorcycles with specifications
-  const sampleWithSpecs = motorcycles.filter(m => m.engine_size > 0 && m.horsepower > 0 && m.weight_kg > 0);
-  console.log("Motorcycles with complete specs:", sampleWithSpecs.length);
-  console.log("Sample motorcycle with specs:", sampleWithSpecs[0]);
+  // Enhanced logging for data quality
+  const validMotorcycles = motorcycles.filter(m => !m.is_placeholder);
+  const withEngineData = motorcycles.filter(m => m.engine_size > 0);
+  const withPowerData = motorcycles.filter(m => m.horsepower > 0);
+  const withWeightData = motorcycles.filter(m => m.weight_kg > 0);
+  const withSeatHeightData = motorcycles.filter(m => m.seat_height_mm > 0);
   
-  // Log engine size distribution
-  const engineSizes = motorcycles.map(m => m.engine_size).filter(size => size > 0);
-  console.log("Engine size range:", {
-    min: Math.min(...engineSizes),
-    max: Math.max(...engineSizes),
-    count: engineSizes.length
+  console.log("Data quality summary:", {
+    total: motorcycles.length,
+    valid: validMotorcycles.length,
+    withEngine: withEngineData.length,
+    withPower: withPowerData.length,
+    withWeight: withWeightData.length,
+    withSeatHeight: withSeatHeightData.length
   });
-  
-  console.log("Starting filters:", startingFilters);
 
   const {
     filters,
@@ -66,8 +67,6 @@ export function useMotorcycleFilters(
     isSearching,
     handlers
   } = useFilterState(startingFilters);
-
-  console.log("Current filters in hook:", filters);
 
   const { isFiltering } = useFilteringState(filters);
 
@@ -77,9 +76,7 @@ export function useMotorcycleFilters(
     debouncedSearchTerm
   );
 
-  console.log("=== FILTERING DEBUG END ===");
   console.log("Filtered motorcycles count:", filteredMotorcycles.length);
-  console.log("Sample filtered motorcycle:", filteredMotorcycles[0]);
 
   return {
     filters,

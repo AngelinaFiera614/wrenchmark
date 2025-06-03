@@ -1,27 +1,12 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
-// Simplified admin query that focuses on essential data
+// Simplified admin query that gets essential data without complex joins
 export const ADMIN_MOTORCYCLE_SELECT_QUERY = `
   *,
   brands!motorcycle_models_brand_id_fkey(
     id,
     name,
     slug
-  ),
-  years:model_years(
-    id,
-    year,
-    configurations:model_configurations(
-      id,
-      name,
-      seat_height_mm,
-      weight_kg,
-      wheelbase_mm,
-      fuel_capacity_l,
-      ground_clearance_mm,
-      is_default
-    )
   )
 `;
 
@@ -36,12 +21,6 @@ export const fetchAllMotorcyclesForAdmin = async () => {
 
     if (error) {
       console.error("Database error fetching motorcycles for admin:", error);
-      console.error("Error details:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
       throw new Error(`Admin query failed: ${error.message}`);
     }
 
