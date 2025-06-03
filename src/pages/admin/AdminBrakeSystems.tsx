@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,13 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useComponentDeletion } from "@/hooks/useComponentDeletion";
 import AdminBrakeSystemDialog from "@/components/admin/components/AdminBrakeSystemDialog";
+import ComponentUsageDialog from "@/components/admin/components/ComponentUsageDialog";
 
 const AdminBrakeSystems = () => {
   const { toast } = useToast();
+  const { checkComponentUsage, isChecking } = useComponentDeletion();
   const [isCreateBrakeSystemOpen, setIsCreateBrakeSystemOpen] = useState(false);
   const [editBrakeSystem, setEditBrakeSystem] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [usageDialogOpen, setUsageDialogOpen] = useState(false);
+  const [selectedBrakeSystem, setSelectedBrakeSystem] = useState(null);
+  const [usageInfo, setUsageInfo] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch brake systems
   const { data: brakeSystems, isLoading, error, refetch } = useQuery({
@@ -41,30 +47,49 @@ const AdminBrakeSystems = () => {
   };
 
   const handleDeleteBrakeSystem = async (brakeSystem) => {
-    if (!confirm(`Are you sure you want to delete the ${brakeSystem.type} brake system? This action cannot be undone.`)) {
-      return;
+    setSelectedBrakeSystem(brakeSystem);
+    
+    // Check if component can be deleted
+    const usage = await checkComponentUsage("brake_system", brakeSystem.id);
+    if (usage) {
+      setUsageInfo(usage);
+      setUsageDialogOpen(true);
     }
+  };
 
+  const confirmDelete = async () => {
+    if (!selectedBrakeSystem || !usageInfo?.canDelete) return;
+
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from('brake_systems')
         .delete()
-        .eq('id', brakeSystem.id);
+        .eq('id', selectedBrakeSystem.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw new Error(error.message || "Failed to delete brake system");
+      }
 
       toast({
         title: "Brake system deleted",
-        description: `${brakeSystem.type} has been removed.`,
+        description: `${selectedBrakeSystem.type} has been removed.`,
       });
 
       refetch();
+      setUsageDialogOpen(false);
+      setSelectedBrakeSystem(null);
+      setUsageInfo(null);
     } catch (error) {
+      console.error("Error deleting brake system:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete brake system. Please try again.",
+        description: error.message || "Failed to delete brake system. Please try again.",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -74,6 +99,12 @@ const AdminBrakeSystems = () => {
     if (refreshData) {
       refetch();
     }
+  };
+
+  const closeUsageDialog = () => {
+    setUsageDialogOpen(false);
+    setSelectedBrakeSystem(null);
+    setUsageInfo(null);
   };
 
   // Filter brake systems based on search
@@ -239,10 +270,11 @@ const AdminBrakeSystems = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteBrakeSystem(brakeSystem)}
+                          disabled={isChecking}
                           className="h-8 px-2 text-xs text-red-400 hover:text-red-300"
                         >
                           <Trash2 className="mr-1 h-3 w-3" />
-                          Delete
+                          {isChecking ? "Checking..." : "Delete"}
                         </Button>
                       </div>
                     </TableCell>
@@ -273,12 +305,24 @@ const AdminBrakeSystems = () => {
         </CardContent>
       </Card>
 
-      {/* Dialog */}
+      {/* Dialogs */}
       <AdminBrakeSystemDialog 
         open={isCreateBrakeSystemOpen}
         brakeSystem={editBrakeSystem}
         onClose={handleDialogClose}
       />
+
+      {selectedBrakeSystem && usageInfo && (
+        <ComponentUsageDialog
+          open={usageDialogOpen}
+          onClose={closeUsageDialog}
+          componentName={selectedBrakeSystem.type}
+          componentType="brake system"
+          usageInfo={usageInfo}
+          onConfirmDelete={usageInfo.canDelete ? confirmDelete : undefined}
+          isDeleting={isDeleting}
+        />
+      )}
     </div>
   );
 };
