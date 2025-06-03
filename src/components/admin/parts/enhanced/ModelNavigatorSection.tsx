@@ -30,8 +30,8 @@ const ModelNavigatorSection = ({
     console.log("Models data for brand extraction:", models?.slice(0, 2)); // Debug log
     const uniqueBrands = [...new Set(
       models.map(m => {
-        // Try multiple possible data structures
-        const brandName = m.brands?.name || m.brand?.name || null;
+        // Access brand name from the correct property structure
+        const brandName = m.brand?.name || null;
         console.log("Extracting brand from model:", m.name, "Brand:", brandName); // Debug log
         return brandName;
       }).filter(Boolean)
@@ -48,7 +48,7 @@ const ModelNavigatorSection = ({
   // Filter models based on search and filters - Fixed brand comparison
   const filteredModels = useMemo(() => {
     return models.filter(model => {
-      const brandName = model.brands?.name || model.brand?.name || "";
+      const brandName = model.brand?.name || "";
       
       const matchesSearch = !searchQuery.trim() || 
         model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -147,7 +147,7 @@ const ModelNavigatorSection = ({
             </div>
           ) : (
             filteredModels.map((model) => {
-              const brandName = model.brands?.name || model.brand?.name || "Unknown Brand";
+              const brandName = model.brand?.name || "Unknown Brand";
               return (
                 <Button
                   key={model.id}
