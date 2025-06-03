@@ -40,14 +40,19 @@ export const linkComponentToConfiguration = async (
       return { success: false, error: 'Failed to link component' };
     }
 
-    // Log the admin action
-    await logAdminAction({
-      action: `component_link_${componentType}`,
-      tableName: 'model_configurations',
-      recordId: configurationId,
-      oldValues: { [`${componentType}_id`]: oldValue },
-      newValues: { [`${componentType}_id`]: componentId }
-    });
+    // Log the admin action (optional, remove if adminAuditLogger doesn't exist)
+    try {
+      await logAdminAction({
+        action: `component_link_${componentType}`,
+        tableName: 'model_configurations',
+        recordId: configurationId,
+        oldValues: { [`${componentType}_id`]: oldValue },
+        newValues: { [`${componentType}_id`]: componentId }
+      });
+    } catch (auditError) {
+      console.warn('Could not log admin action:', auditError);
+      // Don't fail the operation if audit logging fails
+    }
 
     return { success: true };
   } catch (error) {
