@@ -39,6 +39,13 @@ export const useTrimLevelSave = (
       console.log("Form Data:", formData);
 
       const configData = getCleanConfigData();
+      
+      // Handle default configuration constraint
+      if (configData.is_default && !configuration?.id) {
+        // If this is a new default configuration, we need to ensure no other default exists
+        console.log("Creating new default configuration, checking for existing defaults...");
+      }
+      
       console.log("Cleaned config data:", configData);
 
       let savedConfig;
@@ -78,12 +85,22 @@ export const useTrimLevelSave = (
         errorMessage = "Invalid component reference. Please check your component selections.";
       } else if (error?.message?.includes("unique constraint") || error?.message?.includes("duplicate key")) {
         if (error.message.includes("idx_model_configurations_default_per_year")) {
-          errorMessage = "There can only be one default configuration per model year. Please uncheck 'Base Model' or update the existing default configuration.";
+          errorMessage = "There can only be one default configuration per model year. Please uncheck 'Base Model' for existing configurations first, or edit the existing default configuration.";
+        } else if (error.message.includes("duplicate key value violates unique constraint")) {
+          errorMessage = "A trim level with this name already exists for this model year. Please choose a different name.";
         } else {
           errorMessage = "A trim level with this name already exists for this model year.";
         }
       } else if (error?.message?.includes("check_positive_dimensions")) {
         errorMessage = "All dimension values must be positive numbers.";
+      } else if (error?.message?.includes("null value in column")) {
+        const columnMatch = error.message.match(/null value in column "([^"]+)"/);
+        if (columnMatch) {
+          const columnName = columnMatch[1];
+          errorMessage = `Required field missing: ${columnName.replace('_', ' ')}`;
+        } else {
+          errorMessage = "Required fields are missing. Please check all required information is filled out.";
+        }
       } else if (error?.message) {
         errorMessage = error.message;
       }

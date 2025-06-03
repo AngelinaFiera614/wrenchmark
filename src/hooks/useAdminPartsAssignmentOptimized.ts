@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
 import { fetchModelYears, deleteModelYear } from "@/services/models/modelYearService";
-import { fetchConfigurations } from "@/services/models/configurationService";
+import { fetchConfigurations, deleteConfiguration } from "@/services/models/configurationService";
 import { toast } from "sonner";
 import { Configuration } from "@/types/motorcycle";
 
@@ -96,7 +96,7 @@ export const useAdminPartsAssignmentOptimized = () => {
     setShowPreview(true);
   };
 
-  // New trim level editor handlers
+  // Enhanced trim level editor handlers
   const handleAddTrim = () => {
     if (!selectedYear) {
       toast.error("Please select a model year first");
@@ -109,6 +109,29 @@ export const useAdminPartsAssignmentOptimized = () => {
   const handleEditTrim = (config: Configuration) => {
     setEditingTrimConfig(config);
     setIsEditingTrim(true);
+  };
+
+  const handleDeleteTrim = async (config: Configuration) => {
+    try {
+      console.log("Deleting trim level:", config.id);
+      const success = await deleteConfiguration(config.id);
+      
+      if (success) {
+        toast.success(`Trim level "${config.name}" has been deleted successfully.`);
+        
+        // If the deleted config was selected, clear selection
+        if (selectedConfig === config.id) {
+          setSelectedConfig(null);
+        }
+        
+        // Refresh configurations
+        refreshConfigurations();
+      }
+    } catch (error: any) {
+      console.error("Error deleting trim level:", error);
+      toast.error(`Failed to delete trim level: ${error.message}`);
+      throw error;
+    }
   };
 
   const handleCloseTrimEditor = () => {
@@ -207,6 +230,7 @@ export const useAdminPartsAssignmentOptimized = () => {
     handleYearDelete,
     handleAddTrim,
     handleEditTrim,
+    handleDeleteTrim,
     handleCloseTrimEditor,
     handleSaveTrim,
   };

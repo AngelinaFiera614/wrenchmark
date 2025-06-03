@@ -1,4 +1,3 @@
-
 import React from "react";
 import AdminPartsAssignmentHeader from "@/components/admin/parts/AdminPartsAssignmentHeader";
 import ConfigurationPreview from "@/components/admin/parts/ConfigurationPreview";
@@ -32,6 +31,8 @@ const AdminPartsAssignmentOptimized = () => {
     refreshConfigurations,
     handleYearDelete,
     handleAddTrim,
+    handleEditTrim,
+    handleDeleteTrim,
     handleCloseTrimEditor,
     handleSaveTrim,
   } = useAdminPartsAssignmentOptimized();
@@ -62,7 +63,7 @@ const AdminPartsAssignmentOptimized = () => {
         isLoading={isLoading}
       />
 
-      {/* Trim Section */}
+      {/* Enhanced Trim Section with Edit/Delete */}
       <TrimSection
         configurations={configurations || []}
         selectedYear={selectedYear}
@@ -70,6 +71,8 @@ const AdminPartsAssignmentOptimized = () => {
         onConfigSelect={handleConfigSelect}
         onConfigChange={refreshConfigurations}
         onAddTrim={handleAddTrim}
+        onEditTrim={handleEditTrim}
+        onDeleteTrim={handleDeleteTrim}
       />
 
       {/* Components Section */}
