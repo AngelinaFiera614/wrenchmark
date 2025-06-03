@@ -30,7 +30,7 @@ const ModelsColumn = ({
     const query = searchQuery.toLowerCase();
     return (
       model.name.toLowerCase().includes(query) ||
-      (model.brands?.name || '').toLowerCase().includes(query) ||
+      (model.brand?.name || '').toLowerCase().includes(query) ||
       model.type.toLowerCase().includes(query)
     );
   }) || [];
@@ -78,7 +78,7 @@ const ModelsColumn = ({
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">
-                    {model.brands?.name || 'Unknown'} {model.name}
+                    {model.brand?.name || 'Unknown'} {model.name}
                   </div>
                   <div className="text-sm text-explorer-text-muted">
                     {model.type} • {model.production_status}

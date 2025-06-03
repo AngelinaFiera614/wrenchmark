@@ -37,7 +37,10 @@ const AdminPartsAssignmentOptimized = () => {
 
   return (
     <div className="min-h-screen bg-explorer-dark text-explorer-text">
-      <AdminPartsAssignmentHeader />
+      <AdminPartsAssignmentHeader 
+        selectedConfig={selectedConfig}
+        onPreviewConfig={handlePreviewConfig}
+      />
       
       <div className="container mx-auto px-6 py-6">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
@@ -55,8 +58,19 @@ const AdminPartsAssignmentOptimized = () => {
             <AdminPartsAssignmentTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              showPreview={showPreview}
-              onTogglePreview={() => setShowPreview(!showPreview)}
+              models={models || []}
+              modelYears={modelYears || []}
+              configurations={configurations || []}
+              selectedModel={selectedModel}
+              selectedYear={selectedYear}
+              selectedConfig={selectedConfig}
+              selectedConfigData={selectedConfigData}
+              onModelSelect={handleModelSelect}
+              onYearSelect={handleYearSelect}
+              onConfigSelect={handleConfigSelect}
+              onComponentLinked={handleComponentLinked}
+              refreshConfigurations={refreshConfigurations}
+              isLoading={modelsLoading || yearsLoading || configsLoading}
             />
 
             <div className="space-y-6">
@@ -77,7 +91,7 @@ const AdminPartsAssignmentOptimized = () => {
 
               {activeTab === "components" && selectedModel && (
                 <ComponentAssignmentGrid
-                  modelId={selectedModel}
+                  selectedModel={selectedModel}
                   selectedModelData={selectedModelData}
                   onComponentLinked={handleComponentLinked}
                 />
@@ -96,8 +110,8 @@ const AdminPartsAssignmentOptimized = () => {
               {showPreview && selectedConfigData && (
                 <ConfigurationPreview
                   configuration={selectedConfigData}
-                  modelData={selectedModelData}
-                  yearData={selectedYearData}
+                  selectedModelData={selectedModelData}
+                  selectedYearData={selectedYearData}
                   onClose={() => setShowPreview(false)}
                 />
               )}

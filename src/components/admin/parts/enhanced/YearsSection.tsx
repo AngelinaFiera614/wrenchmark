@@ -49,7 +49,7 @@ const YearsSection = ({
       yearData: {
         id: year.id,
         year: year.year,
-        brandName: selectedModelData?.brands?.name,
+        brandName: selectedModelData?.brand?.name,
         modelName: selectedModelData?.name
       }
     });
@@ -135,7 +135,7 @@ const YearsSection = ({
             Model Years
             {selectedModelData && (
               <Badge variant="outline" className="text-xs">
-                {selectedModelData.brands?.name} {selectedModelData.name}
+                {selectedModelData.brand?.name} {selectedModelData.name}
               </Badge>
             )}
             <Badge variant="secondary" className="ml-auto">
