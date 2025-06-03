@@ -1,3 +1,4 @@
+
 export type MotorcycleCategory = 
   | "Sport" 
   | "Cruiser" 
@@ -208,6 +209,7 @@ export interface Configuration {
   trim_level?: string;
   market_region?: string;
   price_premium_usd?: number;
+  msrp_usd?: number;
   image_url?: string;
   color_id?: string;
   optional_equipment?: string[];
