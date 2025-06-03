@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
@@ -7,11 +8,12 @@ import SmartRecommendations from "@/components/motorcycles/SmartRecommendations"
 import { useMotorcycleFilters, initialFilters } from "@/hooks/useMotorcycleFilters";
 import { syncFiltersToUrl, parseFiltersFromUrl } from "@/lib/filter-utils";
 import { Button } from "@/components/ui/button";
-import { X, Sparkles, RefreshCw, AlertTriangle } from "lucide-react";
+import { X, Sparkles, RefreshCw, AlertTriangle, Info } from "lucide-react";
 import { ComparisonIndicator } from "@/components/comparison/ComparisonIndicator";
 import { getAllMotorcycles } from "@/services/motorcycles/motorcycleOperations";
 import { Motorcycle } from "@/types";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Motorcycles() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,6 +23,7 @@ export default function Motorcycles() {
   const [showRecommendations, setShowRecommendations] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const [dataQualityInfo, setDataQualityInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
   // Fetch motorcycles from Supabase
   useEffect(() => {
@@ -43,21 +46,34 @@ export default function Motorcycles() {
           // Analyze data quality
           const qualityInfo = {
             total: data.length,
-            withEngine: data.filter(m => m.engine_size > 0).length,
-            withPower: data.filter(m => m.horsepower > 0).length,
-            withWeight: data.filter(m => m.weight_kg > 0).length,
-            withSeatHeight: data.filter(m => m.seat_height_mm > 0).length,
-            placeholders: data.filter(m => m.is_placeholder).length
+            withEngine: data.filter(m => (m.engine_size || 0) > 0).length,
+            withPower: data.filter(m => (m.horsepower || 0) > 0).length,
+            withWeight: data.filter(m => (m.weight_kg || 0) > 0).length,
+            withSeatHeight: data.filter(m => (m.seat_height_mm || 0) > 0).length,
+            placeholders: data.filter(m => m.is_placeholder).length,
+            withComponentData: data.filter(m => m._componentData?.hasComponentData).length
           };
           
           setDataQualityInfo(qualityInfo);
+          
+          // Debug info for troubleshooting
+          setDebugInfo({
+            sampleData: data.slice(0, 3).map(m => ({
+              name: `${m.make} ${m.model}`,
+              year: m.year,
+              engine_size: m.engine_size,
+              weight_kg: m.weight_kg,
+              is_placeholder: m.is_placeholder,
+              migration_status: m.migration_status
+            }))
+          });
           
           console.log("=== DATA QUALITY ANALYSIS ===", qualityInfo);
           console.log("=== MOTORCYCLES PAGE: Success ===");
           toast.success(`Loaded ${data.length} motorcycles successfully`);
           
-          if (qualityInfo.withEngine < qualityInfo.total * 0.8) {
-            toast.warning("Some motorcycles have incomplete engine data");
+          if (qualityInfo.withEngine < qualityInfo.total * 0.5) {
+            toast.warning("Some motorcycles have incomplete engine data - they will still be displayed");
           }
         }
       } catch (error) {
@@ -65,6 +81,15 @@ export default function Motorcycles() {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         setError(`Failed to load motorcycles: ${errorMessage}`);
         toast.error("Failed to load motorcycles data");
+        
+        // Set debug info for error state
+        setDebugInfo({
+          errorDetails: {
+            message: errorMessage,
+            type: error instanceof Error ? error.constructor.name : 'Unknown',
+            stack: error instanceof Error ? error.stack : 'No stack trace'
+          }
+        });
       } finally {
         setIsLoading(false);
         console.log("=== MOTORCYCLES PAGE: Fetch complete ===");
@@ -114,7 +139,7 @@ export default function Motorcycles() {
     return (
       <div className="flex-1">
         <div className="container px-4 md:px-6 py-8">
-          <div className="text-center max-w-md mx-auto">
+          <div className="text-center max-w-2xl mx-auto">
             <div className="mb-4">
               <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
               <h1 className="text-2xl font-bold mb-4">Error Loading Motorcycles</h1>
@@ -122,16 +147,35 @@ export default function Motorcycles() {
             <p className="text-muted-foreground mb-6">{error}</p>
             
             {dataQualityInfo && (
-              <div className="mb-6 p-4 bg-muted rounded-lg text-left">
-                <h3 className="font-semibold text-sm mb-2">Data Quality Info:</h3>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <div>Total motorcycles: {dataQualityInfo.total}</div>
-                  <div>With engine data: {dataQualityInfo.withEngine}</div>
-                  <div>With power data: {dataQualityInfo.withPower}</div>
-                  <div>With weight data: {dataQualityInfo.withWeight}</div>
-                  <div>With seat height: {dataQualityInfo.withSeatHeight}</div>
-                </div>
-              </div>
+              <Alert className="mb-6 text-left">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <div className="font-medium">Data Quality Info:</div>
+                    <div className="text-sm space-y-1">
+                      <div>Total motorcycles: {dataQualityInfo.total}</div>
+                      <div>With engine data: {dataQualityInfo.withEngine}</div>
+                      <div>With component data: {dataQualityInfo.withComponentData}</div>
+                      <div>Placeholder motorcycles: {dataQualityInfo.placeholders}</div>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {debugInfo?.errorDetails && (
+              <Alert className="mb-6 text-left">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <div className="font-medium">Error Details:</div>
+                    <div className="text-sm space-y-1">
+                      <div>Type: {debugInfo.errorDetails.type}</div>
+                      <div>Message: {debugInfo.errorDetails.message}</div>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
             )}
             
             <div className="space-y-3">
@@ -148,7 +192,8 @@ export default function Motorcycles() {
               <h3 className="font-semibold text-sm mb-2">Troubleshooting Tips:</h3>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>• Check database connection</li>
-                <li>• Verify motorcycle data is published</li>
+                <li>• Verify motorcycle data is published (is_draft = false)</li>
+                <li>• Check for relationship mapping issues in queries</li>
                 <li>• Contact administrator if issue persists</li>
               </ul>
             </div>
@@ -176,14 +221,17 @@ export default function Motorcycles() {
             
             {/* Data quality info for debugging */}
             {dataQualityInfo && (
-              <div className="bg-muted rounded-lg p-4 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">Data Quality:</span>
-                  <span>
-                    {dataQualityInfo.withEngine}/{dataQualityInfo.total} have engine data
-                  </span>
-                </div>
-              </div>
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="flex items-center justify-between text-sm">
+                    <span>
+                      Data Status: {dataQualityInfo.withEngine}/{dataQualityInfo.total} have engine specs,
+                      {dataQualityInfo.withComponentData}/{dataQualityInfo.total} have component data
+                    </span>
+                  </div>
+                </AlertDescription>
+              </Alert>
             )}
             
             {/* Enhanced Search Bar */}
@@ -248,6 +296,16 @@ export default function Motorcycles() {
             motorcycles={filteredMotorcycles} 
             isLoading={isLoading}
           />
+          
+          {/* Debug info in development */}
+          {debugInfo?.sampleData && process.env.NODE_ENV === 'development' && (
+            <details className="mt-8 p-4 bg-muted rounded-lg text-xs">
+              <summary className="cursor-pointer font-medium">Debug Info (Development Only)</summary>
+              <pre className="mt-2 whitespace-pre-wrap">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </details>
+          )}
         </div>
       </div>
       

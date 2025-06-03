@@ -45,33 +45,42 @@ export function useMotorcycleFiltering(
         }
       }
 
-      // Year range filter
+      // Year range filter - be more inclusive with production years
       const year = motorcycle.year || 0;
-      if (year > 0 && (year < filters.yearRange[0] || year > filters.yearRange[1])) {
-        return false;
+      if (year > 0) {
+        if (year < filters.yearRange[0] || year > filters.yearRange[1]) {
+          return false;
+        }
       }
 
-      // Engine size filter (handle NULL values gracefully)
+      // Engine size filter - only apply if motorcycle has engine data
       const engineSize = motorcycle.engine_size || 0;
-      if (engineSize > 0 && (engineSize < filters.engineSizeRange[0] || engineSize > filters.engineSizeRange[1])) {
-        return false;
+      if (engineSize > 0) {
+        if (engineSize < filters.engineSizeRange[0] || engineSize > filters.engineSizeRange[1]) {
+          return false;
+        }
       }
 
-      // Weight filter (handle NULL values gracefully)
+      // Weight filter - only apply if motorcycle has weight data
       const weight = motorcycle.weight_kg || 0;
-      if (weight > 0 && (weight < filters.weightRange[0] || weight > filters.weightRange[1])) {
-        return false;
+      if (weight > 0) {
+        if (weight < filters.weightRange[0] || weight > filters.weightRange[1]) {
+          return false;
+        }
       }
 
-      // Seat height filter (handle NULL values gracefully)
+      // Seat height filter - only apply if motorcycle has seat height data
       const seatHeight = motorcycle.seat_height_mm || 0;
-      if (seatHeight > 0 && (seatHeight < filters.seatHeightRange[0] || seatHeight > filters.seatHeightRange[1])) {
-        return false;
+      if (seatHeight > 0) {
+        if (seatHeight < filters.seatHeightRange[0] || seatHeight > filters.seatHeightRange[1]) {
+          return false;
+        }
       }
 
-      // ABS filter
+      // ABS filter - only filter if explicitly set and motorcycle has brake data
       if (filters.abs !== null) {
-        if (motorcycle.abs !== filters.abs && motorcycle.has_abs !== filters.abs) {
+        const hasAbs = motorcycle.abs || motorcycle.has_abs || false;
+        if (hasAbs !== filters.abs) {
           return false;
         }
       }
@@ -86,6 +95,19 @@ export function useMotorcycleFiltering(
     });
 
     console.log("Filtered count:", filtered.length);
+    
+    // Log some debug info about what's being filtered out
+    if (filtered.length === 0 && motorcycles.length > 0) {
+      console.log("=== FILTERING DEBUG ===");
+      console.log("Sample motorcycle data:", motorcycles[0]);
+      console.log("Applied filters:", {
+        yearRange: filters.yearRange,
+        engineSizeRange: filters.engineSizeRange,
+        weightRange: filters.weightRange,
+        seatHeightRange: filters.seatHeightRange,
+      });
+    }
+    
     return filtered;
   }, [motorcycles, filters, searchTerm]);
 }

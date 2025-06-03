@@ -1,8 +1,18 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Simplified query that focuses on essential data and handles missing components gracefully
+// Simplified query that gets basic motorcycle data with brands
 export const MOTORCYCLE_SELECT_QUERY = `
+  *,
+  brands!motorcycle_models_brand_id_fkey(
+    id,
+    name,
+    slug
+  )
+`;
+
+// Enhanced query for detailed motorcycle data with all relationships
+export const MOTORCYCLE_DETAIL_SELECT_QUERY = `
   *,
   brands!motorcycle_models_brand_id_fkey(
     id,
@@ -65,9 +75,10 @@ export const queryMotorcycleBySlug = async (slug: string) => {
   console.log("Fetching motorcycle with slug:", slug);
 
   try {
+    // Use detailed query for individual motorcycle pages
     const { data, error } = await supabase
       .from('motorcycle_models')
-      .select(MOTORCYCLE_SELECT_QUERY)
+      .select(MOTORCYCLE_DETAIL_SELECT_QUERY)
       .eq('slug', slug)
       .eq('is_draft', false)
       .maybeSingle();
@@ -94,22 +105,89 @@ export const queryAllMotorcycles = async () => {
   console.log("=== queryAllMotorcycles ===");
   
   try {
-    const { data, error } = await supabase
+    // First, get basic motorcycle data
+    const { data: basicData, error: basicError } = await supabase
       .from('motorcycle_models')
       .select(MOTORCYCLE_SELECT_QUERY)
       .eq('is_draft', false)
       .order('name');
 
-    if (error) {
-      console.error("Database error fetching all motorcycles:", error);
-      throw new Error(`Failed to fetch motorcycles: ${error.message}`);
+    if (basicError) {
+      console.error("Database error fetching basic motorcycles:", basicError);
+      throw new Error(`Failed to fetch motorcycles: ${basicError.message}`);
     }
 
-    console.log("Successfully fetched motorcycles, count:", data?.length || 0);
-    return data || [];
+    if (!basicData || basicData.length === 0) {
+      console.log("No motorcycles found in basic query");
+      return [];
+    }
+
+    console.log("Basic motorcycles fetched:", basicData.length);
+
+    // Then try to enhance with component data for those that have it
+    const enhancedData = [];
+    
+    for (const motorcycle of basicData) {
+      try {
+        // Try to get enhanced data for this motorcycle
+        const { data: detailedData, error: detailError } = await supabase
+          .from('motorcycle_models')
+          .select(`
+            *,
+            brands!motorcycle_models_brand_id_fkey(id, name, slug),
+            years:model_years!inner(
+              *,
+              configurations:model_configurations(
+                *,
+                engines:engine_id(displacement_cc, power_hp, torque_nm, engine_type),
+                brake_systems:brake_system_id(type, has_traction_control)
+              )
+            )
+          `)
+          .eq('id', motorcycle.id)
+          .maybeSingle();
+
+        if (detailError) {
+          console.log(`Could not fetch detailed data for ${motorcycle.name}, using basic data:`, detailError.message);
+          enhancedData.push(motorcycle);
+        } else if (detailedData) {
+          enhancedData.push(detailedData);
+        } else {
+          enhancedData.push(motorcycle);
+        }
+      } catch (enhanceError) {
+        console.log(`Enhancement failed for ${motorcycle.name}, using basic data:`, enhanceError);
+        enhancedData.push(motorcycle);
+      }
+    }
+
+    console.log("Successfully fetched motorcycles, count:", enhancedData.length);
+    return enhancedData;
   } catch (error) {
     console.error("Error in queryAllMotorcycles:", error);
-    throw error;
+    
+    // Fallback: try to get just the basic data without any relationships
+    try {
+      console.log("Attempting fallback query...");
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('motorcycle_models')
+        .select(`
+          *,
+          brands!motorcycle_models_brand_id_fkey(id, name, slug)
+        `)
+        .eq('is_draft', false)
+        .order('name');
+
+      if (fallbackError) {
+        throw fallbackError;
+      }
+
+      console.log("Fallback query successful, count:", fallbackData?.length || 0);
+      return fallbackData || [];
+    } catch (fallbackError) {
+      console.error("Fallback query also failed:", fallbackError);
+      throw error;
+    }
   }
 };
 
