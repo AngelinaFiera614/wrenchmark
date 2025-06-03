@@ -81,3 +81,55 @@ export const fetchMotorcycleForAdminEdit = async (id: string) => {
     throw error;
   }
 };
+
+export const publishMotorcycle = async (motorcycleId: string): Promise<boolean> => {
+  console.log("=== publishMotorcycle ===");
+  console.log("Publishing motorcycle with ID:", motorcycleId);
+
+  try {
+    const { error } = await supabase
+      .from('motorcycle_models')
+      .update({ 
+        is_draft: false, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', motorcycleId);
+
+    if (error) {
+      console.error("Database error publishing motorcycle:", error);
+      throw new Error(`Failed to publish motorcycle: ${error.message}`);
+    }
+
+    console.log("Successfully published motorcycle:", motorcycleId);
+    return true;
+  } catch (error) {
+    console.error("Error in publishMotorcycle:", error);
+    return false;
+  }
+};
+
+export const unpublishMotorcycle = async (motorcycleId: string): Promise<boolean> => {
+  console.log("=== unpublishMotorcycle ===");
+  console.log("Unpublishing motorcycle with ID:", motorcycleId);
+
+  try {
+    const { error } = await supabase
+      .from('motorcycle_models')
+      .update({ 
+        is_draft: true, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', motorcycleId);
+
+    if (error) {
+      console.error("Database error unpublishing motorcycle:", error);
+      throw new Error(`Failed to unpublish motorcycle: ${error.message}`);
+    }
+
+    console.log("Successfully unpublished motorcycle:", motorcycleId);
+    return true;
+  } catch (error) {
+    console.error("Error in unpublishMotorcycle:", error);
+    return false;
+  }
+};
