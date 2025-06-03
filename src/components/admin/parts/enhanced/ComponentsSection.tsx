@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wrench, Engine, Disc, Frame, Cog, Wheel } from "lucide-react";
+import { Wrench, Zap, Disc, Frame, Cog, Circle } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
 
 interface ComponentsSectionProps {
@@ -33,7 +33,7 @@ const ComponentsSection = ({
   const componentTypes = [
     {
       name: "Engine",
-      icon: Engine,
+      icon: Zap,
       assigned: !!selectedConfig.engine_id,
       value: selectedConfig.engine_id
     },
@@ -57,7 +57,7 @@ const ComponentsSection = ({
     },
     {
       name: "Wheels",
-      icon: Wheel,
+      icon: Circle,
       assigned: !!selectedConfig.wheel_id,
       value: selectedConfig.wheel_id
     }
