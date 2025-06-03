@@ -26,12 +26,12 @@ export const validateConfiguration = (
   allConfigs: Configuration[]
 ): ValidationResult => {
   const issues: ValidationIssue[] = [];
-  const sectionStatus = {
-    basic: 'missing' as const,
-    components: 'missing' as const,
-    dimensions: 'missing' as const,
-    metrics: 'missing' as const,
-    notes: 'complete' as const
+  const sectionStatus: Record<string, 'complete' | 'partial' | 'missing'> = {
+    basic: 'missing',
+    components: 'missing',
+    dimensions: 'missing',
+    metrics: 'missing',
+    notes: 'complete'
   };
 
   if (!config) {

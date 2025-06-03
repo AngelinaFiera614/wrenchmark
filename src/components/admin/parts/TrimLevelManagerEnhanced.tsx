@@ -20,6 +20,8 @@ interface TrimLevelManagerEnhancedProps {
   selectedConfig: string | null;
   onConfigSelect: (configId: string) => void;
   onConfigChange: () => void;
+  activeSectionTab?: string;
+  validation?: any;
 }
 
 const TrimLevelManagerEnhanced = ({
@@ -27,7 +29,9 @@ const TrimLevelManagerEnhanced = ({
   configurations,
   selectedConfig,
   onConfigSelect,
-  onConfigChange
+  onConfigChange,
+  activeSectionTab,
+  validation
 }: TrimLevelManagerEnhancedProps) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
