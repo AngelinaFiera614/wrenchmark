@@ -1,29 +1,59 @@
 
-// Extract engine data from various sources with better fallbacks
-export const extractEngineData = (rawData: any, configurations: any[] = []) => {
-  // Try to find the best configuration with engine data
-  const configWithEngine = configurations.find(config => 
-    config?.engines?.displacement_cc > 0 || config?.engine?.displacement_cc > 0
-  );
-  
-  const engineSource = configWithEngine?.engines || configWithEngine?.engine || {};
-  
-  // Use configuration engine data first, then fallback to model-level data
-  const displacement = engineSource.displacement_cc || rawData.engine_size || 0;
-  const power = engineSource.power_hp || rawData.horsepower || 0;
-  const torque = engineSource.torque_nm || rawData.torque_nm || 0;
-  
+// Extract engine data with inheritance support
+export const extractEngineData = (configurations: any[] = [], engine: any = null, fallbackData: any = {}) => {
+  console.log("=== ENGINE EXTRACT: Starting ===", {
+    configurations: configurations.length,
+    hasEngine: !!engine,
+    hasFallback: !!fallbackData.engine_size
+  });
+
+  // Use the resolved engine component first
+  if (engine) {
+    console.log("Using resolved engine component:", engine.name);
+    return {
+      displacement_cc: engine.displacement_cc || fallbackData.engine_size || null,
+      power_hp: engine.power_hp || fallbackData.horsepower || null,
+      torque_nm: engine.torque_nm || fallbackData.torque_nm || null,
+      engine_type: engine.engine_type || fallbackData.engine || null,
+      fuel_system: engine.fuel_system || fallbackData.fuel_system || null,
+      cooling: engine.cooling || fallbackData.cooling_system || null,
+      cylinder_count: engine.cylinder_count || null,
+      valve_count: engine.valve_count || null,
+      power_rpm: engine.power_rpm || null,
+      torque_rpm: engine.torque_rpm || null
+    };
+  }
+
+  // Fall back to configuration data
+  const configWithEngine = configurations.find(config => config.engine_id);
+  if (configWithEngine) {
+    console.log("Using configuration engine data");
+    return {
+      displacement_cc: fallbackData.engine_size || null,
+      power_hp: fallbackData.horsepower || null,
+      torque_nm: fallbackData.torque_nm || null,
+      engine_type: fallbackData.engine || null,
+      fuel_system: fallbackData.fuel_system || null,
+      cooling: fallbackData.cooling_system || null,
+      cylinder_count: null,
+      valve_count: null,
+      power_rpm: null,
+      torque_rpm: null
+    };
+  }
+
+  // Use fallback data from model
+  console.log("Using fallback engine data from model");
   return {
-    engine_size: displacement,
-    displacement_cc: displacement,
-    engine_cc: displacement,
-    horsepower: power,
-    horsepower_hp: power,
-    torque_nm: torque,
-    engine_type: engineSource.engine_type || rawData.engine_type || null,
-    cylinder_count: engineSource.cylinder_count || rawData.cylinder_count || null,
-    cooling_system: engineSource.cooling || rawData.cooling_system || null,
-    power_rpm: engineSource.power_rpm || rawData.power_rpm || null,
-    torque_rpm: engineSource.torque_rpm || rawData.torque_rpm || null,
+    displacement_cc: fallbackData.engine_size || null,
+    power_hp: fallbackData.horsepower || null,
+    torque_nm: fallbackData.torque_nm || null,
+    engine_type: fallbackData.engine || fallbackData.category || null,
+    fuel_system: fallbackData.fuel_system || null,
+    cooling: fallbackData.cooling_system || null,
+    cylinder_count: null,
+    valve_count: null,
+    power_rpm: null,
+    torque_rpm: null
   };
 };

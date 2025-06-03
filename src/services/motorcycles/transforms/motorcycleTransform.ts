@@ -1,146 +1,218 @@
+
+import { Database } from "@/integrations/supabase/types";
 import { Motorcycle } from "@/types";
 import { extractEngineData } from "./engineDataExtractor";
 import { extractBrakeData } from "./brakeDataExtractor";
 import { extractDimensionData } from "./dimensionDataExtractor";
 
-export const transformMotorcycleData = (rawData: any): Motorcycle => {
-  console.log("=== transformMotorcycleData ===");
-  console.log("Processing motorcycle:", rawData.name);
-  
-  try {
-    // Extract brand data with fallback
-    const brandName = rawData.brands?.name || 'Unknown Brand';
-    
-    // Process model years and configurations
-    const modelYears = rawData.years || [];
-    const allConfigurations = modelYears.flatMap(year => 
-      (year.configurations || []).map(config => ({
-        ...config,
-        model_year: year
-      }))
-    );
-    
-    console.log(`Found ${allConfigurations.length} configurations for ${rawData.name}`);
-    
-    // Extract data using configurations with fallbacks to model-level data
-    const engineData = extractEngineData(rawData, allConfigurations);
-    const brakeData = extractBrakeData(allConfigurations, rawData);
-    const dimensionData = extractDimensionData(allConfigurations, rawData);
-    const colorOptions = modelYears.flatMap(year => year.color_options || []);
+// Component data structure for inheritance
+export interface ComponentData {
+  configurations: any[];
+  components: {
+    engines: any[];
+    brakes: any[];
+    frames: any[];
+    suspensions: any[];
+    wheels: any[];
+  };
+  model_assignments: any[];
+}
 
-    // Determine data completeness
-    const hasEngineData = engineData.engine_size > 0;
-    const hasDimensionData = dimensionData.seat_height_mm > 0 || dimensionData.weight_kg > 0;
-    const hasComponentDataAvailable = allConfigurations.length > 0;
-    
-    console.log(`Data completeness for ${rawData.name}:`, {
-      hasEngineData,
-      hasDimensionData,
-      hasComponentData: hasComponentDataAvailable,
-      configurationsCount: allConfigurations.length
-    });
+// Transform a raw motorcycle model into the Motorcycle type with enhanced component inheritance
+export const transformToMotorcycle = (
+  model: any,
+  modelYears: any[],
+  componentData: ComponentData
+): Motorcycle => {
+  console.log("=== TRANSFORM: Processing model ===", model.name);
+  console.log("Model years:", modelYears.length);
+  console.log("Configurations:", componentData.configurations.length);
+  console.log("Model assignments:", componentData.model_assignments.length);
 
-    // Create the transformed motorcycle object
-    const transformed: Motorcycle = {
-      id: rawData.id,
-      make: brandName,
-      brand_id: rawData.brand_id,
-      model: rawData.name || 'Unknown Model',
-      year: rawData.production_start_year || new Date().getFullYear(),
-      category: rawData.category || rawData.type || 'Standard',
-      style_tags: [],
-      difficulty_level: rawData.difficulty_level || 3,
-      image_url: rawData.default_image_url || '/placeholder.svg',
-      
-      // Enhanced engine fields
-      ...engineData,
-      
-      // Enhanced dimension fields
-      ...dimensionData,
-      
-      // Enhanced brake fields
-      ...brakeData,
-      
-      // Speed data with conversions
-      top_speed_kph: rawData.top_speed_kph || 0,
-      top_speed_mph: rawData.top_speed_kph ? (rawData.top_speed_kph * 0.621371) : 0,
-      
-      // Other fields with fallbacks
-      wet_weight_kg: rawData.wet_weight_kg || null,
-      smart_features: [],
-      summary: rawData.summary || rawData.base_description || '',
-      slug: rawData.slug,
-      created_at: rawData.created_at,
-      is_placeholder: !hasEngineData && !hasDimensionData,
-      migration_status: hasComponentDataAvailable ? 'migrated' : 'basic_data_only',
-      status: rawData.status || rawData.production_status || 'active',
-      engine: `${engineData.engine_size || 0}cc`,
-      is_draft: rawData.is_draft || false,
-      transmission: rawData.transmission,
-      drive_type: rawData.drive_type,
-      cooling_system: rawData.cooling_system,
-      power_to_weight_ratio: rawData.power_to_weight_ratio,
-      is_entry_level: rawData.is_entry_level,
-      recommended_license_level: rawData.recommended_license_level,
-      use_cases: rawData.use_cases || [],
-      
-      // Store component data for detailed views
-      _componentData: {
-        configurations: allConfigurations,
-        colorOptions: colorOptions,
-        selectedConfiguration: allConfigurations.find(c => c.is_default) || allConfigurations[0]
-      }
-    };
-    
-    console.log(`Successfully transformed ${transformed.make} ${transformed.model}`);
-    console.log(`Data status: placeholder=${transformed.is_placeholder}, migration=${transformed.migration_status}`);
-    
-    return transformed;
-  } catch (error) {
-    console.error(`Error transforming motorcycle data for ${rawData.name}:`, error);
-    
-    // Return a minimal motorcycle with basic data instead of failing
-    return createErrorFallbackMotorcycle(rawData);
+  // Find the most recent year for this model
+  const latestYear = modelYears.reduce((latest, year) => {
+    return year.year > latest.year ? year : latest;
+  }, modelYears[0] || { year: new Date().getFullYear() });
+
+  // Find configurations for the latest year
+  const latestConfigurations = componentData.configurations.filter(
+    config => config.model_year_id === latestYear?.id
+  );
+
+  console.log("Latest year:", latestYear?.year);
+  console.log("Latest configurations:", latestConfigurations.length);
+
+  // Use the default configuration or the first available
+  const defaultConfig = latestConfigurations.find(config => config.is_default) || 
+                       latestConfigurations[0];
+
+  if (defaultConfig) {
+    console.log("Using configuration:", defaultConfig.name || "Standard");
+  } else {
+    console.log("No configuration found, using model-level defaults");
   }
-};
 
-const createErrorFallbackMotorcycle = (rawData: any): Motorcycle => {
-  return {
-    id: rawData.id,
-    make: rawData.brands?.name || 'Unknown Brand',
-    brand_id: rawData.brand_id,
-    model: rawData.name || 'Unknown Model',
-    year: rawData.production_start_year || new Date().getFullYear(),
-    category: rawData.category || rawData.type || 'Standard',
-    style_tags: [],
-    difficulty_level: rawData.difficulty_level || 3,
-    image_url: rawData.default_image_url || '/placeholder.svg',
+  // Extract component data with inheritance
+  const resolvedComponents = resolveComponentInheritance(
+    model,
+    defaultConfig,
+    componentData
+  );
+
+  // Extract engine data
+  const engineData = extractEngineData(
+    latestConfigurations,
+    resolvedComponents.engine,
+    model
+  );
+
+  // Extract brake data
+  const brakeData = extractBrakeData(
+    latestConfigurations,
+    resolvedComponents.brake_system,
+    model
+  );
+
+  // Extract dimension data
+  const dimensionData = extractDimensionData(
+    latestConfigurations,
+    model
+  );
+
+  // Build the transformed motorcycle
+  const motorcycle: Motorcycle = {
+    id: model.id,
+    make: model.brands?.name || "Unknown",
+    model: model.name,
+    year: latestYear?.year || new Date().getFullYear(),
+    slug: model.slug,
+    type: model.type || "Standard",
+    image_url: model.default_image_url || latestYear?.image_url,
     
-    // Use any available model-level data or provide defaults
-    engine_size: rawData.engine_size || 0,
-    horsepower: rawData.horsepower || 0,
-    weight_kg: rawData.weight_kg || 0,
-    seat_height_mm: rawData.seat_height_mm || 0,
-    abs: rawData.has_abs || false,
-    top_speed_kph: rawData.top_speed_kph || 0,
-    torque_nm: rawData.torque_nm || 0,
-    wheelbase_mm: rawData.wheelbase_mm || 0,
-    ground_clearance_mm: rawData.ground_clearance_mm || 0,
-    fuel_capacity_l: rawData.fuel_capacity_l || 0,
-    smart_features: [],
-    summary: rawData.summary || rawData.base_description || '',
-    slug: rawData.slug,
-    created_at: rawData.created_at,
-    is_placeholder: true,
-    migration_status: 'error_fallback',
-    status: rawData.status || 'active',
-    engine: `${rawData.engine_size || 0}cc`,
-    is_draft: rawData.is_draft || false,
-    use_cases: [],
+    // Engine specifications
+    engine_size: engineData.displacement_cc,
+    horsepower: engineData.power_hp,
+    torque_nm: engineData.torque_nm,
+    engine: engineData.engine_type,
+    fuel_system: engineData.fuel_system,
+    cooling: engineData.cooling,
+    
+    // Brake data
+    has_abs: brakeData.has_abs,
+    brake_type: brakeData.brake_type,
+    
+    // Dimensions
+    seat_height_mm: dimensionData.seat_height_mm,
+    weight_kg: dimensionData.weight_kg,
+    wheelbase_mm: dimensionData.wheelbase_mm,
+    fuel_capacity_l: dimensionData.fuel_capacity_l,
+    ground_clearance_mm: dimensionData.ground_clearance_mm,
+
+    // Metadata
+    is_placeholder: false,
+    migration_status: "new_system",
+    summary: model.summary || model.base_description,
+    
+    // Component inheritance metadata
     _componentData: {
-      configurations: [],
-      colorOptions: [],
-      selectedConfiguration: null
+      configurations: latestConfigurations,
+      modelAssignments: componentData.model_assignments.filter(
+        assignment => assignment.model_id === model.id
+      ),
+      inheritanceSource: defaultConfig ? 'configuration' : 'model',
+      resolvedComponents
     }
   };
+
+  console.log("=== TRANSFORM: Completed ===", {
+    model: motorcycle.model,
+    engine_size: motorcycle.engine_size,
+    horsepower: motorcycle.horsepower,
+    has_components: !!resolvedComponents.engine
+  });
+
+  return motorcycle;
 };
+
+// Resolve component inheritance for a configuration
+function resolveComponentInheritance(
+  model: any,
+  configuration: any,
+  componentData: ComponentData
+) {
+  const modelAssignments = componentData.model_assignments.filter(
+    assignment => assignment.model_id === model.id
+  );
+
+  console.log("=== INHERITANCE: Resolving components ===");
+  console.log("Model assignments:", modelAssignments.length);
+  console.log("Configuration:", configuration?.name || "None");
+
+  const resolved = {
+    engine: resolveComponent('engine', configuration, modelAssignments, componentData.components.engines),
+    brake_system: resolveComponent('brake_system', configuration, modelAssignments, componentData.components.brakes),
+    frame: resolveComponent('frame', configuration, modelAssignments, componentData.components.frames),
+    suspension: resolveComponent('suspension', configuration, modelAssignments, componentData.components.suspensions),
+    wheel: resolveComponent('wheel', configuration, modelAssignments, componentData.components.wheels)
+  };
+
+  console.log("=== INHERITANCE: Resolved ===", {
+    engine: !!resolved.engine,
+    brake_system: !!resolved.brake_system,
+    frame: !!resolved.frame,
+    suspension: !!resolved.suspension,
+    wheel: !!resolved.wheel
+  });
+
+  return resolved;
+}
+
+// Resolve a single component using the inheritance hierarchy
+function resolveComponent(
+  componentType: string,
+  configuration: any,
+  modelAssignments: any[],
+  components: any[]
+) {
+  // 1. Check if configuration has an override
+  if (configuration) {
+    const overrideField = `${componentType}_override`;
+    const componentField = `${componentType}_id`;
+    
+    if (configuration[overrideField] && configuration[componentField]) {
+      const component = components.find(c => c.id === configuration[componentField]);
+      if (component) {
+        console.log(`Using ${componentType} from configuration override`);
+        return component;
+      }
+    }
+  }
+
+  // 2. Check model-level assignments
+  const modelAssignment = modelAssignments.find(
+    assignment => assignment.component_type === componentType
+  );
+  
+  if (modelAssignment) {
+    const component = components.find(c => c.id === modelAssignment.component_id);
+    if (component) {
+      console.log(`Using ${componentType} from model assignment`);
+      return component;
+    }
+  }
+
+  // 3. Fall back to configuration direct assignment
+  if (configuration) {
+    const componentField = `${componentType}_id`;
+    if (configuration[componentField]) {
+      const component = components.find(c => c.id === configuration[componentField]);
+      if (component) {
+        console.log(`Using ${componentType} from configuration direct`);
+        return component;
+      }
+    }
+  }
+
+  console.log(`No ${componentType} found for inheritance`);
+  return null;
+}

@@ -700,6 +700,13 @@ export type Database = {
             foreignKeyName: "manuals_model_id_fkey"
             columns: ["model_id"]
             isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
+          },
+          {
+            foreignKeyName: "manuals_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
             referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
           },
@@ -707,33 +714,52 @@ export type Database = {
       }
       model_component_assignments: {
         Row: {
+          assignment_type: string | null
           component_id: string
           component_type: string
           created_at: string
+          effective_from_year: number | null
+          effective_to_year: number | null
           id: string
           is_default: boolean | null
           model_id: string
+          notes: string | null
           updated_at: string
         }
         Insert: {
+          assignment_type?: string | null
           component_id: string
           component_type: string
           created_at?: string
+          effective_from_year?: number | null
+          effective_to_year?: number | null
           id?: string
           is_default?: boolean | null
           model_id: string
+          notes?: string | null
           updated_at?: string
         }
         Update: {
+          assignment_type?: string | null
           component_id?: string
           component_type?: string
           created_at?: string
+          effective_from_year?: number | null
+          effective_to_year?: number | null
           id?: string
           is_default?: boolean | null
           model_id?: string
+          notes?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "model_component_assignments_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
+          },
           {
             foreignKeyName: "model_component_assignments_model_id_fkey"
             columns: ["model_id"]
@@ -937,6 +963,13 @@ export type Database = {
             foreignKeyName: "model_years_motorcycle_id_fkey"
             columns: ["motorcycle_id"]
             isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
+          },
+          {
+            foreignKeyName: "model_years_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
             referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
           },
@@ -998,6 +1031,13 @@ export type Database = {
           year_published?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "motorcycle_documents_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
+          },
           {
             foreignKeyName: "motorcycle_documents_motorcycle_id_fkey"
             columns: ["motorcycle_id"]
@@ -1118,8 +1158,22 @@ export type Database = {
             foreignKeyName: "fk_motorcycle_images_configuration"
             columns: ["configuration_id"]
             isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["configuration_id"]
+          },
+          {
+            foreignKeyName: "fk_motorcycle_images_configuration"
+            columns: ["configuration_id"]
+            isOneToOne: false
             referencedRelation: "model_configurations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_motorcycle_images_motorcycle"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
           },
           {
             foreignKeyName: "fk_motorcycle_images_motorcycle"
@@ -1132,8 +1186,22 @@ export type Database = {
             foreignKeyName: "motorcycle_images_configuration_id_fkey"
             columns: ["configuration_id"]
             isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["configuration_id"]
+          },
+          {
+            foreignKeyName: "motorcycle_images_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
             referencedRelation: "model_configurations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_images_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
           },
           {
             foreignKeyName: "motorcycle_images_motorcycle_id_fkey"
@@ -1165,6 +1233,13 @@ export type Database = {
           tag_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "motorcycle_model_tags_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
+          },
           {
             foreignKeyName: "motorcycle_model_tags_motorcycle_id_fkey"
             columns: ["motorcycle_id"]
@@ -1336,8 +1411,22 @@ export type Database = {
             foreignKeyName: "motorcycle_models_predecessor_model_id_fkey"
             columns: ["predecessor_model_id"]
             isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
+          },
+          {
+            foreignKeyName: "motorcycle_models_predecessor_model_id_fkey"
+            columns: ["predecessor_model_id"]
+            isOneToOne: false
             referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_models_successor_model_id_fkey"
+            columns: ["successor_model_id"]
+            isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
           },
           {
             foreignKeyName: "motorcycle_models_successor_model_id_fkey"
@@ -1441,8 +1530,22 @@ export type Database = {
             foreignKeyName: "motorcycle_videos_configuration_id_fkey"
             columns: ["configuration_id"]
             isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["configuration_id"]
+          },
+          {
+            foreignKeyName: "motorcycle_videos_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
             referencedRelation: "model_configurations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "motorcycle_videos_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
           },
           {
             foreignKeyName: "motorcycle_videos_motorcycle_id_fkey"
@@ -1527,6 +1630,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "repair_skills_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["model_id"]
+          },
           {
             foreignKeyName: "repair_skills_model_id_fkey"
             columns: ["model_id"]
@@ -1723,6 +1833,13 @@ export type Database = {
             foreignKeyName: "trim_color_assignments_configuration_id_fkey"
             columns: ["configuration_id"]
             isOneToOne: false
+            referencedRelation: "effective_component_assignments"
+            referencedColumns: ["configuration_id"]
+          },
+          {
+            foreignKeyName: "trim_color_assignments_configuration_id_fkey"
+            columns: ["configuration_id"]
+            isOneToOne: false
             referencedRelation: "model_configurations"
             referencedColumns: ["id"]
           },
@@ -1904,7 +2021,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      effective_component_assignments: {
+        Row: {
+          brake_system_inherited: boolean | null
+          configuration_id: string | null
+          configuration_name: string | null
+          effective_brake_system_id: string | null
+          effective_engine_id: string | null
+          effective_frame_id: string | null
+          effective_suspension_id: string | null
+          effective_wheel_id: string | null
+          engine_inherited: boolean | null
+          frame_inherited: boolean | null
+          model_id: string | null
+          model_name: string | null
+          suspension_inherited: boolean | null
+          wheel_inherited: boolean | null
+          year: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_suggestions: {
@@ -2024,6 +2160,10 @@ export type Database = {
       migrate_legacy_motorcycle: {
         Args: Record<PropertyKey, never> | { legacy_id: string }
         Returns: boolean
+      }
+      populate_model_component_defaults: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
     }
     Enums: {

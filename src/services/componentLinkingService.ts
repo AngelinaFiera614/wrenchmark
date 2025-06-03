@@ -1,143 +1,132 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
 
-export interface ComponentLinkingResult {
+interface LinkResult {
   success: boolean;
   error?: string;
 }
 
+// Link a component to a configuration (with override)
 export const linkComponentToConfiguration = async (
   configurationId: string,
   componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
   componentId: string
-): Promise<ComponentLinkingResult> => {
+): Promise<LinkResult> => {
   try {
-    // Get current configuration for audit logging
-    const { data: currentConfig, error: fetchError } = await supabase
-      .from('model_configurations')
-      .select('*')
-      .eq('id', configurationId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching current configuration:', fetchError);
-      return { success: false, error: 'Failed to fetch configuration' };
-    }
-
-    const oldValue = currentConfig[`${componentType}_id`];
+    const overrideField = `${componentType}_override`;
+    const componentField = `${componentType}_id`;
     
-    // Update the configuration with the new component
-    const updateData = { [`${componentType}_id`]: componentId };
-    
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from('model_configurations')
-      .update(updateData)
+      .update({
+        [overrideField]: true,
+        [componentField]: componentId,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', configurationId);
 
-    if (updateError) {
-      console.error('Error linking component:', updateError);
-      return { success: false, error: 'Failed to link component' };
-    }
-
-    // Log the admin action (optional, remove if adminAuditLogger doesn't exist)
-    try {
-      await logAdminAction({
-        action: `component_link_${componentType}`,
-        tableName: 'model_configurations',
-        recordId: configurationId,
-        oldValues: { [`${componentType}_id`]: oldValue },
-        newValues: { [`${componentType}_id`]: componentId }
-      });
-    } catch (auditError) {
-      console.warn('Could not log admin action:', auditError);
-      // Don't fail the operation if audit logging fails
+    if (error) {
+      return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error in linkComponentToConfiguration:', error);
-    return { success: false, error: 'Unexpected error occurred' };
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
   }
 };
 
+// Unlink a component from a configuration (remove override)
 export const unlinkComponentFromConfiguration = async (
   configurationId: string,
   componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
-): Promise<ComponentLinkingResult> => {
+): Promise<LinkResult> => {
   try {
-    // Get current configuration for audit logging
-    const { data: currentConfig, error: fetchError } = await supabase
-      .from('model_configurations')
-      .select('*')
-      .eq('id', configurationId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching current configuration:', fetchError);
-      return { success: false, error: 'Failed to fetch configuration' };
-    }
-
-    const oldValue = currentConfig[`${componentType}_id`];
+    const overrideField = `${componentType}_override`;
+    const componentField = `${componentType}_id`;
     
-    // Remove the component from the configuration
-    const updateData = { [`${componentType}_id`]: null };
-    
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from('model_configurations')
-      .update(updateData)
+      .update({
+        [overrideField]: false,
+        [componentField]: null,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', configurationId);
 
-    if (updateError) {
-      console.error('Error unlinking component:', updateError);
-      return { success: false, error: 'Failed to unlink component' };
+    if (error) {
+      return { success: false, error: error.message };
     }
-
-    // Log the admin action
-    await logAdminAction({
-      action: `component_unlink_${componentType}`,
-      tableName: 'model_configurations',
-      recordId: configurationId,
-      oldValues: { [`${componentType}_id`]: oldValue },
-      newValues: { [`${componentType}_id`]: null }
-    });
 
     return { success: true };
   } catch (error) {
-    console.error('Error in unlinkComponentFromConfiguration:', error);
-    return { success: false, error: 'Unexpected error occurred' };
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
   }
 };
 
-export const getComponentUsageInConfigurations = async (
-  componentId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
-): Promise<{ configurations: any[], count: number }> => {
+// Link a component to a model (model-level assignment)
+export const linkComponentToModel = async (
+  modelId: string,
+  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
+  componentId: string
+): Promise<LinkResult> => {
   try {
+    const { error } = await supabase
+      .from('model_component_assignments')
+      .upsert({
+        model_id: modelId,
+        component_type: componentType,
+        component_id: componentId,
+        assignment_type: 'standard',
+        is_default: true,
+        notes: 'Assigned via admin interface'
+      });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+};
+
+// Get component usage in configurations
+export const getComponentUsageInConfigurations = async (
+  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
+  componentId: string
+) => {
+  try {
+    const componentField = `${componentType}_id`;
+    
     const { data, error } = await supabase
       .from('model_configurations')
       .select(`
         id,
         name,
-        model_year_id,
         model_years!inner(
           year,
-          motorcycle_models!inner(
-            name,
-            brands!inner(name)
-          )
+          motorcycle_models!inner(name)
         )
       `)
-      .eq(`${componentType}_id`, componentId);
+      .eq(componentField, componentId);
 
     if (error) {
-      console.error('Error fetching component usage:', error);
-      return { configurations: [], count: 0 };
+      throw error;
     }
 
-    return { configurations: data || [], count: data?.length || 0 };
+    return data || [];
   } catch (error) {
-    console.error('Error in getComponentUsageInConfigurations:', error);
-    return { configurations: [], count: 0 };
+    console.error("Error getting component usage:", error);
+    throw error;
   }
 };

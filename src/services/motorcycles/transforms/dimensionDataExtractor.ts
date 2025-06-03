@@ -1,28 +1,50 @@
 
-// Extract dimension data with fallbacks
+// Extract dimension data from configurations with proper fallbacks
 export const extractDimensionData = (configurations: any[] = [], fallbackData: any = {}) => {
-  // Find configuration with the most complete dimension data
-  const configWithDimensions = configurations.find(config => 
-    config?.seat_height_mm > 0 || config?.weight_kg > 0
-  ) || configurations[0];
-  
-  const seat_height_mm = configWithDimensions?.seat_height_mm || fallbackData.seat_height_mm || 0;
-  const weight_kg = configWithDimensions?.weight_kg || fallbackData.weight_kg || 0;
-  const wheelbase_mm = configWithDimensions?.wheelbase_mm || fallbackData.wheelbase_mm || 0;
-  const ground_clearance_mm = configWithDimensions?.ground_clearance_mm || fallbackData.ground_clearance_mm || 0;
-  const fuel_capacity_l = configWithDimensions?.fuel_capacity_l || fallbackData.fuel_capacity_l || 0;
+  console.log("=== DIMENSIONS EXTRACT: Starting ===", {
+    configurations: configurations.length,
+    hasFallback: !!fallbackData.seat_height_mm
+  });
 
+  // Find the configuration with the most complete dimension data
+  const configWithDimensions = configurations.reduce((best, config) => {
+    const currentCount = [
+      config.seat_height_mm,
+      config.weight_kg,
+      config.wheelbase_mm,
+      config.fuel_capacity_l,
+      config.ground_clearance_mm
+    ].filter(Boolean).length;
+
+    const bestCount = [
+      best?.seat_height_mm,
+      best?.weight_kg,
+      best?.wheelbase_mm,
+      best?.fuel_capacity_l,
+      best?.ground_clearance_mm
+    ].filter(Boolean).length;
+
+    return currentCount > bestCount ? config : best;
+  }, configurations[0]);
+
+  if (configWithDimensions) {
+    console.log("Using configuration dimension data");
+    return {
+      seat_height_mm: configWithDimensions.seat_height_mm || fallbackData.seat_height_mm || null,
+      weight_kg: configWithDimensions.weight_kg || fallbackData.weight_kg || fallbackData.wet_weight_kg || null,
+      wheelbase_mm: configWithDimensions.wheelbase_mm || fallbackData.wheelbase_mm || null,
+      fuel_capacity_l: configWithDimensions.fuel_capacity_l || fallbackData.fuel_capacity_l || null,
+      ground_clearance_mm: configWithDimensions.ground_clearance_mm || fallbackData.ground_clearance_mm || null
+    };
+  }
+
+  // Use fallback data from model
+  console.log("Using fallback dimension data from model");
   return {
-    seat_height_mm,
-    weight_kg,
-    wheelbase_mm,
-    ground_clearance_mm,
-    fuel_capacity_l,
-    // Imperial conversions
-    seat_height_in: seat_height_mm ? (seat_height_mm / 25.4) : 0,
-    weight_lbs: weight_kg ? (weight_kg * 2.20462) : 0,
-    wheelbase_in: wheelbase_mm ? (wheelbase_mm / 25.4) : 0,
-    ground_clearance_in: ground_clearance_mm ? (ground_clearance_mm / 25.4) : 0,
-    fuel_capacity_gal: fuel_capacity_l ? (fuel_capacity_l * 0.264172) : 0,
+    seat_height_mm: fallbackData.seat_height_mm || null,
+    weight_kg: fallbackData.weight_kg || fallbackData.wet_weight_kg || null,
+    wheelbase_mm: fallbackData.wheelbase_mm || null,
+    fuel_capacity_l: fallbackData.fuel_capacity_l || null,
+    ground_clearance_mm: fallbackData.ground_clearance_mm || null
   };
 };
