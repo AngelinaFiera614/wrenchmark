@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MotorcycleFilters from "@/components/motorcycles/MotorcycleFilters";
@@ -51,7 +50,7 @@ export default function Motorcycles() {
             withWeight: data.filter(m => (m.weight_kg || 0) > 0).length,
             withSeatHeight: data.filter(m => (m.seat_height_mm || 0) > 0).length,
             placeholders: data.filter(m => m.is_placeholder).length,
-            withComponentData: data.filter(m => m._componentData?.hasComponentData).length
+            withComponentData: data.filter(m => (m._componentData?.configurations || []).length > 0).length
           };
           
           setDataQualityInfo(qualityInfo);

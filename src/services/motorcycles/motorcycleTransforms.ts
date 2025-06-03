@@ -1,4 +1,3 @@
-
 import { Motorcycle } from "@/types";
 
 // Extract engine data from various sources with better fallbacks
@@ -101,12 +100,12 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     // Determine data completeness
     const hasEngineData = engineData.engine_size > 0;
     const hasDimensionData = dimensionData.seat_height_mm > 0 || dimensionData.weight_kg > 0;
-    const hasComponentData = allConfigurations.length > 0;
+    const hasComponentDataAvailable = allConfigurations.length > 0;
     
     console.log(`Data completeness for ${rawData.name}:`, {
       hasEngineData,
       hasDimensionData,
-      hasComponentData,
+      hasComponentData: hasComponentDataAvailable,
       configurationsCount: allConfigurations.length
     });
 
@@ -142,7 +141,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       slug: rawData.slug,
       created_at: rawData.created_at,
       is_placeholder: !hasEngineData && !hasDimensionData,
-      migration_status: hasComponentData ? 'migrated' : 'basic_data_only',
+      migration_status: hasComponentDataAvailable ? 'migrated' : 'basic_data_only',
       status: rawData.status || rawData.production_status || 'active',
       engine: `${engineData.engine_size || 0}cc`,
       is_draft: rawData.is_draft || false,
@@ -158,14 +157,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       _componentData: {
         configurations: allConfigurations,
         colorOptions: colorOptions,
-        selectedConfiguration: allConfigurations.find(c => c.is_default) || allConfigurations[0],
-        hasComponentData,
-        dataCompleteness: {
-          hasEngineData,
-          hasDimensionData,
-          hasComponentData,
-          configurationsCount: allConfigurations.length
-        }
+        selectedConfiguration: allConfigurations.find(c => c.is_default) || allConfigurations[0]
       }
     };
     
@@ -212,14 +204,7 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
       _componentData: {
         configurations: [],
         colorOptions: [],
-        selectedConfiguration: null,
-        hasComponentData: false,
-        dataCompleteness: {
-          hasEngineData: false,
-          hasDimensionData: false,
-          hasComponentData: false,
-          configurationsCount: 0
-        }
+        selectedConfiguration: null
       }
     };
   }
