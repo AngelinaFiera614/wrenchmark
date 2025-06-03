@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
-import { fetchModelYears } from "@/services/models/modelYearService";
+import { fetchModelYears, deleteModelYear } from "@/services/models/modelYearService";
 import { fetchConfigurations } from "@/services/models/configurationService";
+import { toast } from "sonner";
 
 export const useAdminPartsAssignmentOptimized = () => {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
@@ -105,6 +106,33 @@ export const useAdminPartsAssignmentOptimized = () => {
     });
   };
 
+  // New year deletion handler
+  const handleYearDelete = async (yearId: string) => {
+    try {
+      const success = await deleteModelYear(yearId);
+      if (success) {
+        toast.success("Model year deleted successfully");
+        
+        // If the deleted year was selected, clear the selection
+        if (selectedYear === yearId) {
+          setSelectedYear(null);
+          setSelectedConfig(null);
+        }
+        
+        // Invalidate and refetch model years
+        queryClient.invalidateQueries({ 
+          queryKey: ["model-years-optimized", selectedModel] 
+        });
+      } else {
+        toast.error("Failed to delete model year");
+      }
+    } catch (error) {
+      console.error("Error deleting model year:", error);
+      toast.error("Error deleting model year");
+      throw error;
+    }
+  };
+
   // Optimized data loading state
   const isLoading = modelsLoading || yearsLoading || configsLoading;
 
@@ -139,5 +167,6 @@ export const useAdminPartsAssignmentOptimized = () => {
     handlePreviewConfig,
     handleComponentLinked,
     refreshConfigurations,
+    handleYearDelete,
   };
 };

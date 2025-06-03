@@ -27,6 +27,7 @@ const AdminPartsAssignmentOptimized = () => {
     handleConfigSelect,
     handlePreviewConfig,
     refreshConfigurations,
+    handleYearDelete,
   } = useAdminPartsAssignmentOptimized();
 
   return (
@@ -51,6 +52,7 @@ const AdminPartsAssignmentOptimized = () => {
         selectedYear={selectedYear}
         selectedModelData={selectedModelData}
         onYearSelect={handleYearSelect}
+        onYearDelete={handleYearDelete}
         isLoading={isLoading}
       />
 
