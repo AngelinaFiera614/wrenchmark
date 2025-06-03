@@ -89,11 +89,10 @@ const AdminPartsAssignmentOptimized = () => {
                 />
               )}
 
-              {activeTab === "components" && selectedModel && (
+              {activeTab === "components" && selectedConfigData && (
                 <ComponentAssignmentGrid
-                  selectedModel={selectedModel}
-                  selectedModelData={selectedModelData}
-                  onComponentLinked={handleComponentLinked}
+                  configuration={selectedConfigData}
+                  onComponentChange={handleComponentLinked}
                 />
               )}
 
@@ -110,8 +109,7 @@ const AdminPartsAssignmentOptimized = () => {
               {showPreview && selectedConfigData && (
                 <ConfigurationPreview
                   configuration={selectedConfigData}
-                  selectedModelData={selectedModelData}
-                  selectedYearData={selectedYearData}
+                  isOpen={showPreview}
                   onClose={() => setShowPreview(false)}
                 />
               )}
