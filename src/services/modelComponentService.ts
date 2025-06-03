@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ModelComponentAssignment {
@@ -210,10 +209,11 @@ export const canDeleteComponent = async (
     `)
     .eq(componentField, componentId);
     
-  const modelNames = modelAssignments?.map(a => a.motorcycle_models?.name).filter(Boolean) || [];
-  const trimNames = trimAssignments?.map(t => 
-    `${t.model_years?.motorcycle_models?.name} - ${t.name}`
-  ).filter(Boolean) || [];
+  const modelNames = modelAssignments?.map(a => (a as any).motorcycle_models?.name).filter(Boolean) || [];
+  const trimNames = trimAssignments?.map(t => {
+    const trimData = t as any;
+    return `${trimData.model_years?.motorcycle_models?.name} - ${trimData.name}`;
+  }).filter(Boolean) || [];
   
   const totalUsage = (modelAssignments?.length || 0) + (trimAssignments?.length || 0);
   
