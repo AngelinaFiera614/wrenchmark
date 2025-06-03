@@ -13,7 +13,7 @@ import { DataCompletenessIndicator } from "@/components/motorcycles/DataComplete
 import { calculateDataCompleteness } from "@/utils/dataCompleteness";
 import { Motorcycle } from "@/types";
 import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
-import { transformMotorcycleData } from "@/services/motorcycles/motorcycleTransforms";
+import { getAllMotorcycles } from "@/services/motorcycles/motorcycleOperations";
 import { deleteMotorcycleModelCascade } from "@/services/models/modelQueries";
 import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
 
@@ -30,41 +30,17 @@ const AdminMotorcycleModels = () => {
     queryFn: async () => {
       try {
         console.log("=== ADMIN: Fetching motorcycle models ===");
-        const rawData = await fetchAllMotorcyclesForAdmin();
+        const motorcycles = await getAllMotorcycles();
         
-        if (!rawData || rawData.length === 0) {
+        if (!motorcycles || motorcycles.length === 0) {
           console.log("=== ADMIN: No motorcycle models found ===");
           return [];
         }
         
-        // Transform the raw data to match the Motorcycle interface with error handling
-        const transformedData: Motorcycle[] = [];
-        const errors: string[] = [];
+        console.log("=== ADMIN: Fetch complete ===");
+        console.log("Successfully loaded:", motorcycles.length);
         
-        for (const item of rawData) {
-          try {
-            const transformed = transformMotorcycleData(item);
-            transformedData.push(transformed);
-          } catch (transformError) {
-            console.error(`Admin: Failed to transform motorcycle ${item.name}:`, transformError);
-            errors.push(`${item.name}: ${transformError instanceof Error ? transformError.message : 'Unknown error'}`);
-          }
-        }
-        
-        console.log("=== ADMIN: Transformation complete ===");
-        console.log("Successfully transformed:", transformedData.length);
-        console.log("Transformation errors:", errors.length);
-        
-        if (errors.length > 0) {
-          console.log("Admin transformation errors:", errors);
-          toast({
-            variant: "destructive",
-            title: "Data Issues Found",
-            description: `${errors.length} motorcycles have data issues. Check console for details.`,
-          });
-        }
-        
-        return transformedData;
+        return motorcycles;
       } catch (error) {
         console.error("=== ADMIN: Error fetching motorcycles ===", error);
         toast({

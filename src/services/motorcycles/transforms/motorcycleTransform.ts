@@ -1,4 +1,3 @@
-
 import { Database } from "@/integrations/supabase/types";
 import { Motorcycle } from "@/types";
 import { extractEngineData } from "./engineDataExtractor";

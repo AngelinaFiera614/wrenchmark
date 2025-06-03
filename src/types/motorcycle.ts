@@ -1,4 +1,3 @@
-
 export type MotorcycleCategory = 
   | "Sport" 
   | "Cruiser" 
@@ -90,6 +89,7 @@ export interface Motorcycle {
     configurations?: Configuration[];
     colorOptions?: any[];
     selectedConfiguration?: Configuration;
+    resolvedComponents?: any;
   };
 }
 
