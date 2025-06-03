@@ -7,6 +7,7 @@ import TrimSection from "@/components/admin/parts/enhanced/TrimSection";
 import ComponentsSection from "@/components/admin/parts/enhanced/ComponentsSection";
 import TrimLevelEditor from "@/components/admin/parts/TrimLevelEditor";
 import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
+import { Configuration } from "@/types/motorcycle";
 
 const AdminPartsAssignmentOptimized = () => {
   const {
@@ -65,14 +66,11 @@ const AdminPartsAssignmentOptimized = () => {
 
       {/* Enhanced Trim Section with Edit/Delete */}
       <TrimSection
+        modelYearId={selectedYear}
         configurations={configurations || []}
-        selectedYear={selectedYear}
         selectedConfig={selectedConfig}
         onConfigSelect={handleConfigSelect}
         onConfigChange={refreshConfigurations}
-        onAddTrim={handleAddTrim}
-        onEditTrim={handleEditTrim}
-        onDeleteTrim={handleDeleteTrim}
       />
 
       {/* Components Section */}

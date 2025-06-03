@@ -6,7 +6,7 @@ import ColorManagementSection from "./ColorManagementSection";
 import { Configuration } from "@/types/motorcycle";
 
 interface TrimSectionProps {
-  modelYearId: string;
+  modelYearId: string | null;
   configurations: Configuration[];
   selectedConfig: string | null;
   onConfigSelect: (configId: string) => void;
@@ -21,6 +21,10 @@ const TrimSection = ({
   onConfigChange
 }: TrimSectionProps) => {
   const selectedConfigData = configurations.find(c => c.id === selectedConfig);
+
+  if (!modelYearId) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">

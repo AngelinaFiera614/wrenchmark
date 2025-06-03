@@ -1,4 +1,6 @@
 
+import { ColorOption } from "./colors";
+
 export interface TrimColorAssignment {
   id: string;
   configuration_id: string;
