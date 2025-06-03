@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Copy, Check, X, Eye, AlertTriangle, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
-import { copyConfigurationToMultipleYears, getYearsWithExistingConfigs } from "@/services/models/configurationService";
+import { copyConfigurationToMultipleYears, getYearsWithExistingConfigs } from "@/services/models/configurationCopy";
 import { calculateFormCompleteness } from "./trim-level-editor/validationEnhanced";
 
 interface EnhancedCopyTrimLevelDialogProps {

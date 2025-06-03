@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
-import { deleteConfiguration, getAvailableTargetYears } from "@/services/models/configurationService";
+import { deleteConfiguration } from "@/services/models/configurationService";
+import { getAvailableTargetYears } from "@/services/models/configurationCopy";
 import { supabase } from "@/integrations/supabase/client";
 import TrimLevelEditor from "./TrimLevelEditor";
 import TrimLevelActions from "./trim-level/TrimLevelActions";
@@ -77,7 +78,7 @@ const TrimLevelManager = ({
         .single();
         
       if (modelYear) {
-        const years = await getAvailableTargetYears(modelYear.motorcycle_id, config.name);
+        const years = await getAvailableTargetYears(modelYear.motorcycle_id);
         setAvailableYears(years.filter(y => y.id !== modelYearId)); // Exclude current year
         setCopyDialogOpen(true);
       }

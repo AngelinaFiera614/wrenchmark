@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
-import { copyConfigurationToMultipleYears } from "@/services/models/configurationService";
+import { copyConfigurationToMultipleYears } from "@/services/models/configurationCopy";
 
 interface CopyTrimLevelDialogProps {
   open: boolean;
@@ -57,7 +57,11 @@ const CopyTrimLevelDialog = ({
       const results = await copyConfigurationToMultipleYears(
         sourceConfiguration.id,
         selectedYears,
-        copyOptions
+        {
+          copyComponents: copyOptions.copyComponents,
+          copyDimensions: copyOptions.copyDimensions,
+          copyBasicInfo: copyOptions.copyBasicInfo
+        }
       );
 
       const successful = results.filter(r => r.success).length;
