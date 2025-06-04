@@ -26,6 +26,16 @@ const TrimSection = ({
     return null;
   }
 
+  const handleManageComponents = () => {
+    console.log("Opening component library...");
+    // Implement component management
+  };
+
+  const handleBulkAssign = () => {
+    console.log("Opening bulk assign dialog...");
+    // Implement bulk assignment
+  };
+
   return (
     <div className="space-y-6">
       {/* Trim Level Manager */}
@@ -39,8 +49,9 @@ const TrimSection = ({
 
       {/* Components Section */}
       <ComponentsSection
-        selectedConfig={selectedConfigData}
-        onRefresh={onConfigChange}
+        selectedYears={modelYearId ? [modelYearId] : []}
+        onManageComponents={handleManageComponents}
+        onBulkAssign={handleBulkAssign}
       />
 
       {/* Color Management Section */}
