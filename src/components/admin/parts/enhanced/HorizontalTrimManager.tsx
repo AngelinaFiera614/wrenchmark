@@ -12,19 +12,22 @@ import { Save, X } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
 
 interface HorizontalTrimManagerProps {
-  modelYearId: string;
+  modelYearIds: string[];
   configuration?: Configuration;
   onSave: (config: Configuration) => void;
   onCancel: () => void;
 }
 
 const HorizontalTrimManager = ({
-  modelYearId,
+  modelYearIds,
   configuration,
   onSave,
   onCancel
 }: HorizontalTrimManagerProps) => {
   const [expandedSection, setExpandedSection] = useState<string>("basic");
+
+  // Use the first model year ID for form initialization if editing existing config
+  const primaryModelYearId = configuration?.model_year_id || modelYearIds[0] || "";
 
   const {
     formData,
@@ -35,14 +38,14 @@ const HorizontalTrimManager = ({
     handleComponentSelect,
     getMockConfiguration,
     getCleanConfigData
-  } = useTrimLevelFormEnhanced(modelYearId, configuration);
+  } = useTrimLevelFormEnhanced(primaryModelYearId, configuration);
 
   const {
     handleSave,
     saving,
     lastError,
     setLastError
-  } = useTrimLevelSave(modelYearId, configuration, onSave);
+  } = useTrimLevelSave(modelYearIds, configuration, onSave);
 
   const metrics = useConfigurationMetrics(getMockConfiguration());
 
@@ -87,13 +90,22 @@ const HorizontalTrimManager = ({
     }
   };
 
+  const isMultiYear = modelYearIds.length > 1;
+
   return (
     <div className="space-y-4">
       {/* Header Actions */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-explorer-text">
-          {configuration ? 'Edit Trim Level' : 'Create New Trim Level'}
-        </h2>
+        <div>
+          <h2 className="text-xl font-bold text-explorer-text">
+            {configuration ? 'Edit Trim Level' : 'Create New Trim Level'}
+          </h2>
+          {isMultiYear && !configuration && (
+            <p className="text-sm text-explorer-text-muted">
+              This trim level will be created for {modelYearIds.length} model years
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
@@ -109,7 +121,7 @@ const HorizontalTrimManager = ({
             className="bg-accent-teal text-black hover:bg-accent-teal/90"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Configuration'}
+            {saving ? 'Saving...' : `Save Configuration${isMultiYear && !configuration ? ` (${modelYearIds.length} years)` : ''}`}
           </Button>
         </div>
       </div>

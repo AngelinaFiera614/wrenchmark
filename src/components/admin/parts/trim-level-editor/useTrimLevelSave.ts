@@ -2,31 +2,19 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
+import { createConfiguration, updateConfiguration } from "@/services/models/configurationCore";
 
-// Mock service functions - these would be replaced with actual service calls
-const createConfiguration = async (data: any): Promise<Configuration> => {
-  console.log("Creating configuration:", data);
-  // Simulate API call
-  return { ...data, id: `config-${Date.now()}` } as Configuration;
-};
-
-const updateConfiguration = async (id: string, data: any): Promise<Configuration> => {
-  console.log("Updating configuration:", id, data);
-  // Simulate API call
-  return { ...data, id } as Configuration;
-};
-
-const validateTrimLevelForm = (formData: any, modelYearId: string) => {
+const validateTrimLevelForm = (formData: any, modelYearIds: string[]) => {
   if (!formData.name || formData.name.trim().length === 0) {
     throw new Error("Trim level name is required");
   }
-  if (!modelYearId) {
-    throw new Error("Model year is required");
+  if (!modelYearIds || modelYearIds.length === 0) {
+    throw new Error("At least one model year is required");
   }
 };
 
 export const useTrimLevelSave = (
-  modelYearId: string,
+  modelYearIds: string[],
   configuration?: Configuration,
   onSave?: (config: Configuration) => void
 ) => {
@@ -38,7 +26,7 @@ export const useTrimLevelSave = (
     setLastError(null);
     
     try {
-      validateTrimLevelForm(formData, modelYearId);
+      validateTrimLevelForm(formData, modelYearIds);
     } catch (validationError: any) {
       const errorMessage = validationError.message;
       setLastError(errorMessage);
@@ -54,40 +42,53 @@ export const useTrimLevelSave = (
     
     try {
       console.log("=== STARTING TRIM LEVEL SAVE OPERATION ===");
-      console.log("Model Year ID:", modelYearId);
+      console.log("Model Year IDs:", modelYearIds);
       console.log("Configuration ID:", configuration?.id);
       console.log("Form Data:", formData);
 
       const configData = getCleanConfigData();
-      
-      // Handle default configuration constraint
-      if (configData.is_default && !configuration?.id) {
-        // If this is a new default configuration, we need to ensure no other default exists
-        console.log("Creating new default configuration, checking for existing defaults...");
-      }
-      
       console.log("Cleaned config data:", configData);
 
-      let savedConfig;
+      let savedConfigs: Configuration[] = [];
+
       if (configuration?.id) {
+        // Update existing configuration
         console.log("Updating existing configuration...");
-        savedConfig = await updateConfiguration(configuration.id, configData);
+        const savedConfig = await updateConfiguration(configuration.id, configData);
+        if (savedConfig) {
+          savedConfigs.push(savedConfig);
+        }
       } else {
-        console.log("Creating new configuration...");
-        savedConfig = await createConfiguration(configData);
+        // Create new configurations for all selected model years
+        console.log("Creating new configurations for model years:", modelYearIds);
+        
+        for (const modelYearId of modelYearIds) {
+          const configDataForYear = {
+            ...configData,
+            model_year_id: modelYearId
+          };
+          
+          console.log(`Creating configuration for year ${modelYearId}:`, configDataForYear);
+          const savedConfig = await createConfiguration(configDataForYear);
+          if (savedConfig) {
+            savedConfigs.push(savedConfig);
+          }
+        }
       }
 
-      if (savedConfig) {
+      if (savedConfigs.length > 0) {
         console.log("=== SAVE OPERATION SUCCESSFUL ===");
-        console.log("Saved configuration:", savedConfig);
+        console.log("Saved configurations:", savedConfigs);
         
+        const isMultiple = savedConfigs.length > 1;
         toast({
           title: "Success!",
-          description: `${formData.name} has been ${configuration ? 'updated' : 'created'} successfully.`,
+          description: `${formData.name} has been ${configuration ? 'updated' : 'created'} successfully${isMultiple ? ` for ${savedConfigs.length} model years` : ''}.`,
         });
         
         if (onSave) {
-          onSave(savedConfig);
+          // Return the first saved config for compatibility
+          onSave(savedConfigs[0]);
         }
       } else {
         throw new Error("No configuration data returned from save operation");

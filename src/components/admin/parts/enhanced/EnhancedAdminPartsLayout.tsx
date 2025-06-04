@@ -53,12 +53,23 @@ const EnhancedAdminPartsLayout = () => {
       alert("Please select a model first");
       return;
     }
+    
+    // Use provided yearId or selected years, fallback to current year
+    const yearsToUse = yearId ? [yearId] : selectedYears.length > 0 ? selectedYears : adminData.selectedYear ? [adminData.selectedYear] : [];
+    
+    if (yearsToUse.length === 0) {
+      alert("Please select at least one model year");
+      return;
+    }
+    
+    setSelectedYears(yearsToUse);
     setEditingConfig(null);
     setIsCreatingNew(true);
   };
 
   const handleEditConfig = (config: any) => {
     setEditingConfig(config);
+    setSelectedYears([config.model_year_id]);
     setIsCreatingNew(true);
   };
 
@@ -77,7 +88,10 @@ const EnhancedAdminPartsLayout = () => {
 
   const handleCopyConfig = (config: any) => {
     console.log("Copying configuration:", config);
-    // Implement copy logic
+    // Set up for creating a new config based on the copied one
+    setEditingConfig({ ...config, name: `${config.name} (Copy)`, is_default: false });
+    setSelectedYears([config.model_year_id]);
+    setIsCreatingNew(true);
   };
 
   const handleDeleteConfig = (config: any) => {
@@ -148,7 +162,7 @@ const EnhancedAdminPartsLayout = () => {
           <div className="xl:col-span-3 space-y-6">
             {isCreatingNew ? (
               <HorizontalTrimManager
-                modelYearId={selectedYears[0] || adminData.selectedYear || ""}
+                modelYearIds={selectedYears}
                 configuration={editingConfig}
                 onSave={handleSaveConfig}
                 onCancel={handleCancelEdit}

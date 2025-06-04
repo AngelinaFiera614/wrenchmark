@@ -9,7 +9,7 @@ import { ChevronDown, ChevronUp, Plus, Settings, Eye, Copy, Trash2 } from "lucid
 interface TrimLevelsSectionProps {
   selectedYears: string[];
   configurations: any[];
-  onCreateNew: (yearId: string) => void;
+  onCreateNew: (yearIds?: string[]) => void;
   onEdit: (config: any) => void;
   onCopy: (config: any) => void;
   onDelete: (config: any) => void;
@@ -58,9 +58,20 @@ const TrimLevelsSection = ({
     }
   };
 
+  const handleCreateNewTrim = () => {
+    if (selectedYears.length === 0) {
+      alert("Please select at least one model year first");
+      return;
+    }
+    onCreateNew(selectedYears);
+  };
+
   if (selectedYears.length === 0) {
     return (
       <Card className="bg-explorer-card border-explorer-chrome/30">
+        <CardHeader>
+          <CardTitle className="text-explorer-text">Trim Levels</CardTitle>
+        </CardHeader>
         <CardContent className="p-8 text-center">
           <div className="text-explorer-text-muted">
             Select one or more model years to manage trim levels
@@ -73,9 +84,18 @@ const TrimLevelsSection = ({
   return (
     <Card className="bg-explorer-card border-explorer-chrome/30">
       <CardHeader>
-        <CardTitle className="text-explorer-text">
-          Trim Levels ({selectedYears.length} years selected)
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-explorer-text">
+            Trim Levels ({selectedYears.length} years selected)
+          </CardTitle>
+          <Button
+            onClick={handleCreateNewTrim}
+            className="bg-accent-teal text-black hover:bg-accent-teal/90"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Add Trim to Selected Years
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {selectedYears.map(yearId => {
@@ -95,7 +115,7 @@ const TrimLevelsSection = ({
                           <ChevronDown className="h-4 w-4 text-explorer-text-muted" />
                         )}
                         <div className="text-sm font-medium text-explorer-text">
-                          Year {/* You'll need to get actual year from yearId */}
+                          Model Year (ID: {yearId.slice(0, 8)}...)
                         </div>
                         <Badge variant="secondary" className="text-xs">
                           {yearConfigs.length} trims
@@ -106,7 +126,7 @@ const TrimLevelsSection = ({
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onCreateNew(yearId);
+                          onCreateNew([yearId]);
                         }}
                         className="border-accent-teal/30 text-accent-teal hover:bg-accent-teal/10"
                       >
