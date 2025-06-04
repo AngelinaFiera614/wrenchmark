@@ -21,6 +21,8 @@ export const fetchConfigurationsForMultipleYears = async (modelYearIds: string[]
   try {
     console.log("Fetching configurations for multiple years:", modelYearIds);
     
+    if (modelYearIds.length === 0) return [];
+    
     const { data, error } = await supabase
       .from('model_configurations')
       .select(`
@@ -44,6 +46,65 @@ export const fetchConfigurationsForMultipleYears = async (modelYearIds: string[]
     return data || [];
   } catch (error) {
     console.error("Error in fetchConfigurationsForMultipleYears:", error);
+    throw error;
+  }
+};
+
+export const checkForExistingDefault = async (modelYearId: string): Promise<Configuration | null> => {
+  try {
+    console.log("Checking for existing default configuration for year:", modelYearId);
+    
+    const { data, error } = await supabase
+      .from('model_configurations')
+      .select('*')
+      .eq('model_year_id', modelYearId)
+      .eq('is_default', true)
+      .maybeSingle();
+      
+    if (error) {
+      console.error("Error checking for existing default:", error);
+      throw new Error(`Failed to check for existing default: ${error.message}`);
+    }
+    
+    console.log("Existing default check result:", data);
+    return data;
+  } catch (error) {
+    console.error("Error in checkForExistingDefault:", error);
+    throw error;
+  }
+};
+
+export const cloneConfiguration = async (sourceConfigId: string, newName: string): Promise<Configuration | null> => {
+  try {
+    console.log("Cloning configuration:", sourceConfigId, "with new name:", newName);
+    
+    // Get source configuration
+    const { data: sourceConfig, error: fetchError } = await supabase
+      .from('model_configurations')
+      .select('*')
+      .eq('id', sourceConfigId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching source configuration:", fetchError);
+      throw new Error(`Failed to fetch source configuration: ${fetchError.message}`);
+    }
+
+    // Create new configuration with copied data
+    const newConfigData = {
+      ...sourceConfig,
+      id: undefined, // Remove ID to create new record
+      name: newName,
+      is_default: false, // Don't copy default status
+      created_at: undefined,
+      updated_at: undefined,
+    };
+
+    const clonedConfig = await createConfiguration(newConfigData);
+    console.log("Configuration cloned successfully:", clonedConfig);
+    return clonedConfig;
+  } catch (error) {
+    console.error("Error in cloneConfiguration:", error);
     throw error;
   }
 };
