@@ -1,9 +1,8 @@
-
 import { useCallback } from "react";
 
 interface UseAdminPartsLayoutActionsProps {
   selectedYears: string[];
-  setSelectedYears: (years: string[]) => void;
+  setSelectedYears: (years: string[] | ((prev: string[]) => string[])) => void;
   setIsCreatingNew: (creating: boolean) => void;
   setEditingConfig: (config: any) => void;
   adminData: any;
@@ -22,7 +21,7 @@ export const useAdminPartsLayoutActions = ({
   }, []);
 
   const handleYearToggle = useCallback((yearId: string) => {
-    setSelectedYears(prev => {
+    setSelectedYears((prev: string[]) => {
       const newYears = prev.includes(yearId) 
         ? prev.filter(id => id !== yearId)
         : [...prev, yearId];
