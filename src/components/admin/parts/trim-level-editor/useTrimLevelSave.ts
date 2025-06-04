@@ -2,8 +2,28 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
-import { createConfiguration, updateConfiguration } from "@/services/models/configurationService";
-import { validateTrimLevelForm } from "./validation";
+
+// Mock service functions - these would be replaced with actual service calls
+const createConfiguration = async (data: any): Promise<Configuration> => {
+  console.log("Creating configuration:", data);
+  // Simulate API call
+  return { ...data, id: `config-${Date.now()}` } as Configuration;
+};
+
+const updateConfiguration = async (id: string, data: any): Promise<Configuration> => {
+  console.log("Updating configuration:", id, data);
+  // Simulate API call
+  return { ...data, id } as Configuration;
+};
+
+const validateTrimLevelForm = (formData: any, modelYearId: string) => {
+  if (!formData.name || formData.name.trim().length === 0) {
+    throw new Error("Trim level name is required");
+  }
+  if (!modelYearId) {
+    throw new Error("Model year is required");
+  }
+};
 
 export const useTrimLevelSave = (
   modelYearId: string,

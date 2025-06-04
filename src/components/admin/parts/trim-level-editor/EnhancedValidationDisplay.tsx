@@ -5,7 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, AlertCircle, Info, ChevronDown, ChevronRight, Lightbulb } from "lucide-react";
-import { ValidationResult } from "./validationEnhanced";
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  suggestions: string[];
+  completeness: number;
+  sectionStatus: Record<string, 'complete' | 'partial' | 'missing'>;
+}
 
 interface EnhancedValidationDisplayProps {
   validation: ValidationResult;

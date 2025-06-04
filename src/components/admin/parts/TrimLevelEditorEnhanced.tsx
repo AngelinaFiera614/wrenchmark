@@ -82,6 +82,7 @@ const TrimLevelEditorEnhanced = ({
         onInputChange={handleInputChangeWithErrorClear}
         onComponentSelect={handleComponentSelect}
         metrics={metrics}
+        validation={validation}
       />
     </div>
   );

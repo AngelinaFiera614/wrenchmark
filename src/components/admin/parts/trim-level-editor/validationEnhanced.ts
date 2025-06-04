@@ -1,63 +1,21 @@
-import { Configuration } from "@/types/motorcycle";
 
-export interface FormCompleteness {
-  basicInfo: number;
-  components: number;
-  dimensions: number;
-  overall: number;
-}
+import { Configuration } from "@/types/motorcycle";
 
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
   suggestions: string[];
+  completeness: number;
+  sectionStatus: Record<string, 'complete' | 'partial' | 'missing'>;
 }
 
-export const calculateFormCompleteness = (config: Configuration): FormCompleteness => {
-  // Calculate basic info completeness
-  const basicInfoFields = [
-    config.name,
-    config.market_region,
-    config.msrp_usd
-  ];
-  const basicInfoComplete = basicInfoFields.filter(field => field !== null && field !== undefined && field !== '').length;
-  const basicInfo = Math.round((basicInfoComplete / basicInfoFields.length) * 100);
-
-  // Calculate components completeness
-  const componentFields = [
-    config.engine_id,
-    config.brake_system_id,
-    config.frame_id,
-    config.suspension_id,
-    config.wheel_id
-  ];
-  const componentsComplete = componentFields.filter(field => field !== null && field !== undefined && field !== '').length;
-  const components = Math.round((componentsComplete / componentFields.length) * 100);
-
-  // Calculate dimensions completeness
-  const dimensionFields = [
-    config.seat_height_mm,
-    config.weight_kg,
-    config.wheelbase_mm,
-    config.fuel_capacity_l,
-    config.ground_clearance_mm
-  ];
-  const dimensionsComplete = dimensionFields.filter(field => field !== null && field !== undefined).length;
-  const dimensions = Math.round((dimensionsComplete / dimensionFields.length) * 100);
-
-  // Calculate overall completeness
-  const totalFields = basicInfoFields.length + componentFields.length + dimensionFields.length;
-  const totalComplete = basicInfoComplete + componentsComplete + dimensionsComplete;
-  const overall = Math.round((totalComplete / totalFields) * 100);
-
-  return {
-    basicInfo,
-    components,
-    dimensions,
-    overall
-  };
-};
+export interface FormCompleteness {
+  overall: number;
+  basicInfo: number;
+  components: number;
+  dimensions: number;
+}
 
 export const validateTrimLevelFormEnhanced = (formData: any, modelYearId: string): ValidationResult => {
   const errors: string[] = [];
@@ -65,83 +23,123 @@ export const validateTrimLevelFormEnhanced = (formData: any, modelYearId: string
   const suggestions: string[] = [];
 
   // Required field validation
-  if (!formData.name || formData.name.trim() === '') {
-    errors.push('Trim level name is required');
+  if (!formData.name || formData.name.trim().length === 0) {
+    errors.push("Trim level name is required");
   }
 
   if (!modelYearId) {
-    errors.push('Model year ID is required');
+    errors.push("Model year is required");
   }
 
-  // Warning validations
+  // Component validation
   if (!formData.engine_id) {
-    warnings.push('No engine selected');
+    warnings.push("Engine component is not assigned");
   }
 
   if (!formData.brake_system_id) {
-    warnings.push('No brake system selected');
+    warnings.push("Brake system is not assigned");
   }
 
   if (!formData.frame_id) {
-    warnings.push('No frame selected');
+    warnings.push("Frame component is not assigned");
   }
 
-  if (!formData.suspension_id) {
-    warnings.push('No suspension selected');
+  // Dimension validation
+  if (!formData.seat_height_mm) {
+    warnings.push("Seat height is missing");
   }
 
-  if (!formData.wheel_id) {
-    warnings.push('No wheels selected');
+  if (!formData.weight_kg) {
+    warnings.push("Weight is missing");
   }
 
-  // Dimension validations
-  if (formData.seat_height_mm && formData.seat_height_mm <= 0) {
-    errors.push('Seat height must be positive');
+  // Pricing validation
+  if (!formData.msrp_usd) {
+    suggestions.push("Consider adding MSRP for better completeness");
   }
 
-  if (formData.weight_kg && formData.weight_kg <= 0) {
-    errors.push('Weight must be positive');
-  }
-
-  if (formData.wheelbase_mm && formData.wheelbase_mm <= 0) {
-    errors.push('Wheelbase must be positive');
-  }
-
-  if (formData.fuel_capacity_l && formData.fuel_capacity_l <= 0) {
-    errors.push('Fuel capacity must be positive');
-  }
-
-  if (formData.ground_clearance_mm && formData.ground_clearance_mm <= 0) {
-    errors.push('Ground clearance must be positive');
-  }
-
-  // Suggestions for improvement
+  // Market region suggestion
   if (!formData.market_region) {
-    suggestions.push('Consider adding a market region for better categorization');
+    suggestions.push("Market region helps with regional specifications");
   }
 
-  if (!formData.msrp_usd && formData.msrp_usd !== 0) {
-    suggestions.push('Adding MSRP information helps with market positioning and customer expectations');
-  }
+  // Calculate section status
+  const sectionStatus = {
+    basic: formData.name && formData.msrp_usd ? 'complete' : formData.name ? 'partial' : 'missing',
+    components: (formData.engine_id && formData.brake_system_id && formData.frame_id) ? 'complete' : 
+                (formData.engine_id || formData.brake_system_id || formData.frame_id) ? 'partial' : 'missing',
+    dimensions: (formData.seat_height_mm && formData.weight_kg && formData.wheelbase_mm) ? 'complete' : 
+                (formData.seat_height_mm || formData.weight_kg) ? 'partial' : 'missing',
+    metrics: 'complete', // Always complete as it's calculated
+    notes: 'complete' // Always complete as it's optional
+  } as Record<string, 'complete' | 'partial' | 'missing'>;
 
-  if (formData.seat_height_mm && formData.weight_kg) {
-    // Add performance-based suggestions
-    const seatHeight = Number(formData.seat_height_mm);
-    const weight = Number(formData.weight_kg);
-    
-    if (seatHeight < 780) {
-      suggestions.push('Low seat height detected - consider adding beginner-friendly tags');
-    }
-    
-    if (weight > 250) {
-      suggestions.push('Heavy motorcycle detected - consider noting handling characteristics');
-    }
-  }
+  // Calculate overall completeness
+  const totalFields = 10; // Total expected fields
+  let completedFields = 0;
+
+  if (formData.name) completedFields++;
+  if (formData.engine_id) completedFields++;
+  if (formData.brake_system_id) completedFields++;
+  if (formData.frame_id) completedFields++;
+  if (formData.seat_height_mm) completedFields++;
+  if (formData.weight_kg) completedFields++;
+  if (formData.wheelbase_mm) completedFields++;
+  if (formData.fuel_capacity_l) completedFields++;
+  if (formData.msrp_usd) completedFields++;
+  if (formData.market_region) completedFields++;
+
+  const completeness = Math.round((completedFields / totalFields) * 100);
 
   return {
     isValid: errors.length === 0,
     errors,
     warnings,
-    suggestions
+    suggestions,
+    completeness,
+    sectionStatus
+  };
+};
+
+export const calculateFormCompleteness = (configuration: Configuration): FormCompleteness => {
+  // Basic info completeness
+  const basicInfoFields = [
+    configuration.name,
+    configuration.msrp_usd,
+    configuration.market_region
+  ];
+  const basicInfoComplete = basicInfoFields.filter(Boolean).length;
+  const basicInfo = Math.round((basicInfoComplete / basicInfoFields.length) * 100);
+
+  // Components completeness
+  const componentFields = [
+    configuration.engine_id,
+    configuration.brake_system_id,
+    configuration.frame_id,
+    configuration.suspension_id,
+    configuration.wheel_id
+  ];
+  const componentsComplete = componentFields.filter(Boolean).length;
+  const components = Math.round((componentsComplete / componentFields.length) * 100);
+
+  // Dimensions completeness
+  const dimensionFields = [
+    configuration.seat_height_mm,
+    configuration.weight_kg,
+    configuration.wheelbase_mm,
+    configuration.fuel_capacity_l,
+    configuration.ground_clearance_mm
+  ];
+  const dimensionsComplete = dimensionFields.filter(Boolean).length;
+  const dimensions = Math.round((dimensionsComplete / dimensionFields.length) * 100);
+
+  // Overall completeness
+  const overall = Math.round((basicInfo + components + dimensions) / 3);
+
+  return {
+    overall,
+    basicInfo,
+    components,
+    dimensions
   };
 };

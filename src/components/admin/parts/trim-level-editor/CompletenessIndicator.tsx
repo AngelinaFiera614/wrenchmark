@@ -3,7 +3,13 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, AlertCircle, XCircle, Info } from "lucide-react";
-import { FormCompleteness } from "./validationEnhanced";
+
+export interface FormCompleteness {
+  overall: number;
+  basicInfo: number;
+  components: number;
+  dimensions: number;
+}
 
 interface CompletenessIndicatorProps {
   completeness: FormCompleteness;
