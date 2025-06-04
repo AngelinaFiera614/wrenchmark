@@ -32,10 +32,13 @@ export const useAdminPartsAssignmentRefactored = () => {
     refetchConfigurations
   } = useAdminDataQueries(selectedModel, selectedYear);
 
+  // Ensure configurations is always an array
+  const safeConfigurations = Array.isArray(configurations) ? configurations : [];
+
   // Cache management
   const { refreshConfigurations, fetchConfigurationsForYears } = useAdminCacheManagement(
     selectedYear,
-    configurations
+    safeConfigurations
   );
 
   // Selection handlers
@@ -54,7 +57,7 @@ export const useAdminPartsAssignmentRefactored = () => {
   // Derived data with proper typing
   const selectedModelData = models.find((m: MotorcycleModel) => m.id === selectedModel);
   const selectedYearData = modelYears.find((y: ModelYear) => y.id === selectedYear);
-  const selectedConfigData = configurations.find((c: Configuration) => c.id === selectedConfig);
+  const selectedConfigData = safeConfigurations.find((c: Configuration) => c.id === selectedConfig);
 
   const handleComponentLinked = () => {
     // Refresh configurations when components are linked
@@ -75,11 +78,11 @@ export const useAdminPartsAssignmentRefactored = () => {
   }, [modelYears, selectedYear]);
 
   useEffect(() => {
-    if (selectedConfig && !configurations.find((c: Configuration) => c.id === selectedConfig)) {
+    if (selectedConfig && !safeConfigurations.find((c: Configuration) => c.id === selectedConfig)) {
       console.log("Resetting config selection - config no longer available");
       setSelectedConfig(null);
     }
-  }, [configurations, selectedConfig]);
+  }, [safeConfigurations, selectedConfig]);
 
   // Debug logging with error information
   useEffect(() => {
@@ -87,14 +90,14 @@ export const useAdminPartsAssignmentRefactored = () => {
     console.log("Selected model:", selectedModel);
     console.log("Selected year:", selectedYear);
     console.log("Selected config:", selectedConfig);
-    console.log("Configurations count:", configurations.length);
+    console.log("Configurations count:", safeConfigurations.length);
     console.log("Model years count:", modelYears.length);
     console.log("Errors:", {
       modelsError: modelsError?.message,
       yearsError: yearsError?.message,
       configsError: configsError?.message
     });
-  }, [selectedModel, selectedYear, selectedConfig, configurations.length, modelYears.length, modelsError, yearsError, configsError]);
+  }, [selectedModel, selectedYear, selectedConfig, safeConfigurations.length, modelYears.length, modelsError, yearsError, configsError]);
 
   return {
     // Selection state
@@ -109,7 +112,7 @@ export const useAdminPartsAssignmentRefactored = () => {
     // Data
     models,
     modelYears,
-    configurations,
+    configurations: safeConfigurations,
     selectedModelData,
     selectedYearData,
     selectedConfigData,

@@ -75,15 +75,17 @@ export const useAdminDataQueries = (selectedModel: string | null, selectedYear: 
           description: "Failed to load trim configurations. Please try again."
         });
       }
-    },
-    onSuccess: (data: Configuration[]) => {
-      console.log("Configurations query successful:", {
-        yearId: selectedYear,
-        count: data.length,
-        configurations: data.map(c => ({ id: c.id, name: c.name }))
-      });
     }
   });
+
+  // Log successful configuration fetch
+  if (configurations && configurations.length > 0) {
+    console.log("Configurations query successful:", {
+      yearId: selectedYear,
+      count: configurations.length,
+      configurations: configurations.map(c => ({ id: c.id, name: c.name }))
+    });
+  }
 
   return {
     models,
