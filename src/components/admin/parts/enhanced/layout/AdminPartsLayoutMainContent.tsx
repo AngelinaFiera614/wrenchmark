@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import MultiYearSelector from "../MultiYearSelector";
 import TrimLevelsSection from "../TrimLevelsSection";
 import ComponentsSection from "../ComponentsSection";
-import TrimLevelManagerEnhanced from "../../TrimLevelManagerEnhanced";
 
 interface AdminPartsLayoutMainContentProps {
   selectedModel: string | null;
@@ -87,21 +86,6 @@ const AdminPartsLayoutMainContent = ({
           onManageComponents={onManageComponents}
           onBulkAssign={onBulkAssign}
         />
-      )}
-
-      {/* Legacy Trim Level Manager for existing functionality */}
-      {selectedYear && (
-        <Card className="bg-explorer-card border-explorer-chrome/30 p-6">
-          <TrimLevelManagerEnhanced
-            modelYearId={selectedYear}
-            configurations={configurations}
-            selectedConfig={selectedConfig}
-            onConfigSelect={onConfigSelect}
-            onConfigChange={refreshConfigurations}
-            validation={validation}
-            onEditConfig={onEditConfig}
-          />
-        </Card>
       )}
     </div>
   );

@@ -3,7 +3,6 @@ import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Eye, Copy, Trash2 } from "lucide-react";
 
 interface TrimLevelCardProps {
   config: any;
@@ -51,38 +50,50 @@ const TrimLevelCard = ({ config, onEdit, onPreview, onCopy, onDelete }: TrimLeve
         )}
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={() => onEdit(config)}
-            className="p-1 h-auto text-explorer-text hover:bg-explorer-chrome/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(config);
+            }}
+            className="text-xs border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
           >
-            <Settings className="h-3 w-3" />
+            Edit
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={() => onPreview(config)}
-            className="p-1 h-auto text-explorer-text hover:bg-explorer-chrome/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview(config);
+            }}
+            className="text-xs border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
           >
-            <Eye className="h-3 w-3" />
+            Preview
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={() => onCopy(config)}
-            className="p-1 h-auto text-explorer-text hover:bg-explorer-chrome/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopy(config);
+            }}
+            className="text-xs border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
           >
-            <Copy className="h-3 w-3" />
+            Copy
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={() => onDelete(config)}
-            className="p-1 h-auto text-red-400 hover:bg-red-500/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(config);
+            }}
+            className="text-xs border-red-400/30 text-red-400 hover:bg-red-500/20"
           >
-            <Trash2 className="h-3 w-3" />
+            Delete
           </Button>
         </div>
       </CardContent>

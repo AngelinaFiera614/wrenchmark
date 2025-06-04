@@ -4,6 +4,7 @@ import ExpandableSection from "./ExpandableSection";
 import TrimBasicInfoSection from "./TrimBasicInfoSection";
 import TrimComponentsSection from "./TrimComponentsSection";
 import TrimPreviewSection from "./TrimPreviewSection";
+import TrimNotesSection from "./TrimNotesSection";
 import { useTrimLevelFormEnhanced } from "../trim-level-editor/useTrimLevelFormEnhanced";
 import { useTrimLevelSave } from "../trim-level-editor/useTrimLevelSave";
 import { useConfigurationMetrics } from "@/hooks/useConfigurationMetrics";
@@ -84,6 +85,9 @@ const HorizontalTrimManager = ({
         
       case 'preview':
         return `${completeness.overall}% complete, ${validation.errors.length} errors, ${validation.warnings.length} warnings`;
+
+      case 'notes':
+        return formData.notes ? 'Documentation added' : 'No notes added';
         
       default:
         return 'Section content';
@@ -177,6 +181,22 @@ const HorizontalTrimManager = ({
             validation={validation}
             completeness={completeness}
             metrics={metrics}
+          />
+        </ExpandableSection>
+
+        <ExpandableSection
+          id="notes"
+          title="Notes & Documentation"
+          status={formData.notes ? 'complete' : 'missing'}
+          summary={getSectionSummary('notes')}
+          isExpanded={expandedSection === 'notes'}
+          onToggle={handleSectionToggle}
+        >
+          <TrimNotesSection
+            formData={formData}
+            validation={validation}
+            completeness={completeness}
+            onInputChange={handleInputChangeWithErrorClear}
           />
         </ExpandableSection>
       </div>

@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface UseAdminPartsLayoutActionsProps {
   selectedYears: string[];
@@ -15,6 +16,7 @@ export const useAdminPartsLayoutActions = ({
   setEditingConfig,
   adminData
 }: UseAdminPartsLayoutActionsProps) => {
+  const { toast } = useToast();
 
   const handleRunValidation = useCallback(() => {
     console.log("Running full validation...");
@@ -84,10 +86,38 @@ export const useAdminPartsLayoutActions = ({
     setIsCreatingNew(true);
   }, [setEditingConfig, setSelectedYears, setIsCreatingNew]);
 
-  const handleDeleteConfig = useCallback((config: any) => {
+  const handleDeleteConfig = useCallback(async (config: any) => {
     console.log("Deleting configuration:", config);
-    // Implement delete logic
-  }, []);
+    
+    try {
+      // Import and use the delete service
+      const { deleteConfiguration } = await import("@/services/models/configurationService");
+      
+      const confirmed = window.confirm(
+        `Are you sure you want to delete the trim level "${config.name || 'Unnamed'}"? This action cannot be undone.`
+      );
+      
+      if (!confirmed) return;
+
+      await deleteConfiguration(config.id);
+      
+      toast({
+        title: "Trim Level Deleted",
+        description: `"${config.name || 'Unnamed trim'}" has been deleted successfully.`,
+      });
+
+      // Refresh configurations after deletion
+      await adminData.refreshConfigurations(selectedYears.length > 0 ? selectedYears : [config.model_year_id]);
+      
+    } catch (error) {
+      console.error("Error deleting configuration:", error);
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: "Failed to delete the trim level. Please try again.",
+      });
+    }
+  }, [selectedYears, adminData, toast]);
 
   const handlePreviewConfig = useCallback((config: any) => {
     console.log("Previewing configuration:", config);
