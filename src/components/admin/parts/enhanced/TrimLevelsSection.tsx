@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, Plus, Settings, Eye, Copy, Trash2, RefreshCw } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
-import { fetchConfigurationsForMultipleYears } from "@/services/models/configurationService";
-import { useQuery } from "@tanstack/react-query";
 
 interface TrimLevelsSectionProps {
   selectedYears: string[];
@@ -17,6 +15,7 @@ interface TrimLevelsSectionProps {
   onCopy: (config: any) => void;
   onDelete: (config: any) => void;
   onPreview: (config: any) => void;
+  onRefresh?: () => void;
 }
 
 const TrimLevelsSection = ({
@@ -26,21 +25,11 @@ const TrimLevelsSection = ({
   onEdit,
   onCopy,
   onDelete,
-  onPreview
+  onPreview,
+  onRefresh
 }: TrimLevelsSectionProps) => {
   const [expandedYears, setExpandedYears] = useState<string[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Query for multi-year configurations
-  const { 
-    data: multiYearConfigs = [], 
-    isLoading: multiYearLoading,
-    refetch: refetchMultiYear
-  } = useQuery<Configuration[]>({
-    queryKey: ["configurations-multi", ...selectedYears.sort()],
-    queryFn: () => selectedYears.length > 0 ? fetchConfigurationsForMultipleYears(selectedYears) : Promise.resolve([]),
-    enabled: selectedYears.length > 0,
-  });
 
   const toggleYear = (yearId: string) => {
     setExpandedYears(prev => 
@@ -51,9 +40,8 @@ const TrimLevelsSection = ({
   };
 
   const getConfigsByYear = (yearId: string) => {
-    // Use multi-year configs when available, fallback to passed configurations
-    const configsToUse = multiYearConfigs.length > 0 ? multiYearConfigs : configurations;
-    return configsToUse.filter(config => config.model_year_id === yearId);
+    // Use configurations passed from parent - this ensures consistency
+    return configurations.filter(config => config.model_year_id === yearId);
   };
 
   const getCompletionStatus = (config: any) => {
@@ -84,9 +72,11 @@ const TrimLevelsSection = ({
   };
 
   const handleRefreshConfigs = async () => {
+    if (!onRefresh) return;
+    
     setIsRefreshing(true);
     try {
-      await refetchMultiYear();
+      await onRefresh();
       console.log("Refreshed configurations for selected years:", selectedYears);
     } catch (error) {
       console.error("Error refreshing configurations:", error);
@@ -106,12 +96,12 @@ const TrimLevelsSection = ({
     console.log("TrimLevelsSection: Data updated", {
       selectedYears,
       configurationsCount: configurations.length,
-      multiYearConfigsCount: multiYearConfigs.length,
-      multiYearLoading,
-      configurations: configurations.map(c => ({ id: c.id, name: c.name, model_year_id: c.model_year_id })),
-      multiYearConfigs: multiYearConfigs.map(c => ({ id: c.id, name: c.name, model_year_id: c.model_year_id }))
+      configurationsByYear: selectedYears.reduce((acc, yearId) => {
+        acc[yearId] = getConfigsByYear(yearId).length;
+        return acc;
+      }, {} as Record<string, number>)
     });
-  }, [configurations, multiYearConfigs, selectedYears, multiYearLoading]);
+  }, [configurations, selectedYears]);
 
   if (selectedYears.length === 0) {
     return (
@@ -136,16 +126,18 @@ const TrimLevelsSection = ({
             Trim Levels ({selectedYears.length} years selected)
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefreshConfigs}
-              disabled={isRefreshing}
-              className="border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
-            >
-              <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+            {onRefresh && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshConfigs}
+                disabled={isRefreshing}
+                className="border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
+              >
+                <RefreshCw className={`h-3 w-3 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            )}
             <Button
               onClick={handleCreateNewTrim}
               className="bg-accent-teal text-black hover:bg-accent-teal/90"
@@ -155,11 +147,6 @@ const TrimLevelsSection = ({
             </Button>
           </div>
         </div>
-        {multiYearLoading && (
-          <div className="text-sm text-explorer-text-muted">
-            Loading configurations for selected years...
-          </div>
-        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {selectedYears.map(yearId => {

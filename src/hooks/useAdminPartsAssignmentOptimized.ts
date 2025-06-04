@@ -41,7 +41,8 @@ export const useAdminPartsAssignmentOptimized = () => {
   // Enhanced configurations query that handles both single and multiple years
   const { 
     data: configurations = [], 
-    isLoading: configsLoading 
+    isLoading: configsLoading,
+    refetch: refetchConfigurations
   } = useQuery<Configuration[]>({
     queryKey: ["configurations", selectedYear],
     queryFn: () => selectedYear ? fetchConfigurations(selectedYear) : Promise.resolve([]),
@@ -55,17 +56,20 @@ export const useAdminPartsAssignmentOptimized = () => {
 
   // Handlers
   const handleModelSelect = (modelId: string) => {
+    console.log("Model selected:", modelId);
     setSelectedModel(modelId);
     setSelectedYear(null);
     setSelectedConfig(null);
   };
 
   const handleYearSelect = (yearId: string) => {
+    console.log("Year selected:", yearId);
     setSelectedYear(yearId);
     setSelectedConfig(null);
   };
 
   const handleConfigSelect = (configId: string) => {
+    console.log("Config selected:", configId);
     setSelectedConfig(configId);
   };
 
@@ -76,55 +80,82 @@ export const useAdminPartsAssignmentOptimized = () => {
 
   const handleComponentLinked = () => {
     // Refresh configurations when components are linked
-    queryClient.invalidateQueries({ queryKey: ["configurations", selectedYear] });
+    refreshConfigurations();
     toast({
       title: "Component Updated",
       description: "Component assignment has been updated successfully.",
     });
   };
 
-  const refreshConfigurations = useCallback((yearIds?: string[]) => {
-    console.log("Refreshing configurations for years:", yearIds);
+  const refreshConfigurations = useCallback(async (yearIds?: string[]) => {
+    console.log("=== REFRESHING CONFIGURATIONS ===");
+    console.log("Year IDs to refresh:", yearIds);
+    console.log("Currently selected year:", selectedYear);
     
-    if (yearIds && yearIds.length > 0) {
-      // Refresh specific years - invalidate each year's cache
-      yearIds.forEach(yearId => {
-        queryClient.invalidateQueries({ 
-          queryKey: ["configurations", yearId] 
+    try {
+      const yearsToRefresh = yearIds || (selectedYear ? [selectedYear] : []);
+      
+      if (yearsToRefresh.length === 0) {
+        console.log("No years to refresh");
+        return;
+      }
+
+      console.log("Invalidating cache for years:", yearsToRefresh);
+      
+      // Invalidate specific year queries
+      for (const yearId of yearsToRefresh) {
+        await queryClient.invalidateQueries({ 
+          queryKey: ["configurations", yearId],
+          exact: true
         });
+      }
+      
+      // Invalidate multi-year queries
+      await queryClient.invalidateQueries({ 
+        queryKey: ["configurations-multi"],
+        exact: false
       });
       
-      // Also refresh multi-year queries if they exist
-      queryClient.invalidateQueries({ 
-        queryKey: ["configurations-multi", ...yearIds.sort()] 
+      // Invalidate any pattern-based configuration queries
+      await queryClient.invalidateQueries({ 
+        queryKey: ["configurations"],
+        exact: false
       });
-    } else if (selectedYear) {
-      // Refresh currently selected year
-      queryClient.invalidateQueries({ 
-        queryKey: ["configurations", selectedYear] 
+      
+      // Force refetch of the current configuration if we have a selected year
+      if (selectedYear && yearsToRefresh.includes(selectedYear)) {
+        console.log("Force refetching current year configurations");
+        await refetchConfigurations();
+      }
+      
+      console.log("Cache invalidation completed successfully");
+      
+    } catch (error) {
+      console.error("Error during cache refresh:", error);
+      toast({
+        variant: "destructive",
+        title: "Refresh Error",
+        description: "Failed to refresh configuration data."
       });
     }
-    
-    // Also refresh the general configurations query pattern
-    queryClient.invalidateQueries({ 
-      queryKey: ["configurations"], 
-      exact: false 
-    });
-    
-    // Force a refetch of the current configurations
-    if (selectedYear) {
-      queryClient.refetchQueries({
-        queryKey: ["configurations", selectedYear]
-      });
-    }
-  }, [queryClient, selectedYear]);
+  }, [queryClient, selectedYear, refetchConfigurations, toast]);
 
   // Function to fetch configurations for multiple years (used by components)
   const fetchConfigurationsForYears = useCallback(async (yearIds: string[]): Promise<Configuration[]> => {
     if (yearIds.length === 0) return [];
     
+    console.log("Fetching configurations for multiple years:", yearIds);
+    
     try {
+      // For single year, use the existing single-year fetch
+      if (yearIds.length === 1 && yearIds[0] === selectedYear) {
+        console.log("Using cached single-year configurations");
+        return configurations;
+      }
+      
+      // For multiple years or different years, fetch fresh data
       const configs = await fetchConfigurationsForMultipleYears(yearIds);
+      console.log("Fetched multi-year configurations:", configs.length);
       return configs;
     } catch (error) {
       console.error("Error fetching configurations for multiple years:", error);
@@ -135,11 +166,12 @@ export const useAdminPartsAssignmentOptimized = () => {
       });
       return [];
     }
-  }, [toast]);
+  }, [configurations, selectedYear, toast]);
 
   // Reset selections when data changes
   useEffect(() => {
     if (selectedYear && !modelYears.find(y => y.id === selectedYear)) {
+      console.log("Resetting year selection - year no longer available");
       setSelectedYear(null);
       setSelectedConfig(null);
     }
@@ -147,9 +179,20 @@ export const useAdminPartsAssignmentOptimized = () => {
 
   useEffect(() => {
     if (selectedConfig && !configurations.find(c => c.id === selectedConfig)) {
+      console.log("Resetting config selection - config no longer available");
       setSelectedConfig(null);
     }
   }, [configurations, selectedConfig]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("=== HOOK STATE UPDATE ===");
+    console.log("Selected model:", selectedModel);
+    console.log("Selected year:", selectedYear);
+    console.log("Selected config:", selectedConfig);
+    console.log("Configurations count:", configurations.length);
+    console.log("Model years count:", modelYears.length);
+  }, [selectedModel, selectedYear, selectedConfig, configurations.length, modelYears.length]);
 
   return {
     // Selection state

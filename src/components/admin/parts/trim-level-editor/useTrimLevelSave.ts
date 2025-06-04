@@ -57,6 +57,7 @@ export const useTrimLevelSave = (
         const savedConfig = await updateConfiguration(configuration.id, configData);
         if (savedConfig) {
           savedConfigs.push(savedConfig);
+          console.log("Configuration updated successfully:", savedConfig);
         }
       } else {
         // Create new configurations for all selected model years
@@ -90,10 +91,10 @@ export const useTrimLevelSave = (
         if (onSave) {
           // For multiple configurations, call onSave for each one
           if (isMultiple) {
-            savedConfigs.forEach((config, index) => {
-              console.log(`Calling onSave callback ${index + 1}/${savedConfigs.length} with:`, config);
-              setTimeout(() => onSave(config), index * 50); // Small delay between calls
-            });
+            console.log("Calling onSave for multiple configurations");
+            // Call onSave with the first configuration as the primary one
+            // The parent component can handle multi-year refresh logic
+            onSave(savedConfigs[0]);
           } else {
             console.log("Calling onSave callback with:", savedConfigs[0]);
             onSave(savedConfigs[0]);
