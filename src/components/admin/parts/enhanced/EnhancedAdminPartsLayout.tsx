@@ -1,20 +1,19 @@
 
 import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Settings, Eye, EyeOff, RotateCcw, Plus } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
 import { validateConfiguration } from "../validation/ValidationEngine";
 import ContextSidebar from "./ContextSidebar";
-import ComponentLibraryEnhanced from "./ComponentLibraryEnhanced";
+import MultiYearSelector from "./MultiYearSelector";
+import TrimLevelsSection from "./TrimLevelsSection";
+import ComponentsSection from "./ComponentsSection";
 import HorizontalTrimManager from "./HorizontalTrimManager";
 import TrimLevelManagerEnhanced from "../TrimLevelManagerEnhanced";
 
-type AdminMode = "trim-manager" | "component-library";
-
 const EnhancedAdminPartsLayout = () => {
-  const [activeMode, setActiveMode] = useState<AdminMode>("trim-manager");
+  const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [editingConfig, setEditingConfig] = useState<any>(null);
   
@@ -33,9 +32,25 @@ const EnhancedAdminPartsLayout = () => {
     console.log("Validation results:", validation);
   };
 
-  const handleCreateNew = () => {
-    if (!adminData.selectedYear) {
-      alert("Please select a model and year first");
+  const handleYearToggle = (yearId: string) => {
+    setSelectedYears(prev => 
+      prev.includes(yearId) 
+        ? prev.filter(id => id !== yearId)
+        : [...prev, yearId]
+    );
+  };
+
+  const handleSelectAllYears = () => {
+    setSelectedYears(adminData.modelYears.map(year => year.id));
+  };
+
+  const handleClearAllYears = () => {
+    setSelectedYears([]);
+  };
+
+  const handleCreateNew = (yearId?: string) => {
+    if (!adminData.selectedModel) {
+      alert("Please select a model first");
       return;
     }
     setEditingConfig(null);
@@ -60,6 +75,30 @@ const EnhancedAdminPartsLayout = () => {
     setEditingConfig(null);
   };
 
+  const handleCopyConfig = (config: any) => {
+    console.log("Copying configuration:", config);
+    // Implement copy logic
+  };
+
+  const handleDeleteConfig = (config: any) => {
+    console.log("Deleting configuration:", config);
+    // Implement delete logic
+  };
+
+  const handlePreviewConfig = (config: any) => {
+    adminData.handleConfigSelect(config.id);
+  };
+
+  const handleManageComponents = () => {
+    console.log("Opening component library...");
+    // Implement component management
+  };
+
+  const handleBulkAssign = () => {
+    console.log("Opening bulk assign dialog...");
+    // Implement bulk assignment
+  };
+
   return (
     <div className="min-h-screen bg-explorer-dark text-explorer-text">
       {/* Header */}
@@ -80,22 +119,13 @@ const EnhancedAdminPartsLayout = () => {
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Run Full Validation
               </Button>
-              {activeMode === "trim-manager" && adminData.selectedYear && (
-                <Button
-                  onClick={handleCreateNew}
-                  className="bg-accent-teal text-black hover:bg-accent-teal/90"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Trim Level
-                </Button>
-              )}
             </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           {/* Left Sidebar - Context Sensitive */}
           <div className="xl:col-span-1">
             <ContextSidebar 
@@ -114,58 +144,66 @@ const EnhancedAdminPartsLayout = () => {
             />
           </div>
 
-          {/* Main Panel */}
-          <div className="xl:col-span-3 flex flex-col">
-            {/* Two-Mode Navigation */}
-            <Card className="bg-explorer-card border-explorer-chrome/30 mb-6">
-              <Tabs value={activeMode} onValueChange={(value) => setActiveMode(value as AdminMode)}>
-                <TabsList className="grid w-full grid-cols-2 bg-explorer-dark border-explorer-chrome/30">
-                  <TabsTrigger 
-                    value="trim-manager"
-                    className="data-[state=active]:bg-accent-teal data-[state=active]:text-black"
-                  >
-                    Trim Level Manager
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="component-library"
-                    className="data-[state=active]:bg-accent-teal data-[state=active]:text-black"
-                  >
-                    Component Library
-                  </TabsTrigger>
-                </TabsList>
+          {/* Main Panel - Horizontal Sections */}
+          <div className="xl:col-span-3 space-y-6">
+            {isCreatingNew ? (
+              <HorizontalTrimManager
+                modelYearId={selectedYears[0] || adminData.selectedYear || ""}
+                configuration={editingConfig}
+                onSave={handleSaveConfig}
+                onCancel={handleCancelEdit}
+              />
+            ) : (
+              <>
+                {/* Years Section */}
+                {adminData.selectedModel && (
+                  <MultiYearSelector
+                    modelYears={adminData.modelYears}
+                    selectedYears={selectedYears}
+                    onYearToggle={handleYearToggle}
+                    onSelectAll={handleSelectAllYears}
+                    onClearAll={handleClearAllYears}
+                  />
+                )}
 
-                {/* Mode Content */}
-                <div className="flex-1 mt-6">
-                  <TabsContent value="trim-manager" className="m-0 h-full">
-                    {isCreatingNew ? (
-                      <HorizontalTrimManager
-                        modelYearId={adminData.selectedYear!}
-                        configuration={editingConfig}
-                        onSave={handleSaveConfig}
-                        onCancel={handleCancelEdit}
-                      />
-                    ) : (
-                      <TrimLevelManagerEnhanced
-                        modelYearId={adminData.selectedYear || ""}
-                        configurations={adminData.configurations}
-                        selectedConfig={adminData.selectedConfig}
-                        onConfigSelect={adminData.handleConfigSelect}
-                        onConfigChange={adminData.refreshConfigurations}
-                        validation={validation}
-                      />
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="component-library" className="m-0 h-full">
-                    <ComponentLibraryEnhanced
+                {/* Trim Levels Section */}
+                {adminData.selectedModel && (
+                  <TrimLevelsSection
+                    selectedYears={selectedYears}
+                    configurations={adminData.configurations}
+                    onCreateNew={handleCreateNew}
+                    onEdit={handleEditConfig}
+                    onCopy={handleCopyConfig}
+                    onDelete={handleDeleteConfig}
+                    onPreview={handlePreviewConfig}
+                  />
+                )}
+
+                {/* Components Section */}
+                {adminData.selectedModel && (
+                  <ComponentsSection
+                    selectedYears={selectedYears}
+                    onManageComponents={handleManageComponents}
+                    onBulkAssign={handleBulkAssign}
+                  />
+                )}
+
+                {/* Legacy Trim Level Manager for existing functionality */}
+                {adminData.selectedYear && (
+                  <Card className="bg-explorer-card border-explorer-chrome/30 p-6">
+                    <TrimLevelManagerEnhanced
+                      modelYearId={adminData.selectedYear}
+                      configurations={adminData.configurations}
                       selectedConfig={adminData.selectedConfig}
-                      selectedConfigData={adminData.selectedConfigData}
-                      handleComponentLinked={adminData.handleComponentLinked}
+                      onConfigSelect={adminData.handleConfigSelect}
+                      onConfigChange={adminData.refreshConfigurations}
+                      validation={validation}
+                      onEditConfig={handleEditConfig}
                     />
-                  </TabsContent>
-                </div>
-              </Tabs>
-            </Card>
+                  </Card>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
