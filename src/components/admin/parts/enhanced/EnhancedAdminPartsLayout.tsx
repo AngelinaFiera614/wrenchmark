@@ -12,16 +12,19 @@ const EnhancedAdminPartsLayout = () => {
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [editingConfig, setEditingConfig] = useState<any>(null);
 
+  const layoutState = useAdminPartsLayoutState();
   const {
-    selectedModel,
-    selectedYear,
-    selectedConfig,
     selectedYears,
     setSelectedYears,
     adminData,
     allConfigsForSelectedYears,
     validation
-  } = useAdminPartsLayoutState();
+  } = layoutState;
+
+  // Extract the specific properties we need from adminData
+  const selectedModel = adminData?.selectedModel || null;
+  const selectedYear = adminData?.selectedYear || null;
+  const selectedConfig = adminData?.selectedConfig || null;
 
   const {
     handleRunValidation,
@@ -67,11 +70,7 @@ const EnhancedAdminPartsLayout = () => {
   return (
     <div className="space-y-6">
       <AdminPartsLayoutHeader
-        selectedModel={selectedModel}
-        selectedYear={selectedYear}
-        selectedConfig={selectedConfig}
         onRunValidation={handleRunValidation}
-        validation={validation}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">

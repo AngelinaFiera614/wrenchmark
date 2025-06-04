@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Wrench, Disc, Chassis, Suspension as SuspensionIcon, Wheel } from "lucide-react";
+import { Plus, Wrench, Disc, Box, Coil, Circle } from "lucide-react";
 import AdminEngineDialog from "@/components/admin/components/AdminEngineDialog";
 import AdminBrakeSystemDialog from "@/components/admin/components/AdminBrakeSystemDialog";
 import AdminFrameDialog from "@/components/admin/components/AdminFrameDialog";
@@ -30,9 +30,9 @@ const AddComponentDialog = ({
   const componentTypes = [
     { id: 'engines', label: 'Engine', icon: Wrench },
     { id: 'brakes', label: 'Brake System', icon: Disc },
-    { id: 'frames', label: 'Frame', icon: Chassis },
-    { id: 'suspensions', label: 'Suspension', icon: SuspensionIcon },
-    { id: 'wheels', label: 'Wheels', icon: Wheel }
+    { id: 'frames', label: 'Frame', icon: Box },
+    { id: 'suspensions', label: 'Suspension', icon: Coil },
+    { id: 'wheels', label: 'Wheels', icon: Circle }
   ];
 
   const handleCreateComponent = (componentType: string) => {
@@ -40,15 +40,13 @@ const AddComponentDialog = ({
     setComponentDialogOpen(true);
   };
 
-  const handleComponentDialogClose = () => {
+  const handleComponentDialogClose = (refreshData?: boolean) => {
     setComponentDialogOpen(false);
     setSelectedComponentType("");
-  };
-
-  const handleComponentCreated = () => {
-    onComponentAdded();
-    handleComponentDialogClose();
-    onClose();
+    if (refreshData) {
+      onComponentAdded();
+      onClose();
+    }
   };
 
   const renderComponentDialog = () => {
@@ -58,7 +56,6 @@ const AddComponentDialog = ({
           <AdminEngineDialog
             open={componentDialogOpen}
             onClose={handleComponentDialogClose}
-            onSuccess={handleComponentCreated}
           />
         );
       case 'brakes':
@@ -66,7 +63,6 @@ const AddComponentDialog = ({
           <AdminBrakeSystemDialog
             open={componentDialogOpen}
             onClose={handleComponentDialogClose}
-            onSuccess={handleComponentCreated}
           />
         );
       case 'frames':
@@ -74,7 +70,6 @@ const AddComponentDialog = ({
           <AdminFrameDialog
             open={componentDialogOpen}
             onClose={handleComponentDialogClose}
-            onSuccess={handleComponentCreated}
           />
         );
       case 'suspensions':
@@ -82,7 +77,6 @@ const AddComponentDialog = ({
           <AdminSuspensionDialog
             open={componentDialogOpen}
             onClose={handleComponentDialogClose}
-            onSuccess={handleComponentCreated}
           />
         );
       case 'wheels':
@@ -90,7 +84,6 @@ const AddComponentDialog = ({
           <AdminWheelDialog
             open={componentDialogOpen}
             onClose={handleComponentDialogClose}
-            onSuccess={handleComponentCreated}
           />
         );
       default:
