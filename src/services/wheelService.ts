@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Wheel {
   id: string;
+  name?: string; // Computed for display purposes
   type?: string;
   front_size?: string;
   rear_size?: string;
@@ -26,10 +27,16 @@ export const fetchWheels = async (): Promise<Wheel[]> => {
     throw error;
   }
 
-  return data || [];
+  // Add computed name field for display
+  return (data || []).map(wheel => ({
+    ...wheel,
+    name: wheel.type || 
+          `${wheel.front_size || 'Unknown'} / ${wheel.rear_size || 'Unknown'}` ||
+          'Unnamed Wheel'
+  }));
 };
 
-export const createWheel = async (wheelData: Omit<Wheel, 'id' | 'created_at' | 'updated_at'>): Promise<Wheel> => {
+export const createWheel = async (wheelData: Omit<Wheel, 'id' | 'created_at' | 'updated_at' | 'name'>): Promise<Wheel> => {
   const { data, error } = await supabase
     .from('wheels')
     .insert([wheelData])
@@ -40,7 +47,12 @@ export const createWheel = async (wheelData: Omit<Wheel, 'id' | 'created_at' | '
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 
+          `${data.front_size || 'Unknown'} / ${data.rear_size || 'Unknown'}` ||
+          'Unnamed Wheel'
+  };
 };
 
 export const updateWheel = async (id: string, wheelData: Partial<Wheel>): Promise<Wheel> => {
@@ -55,7 +67,12 @@ export const updateWheel = async (id: string, wheelData: Partial<Wheel>): Promis
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 
+          `${data.front_size || 'Unknown'} / ${data.rear_size || 'Unknown'}` ||
+          'Unnamed Wheel'
+  };
 };
 
 export const deleteWheel = async (id: string): Promise<void> => {
@@ -80,5 +97,10 @@ export const fetchWheelById = async (id: string): Promise<Wheel> => {
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 
+          `${data.front_size || 'Unknown'} / ${data.rear_size || 'Unknown'}` ||
+          'Unnamed Wheel'
+  };
 };

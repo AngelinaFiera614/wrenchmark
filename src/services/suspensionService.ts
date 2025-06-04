@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Suspension {
   id: string;
+  name?: string; // Computed for display purposes
   front_type?: string;
   rear_type?: string;
   brand?: string;
@@ -25,10 +26,16 @@ export const fetchSuspensions = async (): Promise<Suspension[]> => {
     throw error;
   }
 
-  return data || [];
+  // Add computed name field for display
+  return (data || []).map(suspension => ({
+    ...suspension,
+    name: suspension.brand || 
+          `${suspension.front_type || 'Unknown'} / ${suspension.rear_type || 'Unknown'}` ||
+          'Unnamed Suspension'
+  }));
 };
 
-export const createSuspension = async (suspensionData: Omit<Suspension, 'id' | 'created_at' | 'updated_at'>): Promise<Suspension> => {
+export const createSuspension = async (suspensionData: Omit<Suspension, 'id' | 'created_at' | 'updated_at' | 'name'>): Promise<Suspension> => {
   const { data, error } = await supabase
     .from('suspensions')
     .insert([suspensionData])
@@ -39,7 +46,12 @@ export const createSuspension = async (suspensionData: Omit<Suspension, 'id' | '
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.brand || 
+          `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}` ||
+          'Unnamed Suspension'
+  };
 };
 
 export const updateSuspension = async (id: string, suspensionData: Partial<Suspension>): Promise<Suspension> => {
@@ -54,7 +66,12 @@ export const updateSuspension = async (id: string, suspensionData: Partial<Suspe
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.brand || 
+          `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}` ||
+          'Unnamed Suspension'
+  };
 };
 
 export const deleteSuspension = async (id: string): Promise<void> => {
@@ -79,5 +96,10 @@ export const fetchSuspensionById = async (id: string): Promise<Suspension> => {
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.brand || 
+          `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}` ||
+          'Unnamed Suspension'
+  };
 };

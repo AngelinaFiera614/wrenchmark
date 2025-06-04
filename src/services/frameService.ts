@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Frame {
   id: string;
   type: string;
+  name?: string; // Computed from type for display purposes
   material?: string;
   notes?: string;
   rake_degrees?: number;
@@ -23,10 +24,14 @@ export const fetchFrames = async (): Promise<Frame[]> => {
     throw error;
   }
 
-  return data || [];
+  // Add computed name field for display
+  return (data || []).map(frame => ({
+    ...frame,
+    name: frame.type || 'Unnamed Frame'
+  }));
 };
 
-export const createFrame = async (frameData: Omit<Frame, 'id' | 'created_at' | 'updated_at'>): Promise<Frame> => {
+export const createFrame = async (frameData: Omit<Frame, 'id' | 'created_at' | 'updated_at' | 'name'>): Promise<Frame> => {
   const { data, error } = await supabase
     .from('frames')
     .insert([frameData])
@@ -37,7 +42,10 @@ export const createFrame = async (frameData: Omit<Frame, 'id' | 'created_at' | '
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 'Unnamed Frame'
+  };
 };
 
 export const updateFrame = async (id: string, frameData: Partial<Frame>): Promise<Frame> => {
@@ -52,7 +60,10 @@ export const updateFrame = async (id: string, frameData: Partial<Frame>): Promis
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 'Unnamed Frame'
+  };
 };
 
 export const deleteFrame = async (id: string): Promise<void> => {
@@ -77,5 +88,8 @@ export const fetchFrameById = async (id: string): Promise<Frame> => {
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 'Unnamed Frame'
+  };
 };

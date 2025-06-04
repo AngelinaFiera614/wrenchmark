@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface BrakeSystem {
   id: string;
   type: string;
+  name?: string; // Computed from type for display purposes
   has_traction_control?: boolean;
   brake_type_front?: string;
   brake_type_rear?: string;
@@ -26,10 +27,14 @@ export const fetchBrakes = async (): Promise<BrakeSystem[]> => {
     throw error;
   }
 
-  return data || [];
+  // Add computed name field for display
+  return (data || []).map(brake => ({
+    ...brake,
+    name: brake.type || 'Unnamed Brake System'
+  }));
 };
 
-export const createBrake = async (brakeData: Omit<BrakeSystem, 'id' | 'created_at' | 'updated_at'>): Promise<BrakeSystem> => {
+export const createBrake = async (brakeData: Omit<BrakeSystem, 'id' | 'created_at' | 'updated_at' | 'name'>): Promise<BrakeSystem> => {
   const { data, error } = await supabase
     .from('brake_systems')
     .insert([brakeData])
@@ -40,7 +45,10 @@ export const createBrake = async (brakeData: Omit<BrakeSystem, 'id' | 'created_a
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 'Unnamed Brake System'
+  };
 };
 
 export const updateBrake = async (id: string, brakeData: Partial<BrakeSystem>): Promise<BrakeSystem> => {
@@ -55,7 +63,10 @@ export const updateBrake = async (id: string, brakeData: Partial<BrakeSystem>): 
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 'Unnamed Brake System'
+  };
 };
 
 export const deleteBrake = async (id: string): Promise<void> => {
@@ -80,5 +91,8 @@ export const fetchBrakeById = async (id: string): Promise<BrakeSystem> => {
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    name: data.type || 'Unnamed Brake System'
+  };
 };
