@@ -5,7 +5,6 @@ import { CheckCircle, AlertCircle } from "lucide-react";
 import { Configuration } from "@/types/motorcycle";
 import { deleteConfiguration, getAvailableTargetYears } from "@/services/models/configurationService";
 import { supabase } from "@/integrations/supabase/client";
-import TrimLevelEditorEnhanced from "./TrimLevelEditorEnhanced";
 import TrimLevelActions from "./trim-level/TrimLevelActions";
 import TrimLevelGrid from "./trim-level/TrimLevelGrid";
 import TrimLevelDetails from "./trim-level/TrimLevelDetails";
@@ -22,6 +21,7 @@ interface TrimLevelManagerEnhancedProps {
   onConfigChange: () => void;
   activeSectionTab?: string;
   validation?: any;
+  onEditConfig?: (config: Configuration) => void;
 }
 
 const TrimLevelManagerEnhanced = ({
@@ -31,11 +31,10 @@ const TrimLevelManagerEnhanced = ({
   onConfigSelect,
   onConfigChange,
   activeSectionTab,
-  validation
+  validation,
+  onEditConfig
 }: TrimLevelManagerEnhancedProps) => {
   const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingConfig, setEditingConfig] = useState<Configuration | null>(null);
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [copyingConfig, setCopyingConfig] = useState<Configuration | null>(null);
   const [availableYears, setAvailableYears] = useState<any[]>([]);
@@ -46,16 +45,11 @@ const TrimLevelManagerEnhanced = ({
 
   const selectedConfigData = configurations.find(c => c.id === selectedConfig);
 
-  const handleCreateNew = () => {
-    console.log("Creating new trim level for model year:", modelYearId);
-    setEditingConfig(null);
-    setIsEditing(true);
-  };
-
   const handleEdit = (config: Configuration) => {
     console.log("Editing trim level:", config);
-    setEditingConfig(config);
-    setIsEditing(true);
+    if (onEditConfig) {
+      onEditConfig(config);
+    }
   };
 
   const handleClone = (config: Configuration) => {
@@ -65,8 +59,9 @@ const TrimLevelManagerEnhanced = ({
       name: `${config.name} (Copy)`,
       is_default: false
     } as Configuration;
-    setEditingConfig(clonedConfig);
-    setIsEditing(true);
+    if (onEditConfig) {
+      onEditConfig(clonedConfig);
+    }
   };
 
   const handlePreview = (config: Configuration) => {
@@ -123,35 +118,17 @@ const TrimLevelManagerEnhanced = ({
     setQuickCopyOpen(true);
   };
 
-  const handleEditorClose = (refreshData = false) => {
-    console.log("Closing editor, refreshData:", refreshData);
-    setIsEditing(false);
-    setEditingConfig(null);
-    if (refreshData) {
-      onConfigChange();
-    }
-  };
-
-  const handleSaveSuccess = (savedConfig: Configuration) => {
-    console.log("Trim level saved successfully:", savedConfig);
-    toast({
-      title: "Success!",
-      description: `Trim level "${savedConfig.name}" has been saved successfully.`,
-      action: <CheckCircle className="h-4 w-4 text-green-500" />
-    });
-    handleEditorClose(true);
-    // Auto-select the newly created/updated config
-    onConfigSelect(savedConfig.id);
-  };
-
-  if (isEditing) {
+  // Show message when no model year is selected
+  if (!modelYearId) {
     return (
-      <TrimLevelEditorEnhanced
-        modelYearId={modelYearId}
-        configuration={editingConfig || undefined}
-        onSave={handleSaveSuccess}
-        onCancel={() => handleEditorClose(false)}
-      />
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center space-y-2">
+          <div className="text-lg text-explorer-text">Select a Model and Year</div>
+          <div className="text-sm text-explorer-text-muted">
+            Choose a motorcycle model and year from the sidebar to manage trim levels
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -161,7 +138,7 @@ const TrimLevelManagerEnhanced = ({
       <EnhancedTrimLevelActions
         selectedConfig={selectedConfigData}
         configurations={configurations}
-        onCreateNew={handleCreateNew}
+        onCreateNew={() => {}} // Handled by parent component
         onEdit={handleEdit}
         onDelete={handleDelete}
         onQuickCopy={handleQuickCopy}
@@ -176,10 +153,10 @@ const TrimLevelManagerEnhanced = ({
         onEdit={handleEdit}
         onCopy={handleCopy}
         onPreview={handlePreview}
-        onAdd={handleCreateNew}
+        onAdd={() => {}} // Handled by parent component
         onClone={handleClone}
         onDelete={handleDelete}
-        onCreateNew={handleCreateNew}
+        onCreateNew={() => {}} // Handled by parent component
       />
 
       {/* Selected Trim Level Details */}

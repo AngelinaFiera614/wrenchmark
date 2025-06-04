@@ -3,22 +3,20 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Settings, Eye, EyeOff, RotateCcw } from "lucide-react";
+import { Settings, Eye, EyeOff, RotateCcw, Plus } from "lucide-react";
 import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
 import { validateConfiguration } from "../validation/ValidationEngine";
 import ContextSidebar from "./ContextSidebar";
-import ModelNavigatorEnhanced from "./ModelNavigatorEnhanced";
-import SplitViewTrimManager from "./SplitViewTrimManager";
 import ComponentLibraryEnhanced from "./ComponentLibraryEnhanced";
-import StickyNavigationTabs from "../navigation/StickyNavigationTabs";
+import HorizontalTrimManager from "./HorizontalTrimManager";
+import TrimLevelManagerEnhanced from "../TrimLevelManagerEnhanced";
 
-type AdminMode = "navigator" | "trim-manager" | "component-library";
+type AdminMode = "trim-manager" | "component-library";
 
 const EnhancedAdminPartsLayout = () => {
-  const [activeMode, setActiveMode] = useState<AdminMode>("navigator");
-  const [activeSectionTab, setActiveSectionTab] = useState("basic");
-  const [showPreview, setShowPreview] = useState(false);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [activeMode, setActiveMode] = useState<AdminMode>("trim-manager");
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [editingConfig, setEditingConfig] = useState<any>(null);
   
   const adminData = useAdminPartsAssignmentOptimized();
 
@@ -35,12 +33,31 @@ const EnhancedAdminPartsLayout = () => {
     console.log("Validation results:", validation);
   };
 
-  const handleTogglePreview = () => {
-    setShowPreview(!showPreview);
+  const handleCreateNew = () => {
+    if (!adminData.selectedYear) {
+      alert("Please select a model and year first");
+      return;
+    }
+    setEditingConfig(null);
+    setIsCreatingNew(true);
   };
 
-  const handleTogglePreviewMode = () => {
-    setIsPreviewMode(!isPreviewMode);
+  const handleEditConfig = (config: any) => {
+    setEditingConfig(config);
+    setIsCreatingNew(true);
+  };
+
+  const handleSaveConfig = (savedConfig: any) => {
+    console.log("Configuration saved:", savedConfig);
+    setIsCreatingNew(false);
+    setEditingConfig(null);
+    adminData.refreshConfigurations();
+    adminData.handleConfigSelect(savedConfig.id);
+  };
+
+  const handleCancelEdit = () => {
+    setIsCreatingNew(false);
+    setEditingConfig(null);
   };
 
   return (
@@ -63,42 +80,19 @@ const EnhancedAdminPartsLayout = () => {
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Run Full Validation
               </Button>
-              {activeMode === "trim-manager" && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTogglePreviewMode}
-                    className={isPreviewMode ? "bg-accent-teal/20 text-accent-teal" : ""}
-                  >
-                    {isPreviewMode ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                    {isPreviewMode ? "Edit Mode" : "Preview Mode"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleTogglePreview}
-                    className={showPreview ? "bg-blue-500/20 text-blue-400" : ""}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    {showPreview ? "Hide Live Preview" : "Show Live Preview"}
-                  </Button>
-                </>
+              {activeMode === "trim-manager" && adminData.selectedYear && (
+                <Button
+                  onClick={handleCreateNew}
+                  className="bg-accent-teal text-black hover:bg-accent-teal/90"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Trim Level
+                </Button>
               )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Sticky Section Navigation - Only show in trim manager mode */}
-      {activeMode === "trim-manager" && adminData.selectedConfig && (
-        <StickyNavigationTabs
-          activeTab={activeSectionTab}
-          onTabChange={setActiveSectionTab}
-          sectionStatus={validation.sectionStatus}
-          completeness={validation.completeness}
-        />
-      )}
 
       <div className="container mx-auto px-6 py-6">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
@@ -122,16 +116,10 @@ const EnhancedAdminPartsLayout = () => {
 
           {/* Main Panel */}
           <div className="xl:col-span-3 flex flex-col">
-            {/* Three-Mode Navigation */}
+            {/* Two-Mode Navigation */}
             <Card className="bg-explorer-card border-explorer-chrome/30 mb-6">
               <Tabs value={activeMode} onValueChange={(value) => setActiveMode(value as AdminMode)}>
-                <TabsList className="grid w-full grid-cols-3 bg-explorer-dark border-explorer-chrome/30">
-                  <TabsTrigger 
-                    value="navigator"
-                    className="data-[state=active]:bg-accent-teal data-[state=active]:text-black"
-                  >
-                    Model Navigator
-                  </TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-explorer-dark border-explorer-chrome/30">
                   <TabsTrigger 
                     value="trim-manager"
                     className="data-[state=active]:bg-accent-teal data-[state=active]:text-black"
@@ -148,31 +136,32 @@ const EnhancedAdminPartsLayout = () => {
 
                 {/* Mode Content */}
                 <div className="flex-1 mt-6">
-                  <TabsContent value="navigator" className="m-0 h-full">
-                    <ModelNavigatorEnhanced {...adminData} />
-                  </TabsContent>
-                  
                   <TabsContent value="trim-manager" className="m-0 h-full">
-                    <SplitViewTrimManager 
-                      selectedYear={adminData.selectedYear}
-                      selectedConfig={adminData.selectedConfig}
-                      selectedConfigData={adminData.selectedConfigData}
-                      selectedModelData={adminData.selectedModelData}
-                      selectedYearData={adminData.selectedYearData}
-                      configurations={adminData.configurations}
-                      handleConfigSelect={adminData.handleConfigSelect}
-                      refreshConfigurations={adminData.refreshConfigurations}
-                      showPreview={showPreview}
-                      isPreviewMode={isPreviewMode}
-                      onTogglePreview={handleTogglePreview}
-                      onTogglePreviewMode={handleTogglePreviewMode}
-                      activeSectionTab={activeSectionTab}
-                      validation={validation}
-                    />
+                    {isCreatingNew ? (
+                      <HorizontalTrimManager
+                        modelYearId={adminData.selectedYear!}
+                        configuration={editingConfig}
+                        onSave={handleSaveConfig}
+                        onCancel={handleCancelEdit}
+                      />
+                    ) : (
+                      <TrimLevelManagerEnhanced
+                        modelYearId={adminData.selectedYear || ""}
+                        configurations={adminData.configurations}
+                        selectedConfig={adminData.selectedConfig}
+                        onConfigSelect={adminData.handleConfigSelect}
+                        onConfigChange={adminData.refreshConfigurations}
+                        validation={validation}
+                      />
+                    )}
                   </TabsContent>
                   
                   <TabsContent value="component-library" className="m-0 h-full">
-                    <ComponentLibraryEnhanced {...adminData} />
+                    <ComponentLibraryEnhanced
+                      selectedConfig={adminData.selectedConfig}
+                      selectedConfigData={adminData.selectedConfigData}
+                      handleComponentLinked={adminData.handleComponentLinked}
+                    />
                   </TabsContent>
                 </div>
               </Tabs>
