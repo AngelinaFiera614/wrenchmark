@@ -211,7 +211,7 @@ const BulkAssignDialog = ({ open, onClose, configurations, onSuccess }: BulkAssi
                         {config.name || "Standard"}
                       </div>
                       <div className="text-xs text-explorer-text-muted">
-                        {config.model_years?.motorcycle_models?.name} • {config.model_years?.year}
+                        {config.model_year?.motorcycle_models?.name} • {config.model_year?.year}
                       </div>
                     </div>
                     {config.is_default && (
