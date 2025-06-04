@@ -40,6 +40,24 @@ const SplitViewTrimManager = ({
   activeSectionTab,
   validation
 }: SplitViewTrimManagerProps) => {
+  
+  const handleFixIssue = (issueType: string) => {
+    // Switch to edit mode when clicking to fix issues
+    if (isPreviewMode) {
+      onTogglePreviewMode();
+    }
+    
+    // Navigate to the appropriate section based on issue type
+    if (issueType.includes('engine') || issueType.includes('brake') || issueType.includes('component')) {
+      // Will be handled by parent component via activeSectionTab
+      console.log("Navigate to components section");
+    } else if (issueType.includes('dimension') || issueType.includes('weight') || issueType.includes('height')) {
+      console.log("Navigate to dimensions section");
+    } else if (issueType.includes('pricing') || issueType.includes('msrp')) {
+      console.log("Navigate to basic info section");
+    }
+  };
+
   if (!selectedYear) {
     return (
       <Card className="bg-explorer-card border-explorer-chrome/30">
@@ -82,6 +100,7 @@ const SplitViewTrimManager = ({
             modelData={selectedModelData}
             yearData={selectedYearData}
             onFlaggedClick={onTogglePreviewMode}
+            onFixIssue={handleFixIssue}
           />
         ) : (
           <TrimLevelManagerEnhanced
@@ -112,6 +131,7 @@ const SplitViewTrimManager = ({
                 modelData={selectedModelData}
                 yearData={selectedYearData}
                 onFlaggedClick={onTogglePreviewMode}
+                onFixIssue={handleFixIssue}
                 compact={true}
               />
             ) : (

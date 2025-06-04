@@ -2,31 +2,54 @@
 import { useState, useEffect } from "react";
 import { Configuration } from "@/types/motorcycle";
 import { checkForExistingDefault } from "@/services/models/configurationService";
+import { validateTrimLevelForm } from "./validation";
+
+interface FormData {
+  name: string;
+  engine_id: string;
+  brake_system_id: string;
+  frame_id: string;
+  suspension_id: string;
+  wheel_id: string;
+  seat_height_mm: string | number;
+  weight_kg: string | number;
+  wheelbase_mm: string | number;
+  fuel_capacity_l: string | number;
+  ground_clearance_mm: string | number;
+  is_default: boolean;
+  market_region: string;
+  msrp_usd: string | number;
+  model_year_id: string;
+}
+
+interface SelectedComponents {
+  engine: any;
+  brakes: any;
+  frame: any;
+  suspension: any;
+  wheels: any;
+}
 
 export const useTrimLevelForm = (modelYearId: string, configuration?: Configuration) => {
-  const [formData, setFormData] = useState({
-    model_year_id: modelYearId,
+  const [formData, setFormData] = useState<FormData>({
     name: configuration?.name || "",
-    description: configuration?.description || "",
-    notes: configuration?.notes || "",
     engine_id: configuration?.engine_id || "",
     brake_system_id: configuration?.brake_system_id || "",
     frame_id: configuration?.frame_id || "",
     suspension_id: configuration?.suspension_id || "",
     wheel_id: configuration?.wheel_id || "",
-    seat_height_mm: configuration?.seat_height_mm?.toString() || "",
-    weight_kg: configuration?.weight_kg?.toString() || "",
-    wheelbase_mm: configuration?.wheelbase_mm?.toString() || "",
-    fuel_capacity_l: configuration?.fuel_capacity_l?.toString() || "",
-    ground_clearance_mm: configuration?.ground_clearance_mm?.toString() || "",
+    seat_height_mm: configuration?.seat_height_mm || "",
+    weight_kg: configuration?.weight_kg || "",
+    wheelbase_mm: configuration?.wheelbase_mm || "",
+    fuel_capacity_l: configuration?.fuel_capacity_l || "",
+    ground_clearance_mm: configuration?.ground_clearance_mm || "",
     is_default: configuration?.is_default || false,
-    trim_level: configuration?.trim_level || "",
     market_region: configuration?.market_region || "",
-    msrp_usd: configuration?.msrp_usd?.toString() || configuration?.price_premium_usd?.toString() || "",
-    color_id: configuration?.color_id || "",
+    msrp_usd: configuration?.msrp_usd || configuration?.price_premium_usd || "",
+    model_year_id: modelYearId,
   });
 
-  const [selectedComponents, setSelectedComponents] = useState({
+  const [selectedComponents, setSelectedComponents] = useState<SelectedComponents>({
     engine: configuration?.engine || null,
     brakes: configuration?.brakes || null,
     frame: configuration?.frame || null,
@@ -37,44 +60,39 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
   const [existingDefault, setExistingDefault] = useState<Configuration | null>(null);
   const [hasCheckedDefault, setHasCheckedDefault] = useState(false);
 
-  // Check for existing default configuration when component loads
+  // Check for existing default configuration
   useEffect(() => {
     const checkDefault = async () => {
-      if (!hasCheckedDefault && modelYearId) {
-        try {
-          const existing = await checkForExistingDefault(modelYearId);
-          setExistingDefault(existing);
-          setHasCheckedDefault(true);
-          
-          // If no default exists and this is the first trim, suggest making it default
-          if (!existing && !configuration) {
-            console.log("No default configuration exists, suggesting this as default");
-          }
-        } catch (error) {
-          console.error("Error checking for existing default:", error);
-          setHasCheckedDefault(true);
-        }
+      try {
+        const existing = await checkForExistingDefault(modelYearId);
+        setExistingDefault(existing);
+        setHasCheckedDefault(true);
+      } catch (error) {
+        console.error("Error checking for existing default:", error);
+        setHasCheckedDefault(true);
       }
     };
-    
-    checkDefault();
-  }, [modelYearId, configuration, hasCheckedDefault]);
+
+    if (modelYearId && !hasCheckedDefault) {
+      checkDefault();
+    }
+  }, [modelYearId, hasCheckedDefault]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleComponentSelect = (componentType: string, componentId: string, component: any) => {
+    console.log(`Selected ${componentType}:`, componentId, component);
     handleInputChange(`${componentType}_id`, componentId);
     setSelectedComponents(prev => ({ ...prev, [componentType]: component }));
   };
 
+  // Create a mock configuration for metrics calculation
   const getMockConfiguration = (): Configuration => ({
     id: configuration?.id || 'temp',
     model_year_id: modelYearId,
     name: formData.name,
-    description: formData.description,
-    notes: formData.notes,
     engine_id: formData.engine_id,
     brake_system_id: formData.brake_system_id,
     frame_id: formData.frame_id,
@@ -86,10 +104,8 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     fuel_capacity_l: Number(formData.fuel_capacity_l) || undefined,
     ground_clearance_mm: Number(formData.ground_clearance_mm) || undefined,
     is_default: formData.is_default,
-    trim_level: formData.trim_level,
     market_region: formData.market_region,
     msrp_usd: Number(formData.msrp_usd) || undefined,
-    color_id: formData.color_id,
     engine: selectedComponents.engine,
     brakes: selectedComponents.brakes,
     frame: selectedComponents.frame,
@@ -99,9 +115,7 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
 
   const getCleanConfigData = () => ({
     model_year_id: modelYearId,
-    name: formData.name,
-    description: formData.description || null,
-    notes: formData.notes || null,
+    name: formData.name.trim(),
     engine_id: formData.engine_id || null,
     brake_system_id: formData.brake_system_id || null,
     frame_id: formData.frame_id || null,
@@ -113,10 +127,8 @@ export const useTrimLevelForm = (modelYearId: string, configuration?: Configurat
     fuel_capacity_l: formData.fuel_capacity_l ? Number(formData.fuel_capacity_l) : null,
     ground_clearance_mm: formData.ground_clearance_mm ? Number(formData.ground_clearance_mm) : null,
     is_default: formData.is_default,
-    trim_level: formData.trim_level || null,
     market_region: formData.market_region || null,
     msrp_usd: formData.msrp_usd ? Number(formData.msrp_usd) : null,
-    color_id: formData.color_id || null,
   });
 
   return {

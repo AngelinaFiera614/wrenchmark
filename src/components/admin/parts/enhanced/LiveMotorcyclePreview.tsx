@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, CheckCircle, Clock, ExternalLink } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock, ExternalLink, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LiveMotorcyclePreviewProps {
@@ -11,6 +11,7 @@ interface LiveMotorcyclePreviewProps {
   modelData?: any;
   yearData?: any;
   onFlaggedClick?: () => void;
+  onFixIssue?: (issueType: string) => void;
   compact?: boolean;
 }
 
@@ -19,6 +20,7 @@ const LiveMotorcyclePreview = ({
   modelData, 
   yearData, 
   onFlaggedClick,
+  onFixIssue,
   compact = false 
 }: LiveMotorcyclePreviewProps) => {
   const issues = [];
@@ -26,21 +28,29 @@ const LiveMotorcyclePreview = ({
   const completions = [];
 
   // Analyze configuration completeness
-  if (!configuration.engine_id) issues.push("Missing engine component");
-  if (!configuration.brake_system_id) issues.push("Missing brake system");
-  if (!configuration.frame_id) issues.push("Missing frame");
-  if (!configuration.suspension_id) warnings.push("Missing suspension");
-  if (!configuration.wheel_id) warnings.push("Missing wheels");
+  if (!configuration.engine_id) issues.push({ type: "engine", message: "Missing engine component" });
+  if (!configuration.brake_system_id) issues.push({ type: "brake_system", message: "Missing brake system" });
+  if (!configuration.frame_id) issues.push({ type: "frame", message: "Missing frame" });
+  if (!configuration.suspension_id) warnings.push({ type: "suspension", message: "Missing suspension" });
+  if (!configuration.wheel_id) warnings.push({ type: "wheel", message: "Missing wheels" });
   
-  if (!configuration.seat_height_mm) warnings.push("Missing seat height");
-  if (!configuration.weight_kg) warnings.push("Missing weight");
-  if (!configuration.msrp_usd && !configuration.price_premium_usd) warnings.push("Missing pricing");
+  if (!configuration.seat_height_mm) warnings.push({ type: "dimensions", message: "Missing seat height" });
+  if (!configuration.weight_kg) warnings.push({ type: "dimensions", message: "Missing weight" });
+  if (!configuration.msrp_usd && !configuration.price_premium_usd) warnings.push({ type: "pricing", message: "Missing pricing" });
   
   if (configuration.engine_id) completions.push("Engine assigned");
   if (configuration.brake_system_id) completions.push("Brake system assigned");
   if (configuration.seat_height_mm && configuration.weight_kg) completions.push("Basic dimensions complete");
 
-  const FlaggedSection = ({ title, type, issues }: { title: string, type: 'error' | 'warning' | 'success', issues: string[] }) => (
+  const FlaggedSection = ({ 
+    title, 
+    type, 
+    issues 
+  }: { 
+    title: string, 
+    type: 'error' | 'warning' | 'success', 
+    issues: Array<{ type?: string; message?: string } | string> 
+  }) => (
     <Alert 
       className={`cursor-pointer transition-colors ${
         type === 'error' ? 'border-red-200 bg-red-50 hover:bg-red-100' :
@@ -58,11 +68,29 @@ const LiveMotorcyclePreview = ({
         'text-green-800'
       }>
         <div className="font-medium">{title}</div>
-        <ul className="list-disc list-inside mt-1 text-sm">
+        <div className="space-y-2 mt-2">
           {issues.map((issue, index) => (
-            <li key={index}>{issue}</li>
+            <div key={index} className="flex items-center justify-between">
+              <span className="text-sm">
+                {typeof issue === 'string' ? issue : issue.message}
+              </span>
+              {onFixIssue && typeof issue === 'object' && issue.type && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-1 h-auto ml-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFixIssue(issue.type);
+                  }}
+                >
+                  <Settings className="h-3 w-3" />
+                  Fix
+                </Button>
+              )}
+            </div>
           ))}
-        </ul>
+        </div>
         {onFlaggedClick && (
           <Button variant="ghost" size="sm" className="mt-2 p-0 h-auto">
             <ExternalLink className="h-3 w-3 mr-1" />

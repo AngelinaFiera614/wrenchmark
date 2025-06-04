@@ -1,247 +1,214 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pin, Calendar, Settings, CheckCircle, AlertCircle, Clock, PinOff, Eye } from "lucide-react";
-import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
-import { usePinnedModels } from "@/hooks/usePinnedModels";
+import { Pin, PinOff, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import { validateConfiguration } from "../validation/ValidationEngine";
 
 interface ContextSidebarProps {
-  models: MotorcycleModel[];
-  modelYears: ModelYear[];
-  configurations: Configuration[];
   selectedModel: string | null;
   selectedYear: string | null;
   selectedConfig: string | null;
-  selectedModelData?: MotorcycleModel;
-  selectedYearData?: ModelYear;
-  selectedConfigData?: Configuration;
-  handleModelSelect: (modelId: string) => void;
-  handleYearSelect: (yearId: string) => void;
-  handleConfigSelect: (configId: string) => void;
+  selectedModelData?: any;
+  selectedYearData?: any;
+  selectedConfigData?: any;
+  models: any[];
+  modelYears: any[];
+  configurations: any[];
+  onModelSelect: (modelId: string) => void;
+  onYearSelect: (yearId: string) => void;
+  onConfigSelect: (configId: string) => void;
 }
 
 const ContextSidebar = ({
-  models,
-  modelYears,
-  configurations,
   selectedModel,
   selectedYear,
   selectedConfig,
   selectedModelData,
   selectedYearData,
   selectedConfigData,
-  handleModelSelect,
-  handleYearSelect,
-  handleConfigSelect
+  models,
+  modelYears,
+  configurations,
+  onModelSelect,
+  onYearSelect,
+  onConfigSelect
 }: ContextSidebarProps) => {
-  const { pinnedModelIds, unpinModel } = usePinnedModels();
-  const pinnedModels = models.filter(model => pinnedModelIds.includes(model.id));
+  const [pinnedModels, setPinnedModels] = React.useState<Set<string>>(new Set());
 
-  const getStatusIcon = (item: any, type: 'model' | 'year' | 'config') => {
-    // Mock completion logic - replace with actual validation
-    const hasBasicData = item.name || item.year;
-    const hasAdvancedData = type === 'config' ? 
-      (item.engine_id && item.brake_system_id) : 
-      (type === 'year' ? item.msrp_usd : item.base_description);
-    
-    if (hasBasicData && hasAdvancedData) return <CheckCircle className="h-3 w-3 text-green-400" />;
-    if (hasBasicData) return <Clock className="h-3 w-3 text-yellow-400" />;
-    return <AlertCircle className="h-3 w-3 text-red-400" />;
+  const togglePinModel = (modelId: string) => {
+    setPinnedModels(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(modelId)) {
+        newSet.delete(modelId);
+      } else {
+        newSet.add(modelId);
+      }
+      return newSet;
+    });
+  };
+
+  const getModelCompletionStatus = (modelId: string) => {
+    const modelConfigs = configurations.filter(config => {
+      const year = modelYears.find(y => y.id === config.model_year_id);
+      return year?.motorcycle_id === modelId;
+    });
+
+    if (modelConfigs.length === 0) return { status: 'missing', count: 0, total: 0 };
+
+    let completeCount = 0;
+    modelConfigs.forEach(config => {
+      const validation = validateConfiguration(config, selectedModelData, selectedYearData, configurations);
+      if (validation.isValid && validation.completeness >= 80) {
+        completeCount++;
+      }
+    });
+
+    const completionRatio = completeCount / modelConfigs.length;
+    let status = 'missing';
+    if (completionRatio >= 0.8) status = 'complete';
+    else if (completionRatio >= 0.4) status = 'partial';
+
+    return { status, count: completeCount, total: modelConfigs.length };
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'complete': return <CheckCircle className="h-3 w-3 text-green-500" />;
+      case 'partial': return <Clock className="h-3 w-3 text-yellow-500" />;
+      default: return <AlertTriangle className="h-3 w-3 text-red-500" />;
+    }
   };
 
   return (
-    <div className="space-y-6 h-full">
-      {/* Enhanced Pinned Models Section */}
+    <div className="space-y-4">
+      {/* Current Selection */}
       <Card className="bg-explorer-card border-explorer-chrome/30">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-explorer-text flex items-center gap-2">
-            <Pin className="h-4 w-4 text-accent-teal" />
-            Pinned Models
-            <Badge variant="secondary" className="ml-auto">
-              {pinnedModels.length}/5
-            </Badge>
-          </CardTitle>
+        <CardHeader>
+          <CardTitle className="text-explorer-text text-sm">Current Selection</CardTitle>
         </CardHeader>
-        <CardContent>
-          {pinnedModels.length === 0 ? (
-            <div className="text-center py-4 text-explorer-text-muted text-sm">
-              No pinned models yet. Pin models you're working on for quick access.
+        <CardContent className="space-y-2">
+          {selectedModelData && (
+            <div>
+              <div className="text-xs text-explorer-text-muted">Model</div>
+              <div className="text-sm text-explorer-text">{selectedModelData.name}</div>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {pinnedModels.map((model) => (
-                <div
-                  key={model.id}
-                  className={`group flex items-center justify-between p-3 rounded-md border transition-colors ${
-                    selectedModel === model.id
-                      ? 'bg-accent-teal/20 border-accent-teal/30'
-                      : 'bg-explorer-dark hover:bg-explorer-chrome/10 border-explorer-chrome/20'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {getStatusIcon(model, 'model')}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {model.brand?.name || 'Unknown'} {model.name}
-                      </div>
-                      <div className="text-xs text-explorer-text-muted">
-                        {model.type} • {model.production_status}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleModelSelect(model.id)}
-                      className="h-6 w-6 opacity-70 hover:opacity-100"
-                      title="Select this model"
-                    >
-                      <Eye className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => unpinModel(model.id)}
-                      className="h-6 w-6 opacity-70 hover:opacity-100 text-orange-400 hover:text-orange-300"
-                      title="Unpin this model"
-                    >
-                      <PinOff className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+          )}
+          {selectedYearData && (
+            <div>
+              <div className="text-xs text-explorer-text-muted">Year</div>
+              <div className="text-sm text-explorer-text">{selectedYearData.year}</div>
+            </div>
+          )}
+          {selectedConfigData && (
+            <div>
+              <div className="text-xs text-explorer-text-muted">Configuration</div>
+              <div className="text-sm text-explorer-text">{selectedConfigData.name}</div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Context Navigation - Only show when model selected */}
-      {selectedModel && (
-        <Card className="bg-explorer-card border-explorer-chrome/30 flex-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-explorer-text flex items-center gap-2">
-              <Settings className="h-4 w-4 text-accent-teal" />
-              Context Navigation
-            </CardTitle>
-            {selectedModelData && (
-              <div className="text-sm text-explorer-text-muted">
-                {selectedModelData.brand?.name} {selectedModelData.name}
-              </div>
-            )}
-          </CardHeader>
-          <CardContent className="flex-1">
-            <Tabs defaultValue="years" className="h-full">
-              <TabsList className="grid w-full grid-cols-2 bg-explorer-dark border-explorer-chrome/30">
-                <TabsTrigger 
-                  value="years"
-                  className="data-[state=active]:bg-accent-teal data-[state=active]:text-black"
-                >
-                  <Calendar className="h-3 w-3 mr-1" />
-                  Years
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="trims"
-                  className="data-[state=active]:bg-accent-teal data-[state=active]:text-black"
-                >
-                  <Settings className="h-3 w-3 mr-1" />
-                  Trims
-                </TabsTrigger>
-              </TabsList>
+      {/* Pinned Models */}
+      <Card className="bg-explorer-card border-explorer-chrome/30">
+        <CardHeader>
+          <CardTitle className="text-explorer-text text-sm">Pinned Models</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {Array.from(pinnedModels).length === 0 ? (
+            <div className="text-xs text-explorer-text-muted">No pinned models</div>
+          ) : (
+            <div className="space-y-2">
+              {Array.from(pinnedModels).map(modelId => {
+                const model = models.find(m => m.id === modelId);
+                if (!model) return null;
+                
+                const completion = getModelCompletionStatus(modelId);
+                
+                return (
+                  <div 
+                    key={modelId}
+                    className="flex items-center justify-between p-2 rounded bg-explorer-dark cursor-pointer hover:bg-explorer-chrome/20"
+                    onClick={() => onModelSelect(modelId)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-explorer-text truncate">{model.name}</div>
+                      <div className="flex items-center gap-1 mt-1">
+                        {getStatusIcon(completion.status)}
+                        <span className="text-xs text-explorer-text-muted">
+                          {completion.count}/{completion.total} complete
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="p-1 h-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePinModel(modelId);
+                      }}
+                    >
+                      <PinOff className="h-3 w-3" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Available Models */}
+      <Card className="bg-explorer-card border-explorer-chrome/30">
+        <CardHeader>
+          <CardTitle className="text-explorer-text text-sm">Available Models</CardTitle>
+        </CardHeader>
+        <CardContent className="max-h-64 overflow-y-auto">
+          <div className="space-y-1">
+            {models.slice(0, 10).map(model => {
+              const isPinned = pinnedModels.has(model.id);
+              const completion = getModelCompletionStatus(model.id);
               
-              <TabsContent value="years" className="mt-4 space-y-2">
-                {modelYears.length === 0 ? (
-                  <div className="text-center py-4 text-explorer-text-muted text-sm">
-                    No years found for this model
+              return (
+                <div 
+                  key={model.id}
+                  className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-explorer-chrome/20 ${
+                    selectedModel === model.id ? 'bg-accent-teal/20' : ''
+                  }`}
+                  onClick={() => onModelSelect(model.id)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-explorer-text truncate">{model.name}</div>
+                    <div className="flex items-center gap-1 mt-1">
+                      {getStatusIcon(completion.status)}
+                      <span className="text-xs text-explorer-text-muted">
+                        {completion.count}/{completion.total}
+                      </span>
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-1 max-h-60 overflow-y-auto">
-                    {modelYears.map((year) => (
-                      <Button
-                        key={year.id}
-                        variant="ghost"
-                        onClick={() => handleYearSelect(year.id)}
-                        className={`w-full justify-start p-2 h-auto ${
-                          selectedYear === year.id
-                            ? 'bg-accent-teal/20 text-accent-teal'
-                            : 'hover:bg-explorer-chrome/10'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 w-full">
-                          {getStatusIcon(year, 'year')}
-                          <div className="flex-1 text-left">
-                            <div className="font-medium">{year.year}</div>
-                            {year.changes && (
-                              <div className="text-xs text-explorer-text-muted truncate">
-                                {year.changes}
-                              </div>
-                            )}
-                          </div>
-                          {year.is_available && (
-                            <Badge variant="secondary" className="text-xs">
-                              Available
-                            </Badge>
-                          )}
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="trims" className="mt-4 space-y-2">
-                {!selectedYear ? (
-                  <div className="text-center py-4 text-explorer-text-muted text-sm">
-                    Select a year to view trim levels
-                  </div>
-                ) : configurations.length === 0 ? (
-                  <div className="text-center py-4 text-explorer-text-muted text-sm">
-                    No trim levels found for this year
-                  </div>
-                ) : (
-                  <div className="space-y-1 max-h-60 overflow-y-auto">
-                    {configurations.map((config) => (
-                      <Button
-                        key={config.id}
-                        variant="ghost"
-                        onClick={() => handleConfigSelect(config.id)}
-                        className={`w-full justify-start p-2 h-auto ${
-                          selectedConfig === config.id
-                            ? 'bg-accent-teal/20 text-accent-teal'
-                            : 'hover:bg-explorer-chrome/10'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 w-full">
-                          {getStatusIcon(config, 'config')}
-                          <div className="flex-1 text-left">
-                            <div className="font-medium">
-                              {config.name || `Configuration ${config.id.slice(0, 8)}`}
-                            </div>
-                            {config.trim_level && (
-                              <div className="text-xs text-explorer-text-muted">
-                                {config.trim_level}
-                              </div>
-                            )}
-                          </div>
-                          {config.is_default && (
-                            <Badge variant="secondary" className="text-xs">
-                              Default
-                            </Badge>
-                          )}
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-auto"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePinModel(model.id);
+                    }}
+                  >
+                    {isPinned ? (
+                      <PinOff className="h-3 w-3" />
+                    ) : (
+                      <Pin className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
