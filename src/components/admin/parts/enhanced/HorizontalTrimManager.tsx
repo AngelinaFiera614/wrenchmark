@@ -87,7 +87,7 @@ const HorizontalTrimManager = ({
         return `${completeness.overall}% complete, ${validation.errors.length} errors, ${validation.warnings.length} warnings`;
 
       case 'notes':
-        return formData.notes ? 'Documentation added' : 'No notes added';
+        return (formData as any).notes ? 'Documentation added' : 'No notes added';
         
       default:
         return 'Section content';
@@ -187,7 +187,7 @@ const HorizontalTrimManager = ({
         <ExpandableSection
           id="notes"
           title="Notes & Documentation"
-          status={formData.notes ? 'complete' : 'missing'}
+          status={(formData as any).notes ? 'complete' : 'missing'}
           summary={getSectionSummary('notes')}
           isExpanded={expandedSection === 'notes'}
           onToggle={handleSectionToggle}
