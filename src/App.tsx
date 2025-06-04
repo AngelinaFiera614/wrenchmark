@@ -24,11 +24,13 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminModels from "@/pages/admin/AdminModels";
 import AdminBrands from "@/pages/admin/AdminBrands";
-import AdminEngines from "@/pages/admin/AdminEngines";
-import AdminBrakeSystems from "@/pages/admin/AdminBrakeSystems";
-import AdminFrames from "@/pages/admin/AdminFrames";
-import AdminSuspensions from "@/pages/admin/AdminSuspensions";
-import AdminWheels from "@/pages/admin/AdminWheels";
+import { 
+  AdminEnginesRedirect,
+  AdminBrakeSystemsRedirect,
+  AdminFramesRedirect,
+  AdminSuspensionsRedirect,
+  AdminWheelsRedirect
+} from "@/pages/admin";
 import AdminImages from "@/pages/admin/AdminImages";
 import AdminManuals from "@/pages/admin/AdminManuals";
 import AdminRidingSkills from "@/pages/admin/AdminRidingSkills";
@@ -73,11 +75,11 @@ function App() {
             <Route path="models" element={<AdminModels />} />
             <Route path="models/:slug" element={<ModelDetailPage />} />
             <Route path="brands" element={<AdminBrands />} />
-            <Route path="engines" element={<AdminEngines />} />
-            <Route path="brake-systems" element={<AdminBrakeSystems />} />
-            <Route path="frames" element={<AdminFrames />} />
-            <Route path="suspensions" element={<AdminSuspensions />} />
-            <Route path="wheels" element={<AdminWheels />} />
+            <Route path="engines" element={<AdminEnginesRedirect />} />
+            <Route path="brake-systems" element={<AdminBrakeSystemsRedirect />} />
+            <Route path="frames" element={<AdminFramesRedirect />} />
+            <Route path="suspensions" element={<AdminSuspensionsRedirect />} />
+            <Route path="wheels" element={<AdminWheelsRedirect />} />
             <Route path="enhanced-media" element={<AdminEnhancedMedia />} />
             <Route path="images" element={<AdminImages />} />
             <Route path="manuals" element={<AdminManuals />} />
