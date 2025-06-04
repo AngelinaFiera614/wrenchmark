@@ -1,9 +1,9 @@
 
 import React from "react";
-import EnhancedAdminPartsLayout from "@/components/admin/parts/enhanced/EnhancedAdminPartsLayout";
+import SimplifiedAdminPartsLayout from "@/components/admin/parts/enhanced/SimplifiedAdminPartsLayout";
 
 const AdminParts = () => {
-  return <EnhancedAdminPartsLayout />;
+  return <SimplifiedAdminPartsLayout />;
 };
 
 export default AdminParts;
