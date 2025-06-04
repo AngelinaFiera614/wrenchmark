@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Wrench, Disc, Box, Coil, Circle } from "lucide-react";
+import { Plus, Wrench, Disc, Box, Spring, Circle } from "lucide-react";
 import AdminEngineDialog from "@/components/admin/components/AdminEngineDialog";
 import AdminBrakeSystemDialog from "@/components/admin/components/AdminBrakeSystemDialog";
 import AdminFrameDialog from "@/components/admin/components/AdminFrameDialog";
@@ -31,7 +31,7 @@ const AddComponentDialog = ({
     { id: 'engines', label: 'Engine', icon: Wrench },
     { id: 'brakes', label: 'Brake System', icon: Disc },
     { id: 'frames', label: 'Frame', icon: Box },
-    { id: 'suspensions', label: 'Suspension', icon: Coil },
+    { id: 'suspensions', label: 'Suspension', icon: Spring },
     { id: 'wheels', label: 'Wheels', icon: Circle }
   ];
 
@@ -55,6 +55,7 @@ const AddComponentDialog = ({
         return (
           <AdminEngineDialog
             open={componentDialogOpen}
+            engine={null}
             onClose={handleComponentDialogClose}
           />
         );
@@ -62,6 +63,7 @@ const AddComponentDialog = ({
         return (
           <AdminBrakeSystemDialog
             open={componentDialogOpen}
+            brakeSystem={null}
             onClose={handleComponentDialogClose}
           />
         );
@@ -69,6 +71,7 @@ const AddComponentDialog = ({
         return (
           <AdminFrameDialog
             open={componentDialogOpen}
+            frame={null}
             onClose={handleComponentDialogClose}
           />
         );
@@ -76,6 +79,7 @@ const AddComponentDialog = ({
         return (
           <AdminSuspensionDialog
             open={componentDialogOpen}
+            suspension={null}
             onClose={handleComponentDialogClose}
           />
         );
@@ -83,6 +87,7 @@ const AddComponentDialog = ({
         return (
           <AdminWheelDialog
             open={componentDialogOpen}
+            wheel={null}
             onClose={handleComponentDialogClose}
           />
         );
