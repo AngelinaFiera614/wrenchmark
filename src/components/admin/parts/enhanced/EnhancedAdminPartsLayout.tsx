@@ -104,7 +104,20 @@ const EnhancedAdminPartsLayout = () => {
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
           {/* Left Sidebar - Context Sensitive */}
           <div className="xl:col-span-1">
-            <ContextSidebar {...adminData} />
+            <ContextSidebar 
+              selectedModel={adminData.selectedModel}
+              selectedYear={adminData.selectedYear}
+              selectedConfig={adminData.selectedConfig}
+              selectedModelData={adminData.selectedModelData}
+              selectedYearData={adminData.selectedYearData}
+              selectedConfigData={adminData.selectedConfigData}
+              models={adminData.models}
+              modelYears={adminData.modelYears}
+              configurations={adminData.configurations}
+              onModelSelect={adminData.handleModelSelect}
+              onYearSelect={adminData.handleYearSelect}
+              onConfigSelect={adminData.handleConfigSelect}
+            />
           </div>
 
           {/* Main Panel */}
@@ -141,7 +154,14 @@ const EnhancedAdminPartsLayout = () => {
                   
                   <TabsContent value="trim-manager" className="m-0 h-full">
                     <SplitViewTrimManager 
-                      {...adminData}
+                      selectedYear={adminData.selectedYear}
+                      selectedConfig={adminData.selectedConfig}
+                      selectedConfigData={adminData.selectedConfigData}
+                      selectedModelData={adminData.selectedModelData}
+                      selectedYearData={adminData.selectedYearData}
+                      configurations={adminData.configurations}
+                      handleConfigSelect={adminData.handleConfigSelect}
+                      refreshConfigurations={adminData.refreshConfigurations}
                       showPreview={showPreview}
                       isPreviewMode={isPreviewMode}
                       onTogglePreview={handleTogglePreview}
