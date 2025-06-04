@@ -3,8 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RotateCcw } from "lucide-react";
-import { useAdminPartsAssignmentOptimized } from "@/hooks/useAdminPartsAssignmentOptimized";
+import { useAdminPartsAssignmentRefactored } from "@/hooks/admin/useAdminPartsAssignmentRefactored";
 import { validateConfiguration } from "../validation/ValidationEngine";
+import { Configuration } from "@/types/motorcycle";
 import ContextSidebar from "./ContextSidebar";
 import MultiYearSelector from "./MultiYearSelector";
 import TrimLevelsSection from "./TrimLevelsSection";
@@ -17,7 +18,7 @@ const EnhancedAdminPartsLayout = () => {
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [editingConfig, setEditingConfig] = useState<any>(null);
   
-  const adminData = useAdminPartsAssignmentOptimized();
+  const adminData = useAdminPartsAssignmentRefactored();
 
   // Validation for current configuration
   const validation = validateConfiguration(
@@ -49,7 +50,7 @@ const EnhancedAdminPartsLayout = () => {
     // For multiple years, we'll need to fetch separately - but for now use what we have
     // This could be enhanced to fetch multi-year data if needed
     console.log("Multiple years selected, using available configurations");
-    return adminData.configurations.filter(config => 
+    return adminData.configurations.filter((config: Configuration) => 
       selectedYears.some(yearId => config.model_year_id === yearId)
     );
   }, [selectedYears, adminData.configurations, adminData.selectedYear]);
@@ -78,7 +79,7 @@ const EnhancedAdminPartsLayout = () => {
   };
 
   const handleSelectAllYears = () => {
-    const allYearIds = adminData.modelYears.map(year => year.id);
+    const allYearIds = adminData.modelYears.map((year: any) => year.id);
     console.log("Selecting all years:", allYearIds);
     setSelectedYears(allYearIds);
   };
