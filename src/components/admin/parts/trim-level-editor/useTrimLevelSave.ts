@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
-import { createConfiguration, updateConfiguration } from "@/services/models/configurationCore";
+import { createConfiguration, updateConfiguration } from "@/services/models/configurationService";
 
 const validateTrimLevelForm = (formData: any, modelYearIds: string[]) => {
   if (!formData.name || formData.name.trim().length === 0) {
@@ -88,9 +88,16 @@ export const useTrimLevelSave = (
         });
         
         if (onSave) {
-          // Return the first saved config for compatibility
-          console.log("Calling onSave callback with:", savedConfigs[0]);
-          onSave(savedConfigs[0]);
+          // For multiple configurations, call onSave for each one
+          if (isMultiple) {
+            savedConfigs.forEach((config, index) => {
+              console.log(`Calling onSave callback ${index + 1}/${savedConfigs.length} with:`, config);
+              setTimeout(() => onSave(config), index * 50); // Small delay between calls
+            });
+          } else {
+            console.log("Calling onSave callback with:", savedConfigs[0]);
+            onSave(savedConfigs[0]);
+          }
         }
       } else {
         throw new Error("No configuration data returned from save operation");

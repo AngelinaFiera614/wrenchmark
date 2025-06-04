@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
 import { fetchModelYears } from "@/services/models/modelYearService";
-import { fetchConfigurations } from "@/services/models/configurationService";
+import { fetchConfigurations, fetchConfigurationsForMultipleYears } from "@/services/models/configurationService";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,6 +38,7 @@ export const useAdminPartsAssignmentOptimized = () => {
     enabled: !!selectedModel,
   });
 
+  // Enhanced configurations query that handles both single and multiple years
   const { 
     data: configurations = [], 
     isLoading: configsLoading 
@@ -85,11 +87,16 @@ export const useAdminPartsAssignmentOptimized = () => {
     console.log("Refreshing configurations for years:", yearIds);
     
     if (yearIds && yearIds.length > 0) {
-      // Refresh specific years
+      // Refresh specific years - invalidate each year's cache
       yearIds.forEach(yearId => {
         queryClient.invalidateQueries({ 
           queryKey: ["configurations", yearId] 
         });
+      });
+      
+      // Also refresh multi-year queries if they exist
+      queryClient.invalidateQueries({ 
+        queryKey: ["configurations-multi", ...yearIds.sort()] 
       });
     } else if (selectedYear) {
       // Refresh currently selected year
@@ -98,11 +105,37 @@ export const useAdminPartsAssignmentOptimized = () => {
       });
     }
     
-    // Also refresh the general configurations query
+    // Also refresh the general configurations query pattern
     queryClient.invalidateQueries({ 
-      queryKey: ["configurations"] 
+      queryKey: ["configurations"], 
+      exact: false 
     });
+    
+    // Force a refetch of the current configurations
+    if (selectedYear) {
+      queryClient.refetchQueries({
+        queryKey: ["configurations", selectedYear]
+      });
+    }
   }, [queryClient, selectedYear]);
+
+  // Function to fetch configurations for multiple years (used by components)
+  const fetchConfigurationsForYears = useCallback(async (yearIds: string[]): Promise<Configuration[]> => {
+    if (yearIds.length === 0) return [];
+    
+    try {
+      const configs = await fetchConfigurationsForMultipleYears(yearIds);
+      return configs;
+    } catch (error) {
+      console.error("Error fetching configurations for multiple years:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch configurations for selected years."
+      });
+      return [];
+    }
+  }, [toast]);
 
   // Reset selections when data changes
   useEffect(() => {
@@ -148,6 +181,7 @@ export const useAdminPartsAssignmentOptimized = () => {
     handlePreviewConfig,
     handleComponentLinked,
     refreshConfigurations,
+    fetchConfigurationsForYears,
     setActiveTab,
     setShowPreview,
   };

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -77,13 +78,24 @@ const EnhancedAdminPartsLayout = () => {
     setIsCreatingNew(false);
     setEditingConfig(null);
     
-    // Refresh configurations for all selected years
-    adminData.refreshConfigurations(selectedYears);
+    // Enhanced refresh logic for multi-year operations
+    const yearsToRefresh = selectedYears.length > 0 ? selectedYears : (savedConfig?.model_year_id ? [savedConfig.model_year_id] : []);
     
-    // If we have a saved config, select it
-    if (savedConfig?.id) {
-      adminData.handleConfigSelect(savedConfig.id);
-    }
+    console.log("Refreshing configurations for years:", yearsToRefresh);
+    adminData.refreshConfigurations(yearsToRefresh);
+    
+    // Small delay to ensure cache invalidation completes
+    setTimeout(() => {
+      // If we have a saved config, select it
+      if (savedConfig?.id) {
+        adminData.handleConfigSelect(savedConfig.id);
+        
+        // If the saved config year isn't selected, select it
+        if (savedConfig.model_year_id && adminData.selectedYear !== savedConfig.model_year_id) {
+          adminData.handleYearSelect(savedConfig.model_year_id);
+        }
+      }
+    }, 100);
   };
 
   const handleCancelEdit = () => {
