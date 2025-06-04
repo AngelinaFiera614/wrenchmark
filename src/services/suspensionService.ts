@@ -12,6 +12,7 @@ export interface Suspension {
   rear_travel_mm?: number;
   front_brand?: string;
   rear_brand?: string;
+  notes?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -29,9 +30,7 @@ export const fetchSuspensions = async (): Promise<Suspension[]> => {
   // Add computed name field for display
   return (data || []).map(suspension => ({
     ...suspension,
-    name: suspension.brand || 
-          `${suspension.front_type || 'Unknown'} / ${suspension.rear_type || 'Unknown'}` ||
-          'Unnamed Suspension'
+    name: `${suspension.front_type || 'Unknown'} / ${suspension.rear_type || 'Unknown'}`
   }));
 };
 
@@ -48,9 +47,7 @@ export const createSuspension = async (suspensionData: Omit<Suspension, 'id' | '
 
   return {
     ...data,
-    name: data.brand || 
-          `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}` ||
-          'Unnamed Suspension'
+    name: `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}`
   };
 };
 
@@ -68,9 +65,7 @@ export const updateSuspension = async (id: string, suspensionData: Partial<Suspe
 
   return {
     ...data,
-    name: data.brand || 
-          `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}` ||
-          'Unnamed Suspension'
+    name: `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}`
   };
 };
 
@@ -98,8 +93,6 @@ export const fetchSuspensionById = async (id: string): Promise<Suspension> => {
 
   return {
     ...data,
-    name: data.brand || 
-          `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}` ||
-          'Unnamed Suspension'
+    name: `${data.front_type || 'Unknown'} / ${data.rear_type || 'Unknown'}`
   };
 };

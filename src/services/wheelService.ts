@@ -30,9 +30,7 @@ export const fetchWheels = async (): Promise<Wheel[]> => {
   // Add computed name field for display
   return (data || []).map(wheel => ({
     ...wheel,
-    name: wheel.type || 
-          `${wheel.front_size || 'Unknown'} / ${wheel.rear_size || 'Unknown'}` ||
-          'Unnamed Wheel'
+    name: `${wheel.type || 'Wheel Set'} - ${wheel.front_size || 'Unknown'}/${wheel.rear_size || 'Unknown'}`
   }));
 };
 
@@ -49,9 +47,7 @@ export const createWheel = async (wheelData: Omit<Wheel, 'id' | 'created_at' | '
 
   return {
     ...data,
-    name: data.type || 
-          `${data.front_size || 'Unknown'} / ${data.rear_size || 'Unknown'}` ||
-          'Unnamed Wheel'
+    name: `${data.type || 'Wheel Set'} - ${data.front_size || 'Unknown'}/${data.rear_size || 'Unknown'}`
   };
 };
 
@@ -69,9 +65,7 @@ export const updateWheel = async (id: string, wheelData: Partial<Wheel>): Promis
 
   return {
     ...data,
-    name: data.type || 
-          `${data.front_size || 'Unknown'} / ${data.rear_size || 'Unknown'}` ||
-          'Unnamed Wheel'
+    name: `${data.type || 'Wheel Set'} - ${data.front_size || 'Unknown'}/${data.rear_size || 'Unknown'}`
   };
 };
 
@@ -88,7 +82,7 @@ export const deleteWheel = async (id: string): Promise<void> => {
 
 export const fetchWheelById = async (id: string): Promise<Wheel> => {
   const { data, error } = await supabase
-    .from('wheels')
+    .from('suspensions')
     .select('*')
     .eq('id', id)
     .single();
@@ -99,8 +93,6 @@ export const fetchWheelById = async (id: string): Promise<Wheel> => {
 
   return {
     ...data,
-    name: data.type || 
-          `${data.front_size || 'Unknown'} / ${data.rear_size || 'Unknown'}` ||
-          'Unnamed Wheel'
+    name: `${data.type || 'Wheel Set'} - ${data.front_size || 'Unknown'}/${data.rear_size || 'Unknown'}`
   };
 };
