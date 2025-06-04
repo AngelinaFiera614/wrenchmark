@@ -72,6 +72,7 @@ export const useTrimLevelSave = (
           const savedConfig = await createConfiguration(configDataForYear);
           if (savedConfig) {
             savedConfigs.push(savedConfig);
+            console.log(`Successfully created configuration for year ${modelYearId}:`, savedConfig);
           }
         }
       }
@@ -88,6 +89,7 @@ export const useTrimLevelSave = (
         
         if (onSave) {
           // Return the first saved config for compatibility
+          console.log("Calling onSave callback with:", savedConfigs[0]);
           onSave(savedConfigs[0]);
         }
       } else {

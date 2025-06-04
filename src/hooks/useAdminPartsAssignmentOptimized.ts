@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
 import { fetchModelYears } from "@/services/models/modelYearService";
@@ -82,9 +81,28 @@ export const useAdminPartsAssignmentOptimized = () => {
     });
   };
 
-  const refreshConfigurations = () => {
-    queryClient.invalidateQueries({ queryKey: ["configurations", selectedYear] });
-  };
+  const refreshConfigurations = useCallback((yearIds?: string[]) => {
+    console.log("Refreshing configurations for years:", yearIds);
+    
+    if (yearIds && yearIds.length > 0) {
+      // Refresh specific years
+      yearIds.forEach(yearId => {
+        queryClient.invalidateQueries({ 
+          queryKey: ["configurations", yearId] 
+        });
+      });
+    } else if (selectedYear) {
+      // Refresh currently selected year
+      queryClient.invalidateQueries({ 
+        queryKey: ["configurations", selectedYear] 
+      });
+    }
+    
+    // Also refresh the general configurations query
+    queryClient.invalidateQueries({ 
+      queryKey: ["configurations"] 
+    });
+  }, [queryClient, selectedYear]);
 
   // Reset selections when data changes
   useEffect(() => {

@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +64,14 @@ const TrimLevelsSection = ({
     }
     onCreateNew(selectedYears);
   };
+
+  useEffect(() => {
+    console.log("TrimLevelsSection: Configurations updated", {
+      selectedYears,
+      configurationsCount: configurations.length,
+      configurations: configurations.map(c => ({ id: c.id, name: c.name, model_year_id: c.model_year_id }))
+    });
+  }, [configurations, selectedYears]);
 
   if (selectedYears.length === 0) {
     return (

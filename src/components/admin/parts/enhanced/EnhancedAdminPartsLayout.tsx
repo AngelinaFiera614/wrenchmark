@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -77,8 +76,14 @@ const EnhancedAdminPartsLayout = () => {
     console.log("Configuration saved:", savedConfig);
     setIsCreatingNew(false);
     setEditingConfig(null);
-    adminData.refreshConfigurations();
-    adminData.handleConfigSelect(savedConfig.id);
+    
+    // Refresh configurations for all selected years
+    adminData.refreshConfigurations(selectedYears);
+    
+    // If we have a saved config, select it
+    if (savedConfig?.id) {
+      adminData.handleConfigSelect(savedConfig.id);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -210,7 +215,7 @@ const EnhancedAdminPartsLayout = () => {
                       configurations={adminData.configurations}
                       selectedConfig={adminData.selectedConfig}
                       onConfigSelect={adminData.handleConfigSelect}
-                      onConfigChange={adminData.refreshConfigurations}
+                      onConfigChange={() => adminData.refreshConfigurations()}
                       validation={validation}
                       onEditConfig={handleEditConfig}
                     />
