@@ -84,14 +84,35 @@ export const fetchConfigurations = async (modelYearId: string): Promise<Configur
         frame:frames(*),
         suspension:suspensions(*),
         wheels:wheels(*),
-        color:color_variants(*)
+        color:color_options(*)
       `)
       .eq('model_year_id', modelYearId)
       .order('name');
       
     if (error) {
       console.error("Error fetching configurations:", error);
-      throw new Error(`Failed to fetch configurations: ${error.message}`);
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      
+      // Try a simpler query without joins if the main query fails
+      console.log("Attempting fallback query without joins...");
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('model_configurations')
+        .select('*')
+        .eq('model_year_id', modelYearId)
+        .order('name');
+        
+      if (fallbackError) {
+        console.error("Fallback query also failed:", fallbackError);
+        throw new Error(`Failed to fetch configurations: ${error.message}`);
+      }
+      
+      console.log("Fallback query succeeded, returning basic configuration data:", fallbackData);
+      return fallbackData || [];
     }
     
     console.log("Configurations fetched successfully:", data);

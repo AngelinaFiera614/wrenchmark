@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
@@ -70,10 +69,16 @@ export const useTrimLevelSave = (
           };
           
           console.log(`Creating configuration for year ${modelYearId}:`, configDataForYear);
-          const savedConfig = await createConfiguration(configDataForYear);
-          if (savedConfig) {
-            savedConfigs.push(savedConfig);
-            console.log(`Successfully created configuration for year ${modelYearId}:`, savedConfig);
+          
+          try {
+            const savedConfig = await createConfiguration(configDataForYear);
+            if (savedConfig) {
+              savedConfigs.push(savedConfig);
+              console.log(`Successfully created configuration for year ${modelYearId}:`, savedConfig);
+            }
+          } catch (yearError) {
+            console.error(`Failed to create configuration for year ${modelYearId}:`, yearError);
+            // Continue with other years but log the error
           }
         }
       }
@@ -89,16 +94,8 @@ export const useTrimLevelSave = (
         });
         
         if (onSave) {
-          // For multiple configurations, call onSave for each one
-          if (isMultiple) {
-            console.log("Calling onSave for multiple configurations");
-            // Call onSave with the first configuration as the primary one
-            // The parent component can handle multi-year refresh logic
-            onSave(savedConfigs[0]);
-          } else {
-            console.log("Calling onSave callback with:", savedConfigs[0]);
-            onSave(savedConfigs[0]);
-          }
+          console.log("Calling onSave callback with primary configuration:", savedConfigs[0]);
+          onSave(savedConfigs[0]);
         }
       } else {
         throw new Error("No configuration data returned from save operation");

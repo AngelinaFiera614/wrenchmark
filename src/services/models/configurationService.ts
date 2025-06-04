@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Configuration } from "@/types/motorcycle";
 import { 
@@ -32,14 +31,35 @@ export const fetchConfigurationsForMultipleYears = async (modelYearIds: string[]
         frame:frames(*),
         suspension:suspensions(*),
         wheels:wheels(*),
-        color:color_variants(*)
+        color:color_options(*)
       `)
       .in('model_year_id', modelYearIds)
       .order('name');
       
     if (error) {
       console.error("Error fetching configurations for multiple years:", error);
-      throw new Error(`Failed to fetch configurations: ${error.message}`);
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      
+      // Try a simpler query without joins if the main query fails
+      console.log("Attempting fallback query without joins for multiple years...");
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('model_configurations')
+        .select('*')
+        .in('model_year_id', modelYearIds)
+        .order('name');
+        
+      if (fallbackError) {
+        console.error("Fallback query for multiple years also failed:", fallbackError);
+        throw new Error(`Failed to fetch configurations: ${error.message}`);
+      }
+      
+      console.log("Fallback query for multiple years succeeded:", fallbackData);
+      return fallbackData || [];
     }
     
     console.log("Configurations fetched successfully for multiple years:", data);

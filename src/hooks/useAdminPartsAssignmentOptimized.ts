@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
@@ -20,33 +19,74 @@ export const useAdminPartsAssignmentOptimized = () => {
   const [activeTab, setActiveTab] = useState("navigator");
   const [showPreview, setShowPreview] = useState(false);
 
-  // Data queries with proper typing
+  // Data queries with proper typing and enhanced error handling
   const { 
     data: models = [], 
-    isLoading: modelsLoading 
+    isLoading: modelsLoading,
+    error: modelsError
   } = useQuery<MotorcycleModel[]>({
     queryKey: ["motorcycle-models"],
     queryFn: fetchAllMotorcycleModels,
+    onError: (error) => {
+      console.error("Error fetching motorcycle models:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Loading Models",
+        description: "Failed to load motorcycle models. Please try refreshing."
+      });
+    }
   });
 
   const { 
     data: modelYears = [], 
-    isLoading: yearsLoading 
+    isLoading: yearsLoading,
+    error: yearsError
   } = useQuery<ModelYear[]>({
     queryKey: ["model-years", selectedModel],
     queryFn: () => selectedModel ? fetchModelYears(selectedModel) : Promise.resolve([]),
     enabled: !!selectedModel,
+    onError: (error) => {
+      console.error("Error fetching model years:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Loading Model Years",
+        description: "Failed to load model years. Please try again."
+      });
+    }
   });
 
-  // Enhanced configurations query that handles both single and multiple years
+  // Enhanced configurations query with better error handling
   const { 
     data: configurations = [], 
     isLoading: configsLoading,
+    error: configsError,
     refetch: refetchConfigurations
   } = useQuery<Configuration[]>({
     queryKey: ["configurations", selectedYear],
-    queryFn: () => selectedYear ? fetchConfigurations(selectedYear) : Promise.resolve([]),
+    queryFn: () => {
+      if (!selectedYear) {
+        console.log("No selected year, returning empty configurations");
+        return Promise.resolve([]);
+      }
+      console.log("Fetching configurations for year:", selectedYear);
+      return fetchConfigurations(selectedYear);
+    },
     enabled: !!selectedYear,
+    onError: (error) => {
+      console.error("Error fetching configurations:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Loading Configurations",
+        description: "Failed to load trim configurations. Please try again."
+      });
+    },
+    onSuccess: (data) => {
+      console.log("Configurations query successful:", {
+        yearId: selectedYear,
+        count: data.length,
+        configurations: data.map(c => ({ id: c.id, name: c.name }))
+      });
+    }
   });
 
   // Derived data with proper typing
@@ -130,6 +170,15 @@ export const useAdminPartsAssignmentOptimized = () => {
       
       console.log("Cache invalidation completed successfully");
       
+      // Add a small delay and then log what we have in cache
+      setTimeout(() => {
+        console.log("Post-refresh configurations check:", {
+          selectedYear,
+          configurationsCount: configurations.length,
+          configsError: configsError?.message
+        });
+      }, 100);
+      
     } catch (error) {
       console.error("Error during cache refresh:", error);
       toast({
@@ -138,7 +187,7 @@ export const useAdminPartsAssignmentOptimized = () => {
         description: "Failed to refresh configuration data."
       });
     }
-  }, [queryClient, selectedYear, refetchConfigurations, toast]);
+  }, [queryClient, selectedYear, refetchConfigurations, toast, configurations.length, configsError]);
 
   // Function to fetch configurations for multiple years (used by components)
   const fetchConfigurationsForYears = useCallback(async (yearIds: string[]): Promise<Configuration[]> => {
@@ -184,7 +233,7 @@ export const useAdminPartsAssignmentOptimized = () => {
     }
   }, [configurations, selectedConfig]);
 
-  // Debug logging
+  // Debug logging with error information
   useEffect(() => {
     console.log("=== HOOK STATE UPDATE ===");
     console.log("Selected model:", selectedModel);
@@ -192,7 +241,12 @@ export const useAdminPartsAssignmentOptimized = () => {
     console.log("Selected config:", selectedConfig);
     console.log("Configurations count:", configurations.length);
     console.log("Model years count:", modelYears.length);
-  }, [selectedModel, selectedYear, selectedConfig, configurations.length, modelYears.length]);
+    console.log("Errors:", {
+      modelsError: modelsError?.message,
+      yearsError: yearsError?.message,
+      configsError: configsError?.message
+    });
+  }, [selectedModel, selectedYear, selectedConfig, configurations.length, modelYears.length, modelsError, yearsError, configsError]);
 
   return {
     // Selection state
@@ -216,6 +270,11 @@ export const useAdminPartsAssignmentOptimized = () => {
     modelsLoading,
     yearsLoading,
     configsLoading,
+    
+    // Error states
+    modelsError,
+    yearsError,
+    configsError,
     
     // Handlers
     handleModelSelect,
