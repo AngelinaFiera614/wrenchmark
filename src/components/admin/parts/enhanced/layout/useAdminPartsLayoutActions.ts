@@ -56,7 +56,11 @@ export const useAdminPartsLayoutActions = ({
 
   const handleCreateNew = useCallback((yearIds?: string[]) => {
     if (!adminData.selectedModel) {
-      alert("Please select a model first");
+      toast({
+        variant: "destructive",
+        title: "No Model Selected",
+        description: "Please select a motorcycle model first."
+      });
       return;
     }
     
@@ -64,7 +68,11 @@ export const useAdminPartsLayoutActions = ({
     const yearsToUse = yearIds ? yearIds : selectedYears.length > 0 ? selectedYears : adminData.selectedYear ? [adminData.selectedYear] : [];
     
     if (yearsToUse.length === 0) {
-      alert("Please select at least one model year");
+      toast({
+        variant: "destructive",
+        title: "No Year Selected",
+        description: "Please select at least one model year."
+      });
       return;
     }
     
@@ -72,7 +80,7 @@ export const useAdminPartsLayoutActions = ({
     setSelectedYears(yearsToUse);
     setEditingConfig(null);
     setIsCreatingNew(true);
-  }, [adminData.selectedModel, selectedYears, adminData.selectedYear, setSelectedYears, setEditingConfig, setIsCreatingNew]);
+  }, [adminData.selectedModel, selectedYears, adminData.selectedYear, setSelectedYears, setEditingConfig, setIsCreatingNew, toast]);
 
   const handleEditConfig = useCallback((config: any) => {
     console.log("Editing configuration:", config);
@@ -83,9 +91,19 @@ export const useAdminPartsLayoutActions = ({
 
   const handleCopyConfig = useCallback((config: any) => {
     console.log("Opening copy dialog for configuration:", config);
+    
+    if (!adminData.modelYears || adminData.modelYears.length <= 1) {
+      toast({
+        variant: "destructive",
+        title: "Copy Not Available",
+        description: "Need multiple model years to copy configurations."
+      });
+      return;
+    }
+
     setCopySourceConfig(config);
     setCopyDialogOpen(true);
-  }, []);
+  }, [adminData.modelYears, toast]);
 
   const handleCopyDialogClose = useCallback(() => {
     setCopyDialogOpen(false);
@@ -97,28 +115,38 @@ export const useAdminPartsLayoutActions = ({
     setCopyDialogOpen(false);
     setCopySourceConfig(null);
     
-    // Refresh all configurations
-    await adminData.refreshConfigurations(selectedYears.length > 0 ? selectedYears : [adminData.selectedYear]);
-    
-    toast({
-      title: "Copy Successful",
-      description: "Trim level has been copied to the selected years.",
-    });
+    try {
+      // Refresh all configurations for affected years
+      const yearsToRefresh = selectedYears.length > 0 ? selectedYears : [adminData.selectedYear];
+      await adminData.refreshConfigurations(yearsToRefresh);
+      
+      toast({
+        title: "Copy Successful",
+        description: "Configuration has been copied to the selected years.",
+      });
+    } catch (error) {
+      console.error("Error refreshing after copy:", error);
+      toast({
+        variant: "destructive",
+        title: "Refresh Warning",
+        description: "Copy completed but failed to refresh data. Please refresh manually.",
+      });
+    }
   }, [selectedYears, adminData, toast]);
 
   const handleDeleteConfig = useCallback(async (config: any) => {
     console.log("Deleting configuration:", config);
     
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the trim level "${config.name || 'Unnamed'}"? This action cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+
     try {
       // Import and use the delete service
       const { deleteConfiguration } = await import("@/services/models/configurationService");
       
-      const confirmed = window.confirm(
-        `Are you sure you want to delete the trim level "${config.name || 'Unnamed'}"? This action cannot be undone.`
-      );
-      
-      if (!confirmed) return;
-
       await deleteConfiguration(config.id);
       
       toast({
@@ -146,22 +174,39 @@ export const useAdminPartsLayoutActions = ({
 
   const handleManageComponents = useCallback(() => {
     console.log("Opening component library...");
-    // Implement component management
+    // Component management is handled within the ComponentsSection
   }, []);
 
   const handleBulkAssign = useCallback(() => {
     console.log("Opening bulk assign dialog...");
-    // Implement bulk assignment
-  }, []);
+    toast({
+      title: "Coming Soon",
+      description: "Bulk assignment feature is being developed."
+    });
+  }, [toast]);
 
   const handleRefreshData = useCallback(async () => {
     console.log("Manual refresh triggered for selected years:", selectedYears);
-    if (selectedYears.length > 0) {
-      await adminData.refreshConfigurations(selectedYears);
-    } else if (adminData.selectedYear) {
-      await adminData.refreshConfigurations([adminData.selectedYear]);
+    try {
+      if (selectedYears.length > 0) {
+        await adminData.refreshConfigurations(selectedYears);
+      } else if (adminData.selectedYear) {
+        await adminData.refreshConfigurations([adminData.selectedYear]);
+      }
+      
+      toast({
+        title: "Data Refreshed",
+        description: "Configuration data has been updated."
+      });
+    } catch (error) {
+      console.error("Error during manual refresh:", error);
+      toast({
+        variant: "destructive",
+        title: "Refresh Failed",
+        description: "Failed to refresh data. Please try again."
+      });
     }
-  }, [selectedYears, adminData]);
+  }, [selectedYears, adminData, toast]);
 
   const handleSaveConfig = useCallback(async (savedConfig: any) => {
     console.log("=== CONFIGURATION SAVED ===");
@@ -193,11 +238,21 @@ export const useAdminPartsLayoutActions = ({
           }
         }
       }, 100);
+
+      toast({
+        title: "Configuration Saved",
+        description: `"${savedConfig?.name || 'Configuration'}" has been saved successfully.`
+      });
       
     } catch (error) {
       console.error("Error during configuration save callback:", error);
+      toast({
+        variant: "destructive",
+        title: "Save Warning",
+        description: "Configuration saved but failed to refresh data. Please refresh manually."
+      });
     }
-  }, [selectedYears, setIsCreatingNew, setEditingConfig, adminData]);
+  }, [selectedYears, setIsCreatingNew, setEditingConfig, adminData, toast]);
 
   const handleCancelEdit = useCallback(() => {
     console.log("Cancelling trim edit");
@@ -220,7 +275,7 @@ export const useAdminPartsLayoutActions = ({
     handleRefreshData,
     handleSaveConfig,
     handleCancelEdit,
-    // New copy dialog state and handlers
+    // Enhanced copy dialog state and handlers
     copyDialogOpen,
     copySourceConfig,
     handleCopyDialogClose,

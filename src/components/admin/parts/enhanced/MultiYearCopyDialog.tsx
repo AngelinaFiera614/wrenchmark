@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Copy, AlertTriangle, CheckCircle } from "lucide-react";
+import { Copy, AlertTriangle, CheckCircle, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration, ModelYear } from "@/types/motorcycle";
-import { copyConfigurationToMultipleYears } from "@/services/models/configurationCopy";
+import { copyConfigurationToMultipleYears, getYearsWithExistingConfigs } from "@/services/models/configurationCopy";
 
 interface MultiYearCopyDialogProps {
   open: boolean;
@@ -17,6 +17,13 @@ interface MultiYearCopyDialogProps {
   sourceConfiguration: Configuration;
   availableModelYears: ModelYear[];
   onSuccess: () => void;
+}
+
+interface CopyOptions {
+  copyComponents: boolean;
+  copyDimensions: boolean;
+  copyBasicInfo: boolean;
+  allowOverwrite: boolean;
 }
 
 const MultiYearCopyDialog = ({
@@ -29,7 +36,8 @@ const MultiYearCopyDialog = ({
   const { toast } = useToast();
   const [copying, setCopying] = useState(false);
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
-  const [copyOptions, setCopyOptions] = useState({
+  const [yearsWithExisting, setYearsWithExisting] = useState<Set<string>>(new Set());
+  const [copyOptions, setCopyOptions] = useState<CopyOptions>({
     copyComponents: true,
     copyDimensions: true,
     copyBasicInfo: true,
@@ -50,8 +58,24 @@ const MultiYearCopyDialog = ({
         copyBasicInfo: true,
         allowOverwrite: false
       });
+      loadExistingConfigurations();
     }
-  }, [open]);
+  }, [open, sourceConfiguration.name]);
+
+  const loadExistingConfigurations = async () => {
+    if (!sourceConfiguration.name || targetYears.length === 0) return;
+    
+    try {
+      // Get the motorcycle ID from the source configuration
+      const sourceYear = availableModelYears.find(y => y.id === sourceConfiguration.model_year_id);
+      if (sourceYear?.motorcycle_id) {
+        const existing = await getYearsWithExistingConfigs(sourceYear.motorcycle_id, sourceConfiguration.name);
+        setYearsWithExisting(existing);
+      }
+    } catch (error) {
+      console.error("Error loading existing configurations:", error);
+    }
+  };
 
   const handleYearToggle = (yearId: string) => {
     setSelectedYears(prev => 
@@ -69,15 +93,47 @@ const MultiYearCopyDialog = ({
     setSelectedYears([]);
   };
 
-  const handleCopy = async () => {
+  const getActionSummary = () => {
+    const createYears = selectedYears.filter(yearId => !yearsWithExisting.has(yearId));
+    const updateYears = selectedYears.filter(yearId => yearsWithExisting.has(yearId));
+    
+    return { createYears, updateYears };
+  };
+
+  const validateCopyOptions = () => {
     if (selectedYears.length === 0) {
       toast({
         variant: "destructive",
         title: "No Years Selected",
         description: "Please select at least one model year to copy to."
       });
-      return;
+      return false;
     }
+
+    const { updateYears } = getActionSummary();
+    if (updateYears.length > 0 && !copyOptions.allowOverwrite) {
+      toast({
+        variant: "destructive",
+        title: "Overwrite Required",
+        description: `${updateYears.length} year(s) have existing configurations. Enable "Allow Overwrite" to update them.`
+      });
+      return false;
+    }
+
+    if (!copyOptions.copyBasicInfo && !copyOptions.copyComponents && !copyOptions.copyDimensions) {
+      toast({
+        variant: "destructive",
+        title: "Nothing to Copy",
+        description: "Please select at least one category of data to copy."
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleCopy = async () => {
+    if (!validateCopyOptions()) return;
 
     setCopying(true);
     try {
@@ -93,26 +149,38 @@ const MultiYearCopyDialog = ({
         }
       );
 
-      const successCount = results.filter(r => r.success).length;
-      const failureCount = results.filter(r => !r.success).length;
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+      const created = successful.filter(r => r.action === 'created');
+      const updated = successful.filter(r => r.action === 'updated');
 
-      if (successCount > 0) {
+      if (successful.length > 0) {
+        let message = `Successfully processed ${successful.length} year${successful.length > 1 ? 's' : ''}`;
+        if (created.length > 0 && updated.length > 0) {
+          message += ` (${created.length} created, ${updated.length} updated)`;
+        } else if (created.length > 0) {
+          message += ` (${created.length} created)`;
+        } else if (updated.length > 0) {
+          message += ` (${updated.length} updated)`;
+        }
+
         toast({
           title: "Copy Successful",
-          description: `Successfully copied "${sourceConfiguration.name}" to ${successCount} model year${successCount > 1 ? 's' : ''}.${failureCount > 0 ? ` ${failureCount} failed.` : ''}`
+          description: message
         });
+
+        onSuccess();
+        onClose();
       }
 
-      if (failureCount > 0 && successCount === 0) {
+      if (failed.length > 0) {
+        console.error("Copy failures:", failed);
         toast({
           variant: "destructive",
-          title: "Copy Failed",
-          description: `Failed to copy to any of the selected years. Check for existing configurations with the same name.`
+          title: "Partial Failure",
+          description: `${failed.length} year(s) failed to copy. Check console for details.`
         });
       }
-
-      onSuccess();
-      onClose();
     } catch (error: any) {
       console.error("Error copying configuration:", error);
       toast({
@@ -125,33 +193,27 @@ const MultiYearCopyDialog = ({
     }
   };
 
-  const getSelectedYearNames = () => {
-    return selectedYears
-      .map(id => targetYears.find(year => year.id === id)?.year)
-      .filter(Boolean)
-      .sort((a, b) => b - a)
-      .join(", ");
-  };
+  const { createYears, updateYears } = getActionSummary();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Copy className="h-5 w-5" />
-            Copy Trim Level to Multiple Years
+            Copy "{sourceConfiguration.name}" to Multiple Years
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Source Configuration */}
+          {/* Source Configuration Info */}
           <Card className="bg-explorer-card border-explorer-chrome/30">
             <CardHeader className="pb-3">
               <CardTitle className="text-explorer-text">
-                Source: {sourceConfiguration.name || "Standard"}
+                Source Configuration
               </CardTitle>
               <CardDescription>
-                From {targetYears.find(y => y.id === sourceConfiguration.model_year_id)?.year || "Unknown Year"}
+                {availableModelYears.find(y => y.id === sourceConfiguration.model_year_id)?.year || "Unknown Year"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -179,136 +241,205 @@ const MultiYearCopyDialog = ({
                   </div>
                 </div>
                 <div>
-                  <div className="font-medium text-explorer-text">Price:</div>
+                  <div className="font-medium text-explorer-text">Pricing:</div>
                   <div className="text-explorer-text-muted">
-                    {sourceConfiguration.msrp_usd 
-                      ? `$${sourceConfiguration.msrp_usd.toLocaleString()}`
-                      : "Not set"}
+                    {sourceConfiguration.price_premium_usd 
+                      ? `$${sourceConfiguration.price_premium_usd.toLocaleString()} premium`
+                      : "No premium"}
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Year Selection */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium text-explorer-text">
-                Select Target Years ({selectedYears.length} selected)
-              </Label>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSelectAll}
-                  className="text-xs"
-                >
-                  Select All
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearAll}
-                  className="text-xs"
-                >
-                  Clear All
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-3 max-h-40 overflow-y-auto">
-              {targetYears.map((year) => (
-                <div key={year.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`year-${year.id}`}
-                    checked={selectedYears.includes(year.id)}
-                    onCheckedChange={() => handleYearToggle(year.id)}
-                  />
-                  <Label
-                    htmlFor={`year-${year.id}`}
-                    className="text-sm text-explorer-text cursor-pointer"
-                  >
-                    {year.year}
-                  </Label>
-                </div>
-              ))}
-            </div>
-
-            {selectedYears.length > 0 && (
-              <div className="p-3 bg-accent-teal/10 rounded border border-accent-teal/30">
-                <div className="text-sm text-explorer-text">
-                  <strong>Selected years:</strong> {getSelectedYearNames()}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Copy Options */}
-          <div className="space-y-4">
-            <Label className="text-sm font-medium text-explorer-text">Copy Options</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="copyBasicInfo"
-                  checked={copyOptions.copyBasicInfo}
-                  onCheckedChange={(checked) => 
-                    setCopyOptions(prev => ({ ...prev, copyBasicInfo: !!checked }))
-                  }
-                />
-                <Label htmlFor="copyBasicInfo" className="text-sm text-explorer-text">
-                  Basic Information
-                </Label>
-              </div>
+          <Card className="bg-explorer-card border-explorer-chrome/30">
+            <CardHeader>
+              <CardTitle className="text-explorer-text">What to Copy</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="copyBasicInfo"
+                      checked={copyOptions.copyBasicInfo}
+                      onCheckedChange={(checked) => 
+                        setCopyOptions(prev => ({ ...prev, copyBasicInfo: !!checked }))
+                      }
+                    />
+                    <Label htmlFor="copyBasicInfo" className="text-explorer-text">
+                      Basic Information
+                      <div className="text-xs text-explorer-text-muted">Name, region, pricing</div>
+                    </Label>
+                  </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="copyComponents"
-                  checked={copyOptions.copyComponents}
-                  onCheckedChange={(checked) => 
-                    setCopyOptions(prev => ({ ...prev, copyComponents: !!checked }))
-                  }
-                />
-                <Label htmlFor="copyComponents" className="text-sm text-explorer-text">
-                  Components
-                </Label>
-              </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="copyComponents"
+                      checked={copyOptions.copyComponents}
+                      onCheckedChange={(checked) => 
+                        setCopyOptions(prev => ({ ...prev, copyComponents: !!checked }))
+                      }
+                    />
+                    <Label htmlFor="copyComponents" className="text-explorer-text">
+                      Components
+                      <div className="text-xs text-explorer-text-muted">Engine, brakes, frame, etc.</div>
+                    </Label>
+                  </div>
+                </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="copyDimensions"
-                  checked={copyOptions.copyDimensions}
-                  onCheckedChange={(checked) => 
-                    setCopyOptions(prev => ({ ...prev, copyDimensions: !!checked }))
-                  }
-                />
-                <Label htmlFor="copyDimensions" className="text-sm text-explorer-text">
-                  Dimensions
-                </Label>
-              </div>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="copyDimensions"
+                      checked={copyOptions.copyDimensions}
+                      onCheckedChange={(checked) => 
+                        setCopyOptions(prev => ({ ...prev, copyDimensions: !!checked }))
+                      }
+                    />
+                    <Label htmlFor="copyDimensions" className="text-explorer-text">
+                      Dimensions
+                      <div className="text-xs text-explorer-text-muted">Weight, height, wheelbase</div>
+                    </Label>
+                  </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="allowOverwrite"
-                  checked={copyOptions.allowOverwrite}
-                  onCheckedChange={(checked) => 
-                    setCopyOptions(prev => ({ ...prev, allowOverwrite: !!checked }))
-                  }
-                />
-                <Label htmlFor="allowOverwrite" className="text-sm text-explorer-text">
-                  Allow Overwrite
-                </Label>
-              </div>
-            </div>
-
-            {!copyOptions.allowOverwrite && (
-              <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
-                <div className="text-sm text-yellow-800">
-                  Configurations with the same name will be skipped. Enable "Allow Overwrite" to update existing configurations.
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="allowOverwrite"
+                      checked={copyOptions.allowOverwrite}
+                      onCheckedChange={(checked) => 
+                        setCopyOptions(prev => ({ ...prev, allowOverwrite: !!checked }))
+                      }
+                    />
+                    <Label htmlFor="allowOverwrite" className="text-explorer-text">
+                      Allow Overwrite
+                      <div className="text-xs text-explorer-text-muted">Update existing configurations</div>
+                    </Label>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
+
+          {/* Target Years Selection */}
+          <Card className="bg-explorer-card border-explorer-chrome/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-explorer-text">
+                  Select Target Years ({selectedYears.length} selected)
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="text-xs border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearAll}
+                    className="text-xs border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
+                {targetYears.map((year) => {
+                  const hasExisting = yearsWithExisting.has(year.id);
+                  const isSelected = selectedYears.includes(year.id);
+                  
+                  return (
+                    <div
+                      key={year.id}
+                      className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer transition-colors ${
+                        isSelected 
+                          ? 'border-accent-teal bg-accent-teal/10' 
+                          : 'border-explorer-chrome/30 bg-explorer-dark hover:bg-explorer-chrome/10'
+                      }`}
+                      onClick={() => handleYearToggle(year.id)}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        readOnly
+                      />
+                      <div className="flex-1">
+                        <Label className="cursor-pointer text-explorer-text font-medium">
+                          {year.year}
+                        </Label>
+                        <div className="flex items-center gap-1 mt-1">
+                          {hasExisting ? (
+                            <Badge variant="outline" className="text-xs bg-orange-100 text-orange-800 border-orange-300">
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Will Update
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-300">
+                              <Plus className="h-3 w-3 mr-1" />
+                              Will Create
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Summary */}
+          {selectedYears.length > 0 && (
+            <Card className="bg-explorer-card border-explorer-chrome/30">
+              <CardHeader>
+                <CardTitle className="text-explorer-text">Action Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="flex items-center gap-2 font-medium text-green-600">
+                      <Plus className="h-4 w-4" />
+                      Create New ({createYears.length})
+                    </div>
+                    {createYears.length > 0 && (
+                      <div className="text-explorer-text-muted mt-1">
+                        {createYears.map(yearId => {
+                          const year = targetYears.find(y => y.id === yearId);
+                          return year?.year;
+                        }).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 font-medium text-orange-600">
+                      <RefreshCw className="h-4 w-4" />
+                      Update Existing ({updateYears.length})
+                    </div>
+                    {updateYears.length > 0 && (
+                      <div className="text-explorer-text-muted mt-1">
+                        {updateYears.map(yearId => {
+                          const year = targetYears.find(y => y.id === yearId);
+                          return year?.year;
+                        }).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {updateYears.length > 0 && !copyOptions.allowOverwrite && (
+                  <div className="flex items-center gap-2 mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    Enable "Allow Overwrite" to update existing configurations
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Actions */}
           <div className="flex gap-2 pt-4 border-t border-explorer-chrome/30">
@@ -326,7 +457,10 @@ const MultiYearCopyDialog = ({
               className="flex-1 bg-accent-teal text-black hover:bg-accent-teal/80"
             >
               {copying ? (
-                <>Copying...</>
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Copying...
+                </>
               ) : (
                 <>
                   <Copy className="mr-2 h-4 w-4" />

@@ -37,7 +37,7 @@ export const cloneConfiguration = async (sourceId: string, newName: string): Pro
   }
 };
 
-// Copy configuration to multiple years with enhanced options including updates
+// Enhanced copy configuration to multiple years with better validation and error handling
 export const copyConfigurationToMultipleYears = async (
   sourceId: string, 
   targetModelYearIds: string[],
@@ -49,31 +49,32 @@ export const copyConfigurationToMultipleYears = async (
     allowOverwrite?: boolean;
   } = {}
 ): Promise<Array<{ success: boolean; yearId: string; error?: string; configuration?: Configuration; action: 'created' | 'updated' }>> => {
+  
+  if (!sourceId || !targetModelYearIds.length) {
+    throw new Error("Source ID and target year IDs are required");
+  }
+
+  console.log(`Starting copy operation: ${sourceId} -> ${targetModelYearIds.length} years`);
+  
   const results = [];
   
+  // Fetch source configuration once
+  const { data: sourceConfig, error: fetchError } = await supabase
+    .from('model_configurations')
+    .select('*')
+    .eq('id', sourceId)
+    .single();
+    
+  if (fetchError || !sourceConfig) {
+    throw new Error(`Failed to fetch source configuration: ${fetchError?.message || 'Not found'}`);
+  }
+
+  const configName = options.newName || sourceConfig.name;
+  console.log(`Using configuration name: ${configName}`);
+
   for (const yearId of targetModelYearIds) {
     try {
-      console.log(`Copying configuration ${sourceId} to year ${yearId}`);
-      
-      // Fetch the source configuration
-      const { data: sourceConfig, error: fetchError } = await supabase
-        .from('model_configurations')
-        .select('*')
-        .eq('id', sourceId)
-        .single();
-        
-      if (fetchError || !sourceConfig) {
-        console.error("Error fetching source configuration:", fetchError);
-        results.push({
-          success: false,
-          yearId,
-          error: `Failed to fetch source configuration: ${fetchError?.message || 'Not found'}`,
-          action: 'created'
-        });
-        continue;
-      }
-
-      const configName = options.newName || sourceConfig.name;
+      console.log(`Processing year: ${yearId}`);
 
       // Check if configuration with same name already exists
       const { data: existingConfig } = await supabase
@@ -81,18 +82,20 @@ export const copyConfigurationToMultipleYears = async (
         .select('*')
         .eq('model_year_id', yearId)
         .eq('name', configName)
-        .single();
+        .maybeSingle();
 
       let resultConfig: Configuration | null = null;
       let action: 'created' | 'updated' = 'created';
 
       if (existingConfig && options.allowOverwrite) {
         // Update existing configuration
-        const updateData: any = {
+        console.log(`Updating existing configuration for year ${yearId}`);
+        
+        const updateData: Partial<Configuration> = {
           model_year_id: yearId,
         };
 
-        // Copy basic info
+        // Apply copy options
         if (options.copyBasicInfo !== false) {
           updateData.name = configName;
           updateData.market_region = sourceConfig.market_region;
@@ -103,7 +106,6 @@ export const copyConfigurationToMultipleYears = async (
           updateData.image_url = sourceConfig.image_url;
         }
 
-        // Copy components
         if (options.copyComponents !== false) {
           updateData.engine_id = sourceConfig.engine_id;
           updateData.brake_system_id = sourceConfig.brake_system_id;
@@ -113,7 +115,6 @@ export const copyConfigurationToMultipleYears = async (
           updateData.color_id = sourceConfig.color_id;
         }
 
-        // Copy dimensions
         if (options.copyDimensions !== false) {
           updateData.seat_height_mm = sourceConfig.seat_height_mm;
           updateData.weight_kg = sourceConfig.weight_kg;
@@ -124,14 +125,17 @@ export const copyConfigurationToMultipleYears = async (
 
         resultConfig = await updateConfiguration(existingConfig.id, updateData);
         action = 'updated';
+        
       } else if (!existingConfig) {
         // Create new configuration
-        const newConfig: any = {
+        console.log(`Creating new configuration for year ${yearId}`);
+        
+        const newConfig: Partial<Configuration> = {
           model_year_id: yearId,
           is_default: false // Never copy as default to avoid conflicts
         };
 
-        // Copy basic info
+        // Apply copy options
         if (options.copyBasicInfo !== false) {
           newConfig.name = configName;
           newConfig.market_region = sourceConfig.market_region;
@@ -142,7 +146,6 @@ export const copyConfigurationToMultipleYears = async (
           newConfig.image_url = sourceConfig.image_url;
         }
 
-        // Copy components
         if (options.copyComponents !== false) {
           newConfig.engine_id = sourceConfig.engine_id;
           newConfig.brake_system_id = sourceConfig.brake_system_id;
@@ -152,7 +155,6 @@ export const copyConfigurationToMultipleYears = async (
           newConfig.color_id = sourceConfig.color_id;
         }
 
-        // Copy dimensions
         if (options.copyDimensions !== false) {
           newConfig.seat_height_mm = sourceConfig.seat_height_mm;
           newConfig.weight_kg = sourceConfig.weight_kg;
@@ -163,8 +165,10 @@ export const copyConfigurationToMultipleYears = async (
 
         resultConfig = await createConfiguration(newConfig);
         action = 'created';
+        
       } else {
         // Configuration exists but overwrite not allowed
+        console.log(`Configuration "${configName}" exists for year ${yearId}, overwrite not allowed`);
         results.push({
           success: false,
           yearId,
@@ -175,6 +179,7 @@ export const copyConfigurationToMultipleYears = async (
       }
       
       if (resultConfig) {
+        console.log(`Successfully ${action} configuration for year ${yearId}`);
         results.push({
           success: true,
           yearId,
@@ -189,17 +194,19 @@ export const copyConfigurationToMultipleYears = async (
           action
         });
       }
+      
     } catch (error: any) {
       console.error(`Error copying to year ${yearId}:`, error);
       results.push({
         success: false,
         yearId,
-        error: error.message,
+        error: error.message || 'Unknown error occurred',
         action: 'created'
       });
     }
   }
   
+  console.log(`Copy operation completed. ${results.filter(r => r.success).length}/${results.length} successful`);
   return results;
 };
 
@@ -226,22 +233,48 @@ export const getAvailableTargetYears = async (motorcycleId: string, excludeConfi
   }
 };
 
-// Get years with existing configurations for conflict detection
+// Enhanced function to get years with existing configurations for conflict detection
 export const getYearsWithExistingConfigs = async (motorcycleId: string, configName: string): Promise<Set<string>> => {
   try {
-    const { data: existingConfigs } = await supabase
+    if (!motorcycleId || !configName) {
+      return new Set();
+    }
+
+    console.log(`Checking for existing configs: motorcycle=${motorcycleId}, name=${configName}`);
+
+    // First get all years for this motorcycle
+    const { data: years, error: yearsError } = await supabase
+      .from('model_years')
+      .select('id')
+      .eq('motorcycle_id', motorcycleId);
+
+    if (yearsError) {
+      console.error("Error fetching years:", yearsError);
+      return new Set();
+    }
+
+    if (!years || years.length === 0) {
+      return new Set();
+    }
+
+    const yearIds = years.map(y => y.id);
+
+    // Then check for existing configurations with this name
+    const { data: existingConfigs, error: configsError } = await supabase
       .from('model_configurations')
       .select('model_year_id')
       .eq('name', configName)
-      .in('model_year_id', 
-        await supabase
-          .from('model_years')
-          .select('id')
-          .eq('motorcycle_id', motorcycleId)
-          .then(({ data }) => data?.map(y => y.id) || [])
-      );
-      
-    return new Set(existingConfigs?.map(c => c.model_year_id) || []);
+      .in('model_year_id', yearIds);
+
+    if (configsError) {
+      console.error("Error fetching existing configs:", configsError);
+      return new Set();
+    }
+
+    const existingYearIds = new Set(existingConfigs?.map(c => c.model_year_id) || []);
+    console.log(`Found ${existingYearIds.size} existing configurations`);
+    
+    return existingYearIds;
   } catch (error) {
     console.error("Error getting years with existing configs:", error);
     return new Set();
