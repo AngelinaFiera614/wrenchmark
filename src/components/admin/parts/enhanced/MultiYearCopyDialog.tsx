@@ -367,7 +367,7 @@ const MultiYearCopyDialog = ({
                     >
                       <Checkbox
                         checked={isSelected}
-                        readOnly
+                        onCheckedChange={() => handleYearToggle(year.id)}
                       />
                       <div className="flex-1">
                         <Label className="cursor-pointer text-explorer-text font-medium">
