@@ -48,14 +48,14 @@ const EnhancedAdminPartsLayout = () => {
     setSelectedYears([]);
   };
 
-  const handleCreateNew = (yearId?: string) => {
+  const handleCreateNew = (yearIds?: string[]) => {
     if (!adminData.selectedModel) {
       alert("Please select a model first");
       return;
     }
     
-    // Use provided yearId or selected years, fallback to current year
-    const yearsToUse = yearId ? [yearId] : selectedYears.length > 0 ? selectedYears : adminData.selectedYear ? [adminData.selectedYear] : [];
+    // Use provided yearIds or selected years, fallback to current year
+    const yearsToUse = yearIds ? yearIds : selectedYears.length > 0 ? selectedYears : adminData.selectedYear ? [adminData.selectedYear] : [];
     
     if (yearsToUse.length === 0) {
       alert("Please select at least one model year");

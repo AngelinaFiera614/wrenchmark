@@ -39,7 +39,7 @@ const TrimLevelEditor = ({
     saving,
     lastError,
     setLastError
-  } = useTrimLevelSave(modelYearId, configuration, onSave);
+  } = useTrimLevelSave([modelYearId], configuration, onSave);
 
   const metrics = useConfigurationMetrics(getMockConfiguration());
 
