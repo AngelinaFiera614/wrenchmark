@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import MultiYearSelector from "../MultiYearSelector";
 import TrimLevelsSection from "../TrimLevelsSection";
 import ComponentsSection from "../ComponentsSection";
+import MultiYearCopyDialog from "../MultiYearCopyDialog";
 
 interface AdminPartsLayoutMainContentProps {
   selectedModel: string | null;
@@ -27,6 +28,11 @@ interface AdminPartsLayoutMainContentProps {
   onConfigSelect: (configId: string) => void;
   refreshConfigurations: () => Promise<void>;
   validation: any;
+  // Copy dialog props
+  copyDialogOpen: boolean;
+  copySourceConfig: any;
+  onCopyDialogClose: () => void;
+  onCopySuccess: () => void;
 }
 
 const AdminPartsLayoutMainContent = ({
@@ -50,7 +56,11 @@ const AdminPartsLayoutMainContent = ({
   selectedConfig,
   onConfigSelect,
   refreshConfigurations,
-  validation
+  validation,
+  copyDialogOpen,
+  copySourceConfig,
+  onCopyDialogClose,
+  onCopySuccess
 }: AdminPartsLayoutMainContentProps) => {
   return (
     <div className="xl:col-span-3 space-y-6">
@@ -85,6 +95,17 @@ const AdminPartsLayoutMainContent = ({
           selectedYears={selectedYears}
           onManageComponents={onManageComponents}
           onBulkAssign={onBulkAssign}
+        />
+      )}
+
+      {/* Multi-Year Copy Dialog */}
+      {copyDialogOpen && copySourceConfig && (
+        <MultiYearCopyDialog
+          open={copyDialogOpen}
+          onClose={onCopyDialogClose}
+          sourceConfiguration={copySourceConfig}
+          availableModelYears={modelYears}
+          onSuccess={onCopySuccess}
         />
       )}
     </div>

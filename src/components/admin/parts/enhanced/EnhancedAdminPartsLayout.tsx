@@ -1,23 +1,26 @@
 
-import React from "react";
-import HorizontalTrimManager from "./HorizontalTrimManager";
+import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
 import AdminPartsLayoutHeader from "./layout/AdminPartsLayoutHeader";
 import AdminPartsLayoutSidebar from "./layout/AdminPartsLayoutSidebar";
 import AdminPartsLayoutMainContent from "./layout/AdminPartsLayoutMainContent";
+import HorizontalTrimManager from "./HorizontalTrimManager";
 import { useAdminPartsLayoutState } from "./layout/useAdminPartsLayoutState";
 import { useAdminPartsLayoutActions } from "./layout/useAdminPartsLayoutActions";
 
 const EnhancedAdminPartsLayout = () => {
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [editingConfig, setEditingConfig] = useState<any>(null);
+
   const {
+    selectedModel,
+    selectedYear,
+    selectedConfig,
     selectedYears,
     setSelectedYears,
-    isCreatingNew,
-    setIsCreatingNew,
-    editingConfig,
-    setEditingConfig,
     adminData,
-    validation,
-    allConfigsForSelectedYears
+    allConfigsForSelectedYears,
+    validation
   } = useAdminPartsLayoutState();
 
   const {
@@ -34,7 +37,12 @@ const EnhancedAdminPartsLayout = () => {
     handleBulkAssign,
     handleRefreshData,
     handleSaveConfig,
-    handleCancelEdit
+    handleCancelEdit,
+    // Copy dialog state
+    copyDialogOpen,
+    copySourceConfig,
+    handleCopyDialogClose,
+    handleCopySuccess
   } = useAdminPartsLayoutActions({
     selectedYears,
     setSelectedYears,
@@ -43,62 +51,72 @@ const EnhancedAdminPartsLayout = () => {
     adminData
   });
 
+  if (isCreatingNew) {
+    return (
+      <div className="space-y-6">
+        <HorizontalTrimManager
+          modelYearIds={selectedYears}
+          configuration={editingConfig}
+          onSave={handleSaveConfig}
+          onCancel={handleCancelEdit}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-explorer-dark text-explorer-text">
-      <AdminPartsLayoutHeader onRunValidation={handleRunValidation} />
+    <div className="space-y-6">
+      <AdminPartsLayoutHeader
+        selectedModel={selectedModel}
+        selectedYear={selectedYear}
+        selectedConfig={selectedConfig}
+        onRunValidation={handleRunValidation}
+        validation={validation}
+      />
 
-      <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          <AdminPartsLayoutSidebar
-            selectedModel={adminData.selectedModel}
-            selectedYear={adminData.selectedYear}
-            selectedConfig={adminData.selectedConfig}
-            selectedModelData={adminData.selectedModelData}
-            selectedYearData={adminData.selectedYearData}
-            selectedConfigData={adminData.selectedConfigData}
-            models={adminData.models}
-            modelYears={adminData.modelYears}
-            configurations={adminData.configurations}
-            onModelSelect={adminData.handleModelSelect}
-            onYearSelect={adminData.handleYearSelect}
-            onConfigSelect={adminData.handleConfigSelect}
-          />
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        <AdminPartsLayoutSidebar
+          selectedModel={selectedModel}
+          selectedYear={selectedYear}
+          selectedConfig={selectedConfig}
+          selectedModelData={adminData.selectedModelData}
+          selectedYearData={adminData.selectedYearData}
+          selectedConfigData={adminData.selectedConfigData}
+          models={adminData.models}
+          modelYears={adminData.modelYears}
+          configurations={adminData.configurations}
+          onModelSelect={adminData.handleModelSelect}
+          onYearSelect={adminData.handleYearSelect}
+          onConfigSelect={adminData.handleConfigSelect}
+        />
 
-          {isCreatingNew ? (
-            <div className="xl:col-span-3">
-              <HorizontalTrimManager
-                modelYearIds={selectedYears}
-                configuration={editingConfig}
-                onSave={handleSaveConfig}
-                onCancel={handleCancelEdit}
-              />
-            </div>
-          ) : (
-            <AdminPartsLayoutMainContent
-              selectedModel={adminData.selectedModel}
-              selectedYear={adminData.selectedYear}
-              selectedYears={selectedYears}
-              modelYears={adminData.modelYears}
-              allConfigsForSelectedYears={allConfigsForSelectedYears}
-              onYearToggle={handleYearToggle}
-              onSelectAllYears={handleSelectAllYears}
-              onClearAllYears={handleClearAllYears}
-              onCreateNew={handleCreateNew}
-              onEditConfig={handleEditConfig}
-              onCopyConfig={handleCopyConfig}
-              onDeleteConfig={handleDeleteConfig}
-              onPreviewConfig={handlePreviewConfig}
-              onRefreshData={handleRefreshData}
-              onManageComponents={handleManageComponents}
-              onBulkAssign={handleBulkAssign}
-              configurations={adminData.configurations}
-              selectedConfig={adminData.selectedConfig}
-              onConfigSelect={adminData.handleConfigSelect}
-              refreshConfigurations={adminData.refreshConfigurations}
-              validation={validation}
-            />
-          )}
-        </div>
+        <AdminPartsLayoutMainContent
+          selectedModel={selectedModel}
+          selectedYear={selectedYear}
+          selectedYears={selectedYears}
+          modelYears={adminData.modelYears}
+          allConfigsForSelectedYears={allConfigsForSelectedYears}
+          onYearToggle={handleYearToggle}
+          onSelectAllYears={handleSelectAllYears}
+          onClearAllYears={handleClearAllYears}
+          onCreateNew={handleCreateNew}
+          onEditConfig={handleEditConfig}
+          onCopyConfig={handleCopyConfig}
+          onDeleteConfig={handleDeleteConfig}
+          onPreviewConfig={handlePreviewConfig}
+          onRefreshData={handleRefreshData}
+          onManageComponents={handleManageComponents}
+          onBulkAssign={handleBulkAssign}
+          configurations={adminData.configurations}
+          selectedConfig={selectedConfig}
+          onConfigSelect={adminData.handleConfigSelect}
+          refreshConfigurations={adminData.refreshConfigurations}
+          validation={validation}
+          copyDialogOpen={copyDialogOpen}
+          copySourceConfig={copySourceConfig}
+          onCopyDialogClose={handleCopyDialogClose}
+          onCopySuccess={handleCopySuccess}
+        />
       </div>
     </div>
   );

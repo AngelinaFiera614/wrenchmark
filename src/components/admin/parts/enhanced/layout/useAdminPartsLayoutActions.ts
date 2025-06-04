@@ -1,4 +1,5 @@
-import { useCallback } from "react";
+
+import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UseAdminPartsLayoutActionsProps {
@@ -17,6 +18,8 @@ export const useAdminPartsLayoutActions = ({
   adminData
 }: UseAdminPartsLayoutActionsProps) => {
   const { toast } = useToast();
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+  const [copySourceConfig, setCopySourceConfig] = useState<any>(null);
 
   const handleRunValidation = useCallback(() => {
     console.log("Running full validation...");
@@ -79,12 +82,29 @@ export const useAdminPartsLayoutActions = ({
   }, [setEditingConfig, setSelectedYears, setIsCreatingNew]);
 
   const handleCopyConfig = useCallback((config: any) => {
-    console.log("Copying configuration:", config);
-    // Set up for creating a new config based on the copied one
-    setEditingConfig({ ...config, name: `${config.name} (Copy)`, is_default: false });
-    setSelectedYears([config.model_year_id]);
-    setIsCreatingNew(true);
-  }, [setEditingConfig, setSelectedYears, setIsCreatingNew]);
+    console.log("Opening copy dialog for configuration:", config);
+    setCopySourceConfig(config);
+    setCopyDialogOpen(true);
+  }, []);
+
+  const handleCopyDialogClose = useCallback(() => {
+    setCopyDialogOpen(false);
+    setCopySourceConfig(null);
+  }, []);
+
+  const handleCopySuccess = useCallback(async () => {
+    console.log("Copy operation completed successfully");
+    setCopyDialogOpen(false);
+    setCopySourceConfig(null);
+    
+    // Refresh all configurations
+    await adminData.refreshConfigurations(selectedYears.length > 0 ? selectedYears : [adminData.selectedYear]);
+    
+    toast({
+      title: "Copy Successful",
+      description: "Trim level has been copied to the selected years.",
+    });
+  }, [selectedYears, adminData, toast]);
 
   const handleDeleteConfig = useCallback(async (config: any) => {
     console.log("Deleting configuration:", config);
@@ -199,6 +219,11 @@ export const useAdminPartsLayoutActions = ({
     handleBulkAssign,
     handleRefreshData,
     handleSaveConfig,
-    handleCancelEdit
+    handleCancelEdit,
+    // New copy dialog state and handlers
+    copyDialogOpen,
+    copySourceConfig,
+    handleCopyDialogClose,
+    handleCopySuccess
   };
 };

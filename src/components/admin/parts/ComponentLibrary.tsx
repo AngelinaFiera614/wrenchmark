@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { fetchWheels } from "@/services/wheelService";
 import { linkComponentToConfiguration, unlinkComponentFromConfiguration, getComponentUsageInConfigurations } from "@/services/componentLinkingService";
 import { Configuration } from "@/types/motorcycle";
 import ComponentDetailDialog from "./ComponentDetailDialog";
+import AddComponentDialog from "./enhanced/AddComponentDialog";
 
 interface ComponentLibraryProps {
   selectedConfiguration?: Configuration | null;
@@ -27,31 +29,32 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
   const [linkingComponent, setLinkingComponent] = useState<string | null>(null);
   const [viewingComponent, setViewingComponent] = useState<any>(null);
   const [viewingComponentType, setViewingComponentType] = useState<string>("");
+  const [addComponentDialogOpen, setAddComponentDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch all component types
-  const { data: engines } = useQuery({
+  const { data: engines, refetch: refetchEngines } = useQuery({
     queryKey: ["engines"],
     queryFn: fetchEngines
   });
 
-  const { data: brakes } = useQuery({
+  const { data: brakes, refetch: refetchBrakes } = useQuery({
     queryKey: ["brakes"], 
     queryFn: fetchBrakes
   });
 
-  const { data: frames } = useQuery({
+  const { data: frames, refetch: refetchFrames } = useQuery({
     queryKey: ["frames"],
     queryFn: fetchFrames
   });
 
-  const { data: suspensions } = useQuery({
+  const { data: suspensions, refetch: refetchSuspensions } = useQuery({
     queryKey: ["suspensions"],
     queryFn: fetchSuspensions
   });
 
-  const { data: wheels } = useQuery({
+  const { data: wheels, refetch: refetchWheels } = useQuery({
     queryKey: ["wheels"],
     queryFn: fetchWheels
   });
@@ -117,6 +120,7 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
         });
       }
     } catch (error) {
+      console.error("Error linking component:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -153,6 +157,7 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
         });
       }
     } catch (error) {
+      console.error("Error unlinking component:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -164,6 +169,24 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
   const handleViewComponent = (component: any, type: string) => {
     setViewingComponent(component);
     setViewingComponentType(type);
+  };
+
+  const handleAddComponent = () => {
+    setAddComponentDialogOpen(true);
+  };
+
+  const handleComponentAdded = () => {
+    // Refresh all component data
+    refetchEngines();
+    refetchBrakes();
+    refetchFrames();
+    refetchSuspensions();
+    refetchWheels();
+    
+    toast({
+      title: "Component Added",
+      description: "New component has been added to the library."
+    });
   };
 
   const renderComponentCard = (component: any, type: string) => {
@@ -307,7 +330,10 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
                 </p>
               )}
             </div>
-            <Button className="bg-accent-teal text-black hover:bg-accent-teal/80">
+            <Button 
+              className="bg-accent-teal text-black hover:bg-accent-teal/80"
+              onClick={handleAddComponent}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Component
             </Button>
@@ -366,6 +392,7 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
                   <Button
                     variant="outline"
                     className="mt-4 bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+                    onClick={handleAddComponent}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add {tab.label.slice(0, -1)}
@@ -383,6 +410,14 @@ const ComponentLibrary = ({ selectedConfiguration, onComponentLinked }: Componen
         componentType={viewingComponentType}
         isOpen={!!viewingComponent}
         onClose={() => setViewingComponent(null)}
+      />
+
+      {/* Add Component Dialog */}
+      <AddComponentDialog
+        open={addComponentDialogOpen}
+        onClose={() => setAddComponentDialogOpen(false)}
+        onComponentAdded={handleComponentAdded}
+        defaultComponentType={activeTab}
       />
     </div>
   );
