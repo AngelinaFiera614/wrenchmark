@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Settings, Plus, Wrench } from "lucide-react";
+import { Wrench, Database, Plus } from "lucide-react";
+import ComponentLibraryEnhanced from "./ComponentLibraryEnhanced";
+import { useAdminPartsLayoutState } from "./layout/useAdminPartsLayoutState";
 
 interface ComponentsSectionProps {
   selectedYears: string[];
@@ -11,73 +12,88 @@ interface ComponentsSectionProps {
   onBulkAssign: () => void;
 }
 
-const ComponentsSection = ({
-  selectedYears,
-  onManageComponents,
-  onBulkAssign
-}: ComponentsSectionProps) => {
-  const componentTypes = [
-    { id: 'engines', label: 'Engines', count: 12, icon: Wrench },
-    { id: 'brakes', label: 'Brake Systems', count: 8, icon: Wrench },
-    { id: 'frames', label: 'Frames', count: 6, icon: Wrench },
-    { id: 'suspension', label: 'Suspension', count: 10, icon: Wrench },
-    { id: 'wheels', label: 'Wheels', count: 15, icon: Wrench },
-  ];
+const ComponentsSection = ({ selectedYears, onManageComponents, onBulkAssign }: ComponentsSectionProps) => {
+  const [showLibrary, setShowLibrary] = useState(false);
+  const { adminData } = useAdminPartsLayoutState();
+
+  const handleComponentLinked = () => {
+    // Refresh configurations when a component is linked
+    if (adminData.refreshConfigurations) {
+      adminData.refreshConfigurations(selectedYears);
+    }
+  };
 
   return (
     <Card className="bg-explorer-card border-explorer-chrome/30">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-explorer-text flex items-center gap-2">
-            <Wrench className="h-4 w-4" />
-            Component Library
-          </CardTitle>
           <div className="flex items-center gap-2">
+            <Wrench className="h-5 w-5 text-accent-teal" />
+            <CardTitle className="text-explorer-text">Component Management</CardTitle>
+          </div>
+          <div className="flex gap-2">
             <Button
               variant="outline"
-              size="sm"
-              onClick={onBulkAssign}
-              disabled={selectedYears.length === 0}
+              onClick={() => setShowLibrary(!showLibrary)}
               className="border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
             >
-              <Settings className="h-3 w-3 mr-1" />
-              Bulk Assign
+              <Database className="mr-2 h-4 w-4" />
+              {showLibrary ? 'Hide' : 'Show'} Component Library
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={onManageComponents}
-              className="border-accent-teal/30 text-accent-teal hover:bg-accent-teal/10"
+              onClick={onBulkAssign}
+              className="bg-accent-teal text-black hover:bg-accent-teal/80"
             >
-              <Plus className="h-3 w-3 mr-1" />
-              Manage Components
+              <Plus className="mr-2 h-4 w-4" />
+              Bulk Assign
             </Button>
           </div>
         </div>
       </CardHeader>
+      
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {componentTypes.map(component => (
-            <Card key={component.id} className="bg-explorer-dark border-explorer-chrome/30 hover:border-accent-teal/50 transition-colors cursor-pointer">
-              <CardContent className="p-4 text-center">
-                <component.icon className="h-6 w-6 mx-auto mb-2 text-accent-teal" />
-                <div className="text-sm font-medium text-explorer-text mb-1">
-                  {component.label}
-                </div>
-                <Badge variant="secondary" className="text-xs">
-                  {component.count} available
-                </Badge>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        
-        {selectedYears.length === 0 && (
-          <div className="mt-4 p-4 bg-explorer-dark/50 rounded-lg border border-explorer-chrome/30">
-            <div className="text-sm text-explorer-text-muted text-center">
-              Select model years above to assign components to trim levels
+        {!showLibrary ? (
+          <div className="space-y-4">
+            <p className="text-explorer-text-muted">
+              Manage components for your motorcycle configurations. You can link existing components 
+              or create new ones.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-explorer-dark rounded-lg border border-explorer-chrome/30">
+                <h4 className="font-medium text-explorer-text mb-2">Component Library</h4>
+                <p className="text-sm text-explorer-text-muted mb-3">
+                  Browse, create, edit, and manage all motorcycle components
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowLibrary(true)}
+                  className="w-full border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
+                >
+                  Open Component Library
+                </Button>
+              </div>
+              
+              <div className="p-4 bg-explorer-dark rounded-lg border border-explorer-chrome/30">
+                <h4 className="font-medium text-explorer-text mb-2">Bulk Operations</h4>
+                <p className="text-sm text-explorer-text-muted mb-3">
+                  Assign components to multiple configurations at once
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={onBulkAssign}
+                  className="w-full border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
+                >
+                  Bulk Assign Components
+                </Button>
+              </div>
             </div>
           </div>
+        ) : (
+          <ComponentLibraryEnhanced
+            selectedConfiguration={adminData.selectedConfigData}
+            onComponentLinked={handleComponentLinked}
+          />
         )}
       </CardContent>
     </Card>

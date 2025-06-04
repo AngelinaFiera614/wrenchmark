@@ -1,64 +1,91 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EngineOption } from "@/types/components";
 
-// Fetch all engines
-export const fetchEngines = async (): Promise<EngineOption[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('engines')
-      .select('*')
-      .order('name');
-      
-    if (error) {
-      console.error("Error fetching engines:", error);
-      return [];
-    }
-    
-    return data.map(engine => ({
-      id: engine.id,
-      name: engine.name,
-      displacement_cc: engine.displacement_cc,
-      power_hp: engine.power_hp,
-      torque_nm: engine.torque_nm,
-      engine_type: engine.engine_type
-    }));
-  } catch (error) {
-    console.error("Error in fetchEngines:", error);
-    return [];
+export interface Engine {
+  id: string;
+  name: string;
+  displacement_cc: number;
+  power_hp?: number;
+  torque_nm?: number;
+  engine_type?: string;
+  power_rpm?: number;
+  torque_rpm?: number;
+  valve_count?: number;
+  cylinder_count?: number;
+  cooling?: string;
+  fuel_system?: string;
+  stroke_type?: string;
+  bore_mm?: number;
+  stroke_mm?: number;
+  compression_ratio?: string;
+  valves_per_cylinder?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const fetchEngines = async (): Promise<Engine[]> => {
+  const { data, error } = await supabase
+    .from('engines')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const createEngine = async (engineData: Omit<Engine, 'id' | 'created_at' | 'updated_at'>): Promise<Engine> => {
+  const { data, error } = await supabase
+    .from('engines')
+    .insert([engineData])
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+
+export const updateEngine = async (id: string, engineData: Partial<Engine>): Promise<Engine> => {
+  const { data, error } = await supabase
+    .from('engines')
+    .update(engineData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+
+export const deleteEngine = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('engines')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    throw error;
   }
 };
 
-// Create a new engine
-export const createEngine = async (engineData: Omit<EngineOption, 'id'>): Promise<EngineOption | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('engines')
-      .insert({
-        name: engineData.name,
-        displacement_cc: engineData.displacement_cc,
-        power_hp: engineData.power_hp,
-        torque_nm: engineData.torque_nm,
-        engine_type: engineData.engine_type
-      })
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Error creating engine:", error);
-      return null;
-    }
-    
-    return {
-      id: data.id,
-      name: data.name,
-      displacement_cc: data.displacement_cc,
-      power_hp: data.power_hp,
-      torque_nm: data.torque_nm,
-      engine_type: data.engine_type
-    };
-  } catch (error) {
-    console.error("Error in createEngine:", error);
-    return null;
+export const fetchEngineById = async (id: string): Promise<Engine> => {
+  const { data, error } = await supabase
+    .from('engines')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    throw error;
   }
+
+  return data;
 };
