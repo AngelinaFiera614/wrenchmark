@@ -29,13 +29,9 @@ import {
   GraduationCap,
   Building2,
   PaintBucket,
-  Wrench,
   Camera,
   Settings,
   Database,
-  Cog,
-  Shield,
-  Zap,
 } from "lucide-react";
 
 const navigationGroups = [
@@ -68,14 +64,9 @@ const navigationGroups = [
     ]
   },
   {
-    id: "components",
-    label: "Components",
+    id: "marketplace",
+    label: "Marketplace",
     items: [
-      { name: "Engines", href: "/admin/engines", icon: Cog },
-      { name: "Brake Systems", href: "/admin/brake-systems", icon: Shield },
-      { name: "Frames", href: "/admin/frames", icon: Settings },
-      { name: "Suspensions", href: "/admin/suspensions", icon: Zap },
-      { name: "Wheels", href: "/admin/wheels", icon: Wrench },
       { name: "Accessories", href: "/admin/accessories", icon: PaintBucket },
     ]
   },

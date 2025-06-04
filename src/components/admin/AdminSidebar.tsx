@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -10,7 +11,7 @@ import {
   GraduationCap,
   Building2,
   PaintBucket,
-  Wrench,
+  Settings,
   Camera,
 } from "lucide-react";
 
@@ -18,14 +19,13 @@ const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Models", href: "/admin/models", icon: Bike },
   { name: "Brands", href: "/admin/brands", icon: Building2 },
+  { name: "Configurations", href: "/admin/parts", icon: Settings },
   { name: "Enhanced Media", href: "/admin/enhanced-media", icon: Camera },
   { name: "Images", href: "/admin/images", icon: Camera },
   { name: "Manuals", href: "/admin/manuals", icon: FileText },
   { name: "Riding Skills", href: "/admin/riding-skills", icon: GraduationCap },
   { name: "Courses", href: "/admin/courses", icon: BookOpen },
   { name: "Glossary", href: "/admin/glossary", icon: BookOpen },
-  { name: "Components", href: "/admin/components", icon: Wrench },
-  { name: "Parts", href: "/admin/parts", icon: Wrench },
   { name: "Accessories", href: "/admin/accessories", icon: PaintBucket },
   { name: "Users", href: "/admin/users", icon: Users },
 ];
