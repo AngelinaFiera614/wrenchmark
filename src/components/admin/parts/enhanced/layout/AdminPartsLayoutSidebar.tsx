@@ -1,6 +1,6 @@
 
 import React from "react";
-import ContextSidebar from "../ContextSidebar";
+import EnhancedContextSidebar from "./EnhancedContextSidebar";
 
 interface AdminPartsLayoutSidebarProps {
   selectedModel: string | null;
@@ -20,7 +20,7 @@ interface AdminPartsLayoutSidebarProps {
 const AdminPartsLayoutSidebar = (props: AdminPartsLayoutSidebarProps) => {
   return (
     <div className="xl:col-span-1">
-      <ContextSidebar {...props} />
+      <EnhancedContextSidebar {...props} />
     </div>
   );
 };

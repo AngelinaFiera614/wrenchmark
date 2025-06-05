@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Database, CheckCircle, AlertTriangle } from "lucide-react";
+import { Settings, Database, CheckCircle, AlertTriangle, ArrowRight } from "lucide-react";
 import AdminPartsLayoutSidebar from "./layout/AdminPartsLayoutSidebar";
 import SimpleComponentsManager from "./SimpleComponentsManager";
 import HorizontalTrimManager from "./HorizontalTrimManager";
@@ -39,7 +39,6 @@ const SimplifiedAdminPartsLayout = () => {
   };
 
   const handleSaveConfig = async (configData: any) => {
-    // Handle saving configuration
     setIsCreatingNew(false);
     setEditingConfig(null);
     handleComponentLinked();
@@ -94,8 +93,27 @@ const SimplifiedAdminPartsLayout = () => {
             <div>
               <CardTitle className="text-explorer-text">Parts & Components Management</CardTitle>
               <p className="text-explorer-text-muted">
-                Simplified component management for motorcycle models and configurations
+                Manage motorcycle components and link them to models or specific configurations
               </p>
+              
+              {/* Navigation breadcrumb */}
+              {selectedModel && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-explorer-text-muted">
+                  <span>{adminData.selectedModelData?.name}</span>
+                  {selectedYear && (
+                    <>
+                      <ArrowRight className="h-3 w-3" />
+                      <span>{adminData.selectedYearData?.year}</span>
+                    </>
+                  )}
+                  {selectedConfig && (
+                    <>
+                      <ArrowRight className="h-3 w-3" />
+                      <span>{adminData.selectedConfigData?.name || 'Standard'}</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             
             {selectedModel && (
@@ -123,7 +141,7 @@ const SimplifiedAdminPartsLayout = () => {
       </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Sidebar */}
+        {/* Sidebar with Model/Year/Config Navigation */}
         <AdminPartsLayoutSidebar
           selectedModel={selectedModel}
           selectedYear={selectedYear}

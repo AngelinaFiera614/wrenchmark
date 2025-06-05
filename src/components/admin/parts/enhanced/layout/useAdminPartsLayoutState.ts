@@ -1,60 +1,111 @@
 
-import { useState, useEffect, useMemo } from "react";
-import { useAdminPartsAssignmentRefactored } from "@/hooks/admin/useAdminPartsAssignmentRefactored";
-import { validateConfiguration } from "../../validation/ValidationEngine";
-import { Configuration } from "@/types/motorcycle";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
+import { fetchModelYears } from "@/services/models/modelYearService";
+import { fetchConfigurations } from "@/services/models/configurationService";
 
 export const useAdminPartsLayoutState = () => {
-  const [selectedYears, setSelectedYears] = useState<string[]>([]);
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
-  const [editingConfig, setEditingConfig] = useState<any>(null);
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   
-  const adminData = useAdminPartsAssignmentRefactored();
+  const queryClient = useQueryClient();
 
-  // Validation for current configuration
-  const validation = validateConfiguration(
-    adminData.selectedConfigData,
-    adminData.selectedModelData,
-    adminData.selectedYearData,
-    adminData.configurations
-  );
+  // Fetch motorcycle models
+  const { data: models, isLoading: modelsLoading } = useQuery({
+    queryKey: ["admin-motorcycle-models-parts"],
+    queryFn: fetchAllMotorcycleModels
+  });
 
-  // Sync selectedYears with the main hook's selected year
-  useEffect(() => {
-    if (adminData.selectedYear && !selectedYears.includes(adminData.selectedYear)) {
-      console.log("Syncing selectedYears with hook's selectedYear:", adminData.selectedYear);
-      setSelectedYears([adminData.selectedYear]);
+  // Fetch model years for selected model
+  const { data: modelYears, isLoading: yearsLoading } = useQuery({
+    queryKey: ["model-years", selectedModel],
+    queryFn: () => selectedModel ? fetchModelYears(selectedModel) : [],
+    enabled: !!selectedModel
+  });
+
+  // Fetch configurations for selected year
+  const { data: configurations, isLoading: configsLoading } = useQuery({
+    queryKey: ["configurations", selectedYear],
+    queryFn: () => selectedYear ? fetchConfigurations(selectedYear) : [],
+    enabled: !!selectedYear
+  });
+
+  const selectedModelData = models?.find(m => m.id === selectedModel);
+  const selectedYearData = modelYears?.find(y => y.id === selectedYear);
+  const selectedConfigData = configurations?.find(c => c.id === selectedConfig);
+
+  const handleModelSelect = (modelId: string) => {
+    console.log("Selecting model:", modelId);
+    setSelectedModel(modelId);
+    setSelectedYear(null);
+    setSelectedConfig(null);
+    queryClient.invalidateQueries({ queryKey: ["model-years", modelId] });
+  };
+
+  const handleYearSelect = (yearId: string) => {
+    console.log("Selecting year:", yearId);
+    setSelectedYear(yearId);
+    setSelectedConfig(null);
+    queryClient.invalidateQueries({ queryKey: ["configurations", yearId] });
+  };
+
+  const handleConfigSelect = (configId: string) => {
+    console.log("Selecting config:", configId);
+    setSelectedConfig(configId);
+  };
+
+  const refreshConfigurations = (yearIds?: string[]) => {
+    if (yearIds) {
+      yearIds.forEach(yearId => {
+        queryClient.invalidateQueries({ queryKey: ["configurations", yearId] });
+      });
+    } else if (selectedYear) {
+      queryClient.invalidateQueries({ queryKey: ["configurations", selectedYear] });
     }
-  }, [adminData.selectedYear]);
-
-  // Get all configurations for the selected years from the main hook
-  const allConfigsForSelectedYears = useMemo(() => {
-    if (selectedYears.length === 0) return [];
-    
-    // If we only have one year selected and it matches the main hook's selected year,
-    // use the configurations from the main hook for consistency
-    if (selectedYears.length === 1 && selectedYears[0] === adminData.selectedYear) {
-      console.log("Using configurations from main hook for single selected year");
-      return adminData.configurations;
-    }
-    
-    // For multiple years, we'll need to fetch separately - but for now use what we have
-    // This could be enhanced to fetch multi-year data if needed
-    console.log("Multiple years selected, using available configurations");
-    return adminData.configurations.filter((config: Configuration) => 
-      selectedYears.some(yearId => config.model_year_id === yearId)
-    );
-  }, [selectedYears, adminData.configurations, adminData.selectedYear]);
+  };
 
   return {
-    selectedYears,
-    setSelectedYears,
-    isCreatingNew,
-    setIsCreatingNew,
-    editingConfig,
-    setEditingConfig,
-    adminData,
-    validation,
-    allConfigsForSelectedYears
+    // State
+    selectedModel,
+    selectedYear,
+    selectedConfig,
+    
+    // Data
+    models,
+    modelYears,
+    configurations,
+    selectedModelData,
+    selectedYearData,
+    selectedConfigData,
+    
+    // Loading states
+    modelsLoading,
+    yearsLoading,
+    configsLoading,
+    
+    // Handlers
+    handleModelSelect,
+    handleYearSelect,
+    handleConfigSelect,
+    refreshConfigurations,
+    
+    // Admin data object for compatibility
+    adminData: {
+      selectedModel,
+      selectedYear,
+      selectedConfig,
+      selectedModelData,
+      selectedYearData,
+      selectedConfigData,
+      models,
+      modelYears,
+      configurations,
+      handleModelSelect,
+      handleYearSelect,
+      handleConfigSelect,
+      refreshConfigurations
+    }
   };
 };
