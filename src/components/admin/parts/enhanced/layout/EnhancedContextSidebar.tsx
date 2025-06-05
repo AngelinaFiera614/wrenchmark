@@ -41,6 +41,11 @@ const EnhancedContextSidebar = ({
   const { pinnedModelIds, pinModel, unpinModel, isPinned, canPin } = usePinnedModels();
 
   const getModelCompletionStatus = (modelId: string) => {
+    // Add null/undefined checks for configurations and modelYears
+    if (!configurations || !modelYears || !Array.isArray(configurations) || !Array.isArray(modelYears)) {
+      return { status: 'missing', count: 0, total: 0 };
+    }
+
     const modelConfigs = configurations.filter(config => {
       const year = modelYears.find(y => y.id === config.model_year_id);
       return year?.motorcycle_id === modelId;
@@ -72,11 +77,12 @@ const EnhancedContextSidebar = ({
     }
   };
 
-  const filteredModels = models.filter(model => 
+  // Add null check for models array
+  const filteredModels = models?.filter(model => 
     model.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
 
-  const pinnedModels = models.filter(model => isPinned(model.id));
+  const pinnedModels = models?.filter(model => isPinned(model.id)) || [];
 
   return (
     <div className="space-y-4">
@@ -234,11 +240,11 @@ const EnhancedContextSidebar = ({
           <CardHeader>
             <CardTitle className="text-explorer-text text-sm flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Model Years ({modelYears.length})
+              Model Years ({modelYears?.length || 0})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {modelYears.length === 0 ? (
+            {!modelYears || modelYears.length === 0 ? (
               <div className="text-xs text-explorer-text-muted">No years available</div>
             ) : (
               <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -268,11 +274,11 @@ const EnhancedContextSidebar = ({
           <CardHeader>
             <CardTitle className="text-explorer-text text-sm flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Configurations ({configurations.length})
+              Configurations ({configurations?.length || 0})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {configurations.length === 0 ? (
+            {!configurations || configurations.length === 0 ? (
               <div className="text-xs text-explorer-text-muted">No configurations available</div>
             ) : (
               <div className="space-y-1 max-h-40 overflow-y-auto">
