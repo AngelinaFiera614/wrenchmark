@@ -9,6 +9,7 @@ export const useAdminPartsLayoutState = () => {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
+  const [selectedYears, setSelectedYears] = useState<string[]>([]);
   
   const queryClient = useQueryClient();
 
@@ -36,11 +37,16 @@ export const useAdminPartsLayoutState = () => {
   const selectedYearData = modelYears?.find(y => y.id === selectedYear);
   const selectedConfigData = configurations?.find(c => c.id === selectedConfig);
 
+  // For compatibility with EnhancedAdminPartsLayout
+  const allConfigsForSelectedYears = configurations || [];
+  const validation = { isValid: true, completeness: 100, issues: [] };
+
   const handleModelSelect = (modelId: string) => {
     console.log("Selecting model:", modelId);
     setSelectedModel(modelId);
     setSelectedYear(null);
     setSelectedConfig(null);
+    setSelectedYears([]);
     queryClient.invalidateQueries({ queryKey: ["model-years", modelId] });
   };
 
@@ -48,6 +54,7 @@ export const useAdminPartsLayoutState = () => {
     console.log("Selecting year:", yearId);
     setSelectedYear(yearId);
     setSelectedConfig(null);
+    setSelectedYears([yearId]);
     queryClient.invalidateQueries({ queryKey: ["configurations", yearId] });
   };
 
@@ -56,14 +63,29 @@ export const useAdminPartsLayoutState = () => {
     setSelectedConfig(configId);
   };
 
-  const refreshConfigurations = (yearIds?: string[]) => {
-    if (yearIds) {
-      yearIds.forEach(yearId => {
-        queryClient.invalidateQueries({ queryKey: ["configurations", yearId] });
-      });
-    } else if (selectedYear) {
-      queryClient.invalidateQueries({ queryKey: ["configurations", selectedYear] });
+  const refreshConfigurations = async (yearIds?: string[]) => {
+    console.log("=== REFRESHING CONFIGURATIONS ===");
+    console.log("Year IDs to refresh:", yearIds);
+    console.log("Currently selected year:", selectedYear);
+    
+    const yearsToRefresh = yearIds || (selectedYear ? [selectedYear] : []);
+    
+    if (yearsToRefresh.length === 0) {
+      console.log("No years to refresh");
+      return;
     }
+
+    console.log("Invalidating cache for years:", yearsToRefresh);
+    
+    // Invalidate specific year queries
+    for (const yearId of yearsToRefresh) {
+      await queryClient.invalidateQueries({ 
+        queryKey: ["configurations", yearId],
+        exact: true
+      });
+    }
+    
+    console.log("Cache invalidation completed successfully");
   };
 
   return {
@@ -71,6 +93,8 @@ export const useAdminPartsLayoutState = () => {
     selectedModel,
     selectedYear,
     selectedConfig,
+    selectedYears,
+    setSelectedYears,
     
     // Data
     models,
@@ -79,6 +103,8 @@ export const useAdminPartsLayoutState = () => {
     selectedModelData,
     selectedYearData,
     selectedConfigData,
+    allConfigsForSelectedYears,
+    validation,
     
     // Loading states
     modelsLoading,
