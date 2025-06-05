@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Engine, 
+  Cog, 
   Disc, 
   Box, 
   Waves, 
@@ -18,7 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { fetchEngines } from "@/services/engineService";
-import { fetchBrakeSystems } from "@/services/brakeService";
+import { fetchBrakes } from "@/services/brakeService";
 import { fetchFrames } from "@/services/frameService";
 import { fetchSuspensions } from "@/services/suspensionService";
 import { fetchWheels } from "@/services/wheelService";
@@ -49,7 +49,7 @@ const SimpleComponentsManager = ({
 
   const { data: brakeSystems = [] } = useQuery({
     queryKey: ["brake-systems"],
-    queryFn: fetchBrakeSystems
+    queryFn: fetchBrakes
   });
 
   const { data: frames = [] } = useQuery({
@@ -274,7 +274,7 @@ const SimpleComponentsManager = ({
           <ComponentGrid 
             components={engines} 
             componentType="engine" 
-            icon={Engine}
+            icon={Cog}
           />
         </TabsContent>
 
