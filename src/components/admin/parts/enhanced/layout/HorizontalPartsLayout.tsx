@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -235,7 +236,7 @@ const HorizontalPartsLayout = () => {
                               {yearConfigs.map((config) => (
                                 <TrimLevelCard
                                   key={config.id}
-                                  configuration={config}
+                                  config={config}
                                   isSelected={selectedConfig === config.id}
                                   isDeleting={false}
                                   onClick={() => adminData.handleConfigSelect(config.id)}
