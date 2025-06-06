@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Cog, 
@@ -13,7 +14,9 @@ import {
   Link,
   Unlink,
   Settings,
-  Info
+  Info,
+  Search,
+  Filter
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -31,6 +34,19 @@ interface SimpleComponentsManagerProps {
   showManagementView?: boolean;
 }
 
+// Helper function to normalize component types from plural (UI) to singular (database)
+const normalizeComponentType = (componentType: string): string => {
+  const typeMap: Record<string, string> = {
+    'engines': 'engine',
+    'brakes': 'brake_system',
+    'frames': 'frame',
+    'suspension': 'suspension',
+    'wheels': 'wheel'
+  };
+  
+  return typeMap[componentType] || componentType;
+};
+
 const SimpleComponentsManager = ({
   selectedModel,
   selectedConfiguration,
@@ -40,6 +56,7 @@ const SimpleComponentsManager = ({
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("engines");
   const [linkingComponent, setLinkingComponent] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch all component types
   const { data: engines = [] } = useQuery({
@@ -78,10 +95,17 @@ const SimpleComponentsManager = ({
     }
 
     setLinkingComponent(componentId);
+    
     try {
+      console.log("Linking component to model:", {
+        modelId: selectedModel.id,
+        componentType: normalizeComponentType(componentType),
+        componentId
+      });
+
       const result = await linkComponentToModel(
         selectedModel.id,
-        componentType as any,
+        normalizeComponentType(componentType) as any,
         componentId
       );
 
@@ -92,6 +116,7 @@ const SimpleComponentsManager = ({
         });
         onComponentLinked();
       } else {
+        console.error("Link failed:", result.error);
         throw new Error(result.error);
       }
     } catch (error: any) {
@@ -117,10 +142,17 @@ const SimpleComponentsManager = ({
     }
 
     setLinkingComponent(componentId);
+    
     try {
+      console.log("Linking component to configuration:", {
+        configId: selectedConfiguration.id,
+        componentType: normalizeComponentType(componentType),
+        componentId
+      });
+
       const result = await linkComponentToConfiguration(
         selectedConfiguration.id,
-        componentType as any,
+        normalizeComponentType(componentType) as any,
         componentId
       );
 
@@ -131,6 +163,7 @@ const SimpleComponentsManager = ({
         });
         onComponentLinked();
       } else {
+        console.error("Link failed:", result.error);
         throw new Error(result.error);
       }
     } catch (error: any) {
@@ -144,6 +177,34 @@ const SimpleComponentsManager = ({
       setLinkingComponent(null);
     }
   };
+
+  // Filter components based on search term
+  const filterComponents = (components: any[]) => {
+    if (!searchTerm.trim()) return components;
+    
+    const search = searchTerm.toLowerCase();
+    return components.filter(component => 
+      component.name?.toLowerCase().includes(search) ||
+      component.brand?.toLowerCase().includes(search) ||
+      component.type?.toLowerCase().includes(search) ||
+      component.displacement_cc?.toString().includes(search) ||
+      component.power_hp?.toString().includes(search) ||
+      component.material?.toLowerCase().includes(search)
+    );
+  };
+
+  const componentTabs = [
+    { id: 'engines', label: 'Engines', data: engines, icon: Cog },
+    { id: 'brakes', label: 'Brakes', data: brakeSystems, icon: Disc },
+    { id: 'frames', label: 'Frames', data: frames, icon: Box },
+    { id: 'suspension', label: 'Suspension', data: suspensions, icon: Waves },
+    { id: 'wheels', label: 'Wheels', data: wheels, icon: Circle }
+  ];
+
+  const filteredComponentsForActiveTab = useMemo(() => {
+    const activeTabData = componentTabs.find(tab => tab.id === activeTab);
+    return activeTabData ? filterComponents(activeTabData.data) : [];
+  }, [activeTab, searchTerm, engines, brakeSystems, frames, suspensions, wheels]);
 
   const ComponentGrid = ({ 
     components, 
@@ -161,16 +222,21 @@ const SimpleComponentsManager = ({
           {componentType.charAt(0).toUpperCase() + componentType.slice(1)}
         </h3>
         <Badge variant="outline">{components.length}</Badge>
+        {searchTerm && (
+          <Badge variant="secondary" className="text-xs">
+            {filteredComponentsForActiveTab.length} filtered
+          </Badge>
+        )}
       </div>
 
       {components.length === 0 ? (
         <div className="text-center py-8 text-explorer-text-muted">
-          No {componentType} found
+          {searchTerm ? `No ${componentType} match your search` : `No ${componentType} found`}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {components.map((component) => (
-            <Card key={component.id} className="bg-explorer-dark border-explorer-chrome/30">
+            <Card key={component.id} className="bg-explorer-dark border-explorer-chrome/30 hover:border-accent-teal/30 transition-colors">
               <CardContent className="p-4">
                 <div className="space-y-3">
                   <div>
@@ -183,20 +249,37 @@ const SimpleComponentsManager = ({
                   <div className="text-xs text-explorer-text-muted space-y-1">
                     {componentType === 'engines' && (
                       <>
-                        <div>Type: {component.type || 'N/A'}</div>
+                        <div>Type: {component.type || component.engine_type || 'N/A'}</div>
                         <div>Displacement: {component.displacement_cc ? `${component.displacement_cc}cc` : 'N/A'}</div>
+                        {component.power_hp && <div>Power: {component.power_hp}hp</div>}
                       </>
                     )}
-                    {componentType === 'brake_systems' && (
+                    {componentType === 'brakes' && (
                       <>
                         <div>Type: {component.type || 'N/A'}</div>
-                        <div>Front: {component.front_brake_type || 'N/A'}</div>
+                        <div>Front: {component.brake_type_front || component.front_brake_type || 'N/A'}</div>
+                        {component.brake_type_rear && <div>Rear: {component.brake_type_rear}</div>}
                       </>
                     )}
                     {componentType === 'frames' && (
                       <>
                         <div>Type: {component.type || 'N/A'}</div>
                         <div>Material: {component.material || 'N/A'}</div>
+                        {component.rake_degrees && <div>Rake: {component.rake_degrees}°</div>}
+                      </>
+                    )}
+                    {componentType === 'suspension' && (
+                      <>
+                        <div>Front: {component.front_type || 'N/A'}</div>
+                        <div>Rear: {component.rear_type || 'N/A'}</div>
+                        {component.brand && <div>Brand: {component.brand}</div>}
+                      </>
+                    )}
+                    {componentType === 'wheels' && (
+                      <>
+                        <div>Front: {component.front_size || 'N/A'}</div>
+                        <div>Rear: {component.rear_size || 'N/A'}</div>
+                        {component.type && <div>Type: {component.type}</div>}
                       </>
                     )}
                   </div>
@@ -207,10 +290,10 @@ const SimpleComponentsManager = ({
                       variant="outline"
                       onClick={() => handleLinkToModel(componentType, component.id)}
                       disabled={!selectedModel || linkingComponent === component.id}
-                      className="flex-1 text-xs"
+                      className="flex-1 text-xs hover:bg-accent-teal/20 hover:border-accent-teal/50"
                     >
                       <Link className="mr-1 h-3 w-3" />
-                      {linkingComponent === component.id ? "..." : "Model Default"}
+                      {linkingComponent === component.id ? "Linking..." : "Model Default"}
                     </Button>
 
                     <Button
@@ -218,10 +301,10 @@ const SimpleComponentsManager = ({
                       variant="outline"
                       onClick={() => handleLinkToTrim(componentType, component.id)}
                       disabled={!selectedConfiguration || linkingComponent === component.id}
-                      className="flex-1 text-xs"
+                      className="flex-1 text-xs hover:bg-blue-500/20 hover:border-blue-500/50"
                     >
                       <Settings className="mr-1 h-3 w-3" />
-                      {linkingComponent === component.id ? "..." : "Trim Override"}
+                      {linkingComponent === component.id ? "Linking..." : "Trim Override"}
                     </Button>
                   </div>
                 </div>
@@ -260,55 +343,56 @@ const SimpleComponentsManager = ({
         </Card>
       )}
 
+      {/* Search and Filter */}
+      <Card className="bg-explorer-dark border-explorer-chrome/30">
+        <CardContent className="p-4">
+          <div className="flex gap-4 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-explorer-text-muted h-4 w-4" />
+              <Input
+                placeholder="Search components by name, brand, or specifications..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+              />
+            </div>
+            {searchTerm && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSearchTerm("")}
+                className="bg-explorer-card border-explorer-chrome/30 text-explorer-text"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Component Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="engines">Engines</TabsTrigger>
-          <TabsTrigger value="brakes">Brakes</TabsTrigger>
-          <TabsTrigger value="frames">Frames</TabsTrigger>
-          <TabsTrigger value="suspension">Suspension</TabsTrigger>
-          <TabsTrigger value="wheels">Wheels</TabsTrigger>
+          {componentTabs.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
+              <tab.icon className="h-4 w-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <Badge variant="secondary" className="text-xs">
+                {tab.data.length}
+              </Badge>
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="engines">
-          <ComponentGrid 
-            components={engines} 
-            componentType="engine" 
-            icon={Cog}
-          />
-        </TabsContent>
-
-        <TabsContent value="brakes">
-          <ComponentGrid 
-            components={brakeSystems} 
-            componentType="brake_system" 
-            icon={Disc}
-          />
-        </TabsContent>
-
-        <TabsContent value="frames">
-          <ComponentGrid 
-            components={frames} 
-            componentType="frame" 
-            icon={Box}
-          />
-        </TabsContent>
-
-        <TabsContent value="suspension">
-          <ComponentGrid 
-            components={suspensions} 
-            componentType="suspension" 
-            icon={Waves}
-          />
-        </TabsContent>
-
-        <TabsContent value="wheels">
-          <ComponentGrid 
-            components={wheels} 
-            componentType="wheel" 
-            icon={Circle}
-          />
-        </TabsContent>
+        {componentTabs.map((tab) => (
+          <TabsContent key={tab.id} value={tab.id} className="space-y-4">
+            <ComponentGrid 
+              components={tab.id === activeTab ? filteredComponentsForActiveTab : tab.data}
+              componentType={tab.id} 
+              icon={tab.icon}
+            />
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
