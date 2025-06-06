@@ -2,22 +2,22 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Settings, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Calendar, Settings, ChevronDown, ChevronRight, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { generateModelYears } from "@/services/models/modelYearService";
-import ModelsColumn from "../../hierarchy/ModelsColumn";
+import EnhancedContextSidebar from "./EnhancedContextSidebar";
 import SimpleComponentsManager from "../SimpleComponentsManager";
 import HorizontalTrimManager from "../HorizontalTrimManager";
 import TrimLevelCard from "../../trim-level/TrimLevelCard";
 import { useAdminPartsLayoutState } from "./useAdminPartsLayoutState";
 
 const HorizontalPartsLayout = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [editingConfig, setEditingConfig] = useState<any>(null);
   const [generatingYears, setGeneratingYears] = useState(false);
-  const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
+  const [selectedYears, setSelectedYears] = useState<Set<string>>(new Set());
+  const [selectedTrims, setSelectedTrims] = useState<Set<string>>(new Set());
   
   const { toast } = useToast();
   const layoutState = useAdminPartsLayoutState();
@@ -82,35 +82,54 @@ const HorizontalPartsLayout = () => {
     setEditingConfig(null);
   };
 
-  const toggleYearExpanded = (yearId: string) => {
-    const newExpanded = new Set(expandedYears);
-    if (newExpanded.has(yearId)) {
-      newExpanded.delete(yearId);
+  const toggleYearSelection = (yearId: string) => {
+    const newSelected = new Set(selectedYears);
+    if (newSelected.has(yearId)) {
+      newSelected.delete(yearId);
     } else {
-      newExpanded.add(yearId);
+      newSelected.add(yearId);
     }
-    setExpandedYears(newExpanded);
+    setSelectedYears(newSelected);
   };
 
-  const groupConfigurationsByYear = () => {
-    if (!adminData.modelYears || !adminData.configurations) return {};
+  const toggleTrimSelection = (trimId: string) => {
+    const newSelected = new Set(selectedTrims);
+    if (newSelected.has(trimId)) {
+      newSelected.delete(trimId);
+    } else {
+      newSelected.add(trimId);
+    }
+    setSelectedTrims(newSelected);
+  };
+
+  const getAllTrims = () => {
+    if (!adminData.modelYears || !adminData.configurations) return [];
     
-    const grouped: { [yearId: string]: any[] } = {};
-    
-    adminData.modelYears.forEach(year => {
-      grouped[year.id] = adminData.configurations.filter(
-        config => config.model_year_id === year.id
-      );
+    const allTrims = adminData.configurations.filter(config => {
+      return adminData.modelYears.some(year => year.id === config.model_year_id);
     });
     
-    return grouped;
+    return allTrims;
+  };
+
+  const getTrimsForYear = (yearId: string) => {
+    if (!adminData.configurations) return [];
+    return adminData.configurations.filter(config => config.model_year_id === yearId);
+  };
+
+  const getYearsForTrim = (trimId: string) => {
+    const trim = adminData.configurations?.find(c => c.id === trimId);
+    if (!trim) return [];
+    
+    const year = adminData.modelYears?.find(y => y.id === trim.model_year_id);
+    return year ? [year] : [];
   };
 
   if (isCreatingNew) {
     return (
       <div className="space-y-6">
         <HorizontalTrimManager
-          modelYearIds={selectedYear ? [selectedYear] : []}
+          modelYearIds={Array.from(selectedYears)}
           configuration={editingConfig}
           onSave={handleSaveConfig}
           onCancel={handleCancelEdit}
@@ -119,18 +138,25 @@ const HorizontalPartsLayout = () => {
     );
   }
 
-  const configsByYear = groupConfigurationsByYear();
+  const allTrims = getAllTrims();
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-      {/* Models Sidebar */}
+      {/* Enhanced Sidebar with Pinned Models */}
       <div className="xl:col-span-1">
-        <ModelsColumn
-          models={adminData.models || []}
+        <EnhancedContextSidebar
           selectedModel={selectedModel}
+          selectedYear={selectedYear}
+          selectedConfig={selectedConfig}
+          selectedModelData={adminData.selectedModelData}
+          selectedYearData={adminData.selectedYearData}
+          selectedConfigData={adminData.selectedConfigData}
+          models={adminData.models || []}
+          modelYears={adminData.modelYears || []}
+          configurations={adminData.configurations || []}
           onModelSelect={adminData.handleModelSelect}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onYearSelect={adminData.handleYearSelect}
+          onConfigSelect={adminData.handleConfigSelect}
         />
       </div>
 
@@ -141,28 +167,106 @@ const HorizontalPartsLayout = () => {
           <CardHeader>
             <CardTitle className="text-explorer-text">Parts & Components Management</CardTitle>
             <p className="text-explorer-text-muted">
-              Select a model, then manage years and trim levels with their component assignments
+              Select a model, choose years and trim levels, then assign components. Trims can be assigned to multiple years.
             </p>
           </CardHeader>
         </Card>
 
-        {/* Years and Trim Levels Section */}
+        {/* Years Section */}
         {selectedModel && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-explorer-text">
-                Model Years & Trim Levels
-              </h2>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleGenerateModelYears}
-                  disabled={generatingYears}
-                  variant="outline"
-                  className="border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {generatingYears ? "Generating..." : "Generate Years"}
-                </Button>
+          <Card className="bg-explorer-card border-explorer-chrome/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-explorer-text flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Model Years ({adminData.modelYears?.length || 0})
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleGenerateModelYears}
+                    disabled={generatingYears}
+                    variant="outline"
+                    className="border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {generatingYears ? "Generating..." : "Generate Years"}
+                  </Button>
+                  {selectedYears.size > 0 && (
+                    <Button
+                      onClick={handleCreateNew}
+                      className="bg-accent-teal text-black hover:bg-accent-teal/80"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Trim for {selectedYears.size} Year{selectedYears.size > 1 ? 's' : ''}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {selectedYears.size > 0 && (
+                <p className="text-sm text-accent-teal">
+                  {selectedYears.size} year{selectedYears.size > 1 ? 's' : ''} selected
+                </p>
+              )}
+            </CardHeader>
+            <CardContent>
+              {!adminData.modelYears || adminData.modelYears.length === 0 ? (
+                <div className="text-center py-8 text-explorer-text-muted">
+                  No model years found. Generate years for this model to get started.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {adminData.modelYears.map((year) => {
+                    const yearTrims = getTrimsForYear(year.id);
+                    const isSelected = selectedYears.has(year.id);
+
+                    return (
+                      <Card 
+                        key={year.id} 
+                        className={`cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'bg-accent-teal/20 border-accent-teal' 
+                            : 'bg-explorer-dark border-explorer-chrome/30 hover:border-accent-teal/50'
+                        }`}
+                        onClick={() => toggleYearSelection(year.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-bold text-explorer-text">{year.year}</h3>
+                              <Badge variant="outline" className="text-xs">
+                                {yearTrims.length} trim{yearTrims.length !== 1 ? 's' : ''}
+                              </Badge>
+                            </div>
+                            {year.changes && (
+                              <p className="text-xs text-explorer-text-muted line-clamp-2">
+                                {year.changes}
+                              </p>
+                            )}
+                            {isSelected && (
+                              <div className="text-xs text-accent-teal font-medium">
+                                ✓ Selected
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Trims Section */}
+        {selectedModel && allTrims.length > 0 && (
+          <Card className="bg-explorer-card border-explorer-chrome/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-explorer-text flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Trim Levels ({allTrims.length})
+                </CardTitle>
                 <Button
                   onClick={handleCreateNew}
                   className="bg-accent-teal text-black hover:bg-accent-teal/80"
@@ -171,97 +275,53 @@ const HorizontalPartsLayout = () => {
                   New Trim Level
                 </Button>
               </div>
-            </div>
-
-            {!adminData.modelYears || adminData.modelYears.length === 0 ? (
-              <Card className="bg-explorer-card border-explorer-chrome/30">
-                <CardContent className="p-8 text-center">
-                  <div className="text-explorer-text-muted">
-                    No model years found. Generate years for this model to get started.
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {adminData.modelYears.map((year) => {
-                  const yearConfigs = configsByYear[year.id] || [];
-                  const isExpanded = expandedYears.has(year.id);
+              {selectedTrims.size > 0 && (
+                <p className="text-sm text-accent-teal">
+                  {selectedTrims.size} trim{selectedTrims.size > 1 ? 's' : ''} selected
+                </p>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {allTrims.map((trim) => {
+                  const trimYears = getYearsForTrim(trim.id);
+                  const isSelected = selectedTrims.has(trim.id);
 
                   return (
-                    <Card key={year.id} className="bg-explorer-card border-explorer-chrome/30">
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <button
-                            onClick={() => toggleYearExpanded(year.id)}
-                            className="flex items-center gap-2 text-left hover:text-accent-teal transition-colors"
-                          >
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                            <CardTitle className="text-explorer-text">
-                              {year.year}
-                            </CardTitle>
-                            <Badge variant="outline" className="ml-2">
-                              {yearConfigs.length} {yearConfigs.length === 1 ? 'trim' : 'trims'}
-                            </Badge>
-                          </button>
-                          <Button
-                            onClick={() => {
-                              adminData.handleYearSelect(year.id);
-                              handleCreateNew();
-                            }}
-                            size="sm"
-                            variant="outline"
-                            className="border-accent-teal/30 text-accent-teal hover:bg-accent-teal/10"
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add Trim
-                          </Button>
+                    <div key={trim.id} className="space-y-2">
+                      <TrimLevelCard
+                        config={trim}
+                        isSelected={isSelected || selectedConfig === trim.id}
+                        isDeleting={false}
+                        onClick={() => {
+                          toggleTrimSelection(trim.id);
+                          adminData.handleConfigSelect(trim.id);
+                        }}
+                        onEdit={() => handleEditConfig(trim)}
+                        onClone={() => {
+                          // Handle clone
+                        }}
+                        onDelete={() => {
+                          // Handle delete
+                        }}
+                        onCopy={() => {
+                          // Handle copy
+                        }}
+                      />
+                      <div className="text-xs text-explorer-text-muted px-2">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          <span>
+                            Assigned to: {trimYears.map(y => y.year).join(', ') || 'No years'}
+                          </span>
                         </div>
-                        {year.changes && (
-                          <p className="text-sm text-explorer-text-muted">{year.changes}</p>
-                        )}
-                      </CardHeader>
-
-                      {isExpanded && (
-                        <CardContent>
-                          {yearConfigs.length === 0 ? (
-                            <div className="text-center py-8 text-explorer-text-muted">
-                              No trim levels for this year. Click "Add Trim" to create one.
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {yearConfigs.map((config) => (
-                                <TrimLevelCard
-                                  key={config.id}
-                                  config={config}
-                                  isSelected={selectedConfig === config.id}
-                                  isDeleting={false}
-                                  onClick={() => adminData.handleConfigSelect(config.id)}
-                                  onEdit={() => handleEditConfig(config)}
-                                  onClone={() => {
-                                    // Handle clone
-                                  }}
-                                  onDelete={() => {
-                                    // Handle delete
-                                  }}
-                                  onCopy={() => {
-                                    // Handle copy
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </CardContent>
-                      )}
-                    </Card>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Component Library */}
