@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { generateModelYears } from "@/services/models/modelYearService";
 import ModelsColumn from "../../hierarchy/ModelsColumn";
 import SimpleComponentsManager from "../SimpleComponentsManager";
 import HorizontalTrimManager from "../HorizontalTrimManager";
-import TrimLevelCard from "../trim-level/TrimLevelCard";
+import TrimLevelCard from "../../trim-level/TrimLevelCard";
 import { useAdminPartsLayoutState } from "./useAdminPartsLayoutState";
 
 const HorizontalPartsLayout = () => {
@@ -237,7 +236,13 @@ const HorizontalPartsLayout = () => {
                                 <TrimLevelCard
                                   key={config.id}
                                   configuration={config}
+                                  isSelected={selectedConfig === config.id}
+                                  isDeleting={false}
+                                  onClick={() => adminData.handleConfigSelect(config.id)}
                                   onEdit={() => handleEditConfig(config)}
+                                  onClone={() => {
+                                    // Handle clone
+                                  }}
                                   onDelete={() => {
                                     // Handle delete
                                   }}
