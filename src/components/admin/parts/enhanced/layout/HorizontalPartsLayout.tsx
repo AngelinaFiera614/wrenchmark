@@ -1,11 +1,11 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Settings, ChevronDown, ChevronRight, Users } from "lucide-react";
+import { Plus, Calendar, Settings, ChevronDown, ChevronRight, Users, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { generateModelYears } from "@/services/models/modelYearService";
+import { assignTrimToYears } from "@/services/trimAssignmentService";
 import EnhancedContextSidebar from "./EnhancedContextSidebar";
 import SimpleComponentsManager from "../SimpleComponentsManager";
 import HorizontalTrimManager from "../HorizontalTrimManager";
@@ -18,6 +18,7 @@ const HorizontalPartsLayout = () => {
   const [generatingYears, setGeneratingYears] = useState(false);
   const [selectedYears, setSelectedYears] = useState<Set<string>>(new Set());
   const [selectedTrims, setSelectedTrims] = useState<Set<string>>(new Set());
+  const [assigningTrims, setAssigningTrims] = useState(false);
   
   const { toast } = useToast();
   const layoutState = useAdminPartsLayoutState();
@@ -80,6 +81,69 @@ const HorizontalPartsLayout = () => {
   const handleCancelEdit = () => {
     setIsCreatingNew(false);
     setEditingConfig(null);
+  };
+
+  const handleAssignTrimsToYears = async () => {
+    if (selectedTrims.size === 0 || selectedYears.size === 0) {
+      toast({
+        variant: "destructive",
+        title: "Selection Required",
+        description: "Please select both trims and years to assign."
+      });
+      return;
+    }
+
+    setAssigningTrims(true);
+    
+    try {
+      const trimIds = Array.from(selectedTrims);
+      const yearIds = Array.from(selectedYears);
+      
+      console.log("Assigning trims to years:", { trimIds, yearIds });
+      
+      let totalCreated = 0;
+      let errors = [];
+
+      for (const trimId of trimIds) {
+        const result = await assignTrimToYears(trimId, yearIds);
+        
+        if (result.success) {
+          totalCreated += result.createdConfigurations?.length || 0;
+        } else {
+          errors.push(result.error);
+        }
+      }
+
+      if (errors.length > 0) {
+        toast({
+          variant: "destructive",
+          title: "Partial Success",
+          description: `Created ${totalCreated} configurations, but encountered errors: ${errors.join(', ')}`
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: `Created ${totalCreated} trim configurations across selected years.`
+        });
+      }
+
+      // Clear selections and refresh data
+      setSelectedTrims(new Set());
+      setSelectedYears(new Set());
+      
+      if (adminData.refreshConfigurations) {
+        await adminData.refreshConfigurations();
+      }
+    } catch (error: any) {
+      console.error("Error assigning trims to years:", error);
+      toast({
+        variant: "destructive",
+        title: "Assignment Failed",
+        description: `Failed to assign trims: ${error.message}`
+      });
+    } finally {
+      setAssigningTrims(false);
+    }
   };
 
   const toggleYearSelection = (yearId: string) => {
@@ -171,6 +235,32 @@ const HorizontalPartsLayout = () => {
             </p>
           </CardHeader>
         </Card>
+
+        {/* Assignment Actions */}
+        {selectedTrims.size > 0 && selectedYears.size > 0 && (
+          <Card className="bg-accent-teal/10 border-accent-teal/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-explorer-text font-medium">
+                    Ready to Assign {selectedTrims.size} trim{selectedTrims.size > 1 ? 's' : ''} to {selectedYears.size} year{selectedYears.size > 1 ? 's' : ''}
+                  </h3>
+                  <p className="text-sm text-explorer-text-muted">
+                    This will create new trim configurations for the selected years.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleAssignTrimsToYears}
+                  disabled={assigningTrims}
+                  className="bg-accent-teal text-black hover:bg-accent-teal/80"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  {assigningTrims ? "Assigning..." : "Assign Trims"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Years Section */}
         {selectedModel && (

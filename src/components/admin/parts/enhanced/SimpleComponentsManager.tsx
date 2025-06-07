@@ -16,7 +16,9 @@ import {
   Settings,
   Info,
   Search,
-  Filter
+  Filter,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +27,7 @@ import { fetchBrakes } from "@/services/brakeService";
 import { fetchFrames } from "@/services/frameService";
 import { fetchSuspensions } from "@/services/suspensionService";
 import { fetchWheels } from "@/services/wheelService";
-import { linkComponentToModel, linkComponentToConfiguration } from "@/services/componentLinkingService";
+import { linkComponentToModel, linkComponentToConfiguration, getModelComponentAssignments } from "@/services/componentLinkingService";
 
 interface SimpleComponentsManagerProps {
   selectedModel?: any;
@@ -84,6 +86,13 @@ const SimpleComponentsManager = ({
     queryFn: fetchWheels
   });
 
+  // Fetch model component assignments
+  const { data: modelAssignments = [] } = useQuery({
+    queryKey: ["model-assignments", selectedModel?.id],
+    queryFn: () => selectedModel?.id ? getModelComponentAssignments(selectedModel.id) : [],
+    enabled: !!selectedModel?.id
+  });
+
   const handleLinkToModel = async (componentType: string, componentId: string) => {
     if (!selectedModel) {
       toast({
@@ -117,7 +126,11 @@ const SimpleComponentsManager = ({
         onComponentLinked();
       } else {
         console.error("Link failed:", result.error);
-        throw new Error(result.error);
+        toast({
+          variant: "destructive", 
+          title: "Error",
+          description: `Failed to link component: ${result.error}`
+        });
       }
     } catch (error: any) {
       console.error("Error linking component to model:", error);
@@ -164,7 +177,11 @@ const SimpleComponentsManager = ({
         onComponentLinked();
       } else {
         console.error("Link failed:", result.error);
-        throw new Error(result.error);
+        toast({
+          variant: "destructive",
+          title: "Error", 
+          description: `Failed to link component: ${result.error}`
+        });
       }
     } catch (error: any) {
       console.error("Error linking component to configuration:", error);
@@ -176,6 +193,23 @@ const SimpleComponentsManager = ({
     } finally {
       setLinkingComponent(null);
     }
+  };
+
+  // Check if a component is assigned to the current model
+  const isComponentAssignedToModel = (componentId: string, componentType: string) => {
+    const normalizedType = normalizeComponentType(componentType);
+    return modelAssignments.some(assignment => 
+      assignment.component_type === normalizedType && 
+      assignment.component_id === componentId
+    );
+  };
+
+  // Check if a component is assigned to the current configuration
+  const isComponentAssignedToConfig = (componentId: string, componentType: string) => {
+    if (!selectedConfiguration) return false;
+    const normalizedType = normalizeComponentType(componentType);
+    const fieldName = `${normalizedType}_id`;
+    return selectedConfiguration[fieldName] === componentId;
   };
 
   // Filter components based on search term
@@ -235,82 +269,122 @@ const SimpleComponentsManager = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {components.map((component) => (
-            <Card key={component.id} className="bg-explorer-dark border-explorer-chrome/30 hover:border-accent-teal/30 transition-colors">
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-medium text-explorer-text">{component.name}</h4>
-                    {component.brand && (
-                      <p className="text-sm text-explorer-text-muted">{component.brand}</p>
-                    )}
-                  </div>
+          {components.map((component) => {
+            const isAssignedToModel = isComponentAssignedToModel(component.id, componentType);
+            const isAssignedToConfig = isComponentAssignedToConfig(component.id, componentType);
+            const isLinking = linkingComponent === component.id;
 
-                  <div className="text-xs text-explorer-text-muted space-y-1">
-                    {componentType === 'engines' && (
-                      <>
-                        <div>Type: {component.type || component.engine_type || 'N/A'}</div>
-                        <div>Displacement: {component.displacement_cc ? `${component.displacement_cc}cc` : 'N/A'}</div>
-                        {component.power_hp && <div>Power: {component.power_hp}hp</div>}
-                      </>
-                    )}
-                    {componentType === 'brakes' && (
-                      <>
-                        <div>Type: {component.type || 'N/A'}</div>
-                        <div>Front: {component.brake_type_front || component.front_brake_type || 'N/A'}</div>
-                        {component.brake_type_rear && <div>Rear: {component.brake_type_rear}</div>}
-                      </>
-                    )}
-                    {componentType === 'frames' && (
-                      <>
-                        <div>Type: {component.type || 'N/A'}</div>
-                        <div>Material: {component.material || 'N/A'}</div>
-                        {component.rake_degrees && <div>Rake: {component.rake_degrees}°</div>}
-                      </>
-                    )}
-                    {componentType === 'suspension' && (
-                      <>
-                        <div>Front: {component.front_type || 'N/A'}</div>
-                        <div>Rear: {component.rear_type || 'N/A'}</div>
-                        {component.brand && <div>Brand: {component.brand}</div>}
-                      </>
-                    )}
-                    {componentType === 'wheels' && (
-                      <>
-                        <div>Front: {component.front_size || 'N/A'}</div>
-                        <div>Rear: {component.rear_size || 'N/A'}</div>
-                        {component.type && <div>Type: {component.type}</div>}
-                      </>
-                    )}
-                  </div>
+            return (
+              <Card key={component.id} className={`bg-explorer-dark border-explorer-chrome/30 hover:border-accent-teal/30 transition-colors ${
+                isAssignedToModel || isAssignedToConfig ? 'ring-1 ring-accent-teal/30' : ''
+              }`}>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-medium text-explorer-text">{component.name}</h4>
+                        <div className="flex gap-1">
+                          {isAssignedToModel && (
+                            <Badge variant="outline" className="text-xs bg-blue-500/20 text-blue-400 border-blue-500/30">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Model
+                            </Badge>
+                          )}
+                          {isAssignedToConfig && (
+                            <Badge variant="outline" className="text-xs bg-accent-teal/20 text-accent-teal border-accent-teal/30">
+                              <Settings className="h-3 w-3 mr-1" />
+                              Trim
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      {component.brand && (
+                        <p className="text-sm text-explorer-text-muted">{component.brand}</p>
+                      )}
+                    </div>
 
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleLinkToModel(componentType, component.id)}
-                      disabled={!selectedModel || linkingComponent === component.id}
-                      className="flex-1 text-xs hover:bg-accent-teal/20 hover:border-accent-teal/50"
-                    >
-                      <Link className="mr-1 h-3 w-3" />
-                      {linkingComponent === component.id ? "Linking..." : "Model Default"}
-                    </Button>
+                    <div className="text-xs text-explorer-text-muted space-y-1">
+                      {componentType === 'engines' && (
+                        <>
+                          <div>Type: {component.type || component.engine_type || 'N/A'}</div>
+                          <div>Displacement: {component.displacement_cc ? `${component.displacement_cc}cc` : 'N/A'}</div>
+                          {component.power_hp && <div>Power: {component.power_hp}hp</div>}
+                        </>
+                      )}
+                      {componentType === 'brakes' && (
+                        <>
+                          <div>Type: {component.type || 'N/A'}</div>
+                          <div>Front: {component.brake_type_front || component.front_brake_type || 'N/A'}</div>
+                          {component.brake_type_rear && <div>Rear: {component.brake_type_rear}</div>}
+                        </>
+                      )}
+                      {componentType === 'frames' && (
+                        <>
+                          <div>Type: {component.type || 'N/A'}</div>
+                          <div>Material: {component.material || 'N/A'}</div>
+                          {component.rake_degrees && <div>Rake: {component.rake_degrees}°</div>}
+                        </>
+                      )}
+                      {componentType === 'suspension' && (
+                        <>
+                          <div>Front: {component.front_type || 'N/A'}</div>
+                          <div>Rear: {component.rear_type || 'N/A'}</div>
+                          {component.brand && <div>Brand: {component.brand}</div>}
+                        </>
+                      )}
+                      {componentType === 'wheels' && (
+                        <>
+                          <div>Front: {component.front_size || 'N/A'}</div>
+                          <div>Rear: {component.rear_size || 'N/A'}</div>
+                          {component.type && <div>Type: {component.type}</div>}
+                        </>
+                      )}
+                    </div>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleLinkToTrim(componentType, component.id)}
-                      disabled={!selectedConfiguration || linkingComponent === component.id}
-                      className="flex-1 text-xs hover:bg-blue-500/20 hover:border-blue-500/50"
-                    >
-                      <Settings className="mr-1 h-3 w-3" />
-                      {linkingComponent === component.id ? "Linking..." : "Trim Override"}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleLinkToModel(componentType, component.id)}
+                        disabled={!selectedModel || isLinking || isAssignedToModel}
+                        className={`flex-1 text-xs ${
+                          isAssignedToModel 
+                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' 
+                            : 'hover:bg-accent-teal/20 hover:border-accent-teal/50'
+                        }`}
+                      >
+                        {isAssignedToModel ? (
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Link className="mr-1 h-3 w-3" />
+                        )}
+                        {isLinking ? "Linking..." : isAssignedToModel ? "Model Default" : "Model Default"}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleLinkToTrim(componentType, component.id)}
+                        disabled={!selectedConfiguration || isLinking || isAssignedToConfig}
+                        className={`flex-1 text-xs ${
+                          isAssignedToConfig 
+                            ? 'bg-accent-teal/20 border-accent-teal/50 text-accent-teal' 
+                            : 'hover:bg-blue-500/20 hover:border-blue-500/50'
+                        }`}
+                      >
+                        {isAssignedToConfig ? (
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                        ) : (
+                          <Settings className="mr-1 h-3 w-3" />
+                        )}
+                        {isLinking ? "Linking..." : isAssignedToConfig ? "Trim Override" : "Trim Override"}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
