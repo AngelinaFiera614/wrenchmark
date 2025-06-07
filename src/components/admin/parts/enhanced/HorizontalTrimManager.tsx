@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import ExpandableSection from "./ExpandableSection";
 import TrimBasicInfoSection from "./TrimBasicInfoSection";
-import TrimComponentsSection from "./TrimComponentsSection";
 import TrimPreviewSection from "./TrimPreviewSection";
 import TrimNotesSection from "./TrimNotesSection";
 import { useTrimLevelFormEnhanced } from "../trim-level-editor/useTrimLevelFormEnhanced";
@@ -150,21 +149,6 @@ const HorizontalTrimManager = ({
           <TrimBasicInfoSection
             formData={formData}
             onInputChange={handleInputChangeWithErrorClear}
-          />
-        </ExpandableSection>
-
-        <ExpandableSection
-          id="components"
-          title="Component Assignment"
-          status={validation.sectionStatus?.components || 'missing'}
-          summary={getSectionSummary('components')}
-          isExpanded={expandedSection === 'components'}
-          onToggle={handleSectionToggle}
-        >
-          <TrimComponentsSection
-            formData={formData}
-            selectedComponents={selectedComponents}
-            onComponentSelect={handleComponentSelect}
           />
         </ExpandableSection>
 
