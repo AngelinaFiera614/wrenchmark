@@ -16,12 +16,12 @@ import {
   Settings,
   Info,
   Search,
-  Filter,
   CheckCircle,
-  AlertCircle
+  AlertTriangle,
+  RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchEngines } from "@/services/engineService";
 import { fetchBrakes } from "@/services/brakeService";
 import { fetchFrames } from "@/services/frameService";
@@ -56,6 +56,7 @@ const SimpleComponentsManager = ({
   showManagementView = false
 }: SimpleComponentsManagerProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("engines");
   const [linkingComponent, setLinkingComponent] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -86,8 +87,8 @@ const SimpleComponentsManager = ({
     queryFn: fetchWheels
   });
 
-  // Fetch model component assignments
-  const { data: modelAssignments = [] } = useQuery({
+  // Fetch model component assignments with proper invalidation
+  const { data: modelAssignments = [], refetch: refetchAssignments } = useQuery({
     queryKey: ["model-assignments", selectedModel?.id],
     queryFn: () => selectedModel?.id ? getModelComponentAssignments(selectedModel.id) : [],
     enabled: !!selectedModel?.id
@@ -123,6 +124,9 @@ const SimpleComponentsManager = ({
           title: "Success",
           description: `Component linked to ${selectedModel.name} as default`
         });
+        
+        // Refresh model assignments and trigger parent refresh
+        await refetchAssignments();
         onComponentLinked();
       } else {
         console.error("Link failed:", result.error);
@@ -346,38 +350,44 @@ const SimpleComponentsManager = ({
                         size="sm"
                         variant="outline"
                         onClick={() => handleLinkToModel(componentType, component.id)}
-                        disabled={!selectedModel || isLinking || isAssignedToModel}
+                        disabled={!selectedModel || isLinking}
                         className={`flex-1 text-xs ${
                           isAssignedToModel 
                             ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' 
-                            : 'hover:bg-accent-teal/20 hover:border-accent-teal/50'
+                            : 'hover:bg-blue-500/20 hover:border-blue-500/50'
                         }`}
                       >
-                        {isAssignedToModel ? (
+                        {isLinking && linkingComponent === component.id ? (
+                          <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
+                        ) : isAssignedToModel ? (
                           <CheckCircle className="mr-1 h-3 w-3" />
                         ) : (
                           <Link className="mr-1 h-3 w-3" />
                         )}
-                        {isLinking ? "Linking..." : isAssignedToModel ? "Model Default" : "Model Default"}
+                        {isLinking && linkingComponent === component.id ? "Linking..." : 
+                         isAssignedToModel ? "Model Default" : "Set as Model Default"}
                       </Button>
 
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleLinkToTrim(componentType, component.id)}
-                        disabled={!selectedConfiguration || isLinking || isAssignedToConfig}
+                        disabled={!selectedConfiguration || isLinking}
                         className={`flex-1 text-xs ${
                           isAssignedToConfig 
                             ? 'bg-accent-teal/20 border-accent-teal/50 text-accent-teal' 
-                            : 'hover:bg-blue-500/20 hover:border-blue-500/50'
+                            : 'hover:bg-accent-teal/20 hover:border-accent-teal/50'
                         }`}
                       >
-                        {isAssignedToConfig ? (
+                        {isLinking && linkingComponent === component.id ? (
+                          <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
+                        ) : isAssignedToConfig ? (
                           <CheckCircle className="mr-1 h-3 w-3" />
                         ) : (
                           <Settings className="mr-1 h-3 w-3" />
                         )}
-                        {isLinking ? "Linking..." : isAssignedToConfig ? "Trim Override" : "Trim Override"}
+                        {isLinking && linkingComponent === component.id ? "Linking..." : 
+                         isAssignedToConfig ? "Trim Override" : "Set Trim Override"}
                       </Button>
                     </div>
                   </div>
@@ -393,29 +403,32 @@ const SimpleComponentsManager = ({
   return (
     <div className="space-y-6">
       {/* Context Information */}
-      {(selectedModel || selectedConfiguration) && (
-        <Card className="bg-explorer-dark border-explorer-chrome/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Info className="h-4 w-4 text-accent-teal" />
-              <span className="text-sm font-medium text-explorer-text">Assignment Context</span>
-            </div>
-            <div className="text-sm text-explorer-text-muted space-y-1">
-              {selectedModel && (
-                <div>Model: <span className="text-explorer-text">{selectedModel.name}</span></div>
+      <Card className="bg-explorer-dark border-explorer-chrome/30">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="h-4 w-4 text-accent-teal" />
+            <span className="text-sm font-medium text-explorer-text">Component Assignment Context</span>
+          </div>
+          <div className="text-sm text-explorer-text-muted space-y-1">
+            {selectedModel && (
+              <div>Model: <span className="text-explorer-text">{selectedModel.name}</span></div>
+            )}
+            {selectedConfiguration && (
+              <div>Selected Trim: <span className="text-explorer-text">{selectedConfiguration.name || 'Standard'}</span></div>
+            )}
+            <div className="text-xs mt-2 space-y-1">
+              <div>• <strong className="text-blue-400">Model Default:</strong> Component assigned to all trims of this model (inherited)</div>
+              <div>• <strong className="text-accent-teal">Trim Override:</strong> Component assigned specifically to the selected trim (overrides model default)</div>
+              {!selectedModel && (
+                <div className="flex items-center gap-1 text-amber-400">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>Select a model to enable component assignment</span>
+                </div>
               )}
-              {selectedConfiguration && (
-                <div>Trim Level: <span className="text-explorer-text">{selectedConfiguration.name || 'Standard'}</span></div>
-              )}
-              <div className="text-xs mt-2 text-explorer-text-muted">
-                • <strong>Model Default:</strong> Assigns component as default for all trims of this model
-                <br />
-                • <strong>Trim Override:</strong> Assigns component specifically to this trim level (overrides model default)
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Search and Filter */}
       <Card className="bg-explorer-dark border-explorer-chrome/30">

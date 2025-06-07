@@ -1,14 +1,15 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Settings, ChevronDown, ChevronRight, Users, Copy } from "lucide-react";
+import { Plus, Calendar, Settings, Users, Copy, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { generateModelYears } from "@/services/models/modelYearService";
 import { assignTrimToYears } from "@/services/trimAssignmentService";
 import EnhancedContextSidebar from "./EnhancedContextSidebar";
 import SimpleComponentsManager from "../SimpleComponentsManager";
-import HorizontalTrimManager from "../HorizontalTrimManager";
+import UnifiedConfigurationManager from "../UnifiedConfigurationManager";
 import TrimLevelCard from "../../trim-level/TrimLevelCard";
 import { useAdminPartsLayoutState } from "./useAdminPartsLayoutState";
 
@@ -192,7 +193,7 @@ const HorizontalPartsLayout = () => {
   if (isCreatingNew) {
     return (
       <div className="space-y-6">
-        <HorizontalTrimManager
+        <UnifiedConfigurationManager
           modelYearIds={Array.from(selectedYears)}
           configuration={editingConfig}
           onSave={handleSaveConfig}
@@ -229,12 +230,32 @@ const HorizontalPartsLayout = () => {
         {/* Header */}
         <Card className="bg-explorer-card border-explorer-chrome/30">
           <CardHeader>
-            <CardTitle className="text-explorer-text">Parts & Components Management</CardTitle>
+            <CardTitle className="text-explorer-text">Configuration Management</CardTitle>
             <p className="text-explorer-text-muted">
-              Select a model, choose years and trim levels, then assign components. Trims can be assigned to multiple years.
+              Manage years, trims, components, and pricing. Select a model to start, then create or edit configurations.
             </p>
           </CardHeader>
         </Card>
+
+        {/* Workflow Guide */}
+        {selectedModel && (
+          <Card className="bg-accent-teal/10 border-accent-teal/30">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-accent-teal mt-0.5" />
+                <div>
+                  <h3 className="text-explorer-text font-medium mb-2">Configuration Workflow</h3>
+                  <div className="text-sm text-explorer-text-muted space-y-1">
+                    <p>1. Generate or select model years</p>
+                    <p>2. Create trim configurations for specific years</p>
+                    <p>3. Use the Component Library below to assign components</p>
+                    <p>4. Set pricing and dimensions in the trim editor</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Assignment Actions */}
         {selectedTrims.size > 0 && selectedYears.size > 0 && (
@@ -243,7 +264,7 @@ const HorizontalPartsLayout = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-explorer-text font-medium">
-                    Ready to Assign {selectedTrims.size} trim{selectedTrims.size > 1 ? 's' : ''} to {selectedYears.size} year{selectedYears.size > 1 ? 's' : ''}
+                    Ready to Copy {selectedTrims.size} trim{selectedTrims.size > 1 ? 's' : ''} to {selectedYears.size} year{selectedYears.size > 1 ? 's' : ''}
                   </h3>
                   <p className="text-sm text-explorer-text-muted">
                     This will create new trim configurations for the selected years.
@@ -255,7 +276,7 @@ const HorizontalPartsLayout = () => {
                   className="bg-accent-teal text-black hover:bg-accent-teal/80"
                 >
                   <Copy className="h-4 w-4 mr-2" />
-                  {assigningTrims ? "Assigning..." : "Assign Trims"}
+                  {assigningTrims ? "Copying..." : "Copy Trims"}
                 </Button>
               </div>
             </CardContent>
@@ -355,14 +376,14 @@ const HorizontalPartsLayout = () => {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-explorer-text flex items-center gap-2">
                   <Settings className="h-5 w-5" />
-                  Trim Levels ({allTrims.length})
+                  Trim Configurations ({allTrims.length})
                 </CardTitle>
                 <Button
                   onClick={handleCreateNew}
                   className="bg-accent-teal text-black hover:bg-accent-teal/80"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  New Trim Level
+                  New Trim
                 </Button>
               </div>
               {selectedTrims.size > 0 && (
@@ -402,7 +423,7 @@ const HorizontalPartsLayout = () => {
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
                           <span>
-                            Assigned to: {trimYears.map(y => y.year).join(', ') || 'No years'}
+                            Year: {trimYears.map(y => y.year).join(', ') || 'No years'}
                           </span>
                         </div>
                       </div>
@@ -414,7 +435,7 @@ const HorizontalPartsLayout = () => {
           </Card>
         )}
 
-        {/* Component Library */}
+        {/* Component Library - Single Source of Truth */}
         <Card className="bg-explorer-card border-explorer-chrome/30">
           <CardHeader>
             <CardTitle className="text-explorer-text flex items-center gap-2">
@@ -422,7 +443,7 @@ const HorizontalPartsLayout = () => {
               Component Library
             </CardTitle>
             <p className="text-explorer-text-muted">
-              Assign components as model defaults or trim-specific overrides
+              Assign components as Model Defaults (inherited by all trims) or Trim Overrides (specific to selected trim)
             </p>
           </CardHeader>
           <CardContent>

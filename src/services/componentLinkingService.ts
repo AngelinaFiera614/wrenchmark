@@ -75,7 +75,7 @@ export const unlinkComponentFromConfiguration = async (
   }
 };
 
-// Link a component to a model (model-level assignment) - Fixed with proper upsert
+// Fixed: Link a component to a model (model-level assignment) - Proper upsert with better conflict handling
 export const linkComponentToModel = async (
   modelId: string,
   componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
@@ -84,27 +84,56 @@ export const linkComponentToModel = async (
   try {
     console.log(`Attempting to link ${componentType} ${componentId} to model ${modelId}`);
     
-    // Use upsert to handle existing assignments
-    const { error } = await supabase
+    // First check if an assignment already exists
+    const { data: existingAssignment, error: checkError } = await supabase
       .from('model_component_assignments')
-      .upsert({
-        model_id: modelId,
-        component_type: componentType,
-        component_id: componentId,
-        assignment_type: 'standard',
-        is_default: true,
-        notes: 'Assigned via admin interface',
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'model_id, component_type'
-      });
+      .select('id, component_id')
+      .eq('model_id', modelId)
+      .eq('component_type', componentType)
+      .maybeSingle();
 
-    if (error) {
-      console.error(`Database error linking component:`, error);
-      return { success: false, error: error.message };
+    if (checkError) {
+      console.error(`Error checking existing assignment:`, checkError);
+      return { success: false, error: checkError.message };
     }
 
-    console.log(`Successfully linked ${componentType} ${componentId} to model ${modelId}`);
+    if (existingAssignment) {
+      // Update existing assignment
+      const { error: updateError } = await supabase
+        .from('model_component_assignments')
+        .update({
+          component_id: componentId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingAssignment.id);
+
+      if (updateError) {
+        console.error(`Error updating existing assignment:`, updateError);
+        return { success: false, error: updateError.message };
+      }
+
+      console.log(`Successfully updated existing ${componentType} assignment for model ${modelId}`);
+    } else {
+      // Create new assignment
+      const { error: insertError } = await supabase
+        .from('model_component_assignments')
+        .insert({
+          model_id: modelId,
+          component_type: componentType,
+          component_id: componentId,
+          assignment_type: 'standard',
+          is_default: true,
+          notes: 'Assigned via admin interface'
+        });
+
+      if (insertError) {
+        console.error(`Error creating new assignment:`, insertError);
+        return { success: false, error: insertError.message };
+      }
+
+      console.log(`Successfully created new ${componentType} assignment for model ${modelId}`);
+    }
+
     return { success: true };
   } catch (error) {
     console.error(`Unexpected error in linkComponentToModel:`, error);
