@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Settings, Users, Copy, Info } from "lucide-react";
+import { Plus, Calendar, Settings, Users, Copy, Info, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { generateModelYears } from "@/services/models/modelYearService";
@@ -57,13 +57,17 @@ const HorizontalPartsLayout = () => {
     }
   };
 
-  const handleComponentLinked = () => {
+  const handleComponentLinked = async () => {
+    console.log("Component linked - refreshing data");
     if (adminData.refreshConfigurations) {
-      adminData.refreshConfigurations([selectedYear].filter(Boolean));
+      await adminData.refreshConfigurations([selectedYear].filter(Boolean));
     }
   };
 
   const handleCreateNew = () => {
+    if (selectedYears.size === 0 && selectedYear) {
+      setSelectedYears(new Set([selectedYear]));
+    }
     setIsCreatingNew(true);
     setEditingConfig(null);
   };
@@ -71,17 +75,33 @@ const HorizontalPartsLayout = () => {
   const handleEditConfig = (config: any) => {
     setIsCreatingNew(true);
     setEditingConfig(config);
+    setSelectedYears(new Set([config.model_year_id]));
   };
 
   const handleSaveConfig = async (configData: any) => {
+    console.log("Configuration saved, refreshing data:", configData);
     setIsCreatingNew(false);
     setEditingConfig(null);
-    handleComponentLinked();
+    
+    // Clear selections
+    setSelectedYears(new Set());
+    setSelectedTrims(new Set());
+    
+    // Refresh data and select the new/updated config
+    await handleComponentLinked();
+    
+    // If we have the config ID, select it
+    if (configData?.id) {
+      setTimeout(() => {
+        adminData.handleConfigSelect(configData.id);
+      }, 500);
+    }
   };
 
   const handleCancelEdit = () => {
     setIsCreatingNew(false);
     setEditingConfig(null);
+    setSelectedYears(new Set());
   };
 
   const handleAssignTrimsToYears = async () => {
@@ -103,6 +123,7 @@ const HorizontalPartsLayout = () => {
       console.log("Assigning trims to years:", { trimIds, yearIds });
       
       let totalCreated = 0;
+      let totalExisting = 0;
       let errors = [];
 
       for (const trimId of trimIds) {
@@ -110,6 +131,7 @@ const HorizontalPartsLayout = () => {
         
         if (result.success) {
           totalCreated += result.createdConfigurations?.length || 0;
+          totalExisting += result.existingConfigurations?.length || 0;
         } else {
           errors.push(result.error);
         }
@@ -119,12 +141,16 @@ const HorizontalPartsLayout = () => {
         toast({
           variant: "destructive",
           title: "Partial Success",
-          description: `Created ${totalCreated} configurations, but encountered errors: ${errors.join(', ')}`
+          description: `Created ${totalCreated} new configurations. ${totalExisting} already existed. Errors: ${errors.join(', ')}`
         });
       } else {
+        const message = totalCreated > 0 
+          ? `Created ${totalCreated} new configurations. ${totalExisting} already existed.`
+          : `All ${totalExisting} configurations already existed.`;
+        
         toast({
-          title: "Success!",
-          description: `Created ${totalCreated} trim configurations across selected years.`
+          title: totalCreated > 0 ? "Success!" : "Already Complete",
+          description: message
         });
       }
 
@@ -449,7 +475,10 @@ const HorizontalPartsLayout = () => {
           <CardContent>
             {!selectedModel ? (
               <div className="text-center py-8 text-explorer-text-muted">
-                Select a model from the sidebar to assign components
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <AlertCircle className="h-5 w-5" />
+                  <span>Select a model from the sidebar to assign components</span>
+                </div>
               </div>
             ) : (
               <SimpleComponentsManager

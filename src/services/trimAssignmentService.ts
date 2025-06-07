@@ -5,9 +5,10 @@ interface TrimAssignmentResult {
   success: boolean;
   error?: string;
   createdConfigurations?: string[];
+  existingConfigurations?: string[];
 }
 
-// Copy a trim configuration to multiple years
+// Copy a trim configuration to multiple years with duplicate prevention
 export const assignTrimToYears = async (
   sourceConfigurationId: string,
   targetYearIds: string[]
@@ -28,19 +29,28 @@ export const assignTrimToYears = async (
     }
 
     const createdConfigurations: string[] = [];
+    const existingConfigurations: string[] = [];
 
     // Create new configurations for each target year
     for (const yearId of targetYearIds) {
+      // Skip if it's the same year as the source
+      if (yearId === sourceConfig.model_year_id) {
+        console.log(`Skipping source year ${yearId}`);
+        existingConfigurations.push(sourceConfig.id);
+        continue;
+      }
+
       // Check if a configuration already exists for this year with the same name
       const { data: existingConfig } = await supabase
         .from('model_configurations')
-        .select('id')
+        .select('id, name')
         .eq('model_year_id', yearId)
         .eq('name', sourceConfig.name || 'Standard')
         .single();
 
       if (existingConfig) {
-        console.log(`Configuration already exists for year ${yearId}, skipping`);
+        console.log(`Configuration "${sourceConfig.name || 'Standard'}" already exists for year ${yearId}`);
+        existingConfigurations.push(existingConfig.id);
         continue;
       }
 
@@ -83,7 +93,12 @@ export const assignTrimToYears = async (
 
       if (createError) {
         console.error(`Error creating configuration for year ${yearId}:`, createError);
-        return { success: false, error: `Failed to create configuration: ${createError.message}` };
+        return { 
+          success: false, 
+          error: `Failed to create configuration: ${createError.message}`,
+          createdConfigurations,
+          existingConfigurations
+        };
       }
 
       if (createdConfig) {
@@ -94,7 +109,8 @@ export const assignTrimToYears = async (
 
     return { 
       success: true, 
-      createdConfigurations 
+      createdConfigurations,
+      existingConfigurations
     };
   } catch (error) {
     console.error('Unexpected error in assignTrimToYears:', error);
@@ -105,7 +121,7 @@ export const assignTrimToYears = async (
   }
 };
 
-// Create a new trim configuration for selected years
+// Create a new trim configuration for selected years with validation
 export const createTrimForYears = async (
   yearIds: string[],
   trimData: {
@@ -114,34 +130,51 @@ export const createTrimForYears = async (
     trim_level?: string;
     market_region?: string;
     notes?: string;
+    msrp_usd?: number;
+    seat_height_mm?: number;
+    weight_kg?: number;
   }
 ): Promise<TrimAssignmentResult> => {
   try {
     console.log(`Creating new trim for years:`, yearIds, trimData);
 
+    // Validate required fields
+    if (!trimData.name || trimData.name.trim() === '') {
+      return { success: false, error: 'Trim name is required' };
+    }
+
+    if (yearIds.length === 0) {
+      return { success: false, error: 'At least one year must be selected' };
+    }
+
     const createdConfigurations: string[] = [];
+    const existingConfigurations: string[] = [];
 
     for (const yearId of yearIds) {
       // Check if a configuration already exists for this year with the same name
       const { data: existingConfig } = await supabase
         .from('model_configurations')
-        .select('id')
+        .select('id, name')
         .eq('model_year_id', yearId)
-        .eq('name', trimData.name)
+        .eq('name', trimData.name.trim())
         .single();
 
       if (existingConfig) {
-        console.log(`Configuration "${trimData.name}" already exists for year ${yearId}, skipping`);
+        console.log(`Configuration "${trimData.name}" already exists for year ${yearId}`);
+        existingConfigurations.push(existingConfig.id);
         continue;
       }
 
       const newConfig = {
         model_year_id: yearId,
-        name: trimData.name,
-        description: trimData.description,
-        trim_level: trimData.trim_level,
-        market_region: trimData.market_region,
-        notes: trimData.notes,
+        name: trimData.name.trim(),
+        description: trimData.description?.trim() || null,
+        trim_level: trimData.trim_level?.trim() || null,
+        market_region: trimData.market_region?.trim() || 'US',
+        notes: trimData.notes?.trim() || null,
+        msrp_usd: trimData.msrp_usd || null,
+        seat_height_mm: trimData.seat_height_mm || null,
+        weight_kg: trimData.weight_kg || null,
         is_default: false
       };
 
@@ -153,7 +186,12 @@ export const createTrimForYears = async (
 
       if (createError) {
         console.error(`Error creating trim for year ${yearId}:`, createError);
-        return { success: false, error: `Failed to create trim: ${createError.message}` };
+        return { 
+          success: false, 
+          error: `Failed to create trim: ${createError.message}`,
+          createdConfigurations,
+          existingConfigurations
+        };
       }
 
       if (createdConfig) {
@@ -164,7 +202,8 @@ export const createTrimForYears = async (
 
     return { 
       success: true, 
-      createdConfigurations 
+      createdConfigurations,
+      existingConfigurations
     };
   } catch (error) {
     console.error('Unexpected error in createTrimForYears:', error);
@@ -200,5 +239,74 @@ export const getTrimAssignments = async (modelId: string) => {
   } catch (error) {
     console.error('Error in getTrimAssignments:', error);
     throw error;
+  }
+};
+
+// Delete a configuration with validation
+export const deleteConfiguration = async (configurationId: string): Promise<TrimAssignmentResult> => {
+  try {
+    console.log(`Deleting configuration ${configurationId}`);
+
+    // Check if configuration exists
+    const { data: config, error: fetchError } = await supabase
+      .from('model_configurations')
+      .select('id, name, model_year_id')
+      .eq('id', configurationId)
+      .single();
+
+    if (fetchError || !config) {
+      return { success: false, error: 'Configuration not found' };
+    }
+
+    // Delete the configuration
+    const { error: deleteError } = await supabase
+      .from('model_configurations')
+      .delete()
+      .eq('id', configurationId);
+
+    if (deleteError) {
+      console.error('Error deleting configuration:', deleteError);
+      return { success: false, error: deleteError.message };
+    }
+
+    console.log(`Successfully deleted configuration ${configurationId}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Unexpected error in deleteConfiguration:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+};
+
+// Check for duplicate trim names within a model year
+export const checkDuplicateTrimName = async (
+  modelYearId: string, 
+  trimName: string, 
+  excludeConfigId?: string
+): Promise<boolean> => {
+  try {
+    let query = supabase
+      .from('model_configurations')
+      .select('id')
+      .eq('model_year_id', modelYearId)
+      .eq('name', trimName.trim());
+
+    if (excludeConfigId) {
+      query = query.neq('id', excludeConfigId);
+    }
+
+    const { data, error } = await query.single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
+      console.error('Error checking duplicate trim name:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('Error in checkDuplicateTrimName:', error);
+    return false;
   }
 };

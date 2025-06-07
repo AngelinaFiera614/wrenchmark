@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +26,15 @@ import { fetchBrakes } from "@/services/brakeService";
 import { fetchFrames } from "@/services/frameService";
 import { fetchSuspensions } from "@/services/suspensionService";
 import { fetchWheels } from "@/services/wheelService";
-import { linkComponentToModel, linkComponentToConfiguration, getModelComponentAssignments } from "@/services/componentLinkingService";
+import { 
+  linkComponentToModel, 
+  linkComponentToConfiguration, 
+  unlinkComponentFromModel,
+  unlinkComponentFromConfiguration,
+  getModelComponentAssignments,
+  isComponentAssignedToModel,
+  isComponentAssignedToConfiguration
+} from "@/services/componentLinkingService";
 
 interface SimpleComponentsManagerProps {
   selectedModel?: any;
@@ -60,6 +67,10 @@ const SimpleComponentsManager = ({
   const [activeTab, setActiveTab] = useState("engines");
   const [linkingComponent, setLinkingComponent] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Track assignment states for real-time updates
+  const [modelAssignmentStates, setModelAssignmentStates] = useState<Record<string, boolean>>({});
+  const [configAssignmentStates, setConfigAssignmentStates] = useState<Record<string, boolean>>({});
 
   // Fetch all component types
   const { data: engines = [] } = useQuery({
@@ -94,6 +105,51 @@ const SimpleComponentsManager = ({
     enabled: !!selectedModel?.id
   });
 
+  // Update assignment states when data changes
+  useEffect(() => {
+    if (selectedModel?.id) {
+      const updateAssignmentStates = async () => {
+        const allComponents = [
+          ...engines.map(e => ({ id: e.id, type: 'engines' })),
+          ...brakeSystems.map(b => ({ id: b.id, type: 'brakes' })),
+          ...frames.map(f => ({ id: f.id, type: 'frames' })),
+          ...suspensions.map(s => ({ id: s.id, type: 'suspension' })),
+          ...wheels.map(w => ({ id: w.id, type: 'wheels' }))
+        ];
+
+        const newModelStates: Record<string, boolean> = {};
+        const newConfigStates: Record<string, boolean> = {};
+
+        for (const component of allComponents) {
+          const normalizedType = normalizeComponentType(component.type);
+          const modelKey = `${component.id}-${component.type}-model`;
+          const configKey = `${component.id}-${component.type}-config`;
+
+          // Check model assignment
+          newModelStates[modelKey] = await isComponentAssignedToModel(
+            selectedModel.id,
+            normalizedType as any,
+            component.id
+          );
+
+          // Check configuration assignment if we have a selected config
+          if (selectedConfiguration?.id) {
+            newConfigStates[configKey] = await isComponentAssignedToConfiguration(
+              selectedConfiguration.id,
+              normalizedType as any,
+              component.id
+            );
+          }
+        }
+
+        setModelAssignmentStates(newModelStates);
+        setConfigAssignmentStates(newConfigStates);
+      };
+
+      updateAssignmentStates();
+    }
+  }, [selectedModel?.id, selectedConfiguration?.id, engines, brakeSystems, frames, suspensions, wheels]);
+
   const handleLinkToModel = async (componentType: string, componentId: string) => {
     if (!selectedModel) {
       toast({
@@ -125,6 +181,10 @@ const SimpleComponentsManager = ({
           description: `Component linked to ${selectedModel.name} as default`
         });
         
+        // Update local state immediately
+        const modelKey = `${componentId}-${componentType}-model`;
+        setModelAssignmentStates(prev => ({ ...prev, [modelKey]: true }));
+        
         // Refresh model assignments and trigger parent refresh
         await refetchAssignments();
         onComponentLinked();
@@ -142,6 +202,55 @@ const SimpleComponentsManager = ({
         variant: "destructive",
         title: "Error",
         description: `Failed to link component: ${error.message}`
+      });
+    } finally {
+      setLinkingComponent(null);
+    }
+  };
+
+  const handleUnlinkFromModel = async (componentType: string, componentId: string) => {
+    if (!selectedModel) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No model selected"
+      });
+      return;
+    }
+
+    setLinkingComponent(componentId);
+    
+    try {
+      const result = await unlinkComponentFromModel(
+        selectedModel.id,
+        normalizeComponentType(componentType) as any
+      );
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: `Component unlinked from ${selectedModel.name}`
+        });
+        
+        // Update local state immediately
+        const modelKey = `${componentId}-${componentType}-model`;
+        setModelAssignmentStates(prev => ({ ...prev, [modelKey]: false }));
+        
+        await refetchAssignments();
+        onComponentLinked();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error", 
+          description: `Failed to unlink component: ${result.error}`
+        });
+      }
+    } catch (error: any) {
+      console.error("Error unlinking component from model:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to unlink component: ${error.message}`
       });
     } finally {
       setLinkingComponent(null);
@@ -178,6 +287,11 @@ const SimpleComponentsManager = ({
           title: "Success",
           description: `Component linked to ${selectedConfiguration.name || 'trim level'} as override`
         });
+        
+        // Update local state immediately
+        const configKey = `${componentId}-${componentType}-config`;
+        setConfigAssignmentStates(prev => ({ ...prev, [configKey]: true }));
+        
         onComponentLinked();
       } else {
         console.error("Link failed:", result.error);
@@ -199,21 +313,64 @@ const SimpleComponentsManager = ({
     }
   };
 
+  const handleUnlinkFromTrim = async (componentType: string, componentId: string) => {
+    if (!selectedConfiguration) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No trim level selected"
+      });
+      return;
+    }
+
+    setLinkingComponent(componentId);
+    
+    try {
+      const result = await unlinkComponentFromConfiguration(
+        selectedConfiguration.id,
+        normalizeComponentType(componentType) as any
+      );
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: `Component unlinked from ${selectedConfiguration.name || 'trim level'}`
+        });
+        
+        // Update local state immediately
+        const configKey = `${componentId}-${componentType}-config`;
+        setConfigAssignmentStates(prev => ({ ...prev, [configKey]: false }));
+        
+        onComponentLinked();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error", 
+          description: `Failed to unlink component: ${result.error}`
+        });
+      }
+    } catch (error: any) {
+      console.error("Error unlinking component from configuration:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to unlink component: ${error.message}`
+      });
+    } finally {
+      setLinkingComponent(null);
+    }
+  };
+
   // Check if a component is assigned to the current model
-  const isComponentAssignedToModel = (componentId: string, componentType: string) => {
-    const normalizedType = normalizeComponentType(componentType);
-    return modelAssignments.some(assignment => 
-      assignment.component_type === normalizedType && 
-      assignment.component_id === componentId
-    );
+  const isComponentAssignedToModelLocal = (componentId: string, componentType: string) => {
+    const modelKey = `${componentId}-${componentType}-model`;
+    return modelAssignmentStates[modelKey] || false;
   };
 
   // Check if a component is assigned to the current configuration
-  const isComponentAssignedToConfig = (componentId: string, componentType: string) => {
-    if (!selectedConfiguration) return false;
-    const normalizedType = normalizeComponentType(componentType);
-    const fieldName = `${normalizedType}_id`;
-    return selectedConfiguration[fieldName] === componentId;
+  const isComponentAssignedToConfigLocal = (componentId: string, componentType: string) => {
+    const configKey = `${componentId}-${componentType}-config`;
+    return configAssignmentStates[configKey] || false;
   };
 
   // Filter components based on search term
@@ -274,8 +431,8 @@ const SimpleComponentsManager = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {components.map((component) => {
-            const isAssignedToModel = isComponentAssignedToModel(component.id, componentType);
-            const isAssignedToConfig = isComponentAssignedToConfig(component.id, componentType);
+            const isAssignedToModel = isComponentAssignedToModelLocal(component.id, componentType);
+            const isAssignedToConfig = isComponentAssignedToConfigLocal(component.id, componentType);
             const isLinking = linkingComponent === component.id;
 
             return (
@@ -349,45 +506,45 @@ const SimpleComponentsManager = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleLinkToModel(componentType, component.id)}
+                        onClick={() => isAssignedToModel ? handleUnlinkFromModel(componentType, component.id) : handleLinkToModel(componentType, component.id)}
                         disabled={!selectedModel || isLinking}
                         className={`flex-1 text-xs ${
                           isAssignedToModel 
-                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' 
+                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400' 
                             : 'hover:bg-blue-500/20 hover:border-blue-500/50'
                         }`}
                       >
                         {isLinking && linkingComponent === component.id ? (
                           <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
                         ) : isAssignedToModel ? (
-                          <CheckCircle className="mr-1 h-3 w-3" />
+                          <Unlink className="mr-1 h-3 w-3" />
                         ) : (
                           <Link className="mr-1 h-3 w-3" />
                         )}
-                        {isLinking && linkingComponent === component.id ? "Linking..." : 
-                         isAssignedToModel ? "Model Default" : "Set as Model Default"}
+                        {isLinking && linkingComponent === component.id ? "Processing..." : 
+                         isAssignedToModel ? "Unlink Default" : "Set as Model Default"}
                       </Button>
 
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleLinkToTrim(componentType, component.id)}
+                        onClick={() => isAssignedToConfig ? handleUnlinkFromTrim(componentType, component.id) : handleLinkToTrim(componentType, component.id)}
                         disabled={!selectedConfiguration || isLinking}
                         className={`flex-1 text-xs ${
                           isAssignedToConfig 
-                            ? 'bg-accent-teal/20 border-accent-teal/50 text-accent-teal' 
+                            ? 'bg-accent-teal/20 border-accent-teal/50 text-accent-teal hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400' 
                             : 'hover:bg-accent-teal/20 hover:border-accent-teal/50'
                         }`}
                       >
                         {isLinking && linkingComponent === component.id ? (
                           <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
                         ) : isAssignedToConfig ? (
-                          <CheckCircle className="mr-1 h-3 w-3" />
+                          <Unlink className="mr-1 h-3 w-3" />
                         ) : (
                           <Settings className="mr-1 h-3 w-3" />
                         )}
-                        {isLinking && linkingComponent === component.id ? "Linking..." : 
-                         isAssignedToConfig ? "Trim Override" : "Set Trim Override"}
+                        {isLinking && linkingComponent === component.id ? "Processing..." : 
+                         isAssignedToConfig ? "Remove Override" : "Set Trim Override"}
                       </Button>
                     </div>
                   </div>

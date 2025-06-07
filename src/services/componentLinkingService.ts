@@ -75,7 +75,7 @@ export const unlinkComponentFromConfiguration = async (
   }
 };
 
-// Fixed: Link a component to a model (model-level assignment) - Proper upsert with better conflict handling
+// Fixed: Link a component to a model (model-level assignment) with proper duplicate handling
 export const linkComponentToModel = async (
   modelId: string,
   componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
@@ -84,7 +84,7 @@ export const linkComponentToModel = async (
   try {
     console.log(`Attempting to link ${componentType} ${componentId} to model ${modelId}`);
     
-    // First check if an assignment already exists
+    // First check if an assignment already exists for this component type
     const { data: existingAssignment, error: checkError } = await supabase
       .from('model_component_assignments')
       .select('id, component_id')
@@ -98,7 +98,13 @@ export const linkComponentToModel = async (
     }
 
     if (existingAssignment) {
-      // Update existing assignment
+      // If the component is already assigned, don't create a duplicate
+      if (existingAssignment.component_id === componentId) {
+        console.log(`Component ${componentId} is already assigned to model ${modelId} for ${componentType}`);
+        return { success: true };
+      }
+      
+      // Update existing assignment to new component
       const { error: updateError } = await supabase
         .from('model_component_assignments')
         .update({
@@ -137,6 +143,36 @@ export const linkComponentToModel = async (
     return { success: true };
   } catch (error) {
     console.error(`Unexpected error in linkComponentToModel:`, error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+};
+
+// Remove a component assignment from a model
+export const unlinkComponentFromModel = async (
+  modelId: string,
+  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
+): Promise<LinkResult> => {
+  try {
+    console.log(`Removing ${componentType} assignment from model ${modelId}`);
+    
+    const { error } = await supabase
+      .from('model_component_assignments')
+      .delete()
+      .eq('model_id', modelId)
+      .eq('component_type', componentType);
+
+    if (error) {
+      console.error(`Error removing component assignment:`, error);
+      return { success: false, error: error.message };
+    }
+
+    console.log(`Successfully removed ${componentType} assignment from model ${modelId}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`Unexpected error in unlinkComponentFromModel:`, error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -192,5 +228,60 @@ export const getModelComponentAssignments = async (modelId: string) => {
   } catch (error) {
     console.error('Error in getModelComponentAssignments:', error);
     throw error;
+  }
+};
+
+// Check if a component is assigned to a specific model
+export const isComponentAssignedToModel = async (
+  modelId: string,
+  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
+  componentId: string
+): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('model_component_assignments')
+      .select('id')
+      .eq('model_id', modelId)
+      .eq('component_type', componentType)
+      .eq('component_id', componentId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking component assignment:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('Error in isComponentAssignedToModel:', error);
+    return false;
+  }
+};
+
+// Check if a component is assigned to a specific configuration (trim override)
+export const isComponentAssignedToConfiguration = async (
+  configurationId: string,
+  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
+  componentId: string
+): Promise<boolean> => {
+  try {
+    const componentField = `${componentType}_id`;
+    const overrideField = `${componentType}_override`;
+    
+    const { data, error } = await supabase
+      .from('model_configurations')
+      .select(`${componentField}, ${overrideField}`)
+      .eq('id', configurationId)
+      .single();
+
+    if (error) {
+      console.error('Error checking configuration assignment:', error);
+      return false;
+    }
+
+    return data && data[overrideField] === true && data[componentField] === componentId;
+  } catch (error) {
+    console.error('Error in isComponentAssignedToConfiguration:', error);
+    return false;
   }
 };
