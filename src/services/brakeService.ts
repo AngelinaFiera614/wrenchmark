@@ -3,16 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface BrakeSystem {
   id: string;
-  type: string;
-  name?: string; // Computed from type for display purposes
-  has_traction_control?: boolean;
-  brake_type_front?: string;
-  brake_type_rear?: string;
+  type?: string;
+  front_type?: string;
+  rear_type?: string;
   front_disc_size_mm?: number;
   rear_disc_size_mm?: number;
+  brake_type_front?: string;
+  brake_type_rear?: string;
   brake_brand?: string;
   caliper_type?: string;
+  has_traction_control?: boolean;
+  has_abs?: boolean;
   notes?: string;
+  name?: string; // Computed field for display purposes
   created_at?: string;
   updated_at?: string;
 }
@@ -30,7 +33,7 @@ export const fetchBrakes = async (): Promise<BrakeSystem[]> => {
   // Add computed name field for display
   return (data || []).map(brake => ({
     ...brake,
-    name: brake.type || 'Unnamed Brake System'
+    name: brake.type || `${brake.brake_brand || 'Brake'} System ${brake.id.slice(0, 8)}`
   }));
 };
 
@@ -47,7 +50,7 @@ export const createBrake = async (brakeData: Omit<BrakeSystem, 'id' | 'created_a
 
   return {
     ...data,
-    name: data.type || 'Unnamed Brake System'
+    name: data.type || `${data.brake_brand || 'Brake'} System ${data.id.slice(0, 8)}`
   };
 };
 
@@ -65,7 +68,7 @@ export const updateBrake = async (id: string, brakeData: Partial<BrakeSystem>): 
 
   return {
     ...data,
-    name: data.type || 'Unnamed Brake System'
+    name: data.type || `${data.brake_brand || 'Brake'} System ${data.id.slice(0, 8)}`
   };
 };
 
@@ -93,6 +96,6 @@ export const fetchBrakeById = async (id: string): Promise<BrakeSystem> => {
 
   return {
     ...data,
-    name: data.type || 'Unnamed Brake System'
+    name: data.type || `${data.brake_brand || 'Brake'} System ${data.id.slice(0, 8)}`
   };
 };

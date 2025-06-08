@@ -19,6 +19,11 @@ export interface Engine {
   stroke_mm?: number;
   compression_ratio?: string;
   valves_per_cylinder?: number;
+  valve_train?: string;
+  ignition?: string;
+  starter?: string;
+  engine_code?: string;
+  notes?: string;
   created_at?: string;
   updated_at?: string;
 }
