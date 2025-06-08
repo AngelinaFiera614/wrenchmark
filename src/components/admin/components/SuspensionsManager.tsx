@@ -8,20 +8,7 @@ import { Plus, Search, Edit, Trash2, Save, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { fetchSuspensions, createSuspension, updateSuspension, deleteSuspension } from "@/services/suspensionService";
-
-interface Suspension {
-  id: string;
-  front_type?: string;
-  rear_type?: string;
-  brand?: string;
-  adjustability?: string;
-  front_travel_mm?: number;
-  rear_travel_mm?: number;
-  front_brand?: string;
-  rear_brand?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import type { Suspension } from "@/services/suspensionService";
 
 const SuspensionsManager = () => {
   const { toast } = useToast();
@@ -47,13 +34,13 @@ const SuspensionsManager = () => {
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: "At least front or rear suspension type is required"
+        description: "At least one suspension type is required"
       });
       return;
     }
 
     try {
-      await createSuspension(formData as Omit<Suspension, 'id' | 'created_at' | 'updated_at'>);
+      await createSuspension(formData as Omit<Suspension, 'id' | 'created_at' | 'updated_at' | 'name'>);
       toast({
         title: "Success",
         description: "Suspension created successfully"
@@ -157,13 +144,13 @@ const SuspensionsManager = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Input
-                placeholder="Front Suspension Type"
+                placeholder="Front Type"
                 value={formData.front_type || ""}
                 onChange={(e) => setFormData({ ...formData, front_type: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
               <Input
-                placeholder="Rear Suspension Type"
+                placeholder="Rear Type"
                 value={formData.rear_type || ""}
                 onChange={(e) => setFormData({ ...formData, rear_type: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
@@ -172,18 +159,6 @@ const SuspensionsManager = () => {
                 placeholder="Brand"
                 value={formData.brand || ""}
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
-              <Input
-                placeholder="Front Brand"
-                value={formData.front_brand || ""}
-                onChange={(e) => setFormData({ ...formData, front_brand: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
-              <Input
-                placeholder="Rear Brand"
-                value={formData.rear_brand || ""}
-                onChange={(e) => setFormData({ ...formData, rear_brand: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
               <Input
@@ -235,8 +210,6 @@ const SuspensionsManager = () => {
                 <TableHead>Front Type</TableHead>
                 <TableHead>Rear Type</TableHead>
                 <TableHead>Brand</TableHead>
-                <TableHead>Front Brand</TableHead>
-                <TableHead>Rear Brand</TableHead>
                 <TableHead>Adjustability</TableHead>
                 <TableHead>Front Travel</TableHead>
                 <TableHead>Rear Travel</TableHead>
@@ -277,28 +250,6 @@ const SuspensionsManager = () => {
                       />
                     ) : (
                       suspension.brand || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <Input
-                        value={formData.front_brand || ""}
-                        onChange={(e) => setFormData({ ...formData, front_brand: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      suspension.front_brand || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <Input
-                        value={formData.rear_brand || ""}
-                        onChange={(e) => setFormData({ ...formData, rear_brand: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      suspension.rear_brand || "-"
                     )}
                   </TableCell>
                   <TableCell>
@@ -361,7 +312,7 @@ const SuspensionsManager = () => {
               ))}
               {filteredSuspensions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-explorer-text-muted">
+                  <TableCell colSpan={7} className="text-center py-8 text-explorer-text-muted">
                     {searchTerm ? "No suspensions match your search" : "No suspensions found"}
                   </TableCell>
                 </TableRow>

@@ -8,21 +8,7 @@ import { Plus, Search, Edit, Trash2, Save, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { fetchWheels, createWheel, updateWheel, deleteWheel } from "@/services/wheelService";
-
-interface Wheel {
-  id: string;
-  type?: string;
-  front_size?: string;
-  rear_size?: string;
-  front_tire_size?: string;
-  rear_tire_size?: string;
-  rim_material?: string;
-  spoke_count_front?: number;
-  spoke_count_rear?: number;
-  notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import type { Wheel } from "@/services/wheelService";
 
 const WheelsManager = () => {
   const { toast } = useToast();
@@ -40,22 +26,21 @@ const WheelsManager = () => {
   const filteredWheels = wheels.filter(wheel =>
     wheel.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     wheel.front_size?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    wheel.rear_size?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    wheel.rim_material?.toLowerCase().includes(searchTerm.toLowerCase())
+    wheel.rear_size?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleCreate = async () => {
-    if (!formData.type && !formData.front_size && !formData.rear_size) {
+    if (!formData.type && !formData.front_size) {
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: "At least wheel type or size information is required"
+        description: "Wheel type or size is required"
       });
       return;
     }
 
     try {
-      await createWheel(formData as Omit<Wheel, 'id' | 'created_at' | 'updated_at'>);
+      await createWheel(formData as Omit<Wheel, 'id' | 'created_at' | 'updated_at' | 'name'>);
       toast({
         title: "Success",
         description: "Wheel created successfully"
@@ -133,7 +118,7 @@ const WheelsManager = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-explorer-text-muted h-4 w-4" />
               <Input
-                placeholder="Search wheels by type, size, or material..."
+                placeholder="Search wheels by type or size..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 bg-explorer-dark border-explorer-chrome/30"
@@ -194,20 +179,6 @@ const WheelsManager = () => {
                 onChange={(e) => setFormData({ ...formData, rim_material: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
-              <Input
-                type="number"
-                placeholder="Front Spoke Count"
-                value={formData.spoke_count_front || ""}
-                onChange={(e) => setFormData({ ...formData, spoke_count_front: parseInt(e.target.value) || undefined })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
-              <Input
-                type="number"
-                placeholder="Rear Spoke Count"
-                value={formData.spoke_count_rear || ""}
-                onChange={(e) => setFormData({ ...formData, spoke_count_rear: parseInt(e.target.value) || undefined })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
             </div>
             <Input
               placeholder="Notes"
@@ -246,8 +217,7 @@ const WheelsManager = () => {
                 <TableHead>Front Tire</TableHead>
                 <TableHead>Rear Tire</TableHead>
                 <TableHead>Material</TableHead>
-                <TableHead>Front Spokes</TableHead>
-                <TableHead>Rear Spokes</TableHead>
+                <TableHead>Notes</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -323,25 +293,14 @@ const WheelsManager = () => {
                   <TableCell>
                     {editingId === wheel.id ? (
                       <Input
-                        type="number"
-                        value={formData.spoke_count_front || ""}
-                        onChange={(e) => setFormData({ ...formData, spoke_count_front: parseInt(e.target.value) || undefined })}
+                        value={formData.notes || ""}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                         className="bg-explorer-dark border-explorer-chrome/30"
                       />
                     ) : (
-                      wheel.spoke_count_front || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <Input
-                        type="number"
-                        value={formData.spoke_count_rear || ""}
-                        onChange={(e) => setFormData({ ...formData, spoke_count_rear: parseInt(e.target.value) || undefined })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      wheel.spoke_count_rear || "-"
+                      <div className="max-w-32 truncate" title={wheel.notes || ""}>
+                        {wheel.notes || "-"}
+                      </div>
                     )}
                   </TableCell>
                   <TableCell>
@@ -369,7 +328,7 @@ const WheelsManager = () => {
               ))}
               {filteredWheels.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-explorer-text-muted">
+                  <TableCell colSpan={8} className="text-center py-8 text-explorer-text-muted">
                     {searchTerm ? "No wheels match your search" : "No wheels found"}
                   </TableCell>
                 </TableRow>
