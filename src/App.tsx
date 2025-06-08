@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
@@ -42,6 +41,7 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminEnhancedMedia from "@/pages/admin/AdminEnhancedMedia";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ModelDetailPage from "@/pages/admin/ModelDetailPage";
+import ComponentsPage from "@/pages/admin/ComponentsPage";
 
 function App() {
   return (
@@ -89,6 +89,7 @@ function App() {
             <Route path="parts" element={<AdminParts />} />
             <Route path="accessories" element={<AdminAccessories />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="/admin/components" element={<ComponentsPage />} />
           </Route>
         </Routes>
         <Toaster />

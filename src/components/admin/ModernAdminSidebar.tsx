@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -43,6 +42,7 @@ const navigationGroups = [
       { name: "Models", href: "/admin/models", icon: Bike },
       { name: "Brands", href: "/admin/brands", icon: Building2 },
       { name: "Configurations", href: "/admin/parts", icon: Settings },
+      { name: "Components", href: "/admin/components", icon: Database },
     ]
   },
   {
