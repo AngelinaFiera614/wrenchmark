@@ -2,27 +2,26 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, Filter, Eye, FileText, Trash2, Edit } from "lucide-react";
+import { PlusCircle, Eye, FileText, Trash2, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AdminModelDialog from "@/components/admin/models/AdminModelDialog";
+import EnhancedModelFilters from "@/components/admin/models/EnhancedModelFilters";
+import EnhancedModelStats from "@/components/admin/models/EnhancedModelStats";
 import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
+import { useModelFilters } from "@/hooks/useModelFilters";
 
 const AdminModels = () => {
   const { toast } = useToast();
   const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
   const [editModel, setEditModel] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
 
-  // Fetch motorcycle models using the fixed query
-  const { data: models, isLoading, error, refetch } = useQuery({
+  // Fetch motorcycle models
+  const { data: models = [], isLoading, error, refetch } = useQuery({
     queryKey: ["admin-motorcycle-models"],
     queryFn: fetchAllMotorcycleModels,
     retry: 3,
@@ -30,7 +29,7 @@ const AdminModels = () => {
   });
 
   // Fetch brands for filter dropdown
-  const { data: brands } = useQuery({
+  const { data: brands = [] } = useQuery({
     queryKey: ["brands-for-filter"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -42,15 +41,20 @@ const AdminModels = () => {
     }
   });
 
-  const getBrandName = (brands: any) => {
-    if (!brands) return 'Unknown Brand';
-    if (Array.isArray(brands) && brands.length > 0) {
-      return brands[0]?.name || 'Unknown Brand';
-    }
-    if (typeof brands === 'object' && brands.name) {
-      return brands.name;
-    }
-    return 'Unknown Brand';
+  // Use the enhanced filtering hook
+  const {
+    filters,
+    sort,
+    filteredAndSortedModels,
+    updateFilter,
+    setSort,
+    clearFilters,
+    getActiveFiltersCount,
+    getUniqueCategories
+  } = useModelFilters(models);
+
+  const getBrandName = (model: any) => {
+    return model.brand?.name || 'Unknown Brand';
   };
 
   const handleCreateModel = () => {
@@ -64,7 +68,7 @@ const AdminModels = () => {
   };
 
   const handleDeleteModel = async (model) => {
-    const brandName = getBrandName(model.brands);
+    const brandName = getBrandName(model);
     if (!confirm(`Are you sure you want to delete ${brandName} ${model.name}? This action cannot be undone.`)) {
       return;
     }
@@ -102,7 +106,7 @@ const AdminModels = () => {
 
       if (error) throw error;
 
-      const brandName = getBrandName(model.brands);
+      const brandName = getBrandName(model);
       toast({
         title: model.is_draft ? "Model Published" : "Model Unpublished",
         description: `${brandName} ${model.name} has been ${model.is_draft ? 'published' : 'moved to drafts'}.`,
@@ -125,25 +129,6 @@ const AdminModels = () => {
       refetch();
     }
   };
-
-  // Filter models based on search and filters
-  const filteredModels = models?.filter(model => {
-    const brandName = getBrandName(model.brands);
-    const matchesSearch = !searchTerm || 
-      model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      brandName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesBrand = selectedBrand === "all" || model.brand_id === selectedBrand;
-    
-    const matchesStatus = selectedStatus === "all" || 
-      (selectedStatus === "draft" && model.is_draft) ||
-      (selectedStatus === "published" && !model.is_draft);
-
-    return matchesSearch && matchesBrand && matchesStatus;
-  }) || [];
-
-  const publishedCount = models?.filter(m => !m.is_draft).length || 0;
-  const draftCount = models?.filter(m => m.is_draft).length || 0;
 
   if (isLoading) {
     return (
@@ -210,99 +195,35 @@ const AdminModels = () => {
         </Button>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-explorer-card border-explorer-chrome/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-explorer-text">Total Models</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-explorer-text">{models?.length || 0}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-explorer-card border-explorer-chrome/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-explorer-text">Published</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-400">{publishedCount}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-explorer-card border-explorer-chrome/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-explorer-text">Drafts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-400">{draftCount}</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-explorer-card border-explorer-chrome/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-explorer-text">Brands</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-accent-teal">
-              {new Set(models?.map(m => m.brand_id)).size || 0}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Enhanced Stats */}
+      <EnhancedModelStats 
+        models={models} 
+        filteredModels={filteredAndSortedModels} 
+      />
 
-      {/* Filters */}
-      <Card className="bg-explorer-card border-explorer-chrome/30">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-explorer-text-muted h-4 w-4" />
-                <Input
-                  placeholder="Search models or brands..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
-                />
-              </div>
-            </div>
-            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-              <SelectTrigger className="w-full md:w-48 bg-explorer-dark border-explorer-chrome/30">
-                <SelectValue placeholder="Filter by brand" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Brands</SelectItem>
-                {brands?.map((brand) => (
-                  <SelectItem key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-full md:w-48 bg-explorer-dark border-explorer-chrome/30">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="draft">Drafts</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Enhanced Filters */}
+      <EnhancedModelFilters
+        filters={filters}
+        sort={sort}
+        onFilterChange={updateFilter}
+        onSortChange={setSort}
+        onClearFilters={clearFilters}
+        activeFiltersCount={getActiveFiltersCount()}
+        categories={getUniqueCategories()}
+        brands={brands}
+        isAdvancedOpen={isAdvancedFiltersOpen}
+        onAdvancedToggle={() => setIsAdvancedFiltersOpen(!isAdvancedFiltersOpen)}
+      />
 
       {/* Models Table */}
       <Card className="bg-explorer-card border-explorer-chrome/30">
         <CardHeader>
           <CardTitle className="text-explorer-text flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Models ({filteredModels.length})
+            Models ({filteredAndSortedModels.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredModels.length > 0 ? (
+          {filteredAndSortedModels.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="border-explorer-chrome/20">
@@ -315,8 +236,8 @@ const AdminModels = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredModels.map((model) => {
-                  const brandName = getBrandName(model.brands);
+                {filteredAndSortedModels.map((model) => {
+                  const brandName = getBrandName(model);
                   return (
                     <TableRow key={model.id} className="border-explorer-chrome/20">
                       <TableCell>
@@ -405,12 +326,12 @@ const AdminModels = () => {
           ) : (
             <div className="text-center py-8">
               <div className="text-explorer-text-muted">
-                {searchTerm || selectedBrand !== "all" || selectedStatus !== "all"
+                {getActiveFiltersCount() > 0
                   ? "No models match your filters." 
                   : "No models found. Start by adding your first model."
                 }
               </div>
-              {!searchTerm && selectedBrand === "all" && selectedStatus === "all" && (
+              {getActiveFiltersCount() === 0 && (
                 <Button 
                   variant="outline" 
                   onClick={handleCreateModel}
