@@ -143,7 +143,7 @@ const EnginesManager = () => {
             <CardTitle className="text-explorer-text">Create New Engine</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Input
                 placeholder="Engine Name*"
                 value={formData.name || ""}
@@ -200,7 +200,113 @@ const EnginesManager = () => {
                   <SelectItem value="Oil">Oil</SelectItem>
                 </SelectContent>
               </Select>
+              <Input
+                type="number"
+                placeholder="Cylinders"
+                value={formData.cylinder_count || ""}
+                onChange={(e) => setFormData({ ...formData, cylinder_count: parseInt(e.target.value) || undefined })}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
+              <Select
+                value={formData.valve_train || ""}
+                onValueChange={(value) => setFormData({ ...formData, valve_train: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Valve Train" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SOHC">SOHC</SelectItem>
+                  <SelectItem value="DOHC">DOHC</SelectItem>
+                  <SelectItem value="Pushrod">Pushrod</SelectItem>
+                  <SelectItem value="OHV">OHV</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={formData.stroke_type || ""}
+                onValueChange={(value) => setFormData({ ...formData, stroke_type: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Stroke Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2-stroke">2-stroke</SelectItem>
+                  <SelectItem value="4-stroke">4-stroke</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                placeholder="Bore (mm)"
+                value={formData.bore_mm || ""}
+                onChange={(e) => setFormData({ ...formData, bore_mm: parseFloat(e.target.value) || undefined })}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
+              <Input
+                type="number"
+                placeholder="Stroke (mm)"
+                value={formData.stroke_mm || ""}
+                onChange={(e) => setFormData({ ...formData, stroke_mm: parseFloat(e.target.value) || undefined })}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
+              <Input
+                placeholder="Compression Ratio"
+                value={formData.compression_ratio || ""}
+                onChange={(e) => setFormData({ ...formData, compression_ratio: e.target.value })}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
+              <Select
+                value={formData.fuel_system || ""}
+                onValueChange={(value) => setFormData({ ...formData, fuel_system: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Fuel System" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Carburetor">Carburetor</SelectItem>
+                  <SelectItem value="EFI">EFI</SelectItem>
+                  <SelectItem value="TBI">TBI</SelectItem>
+                  <SelectItem value="Direct Injection">Direct Injection</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={formData.ignition || ""}
+                onValueChange={(value) => setFormData({ ...formData, ignition: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Ignition" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CDI">CDI</SelectItem>
+                  <SelectItem value="Digital">Digital</SelectItem>
+                  <SelectItem value="Magneto">Magneto</SelectItem>
+                  <SelectItem value="TCI">TCI</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={formData.starter || ""}
+                onValueChange={(value) => setFormData({ ...formData, starter: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Starter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Electric">Electric</SelectItem>
+                  <SelectItem value="Kick">Kick</SelectItem>
+                  <SelectItem value="Both">Both</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Engine Code"
+                value={formData.engine_code || ""}
+                onChange={(e) => setFormData({ ...formData, engine_code: e.target.value })}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
             </div>
+            <Input
+              placeholder="Notes"
+              value={formData.notes || ""}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              className="bg-explorer-dark border-explorer-chrome/30"
+            />
             <div className="flex gap-2">
               <Button onClick={handleCreate} className="bg-accent-teal text-black hover:bg-accent-teal/80">
                 <Save className="h-4 w-4 mr-2" />
@@ -233,6 +339,7 @@ const EnginesManager = () => {
                   <TableHead>Power</TableHead>
                   <TableHead>Torque</TableHead>
                   <TableHead>Cooling</TableHead>
+                  <TableHead>Code</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -329,6 +436,17 @@ const EnginesManager = () => {
                     </TableCell>
                     <TableCell>
                       {editingId === engine.id ? (
+                        <Input
+                          value={formData.engine_code || ""}
+                          onChange={(e) => setFormData({ ...formData, engine_code: e.target.value })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        engine.engine_code || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === engine.id ? (
                         <div className="flex gap-1">
                           <Button size="sm" onClick={() => handleUpdate(engine.id)} className="bg-accent-teal text-black hover:bg-accent-teal/80">
                             <Save className="h-3 w-3" />
@@ -352,7 +470,7 @@ const EnginesManager = () => {
                 ))}
                 {filteredEngines.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-explorer-text-muted">
+                    <TableCell colSpan={8} className="text-center py-8 text-explorer-text-muted">
                       {searchTerm ? "No engines match your search" : "No engines found"}
                     </TableCell>
                   </TableRow>

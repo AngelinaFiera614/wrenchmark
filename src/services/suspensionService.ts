@@ -9,8 +9,6 @@ export interface Suspension {
   adjustability?: string;
   front_travel_mm?: number;
   rear_travel_mm?: number;
-  front_brand?: string;
-  rear_brand?: string;
   damping_system?: string;
   notes?: string;
   name?: string; // Computed field for display purposes

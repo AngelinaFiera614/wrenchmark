@@ -144,7 +144,7 @@ const BrakesManager = () => {
             <CardTitle className="text-explorer-text">Create New Brake System</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Input
                 placeholder="System Type*"
                 value={formData.type || ""}
@@ -183,6 +183,18 @@ const BrakesManager = () => {
                 </SelectContent>
               </Select>
               <Input
+                placeholder="Front Disc Size"
+                value={formData.front_disc_size_mm || ""}
+                onChange={(e) => setFormData({ ...formData, front_disc_size_mm: e.target.value })}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
+              <Input
+                placeholder="Rear Disc Size"
+                value={formData.rear_disc_size_mm || ""}
+                onChange={(e) => setFormData({ ...formData, rear_disc_size_mm: e.target.value })}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
+              <Input
                 placeholder="Caliper Type"
                 value={formData.caliper_type || ""}
                 onChange={(e) => setFormData({ ...formData, caliper_type: e.target.value })}
@@ -195,7 +207,20 @@ const BrakesManager = () => {
                 />
                 <label className="text-sm text-explorer-text">Traction Control</label>
               </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.has_abs || false}
+                  onCheckedChange={(checked) => setFormData({ ...formData, has_abs: checked })}
+                />
+                <label className="text-sm text-explorer-text">ABS</label>
+              </div>
             </div>
+            <Input
+              placeholder="Notes"
+              value={formData.notes || ""}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              className="bg-explorer-dark border-explorer-chrome/30"
+            />
             <div className="flex gap-2">
               <Button onClick={handleCreate} className="bg-accent-teal text-black hover:bg-accent-teal/80">
                 <Save className="h-4 w-4 mr-2" />
@@ -228,6 +253,7 @@ const BrakesManager = () => {
                   <TableHead>Rear</TableHead>
                   <TableHead>Caliper</TableHead>
                   <TableHead>TC</TableHead>
+                  <TableHead>ABS</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -316,6 +342,16 @@ const BrakesManager = () => {
                     </TableCell>
                     <TableCell>
                       {editingId === brake.id ? (
+                        <Switch
+                          checked={formData.has_abs || false}
+                          onCheckedChange={(checked) => setFormData({ ...formData, has_abs: checked })}
+                        />
+                      ) : (
+                        brake.has_abs ? "Yes" : "No"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === brake.id ? (
                         <div className="flex gap-1">
                           <Button size="sm" onClick={() => handleUpdate(brake.id)} className="bg-accent-teal text-black hover:bg-accent-teal/80">
                             <Save className="h-3 w-3" />
@@ -339,7 +375,7 @@ const BrakesManager = () => {
                 ))}
                 {filteredBrakes.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-explorer-text-muted">
+                    <TableCell colSpan={8} className="text-center py-8 text-explorer-text-muted">
                       {searchTerm ? "No brake systems match your search" : "No brake systems found"}
                     </TableCell>
                   </TableRow>

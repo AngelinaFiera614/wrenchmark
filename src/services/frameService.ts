@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Frame {
   id: string;
-  type?: string;
+  type: string;
   material?: string;
   construction_method?: string;
   rake_degrees?: number;

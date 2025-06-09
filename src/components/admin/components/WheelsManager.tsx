@@ -9,6 +9,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { fetchWheels, createWheel, updateWheel, deleteWheel } from "@/services/wheelService";
 import type { Wheel } from "@/services/wheelService";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 const WheelsManager = () => {
   const { toast } = useToast();
@@ -26,15 +28,16 @@ const WheelsManager = () => {
   const filteredWheels = wheels.filter(wheel =>
     wheel.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     wheel.front_size?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    wheel.rear_size?.toLowerCase().includes(searchTerm.toLowerCase())
+    wheel.rear_size?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    wheel.rim_material?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleCreate = async () => {
-    if (!formData.type && !formData.front_size) {
+    if (!formData.type && !formData.front_size && !formData.rear_size) {
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: "Wheel type or size is required"
+        description: "At least type or wheel sizes are required"
       });
       return;
     }
@@ -118,7 +121,7 @@ const WheelsManager = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-explorer-text-muted h-4 w-4" />
               <Input
-                placeholder="Search wheels by type or size..."
+                placeholder="Search wheels by type, size, or material..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 bg-explorer-dark border-explorer-chrome/30"
@@ -142,43 +145,67 @@ const WheelsManager = () => {
             <CardTitle className="text-explorer-text">Create New Wheel</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Input
-                placeholder="Wheel Type"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Select
                 value={formData.type || ""}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
+                onValueChange={(value) => setFormData({ ...formData, type: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Wheel Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cast">Cast</SelectItem>
+                  <SelectItem value="Spoke">Spoke</SelectItem>
+                  <SelectItem value="Carbon">Carbon</SelectItem>
+                  <SelectItem value="Alloy">Alloy</SelectItem>
+                  <SelectItem value="Wire">Wire</SelectItem>
+                </SelectContent>
+              </Select>
               <Input
-                placeholder="Front Size"
+                placeholder="Front Size (e.g., 17\")"
                 value={formData.front_size || ""}
                 onChange={(e) => setFormData({ ...formData, front_size: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
               <Input
-                placeholder="Rear Size"
+                placeholder="Rear Size (e.g., 17\")"
                 value={formData.rear_size || ""}
                 onChange={(e) => setFormData({ ...formData, rear_size: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
               <Input
-                placeholder="Front Tire Size"
+                placeholder="Front Tire (e.g., 110/90-17)"
                 value={formData.front_tire_size || ""}
                 onChange={(e) => setFormData({ ...formData, front_tire_size: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
               <Input
-                placeholder="Rear Tire Size"
+                placeholder="Rear Tire (e.g., 150/70-17)"
                 value={formData.rear_tire_size || ""}
                 onChange={(e) => setFormData({ ...formData, rear_tire_size: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
-              <Input
-                placeholder="Rim Material"
+              <Select
                 value={formData.rim_material || ""}
-                onChange={(e) => setFormData({ ...formData, rim_material: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
+                onValueChange={(value) => setFormData({ ...formData, rim_material: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Rim Material" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Steel">Steel</SelectItem>
+                  <SelectItem value="Aluminum">Aluminum</SelectItem>
+                  <SelectItem value="Carbon Fiber">Carbon Fiber</SelectItem>
+                  <SelectItem value="Magnesium">Magnesium</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.tubeless || false}
+                  onCheckedChange={(checked) => setFormData({ ...formData, tubeless: checked })}
+                />
+                <label className="text-sm text-explorer-text">Tubeless</label>
+              </div>
             </div>
             <Input
               placeholder="Notes"
@@ -208,133 +235,151 @@ const WheelsManager = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Front Size</TableHead>
-                <TableHead>Rear Size</TableHead>
-                <TableHead>Front Tire</TableHead>
-                <TableHead>Rear Tire</TableHead>
-                <TableHead>Material</TableHead>
-                <TableHead>Notes</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredWheels.map((wheel) => (
-                <TableRow key={wheel.id}>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <Input
-                        value={formData.type || ""}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      wheel.type || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <Input
-                        value={formData.front_size || ""}
-                        onChange={(e) => setFormData({ ...formData, front_size: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      wheel.front_size || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <Input
-                        value={formData.rear_size || ""}
-                        onChange={(e) => setFormData({ ...formData, rear_size: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      wheel.rear_size || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <Input
-                        value={formData.front_tire_size || ""}
-                        onChange={(e) => setFormData({ ...formData, front_tire_size: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      wheel.front_tire_size || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <Input
-                        value={formData.rear_tire_size || ""}
-                        onChange={(e) => setFormData({ ...formData, rear_tire_size: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      wheel.rear_tire_size || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <Input
-                        value={formData.rim_material || ""}
-                        onChange={(e) => setFormData({ ...formData, rim_material: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      wheel.rim_material || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <Input
-                        value={formData.notes || ""}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      <div className="max-w-32 truncate" title={wheel.notes || ""}>
-                        {wheel.notes || "-"}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === wheel.id ? (
-                      <div className="flex gap-1">
-                        <Button size="sm" onClick={() => handleUpdate(wheel.id)} className="bg-accent-teal text-black hover:bg-accent-teal/80">
-                          <Save className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={cancelEdit}>
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => startEdit(wheel)}>
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(wheel.id)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredWheels.length === 0 && (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-explorer-text-muted">
-                    {searchTerm ? "No wheels match your search" : "No wheels found"}
-                  </TableCell>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Front Size</TableHead>
+                  <TableHead>Rear Size</TableHead>
+                  <TableHead>Front Tire</TableHead>
+                  <TableHead>Rear Tire</TableHead>
+                  <TableHead>Material</TableHead>
+                  <TableHead>Tubeless</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredWheels.map((wheel) => (
+                  <TableRow key={wheel.id}>
+                    <TableCell>
+                      {editingId === wheel.id ? (
+                        <Select
+                          value={formData.type || ""}
+                          onValueChange={(value) => setFormData({ ...formData, type: value })}
+                        >
+                          <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cast">Cast</SelectItem>
+                            <SelectItem value="Spoke">Spoke</SelectItem>
+                            <SelectItem value="Carbon">Carbon</SelectItem>
+                            <SelectItem value="Alloy">Alloy</SelectItem>
+                            <SelectItem value="Wire">Wire</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        wheel.type || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === wheel.id ? (
+                        <Input
+                          value={formData.front_size || ""}
+                          onChange={(e) => setFormData({ ...formData, front_size: e.target.value })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        wheel.front_size || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === wheel.id ? (
+                        <Input
+                          value={formData.rear_size || ""}
+                          onChange={(e) => setFormData({ ...formData, rear_size: e.target.value })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        wheel.rear_size || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === wheel.id ? (
+                        <Input
+                          value={formData.front_tire_size || ""}
+                          onChange={(e) => setFormData({ ...formData, front_tire_size: e.target.value })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        wheel.front_tire_size || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === wheel.id ? (
+                        <Input
+                          value={formData.rear_tire_size || ""}
+                          onChange={(e) => setFormData({ ...formData, rear_tire_size: e.target.value })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        wheel.rear_tire_size || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === wheel.id ? (
+                        <Select
+                          value={formData.rim_material || ""}
+                          onValueChange={(value) => setFormData({ ...formData, rim_material: value })}
+                        >
+                          <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Steel">Steel</SelectItem>
+                            <SelectItem value="Aluminum">Aluminum</SelectItem>
+                            <SelectItem value="Carbon Fiber">Carbon Fiber</SelectItem>
+                            <SelectItem value="Magnesium">Magnesium</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        wheel.rim_material || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === wheel.id ? (
+                        <Switch
+                          checked={formData.tubeless || false}
+                          onCheckedChange={(checked) => setFormData({ ...formData, tubeless: checked })}
+                        />
+                      ) : (
+                        wheel.tubeless ? "Yes" : "No"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === wheel.id ? (
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={() => handleUpdate(wheel.id)} className="bg-accent-teal text-black hover:bg-accent-teal/80">
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={cancelEdit}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => startEdit(wheel)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(wheel.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredWheels.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-explorer-text-muted">
+                      {searchTerm ? "No wheels match your search" : "No wheels found"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

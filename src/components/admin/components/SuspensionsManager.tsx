@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { fetchSuspensions, createSuspension, updateSuspension, deleteSuspension } from "@/services/suspensionService";
 import type { Suspension } from "@/services/suspensionService";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SuspensionsManager = () => {
   const { toast } = useToast();
@@ -34,7 +35,7 @@ const SuspensionsManager = () => {
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: "At least one suspension type is required"
+        description: "At least front or rear type is required"
       });
       return;
     }
@@ -142,31 +143,56 @@ const SuspensionsManager = () => {
             <CardTitle className="text-explorer-text">Create New Suspension</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Input
-                placeholder="Front Type"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Select
                 value={formData.front_type || ""}
-                onChange={(e) => setFormData({ ...formData, front_type: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
-              <Input
-                placeholder="Rear Type"
+                onValueChange={(value) => setFormData({ ...formData, front_type: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Front Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Telescopic">Telescopic</SelectItem>
+                  <SelectItem value="USD Fork">USD Fork</SelectItem>
+                  <SelectItem value="Leading Link">Leading Link</SelectItem>
+                  <SelectItem value="Girder">Girder</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
                 value={formData.rear_type || ""}
-                onChange={(e) => setFormData({ ...formData, rear_type: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
+                onValueChange={(value) => setFormData({ ...formData, rear_type: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Rear Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Dual Shock">Dual Shock</SelectItem>
+                  <SelectItem value="Monoshock">Monoshock</SelectItem>
+                  <SelectItem value="Swing Arm">Swing Arm</SelectItem>
+                  <SelectItem value="Cantilever">Cantilever</SelectItem>
+                </SelectContent>
+              </Select>
               <Input
                 placeholder="Brand"
                 value={formData.brand || ""}
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
-              <Input
-                placeholder="Adjustability"
+              <Select
                 value={formData.adjustability || ""}
-                onChange={(e) => setFormData({ ...formData, adjustability: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
+                onValueChange={(value) => setFormData({ ...formData, adjustability: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Adjustability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="None">None</SelectItem>
+                  <SelectItem value="Preload">Preload</SelectItem>
+                  <SelectItem value="Compression">Compression</SelectItem>
+                  <SelectItem value="Rebound">Rebound</SelectItem>
+                  <SelectItem value="Full">Full</SelectItem>
+                </SelectContent>
+              </Select>
               <Input
                 type="number"
                 placeholder="Front Travel (mm)"
@@ -181,7 +207,27 @@ const SuspensionsManager = () => {
                 onChange={(e) => setFormData({ ...formData, rear_travel_mm: parseInt(e.target.value) || undefined })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
+              <Select
+                value={formData.damping_system || ""}
+                onValueChange={(value) => setFormData({ ...formData, damping_system: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Damping System" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cartridge">Cartridge</SelectItem>
+                  <SelectItem value="Gas-Charged">Gas-Charged</SelectItem>
+                  <SelectItem value="Oil">Oil</SelectItem>
+                  <SelectItem value="Electronic">Electronic</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            <Input
+              placeholder="Notes"
+              value={formData.notes || ""}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              className="bg-explorer-dark border-explorer-chrome/30"
+            />
             <div className="flex gap-2">
               <Button onClick={handleCreate} className="bg-accent-teal text-black hover:bg-accent-teal/80">
                 <Save className="h-4 w-4 mr-2" />
@@ -204,121 +250,151 @@ const SuspensionsManager = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Front Type</TableHead>
-                <TableHead>Rear Type</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>Adjustability</TableHead>
-                <TableHead>Front Travel</TableHead>
-                <TableHead>Rear Travel</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSuspensions.map((suspension) => (
-                <TableRow key={suspension.id}>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <Input
-                        value={formData.front_type || ""}
-                        onChange={(e) => setFormData({ ...formData, front_type: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      suspension.front_type || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <Input
-                        value={formData.rear_type || ""}
-                        onChange={(e) => setFormData({ ...formData, rear_type: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      suspension.rear_type || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <Input
-                        value={formData.brand || ""}
-                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      suspension.brand || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <Input
-                        value={formData.adjustability || ""}
-                        onChange={(e) => setFormData({ ...formData, adjustability: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      suspension.adjustability || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <Input
-                        type="number"
-                        value={formData.front_travel_mm || ""}
-                        onChange={(e) => setFormData({ ...formData, front_travel_mm: parseInt(e.target.value) || undefined })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      suspension.front_travel_mm ? `${suspension.front_travel_mm}mm` : "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <Input
-                        type="number"
-                        value={formData.rear_travel_mm || ""}
-                        onChange={(e) => setFormData({ ...formData, rear_travel_mm: parseInt(e.target.value) || undefined })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      suspension.rear_travel_mm ? `${suspension.rear_travel_mm}mm` : "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === suspension.id ? (
-                      <div className="flex gap-1">
-                        <Button size="sm" onClick={() => handleUpdate(suspension.id)} className="bg-accent-teal text-black hover:bg-accent-teal/80">
-                          <Save className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={cancelEdit}>
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => startEdit(suspension)}>
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(suspension.id)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredSuspensions.length === 0 && (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-explorer-text-muted">
-                    {searchTerm ? "No suspensions match your search" : "No suspensions found"}
-                  </TableCell>
+                  <TableHead>Front Type</TableHead>
+                  <TableHead>Rear Type</TableHead>
+                  <TableHead>Brand</TableHead>
+                  <TableHead>Adjustability</TableHead>
+                  <TableHead>Front Travel</TableHead>
+                  <TableHead>Rear Travel</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredSuspensions.map((suspension) => (
+                  <TableRow key={suspension.id}>
+                    <TableCell>
+                      {editingId === suspension.id ? (
+                        <Select
+                          value={formData.front_type || ""}
+                          onValueChange={(value) => setFormData({ ...formData, front_type: value })}
+                        >
+                          <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Telescopic">Telescopic</SelectItem>
+                            <SelectItem value="USD Fork">USD Fork</SelectItem>
+                            <SelectItem value="Leading Link">Leading Link</SelectItem>
+                            <SelectItem value="Girder">Girder</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        suspension.front_type || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === suspension.id ? (
+                        <Select
+                          value={formData.rear_type || ""}
+                          onValueChange={(value) => setFormData({ ...formData, rear_type: value })}
+                        >
+                          <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Dual Shock">Dual Shock</SelectItem>
+                            <SelectItem value="Monoshock">Monoshock</SelectItem>
+                            <SelectItem value="Swing Arm">Swing Arm</SelectItem>
+                            <SelectItem value="Cantilever">Cantilever</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        suspension.rear_type || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === suspension.id ? (
+                        <Input
+                          value={formData.brand || ""}
+                          onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        suspension.brand || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === suspension.id ? (
+                        <Select
+                          value={formData.adjustability || ""}
+                          onValueChange={(value) => setFormData({ ...formData, adjustability: value })}
+                        >
+                          <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="None">None</SelectItem>
+                            <SelectItem value="Preload">Preload</SelectItem>
+                            <SelectItem value="Compression">Compression</SelectItem>
+                            <SelectItem value="Rebound">Rebound</SelectItem>
+                            <SelectItem value="Full">Full</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        suspension.adjustability || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === suspension.id ? (
+                        <Input
+                          type="number"
+                          value={formData.front_travel_mm || ""}
+                          onChange={(e) => setFormData({ ...formData, front_travel_mm: parseInt(e.target.value) || undefined })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        suspension.front_travel_mm ? `${suspension.front_travel_mm}mm` : "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === suspension.id ? (
+                        <Input
+                          type="number"
+                          value={formData.rear_travel_mm || ""}
+                          onChange={(e) => setFormData({ ...formData, rear_travel_mm: parseInt(e.target.value) || undefined })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        suspension.rear_travel_mm ? `${suspension.rear_travel_mm}mm` : "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === suspension.id ? (
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={() => handleUpdate(suspension.id)} className="bg-accent-teal text-black hover:bg-accent-teal/80">
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={cancelEdit}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => startEdit(suspension)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(suspension.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredSuspensions.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-explorer-text-muted">
+                      {searchTerm ? "No suspensions match your search" : "No suspensions found"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

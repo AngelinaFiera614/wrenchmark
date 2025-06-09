@@ -3,15 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface BrakeSystem {
   id: string;
-  type?: string;
+  type: string;
   front_type?: string;
   rear_type?: string;
-  front_disc_size_mm?: number;
-  rear_disc_size_mm?: number;
-  brake_type_front?: string;
-  brake_type_rear?: string;
-  brake_brand?: string;
+  front_disc_size_mm?: string;
+  rear_disc_size_mm?: string;
   caliper_type?: string;
+  brake_brand?: string;
   has_traction_control?: boolean;
   has_abs?: boolean;
   notes?: string;

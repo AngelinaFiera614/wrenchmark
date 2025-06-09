@@ -12,45 +12,48 @@ export type Database = {
       brake_systems: {
         Row: {
           brake_brand: string | null
-          brake_type_front: string | null
-          brake_type_rear: string | null
           caliper_type: string | null
-          created_at: string
-          front_disc_size_mm: number | null
+          created_at: string | null
+          front_disc_size_mm: string | null
+          front_type: string | null
+          has_abs: boolean | null
           has_traction_control: boolean | null
           id: string
           notes: string | null
-          rear_disc_size_mm: number | null
+          rear_disc_size_mm: string | null
+          rear_type: string | null
           type: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           brake_brand?: string | null
-          brake_type_front?: string | null
-          brake_type_rear?: string | null
           caliper_type?: string | null
-          created_at?: string
-          front_disc_size_mm?: number | null
+          created_at?: string | null
+          front_disc_size_mm?: string | null
+          front_type?: string | null
+          has_abs?: boolean | null
           has_traction_control?: boolean | null
           id?: string
           notes?: string | null
-          rear_disc_size_mm?: number | null
+          rear_disc_size_mm?: string | null
+          rear_type?: string | null
           type: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           brake_brand?: string | null
-          brake_type_front?: string | null
-          brake_type_rear?: string | null
           caliper_type?: string | null
-          created_at?: string
-          front_disc_size_mm?: number | null
+          created_at?: string | null
+          front_disc_size_mm?: string | null
+          front_type?: string | null
+          has_abs?: boolean | null
           has_traction_control?: boolean | null
           id?: string
           notes?: string | null
-          rear_disc_size_mm?: number | null
+          rear_disc_size_mm?: string | null
+          rear_type?: string | null
           type?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -219,34 +222,34 @@ export type Database = {
         Row: {
           component_id: string
           component_type: string
-          created_at: string
+          created_at: string | null
           id: string
           last_used_at: string | null
           model_count: number | null
           trim_count: number | null
-          updated_at: string
+          updated_at: string | null
           usage_count: number | null
         }
         Insert: {
           component_id: string
           component_type: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           last_used_at?: string | null
           model_count?: number | null
           trim_count?: number | null
-          updated_at?: string
+          updated_at?: string | null
           usage_count?: number | null
         }
         Update: {
           component_id?: string
           component_type?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           last_used_at?: string | null
           model_count?: number | null
           trim_count?: number | null
-          updated_at?: string
+          updated_at?: string | null
           usage_count?: number | null
         }
         Relationships: []
@@ -319,100 +322,109 @@ export type Database = {
           bore_mm: number | null
           compression_ratio: string | null
           cooling: string | null
-          created_at: string
+          created_at: string | null
           cylinder_count: number | null
           displacement_cc: number
+          engine_code: string | null
           engine_type: string | null
           fuel_system: string | null
           id: string
+          ignition: string | null
           name: string
+          notes: string | null
           power_hp: number | null
-          power_rpm: number | null
+          starter: string | null
           stroke_mm: number | null
           stroke_type: string | null
           torque_nm: number | null
-          torque_rpm: number | null
-          updated_at: string
-          valve_count: number | null
-          valves_per_cylinder: number | null
+          updated_at: string | null
+          valve_train: string | null
         }
         Insert: {
           bore_mm?: number | null
           compression_ratio?: string | null
           cooling?: string | null
-          created_at?: string
+          created_at?: string | null
           cylinder_count?: number | null
           displacement_cc: number
+          engine_code?: string | null
           engine_type?: string | null
           fuel_system?: string | null
           id?: string
+          ignition?: string | null
           name: string
+          notes?: string | null
           power_hp?: number | null
-          power_rpm?: number | null
+          starter?: string | null
           stroke_mm?: number | null
           stroke_type?: string | null
           torque_nm?: number | null
-          torque_rpm?: number | null
-          updated_at?: string
-          valve_count?: number | null
-          valves_per_cylinder?: number | null
+          updated_at?: string | null
+          valve_train?: string | null
         }
         Update: {
           bore_mm?: number | null
           compression_ratio?: string | null
           cooling?: string | null
-          created_at?: string
+          created_at?: string | null
           cylinder_count?: number | null
           displacement_cc?: number
+          engine_code?: string | null
           engine_type?: string | null
           fuel_system?: string | null
           id?: string
+          ignition?: string | null
           name?: string
+          notes?: string | null
           power_hp?: number | null
-          power_rpm?: number | null
+          starter?: string | null
           stroke_mm?: number | null
           stroke_type?: string | null
           torque_nm?: number | null
-          torque_rpm?: number | null
-          updated_at?: string
-          valve_count?: number | null
-          valves_per_cylinder?: number | null
+          updated_at?: string | null
+          valve_train?: string | null
         }
         Relationships: []
       }
       frames: {
         Row: {
           construction_method: string | null
-          created_at: string
+          created_at: string | null
           id: string
           material: string | null
+          mounting_type: string | null
           notes: string | null
           rake_degrees: number | null
           trail_mm: number | null
           type: string
-          updated_at: string
+          updated_at: string | null
+          wheelbase_mm: number | null
         }
         Insert: {
           construction_method?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           material?: string | null
+          mounting_type?: string | null
           notes?: string | null
           rake_degrees?: number | null
           trail_mm?: number | null
           type: string
-          updated_at?: string
+          updated_at?: string | null
+          wheelbase_mm?: number | null
         }
         Update: {
           construction_method?: string | null
-          created_at?: string
+          created_at?: string | null
           id?: string
           material?: string | null
+          mounting_type?: string | null
           notes?: string | null
           rake_degrees?: number | null
           trail_mm?: number | null
           type?: string
-          updated_at?: string
+          updated_at?: string | null
+          wheelbase_mm?: number | null
         }
         Relationships: []
       }
@@ -700,13 +712,6 @@ export type Database = {
             foreignKeyName: "manuals_model_id_fkey"
             columns: ["model_id"]
             isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
-          },
-          {
-            foreignKeyName: "manuals_model_id_fkey"
-            columns: ["model_id"]
-            isOneToOne: false
             referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
           },
@@ -717,49 +722,42 @@ export type Database = {
           assignment_type: string | null
           component_id: string
           component_type: string
-          created_at: string
+          created_at: string | null
           effective_from_year: number | null
           effective_to_year: number | null
           id: string
           is_default: boolean | null
-          model_id: string
+          model_id: string | null
           notes: string | null
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           assignment_type?: string | null
           component_id: string
           component_type: string
-          created_at?: string
+          created_at?: string | null
           effective_from_year?: number | null
           effective_to_year?: number | null
           id?: string
           is_default?: boolean | null
-          model_id: string
+          model_id?: string | null
           notes?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           assignment_type?: string | null
           component_id?: string
           component_type?: string
-          created_at?: string
+          created_at?: string | null
           effective_from_year?: number | null
           effective_to_year?: number | null
           id?: string
           is_default?: boolean | null
-          model_id?: string
+          model_id?: string | null
           notes?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "model_component_assignments_model_id_fkey"
-            columns: ["model_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
-          },
           {
             foreignKeyName: "model_component_assignments_model_id_fkey"
             columns: ["model_id"]
@@ -878,45 +876,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_model_configurations_suspension"
-            columns: ["suspension_id"]
-            isOneToOne: false
-            referencedRelation: "suspensions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "model_configurations_brake_system_id_fkey"
-            columns: ["brake_system_id"]
-            isOneToOne: false
-            referencedRelation: "brake_systems"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "model_configurations_color_id_fkey"
             columns: ["color_id"]
             isOneToOne: false
             referencedRelation: "color_options"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "model_configurations_engine_id_fkey"
-            columns: ["engine_id"]
-            isOneToOne: false
-            referencedRelation: "engines"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "model_configurations_frame_id_fkey"
-            columns: ["frame_id"]
-            isOneToOne: false
-            referencedRelation: "frames"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "model_configurations_wheel_id_fkey"
-            columns: ["wheel_id"]
-            isOneToOne: false
-            referencedRelation: "wheels"
             referencedColumns: ["id"]
           },
         ]
@@ -959,13 +922,6 @@ export type Database = {
           year?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "model_years_motorcycle_id_fkey"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
-          },
           {
             foreignKeyName: "model_years_motorcycle_id_fkey"
             columns: ["motorcycle_id"]
@@ -1031,13 +987,6 @@ export type Database = {
           year_published?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "motorcycle_documents_motorcycle_id_fkey"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
-          },
           {
             foreignKeyName: "motorcycle_documents_motorcycle_id_fkey"
             columns: ["motorcycle_id"]
@@ -1158,22 +1107,8 @@ export type Database = {
             foreignKeyName: "fk_motorcycle_images_configuration"
             columns: ["configuration_id"]
             isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["configuration_id"]
-          },
-          {
-            foreignKeyName: "fk_motorcycle_images_configuration"
-            columns: ["configuration_id"]
-            isOneToOne: false
             referencedRelation: "model_configurations"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_motorcycle_images_motorcycle"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
           },
           {
             foreignKeyName: "fk_motorcycle_images_motorcycle"
@@ -1186,22 +1121,8 @@ export type Database = {
             foreignKeyName: "motorcycle_images_configuration_id_fkey"
             columns: ["configuration_id"]
             isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["configuration_id"]
-          },
-          {
-            foreignKeyName: "motorcycle_images_configuration_id_fkey"
-            columns: ["configuration_id"]
-            isOneToOne: false
             referencedRelation: "model_configurations"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motorcycle_images_motorcycle_id_fkey"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
           },
           {
             foreignKeyName: "motorcycle_images_motorcycle_id_fkey"
@@ -1233,13 +1154,6 @@ export type Database = {
           tag_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "motorcycle_model_tags_motorcycle_id_fkey"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
-          },
           {
             foreignKeyName: "motorcycle_model_tags_motorcycle_id_fkey"
             columns: ["motorcycle_id"]
@@ -1411,22 +1325,8 @@ export type Database = {
             foreignKeyName: "motorcycle_models_predecessor_model_id_fkey"
             columns: ["predecessor_model_id"]
             isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
-          },
-          {
-            foreignKeyName: "motorcycle_models_predecessor_model_id_fkey"
-            columns: ["predecessor_model_id"]
-            isOneToOne: false
             referencedRelation: "motorcycle_models"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motorcycle_models_successor_model_id_fkey"
-            columns: ["successor_model_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
           },
           {
             foreignKeyName: "motorcycle_models_successor_model_id_fkey"
@@ -1530,22 +1430,8 @@ export type Database = {
             foreignKeyName: "motorcycle_videos_configuration_id_fkey"
             columns: ["configuration_id"]
             isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["configuration_id"]
-          },
-          {
-            foreignKeyName: "motorcycle_videos_configuration_id_fkey"
-            columns: ["configuration_id"]
-            isOneToOne: false
             referencedRelation: "model_configurations"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motorcycle_videos_motorcycle_id_fkey"
-            columns: ["motorcycle_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
           },
           {
             foreignKeyName: "motorcycle_videos_motorcycle_id_fkey"
@@ -1630,13 +1516,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "repair_skills_model_id_fkey"
-            columns: ["model_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["model_id"]
-          },
           {
             foreignKeyName: "repair_skills_model_id_fkey"
             columns: ["model_id"]
@@ -1759,11 +1638,11 @@ export type Database = {
           adjustability: string | null
           brand: string | null
           created_at: string | null
-          front_brand: string | null
+          damping_system: string | null
           front_travel_mm: number | null
           front_type: string | null
           id: string
-          rear_brand: string | null
+          notes: string | null
           rear_travel_mm: number | null
           rear_type: string | null
           updated_at: string | null
@@ -1772,11 +1651,11 @@ export type Database = {
           adjustability?: string | null
           brand?: string | null
           created_at?: string | null
-          front_brand?: string | null
+          damping_system?: string | null
           front_travel_mm?: number | null
           front_type?: string | null
           id?: string
-          rear_brand?: string | null
+          notes?: string | null
           rear_travel_mm?: number | null
           rear_type?: string | null
           updated_at?: string | null
@@ -1785,11 +1664,11 @@ export type Database = {
           adjustability?: string | null
           brand?: string | null
           created_at?: string | null
-          front_brand?: string | null
+          damping_system?: string | null
           front_travel_mm?: number | null
           front_type?: string | null
           id?: string
-          rear_brand?: string | null
+          notes?: string | null
           rear_travel_mm?: number | null
           rear_type?: string | null
           updated_at?: string | null
@@ -1828,13 +1707,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "color_options"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trim_color_assignments_configuration_id_fkey"
-            columns: ["configuration_id"]
-            isOneToOne: false
-            referencedRelation: "effective_component_assignments"
-            referencedColumns: ["configuration_id"]
           },
           {
             foreignKeyName: "trim_color_assignments_configuration_id_fkey"
@@ -1976,7 +1848,7 @@ export type Database = {
       }
       wheels: {
         Row: {
-          created_at: string
+          created_at: string | null
           front_size: string | null
           front_tire_size: string | null
           id: string
@@ -1984,13 +1856,12 @@ export type Database = {
           rear_size: string | null
           rear_tire_size: string | null
           rim_material: string | null
-          spoke_count_front: number | null
-          spoke_count_rear: number | null
+          tubeless: boolean | null
           type: string | null
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           front_size?: string | null
           front_tire_size?: string | null
           id?: string
@@ -1998,13 +1869,12 @@ export type Database = {
           rear_size?: string | null
           rear_tire_size?: string | null
           rim_material?: string | null
-          spoke_count_front?: number | null
-          spoke_count_rear?: number | null
+          tubeless?: boolean | null
           type?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           front_size?: string | null
           front_tire_size?: string | null
           id?: string
@@ -2012,35 +1882,15 @@ export type Database = {
           rear_size?: string | null
           rear_tire_size?: string | null
           rim_material?: string | null
-          spoke_count_front?: number | null
-          spoke_count_rear?: number | null
+          tubeless?: boolean | null
           type?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
     }
     Views: {
-      effective_component_assignments: {
-        Row: {
-          brake_system_inherited: boolean | null
-          configuration_id: string | null
-          configuration_name: string | null
-          effective_brake_system_id: string | null
-          effective_engine_id: string | null
-          effective_frame_id: string | null
-          effective_suspension_id: string | null
-          effective_wheel_id: string | null
-          engine_inherited: boolean | null
-          frame_inherited: boolean | null
-          model_id: string | null
-          model_name: string | null
-          suspension_inherited: boolean | null
-          wheel_inherited: boolean | null
-          year: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       cleanup_expired_suggestions: {

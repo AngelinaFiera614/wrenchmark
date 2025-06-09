@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { fetchFrames, createFrame, updateFrame, deleteFrame } from "@/services/frameService";
 import type { Frame } from "@/services/frameService";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const FramesManager = () => {
   const { toast } = useToast();
@@ -141,25 +142,53 @@ const FramesManager = () => {
             <CardTitle className="text-explorer-text">Create New Frame</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Input
-                placeholder="Frame Type"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Select
                 value={formData.type || ""}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
-              <Input
-                placeholder="Material"
+                onValueChange={(value) => setFormData({ ...formData, type: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Frame Type*" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Steel Trellis">Steel Trellis</SelectItem>
+                  <SelectItem value="Diamond">Diamond</SelectItem>
+                  <SelectItem value="Perimeter">Perimeter</SelectItem>
+                  <SelectItem value="Backbone">Backbone</SelectItem>
+                  <SelectItem value="Cradle">Cradle</SelectItem>
+                  <SelectItem value="Monocoque">Monocoque</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
                 value={formData.material || ""}
-                onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
-              <Input
-                placeholder="Construction Method"
+                onValueChange={(value) => setFormData({ ...formData, material: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Material" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Steel">Steel</SelectItem>
+                  <SelectItem value="Aluminum">Aluminum</SelectItem>
+                  <SelectItem value="Alloy">Alloy</SelectItem>
+                  <SelectItem value="Carbon Fiber">Carbon Fiber</SelectItem>
+                  <SelectItem value="Magnesium">Magnesium</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
                 value={formData.construction_method || ""}
-                onChange={(e) => setFormData({ ...formData, construction_method: e.target.value })}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
+                onValueChange={(value) => setFormData({ ...formData, construction_method: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Construction" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Welded">Welded</SelectItem>
+                  <SelectItem value="Cast">Cast</SelectItem>
+                  <SelectItem value="Hybrid">Hybrid</SelectItem>
+                  <SelectItem value="Riveted">Riveted</SelectItem>
+                  <SelectItem value="Forged">Forged</SelectItem>
+                </SelectContent>
+              </Select>
               <Input
                 type="number"
                 placeholder="Rake (degrees)"
@@ -174,6 +203,26 @@ const FramesManager = () => {
                 onChange={(e) => setFormData({ ...formData, trail_mm: parseFloat(e.target.value) || undefined })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
+              <Input
+                type="number"
+                placeholder="Wheelbase (mm)"
+                value={formData.wheelbase_mm || ""}
+                onChange={(e) => setFormData({ ...formData, wheelbase_mm: parseInt(e.target.value) || undefined })}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
+              <Select
+                value={formData.mounting_type || ""}
+                onValueChange={(value) => setFormData({ ...formData, mounting_type: value })}
+              >
+                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                  <SelectValue placeholder="Mounting Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Rubber-mounted">Rubber-mounted</SelectItem>
+                  <SelectItem value="Direct">Direct</SelectItem>
+                  <SelectItem value="Isolated">Isolated</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Input
               placeholder="Notes"
@@ -203,123 +252,155 @@ const FramesManager = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Material</TableHead>
-                <TableHead>Construction</TableHead>
-                <TableHead>Rake</TableHead>
-                <TableHead>Trail</TableHead>
-                <TableHead>Notes</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredFrames.map((frame) => (
-                <TableRow key={frame.id}>
-                  <TableCell>
-                    {editingId === frame.id ? (
-                      <Input
-                        value={formData.type || ""}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      frame.type
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === frame.id ? (
-                      <Input
-                        value={formData.material || ""}
-                        onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      frame.material || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === frame.id ? (
-                      <Input
-                        value={formData.construction_method || ""}
-                        onChange={(e) => setFormData({ ...formData, construction_method: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      frame.construction_method || "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === frame.id ? (
-                      <Input
-                        type="number"
-                        value={formData.rake_degrees || ""}
-                        onChange={(e) => setFormData({ ...formData, rake_degrees: parseFloat(e.target.value) || undefined })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      frame.rake_degrees ? `${frame.rake_degrees}°` : "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === frame.id ? (
-                      <Input
-                        type="number"
-                        value={formData.trail_mm || ""}
-                        onChange={(e) => setFormData({ ...formData, trail_mm: parseFloat(e.target.value) || undefined })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      frame.trail_mm ? `${frame.trail_mm}mm` : "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === frame.id ? (
-                      <Input
-                        value={formData.notes || ""}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                      />
-                    ) : (
-                      <div className="max-w-32 truncate" title={frame.notes || ""}>
-                        {frame.notes || "-"}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingId === frame.id ? (
-                      <div className="flex gap-1">
-                        <Button size="sm" onClick={() => handleUpdate(frame.id)} className="bg-accent-teal text-black hover:bg-accent-teal/80">
-                          <Save className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={cancelEdit}>
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="outline" onClick={() => startEdit(frame)}>
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(frame.id)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredFrames.length === 0 && (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-explorer-text-muted">
-                    {searchTerm ? "No frames match your search" : "No frames found"}
-                  </TableCell>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Material</TableHead>
+                  <TableHead>Construction</TableHead>
+                  <TableHead>Rake</TableHead>
+                  <TableHead>Trail</TableHead>
+                  <TableHead>Wheelbase</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredFrames.map((frame) => (
+                  <TableRow key={frame.id}>
+                    <TableCell>
+                      {editingId === frame.id ? (
+                        <Select
+                          value={formData.type || ""}
+                          onValueChange={(value) => setFormData({ ...formData, type: value })}
+                        >
+                          <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Steel Trellis">Steel Trellis</SelectItem>
+                            <SelectItem value="Diamond">Diamond</SelectItem>
+                            <SelectItem value="Perimeter">Perimeter</SelectItem>
+                            <SelectItem value="Backbone">Backbone</SelectItem>
+                            <SelectItem value="Cradle">Cradle</SelectItem>
+                            <SelectItem value="Monocoque">Monocoque</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        frame.type
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === frame.id ? (
+                        <Select
+                          value={formData.material || ""}
+                          onValueChange={(value) => setFormData({ ...formData, material: value })}
+                        >
+                          <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Steel">Steel</SelectItem>
+                            <SelectItem value="Aluminum">Aluminum</SelectItem>
+                            <SelectItem value="Alloy">Alloy</SelectItem>
+                            <SelectItem value="Carbon Fiber">Carbon Fiber</SelectItem>
+                            <SelectItem value="Magnesium">Magnesium</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        frame.material || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === frame.id ? (
+                        <Select
+                          value={formData.construction_method || ""}
+                          onValueChange={(value) => setFormData({ ...formData, construction_method: value })}
+                        >
+                          <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Welded">Welded</SelectItem>
+                            <SelectItem value="Cast">Cast</SelectItem>
+                            <SelectItem value="Hybrid">Hybrid</SelectItem>
+                            <SelectItem value="Riveted">Riveted</SelectItem>
+                            <SelectItem value="Forged">Forged</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        frame.construction_method || "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === frame.id ? (
+                        <Input
+                          type="number"
+                          value={formData.rake_degrees || ""}
+                          onChange={(e) => setFormData({ ...formData, rake_degrees: parseFloat(e.target.value) || undefined })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        frame.rake_degrees ? `${frame.rake_degrees}°` : "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === frame.id ? (
+                        <Input
+                          type="number"
+                          value={formData.trail_mm || ""}
+                          onChange={(e) => setFormData({ ...formData, trail_mm: parseFloat(e.target.value) || undefined })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        frame.trail_mm ? `${frame.trail_mm}mm` : "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === frame.id ? (
+                        <Input
+                          type="number"
+                          value={formData.wheelbase_mm || ""}
+                          onChange={(e) => setFormData({ ...formData, wheelbase_mm: parseInt(e.target.value) || undefined })}
+                          className="bg-explorer-dark border-explorer-chrome/30"
+                        />
+                      ) : (
+                        frame.wheelbase_mm ? `${frame.wheelbase_mm}mm` : "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === frame.id ? (
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={() => handleUpdate(frame.id)} className="bg-accent-teal text-black hover:bg-accent-teal/80">
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={cancelEdit}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => startEdit(frame)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(frame.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredFrames.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-explorer-text-muted">
+                      {searchTerm ? "No frames match your search" : "No frames found"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

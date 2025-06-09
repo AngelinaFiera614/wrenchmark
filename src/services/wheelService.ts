@@ -9,8 +9,6 @@ export interface Wheel {
   front_tire_size?: string;
   rear_tire_size?: string;
   rim_material?: string;
-  spoke_count_front?: number;
-  spoke_count_rear?: number;
   tubeless?: boolean;
   notes?: string;
   name?: string; // Computed field for display purposes
