@@ -162,13 +162,13 @@ const WheelsManager = () => {
                 </SelectContent>
               </Select>
               <Input
-                placeholder="Front Size (e.g., 17\")"
+                placeholder='Front Size (e.g., 17")'
                 value={formData.front_size || ""}
                 onChange={(e) => setFormData({ ...formData, front_size: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
               />
               <Input
-                placeholder="Rear Size (e.g., 17\")"
+                placeholder='Rear Size (e.g., 17")'
                 value={formData.rear_size || ""}
                 onChange={(e) => setFormData({ ...formData, rear_size: e.target.value })}
                 className="bg-explorer-dark border-explorer-chrome/30"
