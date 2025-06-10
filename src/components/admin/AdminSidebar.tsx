@@ -1,67 +1,87 @@
-
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { useLocation, Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   LayoutDashboard,
-  Bike,
-  Users,
   FileText,
-  BookOpen,
-  GraduationCap,
-  Building2,
-  PaintBucket,
   Settings,
-  Camera,
+  Wrench,
+  Tag,
+  Component,
+  Image,
+  ListChecks,
+  LucideIcon
 } from "lucide-react";
 
-const navigation = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Models", href: "/admin/models", icon: Bike },
-  { name: "Brands", href: "/admin/brands", icon: Building2 },
-  { name: "Configurations", href: "/admin/parts", icon: Settings },
-  { name: "Enhanced Media", href: "/admin/enhanced-media", icon: Camera },
-  { name: "Images", href: "/admin/images", icon: Camera },
-  { name: "Manuals", href: "/admin/manuals", icon: FileText },
-  { name: "Riding Skills", href: "/admin/riding-skills", icon: GraduationCap },
-  { name: "Courses", href: "/admin/courses", icon: BookOpen },
-  { name: "Glossary", href: "/admin/glossary", icon: BookOpen },
-  { name: "Accessories", href: "/admin/accessories", icon: PaintBucket },
-  { name: "Users", href: "/admin/users", icon: Users },
-];
+interface SidebarItemProps {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+  isActive: boolean;
+}
 
-export default function AdminSidebar() {
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, href, isActive }) => {
+  return (
+    <Link to={href} className="w-full">
+      <Card
+        className={`group flex items-center space-x-3 rounded-md border-0 p-2 transition-colors hover:bg-accent hover:text-accent-foreground ${
+          isActive
+            ? "bg-muted text-muted-foreground"
+            : "bg-transparent text-secondary-foreground"
+        }`}
+      >
+        <Icon className="h-4 w-4" />
+        <p className="text-sm font-medium">{label}</p>
+      </Card>
+    </Link>
+  );
+};
+
+const AdminSidebar = () => {
   const location = useLocation();
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
-      <div className="flex items-center flex-shrink-0 px-4">
-        <h2 className="text-lg font-semibold text-gray-900">Admin Panel</h2>
-      </div>
-      <nav className="mt-5 flex-1 px-2 space-y-1">
-        {navigation.map((item) => (
-          <Link
-            key={item.name}
-            to={item.href}
-            className={cn(
-              "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
-              location.pathname === item.href
-                ? "bg-gray-100 text-gray-900"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-            )}
-          >
-            <item.icon
-              className={cn(
-                "mr-3 flex-shrink-0 h-6 w-6",
-                location.pathname === item.href
-                  ? "text-gray-500"
-                  : "text-gray-400 group-hover:text-gray-500"
-              )}
-            />
-            {item.name}
-          </Link>
-        ))}
-      </nav>
-    </div>
+    <Card className="col-span-3 lg:col-span-1 bg-explorer-card border-explorer-chrome/30">
+      <CardContent className="flex flex-col gap-4">
+        <SidebarItem
+          icon={LayoutDashboard}
+          label="Dashboard"
+          href="/admin"
+          isActive={location.pathname === '/admin'}
+        />
+        <SidebarItem 
+          icon={FileText} 
+          label="Models" 
+          href="/admin/models" 
+          isActive={location.pathname.startsWith('/admin/models')}
+        />
+        <SidebarItem 
+          icon={Settings} 
+          label="Categories" 
+          href="/admin/categories" 
+          isActive={location.pathname === '/admin/categories'}
+        />
+        <SidebarItem 
+          icon={Wrench} 
+          label="Components" 
+          href="/admin/components" 
+          isActive={location.pathname.startsWith('/admin/components')}
+        />
+        <SidebarItem
+          icon={Tag}
+          label="Tags"
+          href="/admin/tags"
+          isActive={location.pathname === '/admin/tags'}
+        />
+         <SidebarItem
+          icon={ListChecks}
+          label="Audit Log"
+          href="/admin/audit-log"
+          isActive={location.pathname === '/admin/audit-log'}
+        />
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default AdminSidebar;

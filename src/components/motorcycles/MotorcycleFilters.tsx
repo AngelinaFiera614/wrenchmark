@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { MotorcycleCategory, MotorcycleFilters as FiltersType } from "@/types";
@@ -9,6 +8,7 @@ import QuickFilters from "./filters/QuickFilters";
 import AdvancedFilters from "./filters/AdvancedFilters";
 import ComponentFilters from "./filters/ComponentFilters";
 import { countActiveFilters } from "@/lib/filter-utils";
+import { useMotorcycleCategories } from "@/hooks/useMotorcycleCategories";
 
 const categories: MotorcycleCategory[] = [
   "Sport",
@@ -46,6 +46,8 @@ export default function MotorcycleFilters({
   onFilterChange,
   isFiltering = false
 }: MotorcycleFiltersProps) {
+  const { categories } = useMotorcycleCategories();
+
   // Create context value for filter components
   const contextValue = {
     filters,
