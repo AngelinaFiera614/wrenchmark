@@ -1,94 +1,113 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { createModelYear } from "@/services/models/modelYearService";
+import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { MotorcycleModel } from "@/types/motorcycle";
+import { Loader2 } from "lucide-react";
+
+const formSchema = z.object({
+  year: z.number().min(1900).max(2030),
+  changes: z.string().optional(),
+  msrp_usd: z.number().positive().optional(),
+  marketing_tagline: z.string().optional(),
+  is_available: z.boolean().default(true),
+  image_url: z.string().url().optional().or(z.literal('')),
+});
 
 interface AdminModelYearDialogProps {
   open: boolean;
-  model: any;
+  model: MotorcycleModel | null;
   onClose: () => void;
 }
 
-const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProps) => {
+const AdminModelYearDialog: React.FC<AdminModelYearDialogProps> = ({
+  open,
+  model,
+  onClose
+}) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    year: new Date().getFullYear(),
-    msrp_usd: "",
-    changes: "",
-    image_url: "",
-    marketing_tagline: "",
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      year: new Date().getFullYear(),
+      changes: '',
+      msrp_usd: undefined,
+      marketing_tagline: '',
+      is_available: true,
+      image_url: '',
+    },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!model?.id) return;
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!model) return;
 
-    setLoading(true);
+    setIsSubmitting(true);
     try {
-      const yearData = {
-        motorcycle_id: model.id,
-        year: Number(formData.year),
-        msrp_usd: formData.msrp_usd ? Number(formData.msrp_usd) : undefined,
-        changes: formData.changes || undefined,
-        image_url: formData.image_url || undefined,
-        marketing_tagline: formData.marketing_tagline || undefined,
-        is_available: true,
-      };
+      const { error } = await supabase
+        .from('model_years')
+        .insert({
+          motorcycle_id: model.id,
+          year: values.year,
+          changes: values.changes || null,
+          msrp_usd: values.msrp_usd || null,
+          marketing_tagline: values.marketing_tagline || null,
+          is_available: values.is_available,
+          image_url: values.image_url || null,
+        });
 
-      const result = await createModelYear(yearData);
-      if (result) {
-        toast({
-          title: "Model year created",
-          description: `${formData.year} model year has been added successfully.`,
-        });
-        
-        // Invalidate queries to refresh the data
-        queryClient.invalidateQueries({ queryKey: ["model-years", model.id] });
-        
-        onClose();
-        // Reset form
-        setFormData({
-          year: new Date().getFullYear(),
-          msrp_usd: "",
-          changes: "",
-          image_url: "",
-          marketing_tagline: "",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to create model year. It may already exist.",
-        });
-      }
-    } catch (error) {
+      if (error) throw error;
+
+      toast({
+        title: "Model Year Added",
+        description: `${values.year} model year has been created for ${model.brand?.name} ${model.name}.`,
+      });
+
+      // Refresh the model years data
+      queryClient.invalidateQueries({ queryKey: ["model-years", model.id] });
+      
+      // Reset form and close dialog
+      form.reset();
+      onClose();
+    } catch (error: any) {
       console.error("Error creating model year:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create model year. Please try again.",
+        description: error.message || "Failed to create model year. Please try again.",
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
-    setFormData({
-      year: new Date().getFullYear(),
-      msrp_usd: "",
-      changes: "",
-      image_url: "",
-      marketing_tagline: "",
-    });
+    form.reset();
     onClose();
   };
 
@@ -97,93 +116,158 @@ const AdminModelYearDialog = ({ open, model, onClose }: AdminModelYearDialogProp
       <DialogContent className="bg-explorer-card border-explorer-chrome/30 max-w-md">
         <DialogHeader>
           <DialogTitle className="text-explorer-text">
-            Add Model Year for {model?.name}
+            Add Model Year
           </DialogTitle>
+          <DialogDescription className="text-explorer-text-muted">
+            {model && `Add a new model year for ${model.brand?.name} ${model.name}`}
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="year">Year *</Label>
-            <Input
-              id="year"
-              type="number"
-              min="1900"
-              max="2030"
-              value={formData.year}
-              onChange={(e) => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
-              className="bg-explorer-dark border-explorer-chrome/30"
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="year"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-explorer-text">Year</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1900}
+                      max={2030}
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="msrp_usd">MSRP (USD)</Label>
-            <Input
-              id="msrp_usd"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.msrp_usd}
-              onChange={(e) => setFormData(prev => ({ ...prev, msrp_usd: e.target.value }))}
-              className="bg-explorer-dark border-explorer-chrome/30"
-              placeholder="0.00"
+            <FormField
+              control={form.control}
+              name="changes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-explorer-text">Changes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="What changed in this model year?"
+                      {...field}
+                      className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="changes">Changes</Label>
-            <Textarea
-              id="changes"
-              value={formData.changes}
-              onChange={(e) => setFormData(prev => ({ ...prev, changes: e.target.value }))}
-              className="bg-explorer-dark border-explorer-chrome/30"
-              placeholder="Describe changes for this model year..."
-              rows={3}
+            <FormField
+              control={form.control}
+              name="msrp_usd"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-explorer-text">MSRP (USD)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="15000"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                      className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="image_url">Image URL</Label>
-            <Input
-              id="image_url"
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-              className="bg-explorer-dark border-explorer-chrome/30"
-              placeholder="https://..."
+            <FormField
+              control={form.control}
+              name="marketing_tagline"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-explorer-text">Marketing Tagline</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Built for Excellence"
+                      {...field}
+                      className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="marketing_tagline">Marketing Tagline</Label>
-            <Input
-              id="marketing_tagline"
-              value={formData.marketing_tagline}
-              onChange={(e) => setFormData(prev => ({ ...prev, marketing_tagline: e.target.value }))}
-              className="bg-explorer-dark border-explorer-chrome/30"
-              placeholder="Marketing tagline for this year..."
+            <FormField
+              control={form.control}
+              name="is_available"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-explorer-text">
+                      Available for purchase
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={loading}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-accent-teal text-black hover:bg-accent-teal/80"
-            >
-              {loading ? "Creating..." : "Create Year"}
-            </Button>
-          </div>
-        </form>
+            <FormField
+              control={form.control}
+              name="image_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-explorer-text">Image URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      {...field}
+                      className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isSubmitting}
+                className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-accent-teal text-black hover:bg-accent-teal/80"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Model Year'
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -87,15 +87,35 @@ const YearsSection = ({
   };
 
   const handleGenerateYears = async () => {
-    if (!selectedModel) return;
+    if (!selectedModel || !selectedModelData) {
+      toast({
+        variant: "destructive",
+        title: "No Model Selected",
+        description: "Please select a model first.",
+      });
+      return;
+    }
+
+    // Check if production years are set
+    if (!selectedModelData.production_start_year) {
+      toast({
+        variant: "destructive",
+        title: "Missing Production Data",
+        description: "This model needs a production start year set before generating years.",
+      });
+      return;
+    }
     
     setIsGenerating(true);
     try {
       const success = await generateModelYears(selectedModel);
       if (success) {
+        const endYear = selectedModelData.production_end_year || new Date().getFullYear();
+        const yearCount = endYear - selectedModelData.production_start_year + 1;
+        
         toast({
-          title: "Years generated",
-          description: "Model years have been generated based on production data.",
+          title: "Years Generated",
+          description: `Successfully generated ${yearCount} model years (${selectedModelData.production_start_year}-${endYear}).`,
         });
         queryClient.invalidateQueries({ queryKey: ["model-years", selectedModel] });
       } else {
@@ -104,8 +124,8 @@ const YearsSection = ({
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to generate model years. Please try again.",
+        title: "Generation Failed",
+        description: "Failed to generate model years. Please check the model's production data.",
       });
     } finally {
       setIsGenerating(false);
@@ -154,17 +174,28 @@ const YearsSection = ({
               <Plus className="h-3 w-3 mr-1" />
               Add Year
             </Button>
-            {modelYears.length === 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGenerateYears}
-                disabled={isGenerating}
-                className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
-              >
-                <RefreshCw className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
-                Generate Years
-              </Button>
+            
+            {/* Show generation info and button */}
+            {selectedModelData && (
+              <div className="flex items-center gap-2">
+                {selectedModelData.production_start_year && (
+                  <span className="text-xs text-explorer-text-muted">
+                    Production: {selectedModelData.production_start_year}
+                    {selectedModelData.production_end_year && ` - ${selectedModelData.production_end_year}`}
+                    {!selectedModelData.production_end_year && ' - Present'}
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateYears}
+                  disabled={isGenerating || !selectedModelData.production_start_year}
+                  className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
+                >
+                  <RefreshCw className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                  {isGenerating ? 'Generating...' : 'Generate Years'}
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -178,8 +209,11 @@ const YearsSection = ({
             <div className="text-center py-8">
               <AlertCircle className="h-12 w-12 text-orange-400 mx-auto mb-4" />
               <p className="text-explorer-text-muted mb-2">No model years found</p>
-              <p className="text-xs text-explorer-text-muted">
-                Add years manually or generate them from production data
+              <p className="text-xs text-explorer-text-muted mb-4">
+                {selectedModelData?.production_start_year 
+                  ? `Generate years from ${selectedModelData.production_start_year}${selectedModelData.production_end_year ? ` to ${selectedModelData.production_end_year}` : ' to present'}`
+                  : 'Set production years in the model details first'
+                }
               </p>
             </div>
           ) : (
