@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -37,15 +36,9 @@ const ModelsTable = () => {
     setIsCreateModelOpen(true);
   };
 
-  const getBrandName = (brands: any) => {
-    if (!brands) return 'Unknown Brand';
-    if (Array.isArray(brands) && brands.length > 0) {
-      return brands[0]?.name || 'Unknown Brand';
-    }
-    if (typeof brands === 'object' && brands.name) {
-      return brands.name;
-    }
-    return 'Unknown Brand';
+  const getBrandName = (model: any) => {
+    if (!model.brand) return 'Unknown Brand';
+    return model.brand.name || 'Unknown Brand';
   };
 
   const handleDeleteClick = (model) => {
@@ -62,7 +55,7 @@ const ModelsTable = () => {
       if (success) {
         toast({
           title: "Model deleted",
-          description: `${getBrandName(deleteModel.brands)} ${deleteModel.name} and all related data has been removed.`,
+          description: `${getBrandName(deleteModel)} ${deleteModel.name} and all related data has been removed.`,
         });
         refetch();
         setDeleteModel(null);
@@ -91,7 +84,7 @@ const ModelsTable = () => {
 
   // Filter models based on search
   const filteredModels = models?.filter(model => {
-    const brandName = getBrandName(model.brands);
+    const brandName = getBrandName(model);
     const matchesSearch = !searchTerm || 
       model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       model.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -146,7 +139,7 @@ const ModelsTable = () => {
               </TableHeader>
               <TableBody>
                 {filteredModels.map((model) => {
-                  const brandName = getBrandName(model.brands);
+                  const brandName = getBrandName(model);
                   return (
                     <TableRow key={model.id} className="border-explorer-chrome/20">
                       <TableCell className="text-explorer-text">

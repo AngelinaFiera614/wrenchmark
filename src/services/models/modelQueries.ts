@@ -156,6 +156,68 @@ export const fetchMotorcycleModelBySlug = async (slug: string): Promise<Motorcyc
   }
 };
 
+export const getMotorcycleModelRelations = async (modelId: string) => {
+  try {
+    const { data, error } = await supabase.rpc('get_motorcycle_model_relations', {
+      model_id_param: modelId
+    });
+
+    if (error) {
+      console.error("Error fetching motorcycle model relations:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch motorcycle model relations:", error);
+    throw error;
+  }
+};
+
+export const fetchModelsForComparison = async (slugs: string[]): Promise<MotorcycleModel[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('motorcycle_models')
+      .select(`
+        id,
+        brand_id,
+        name,
+        type,
+        base_description,
+        production_start_year,
+        production_end_year,
+        production_status,
+        default_image_url,
+        slug,
+        ignore_autofill,
+        is_draft,
+        created_at,
+        updated_at,
+        brands!motorcycle_models_brand_id_fkey(
+          id,
+          name,
+          slug
+        )
+      `)
+      .in('slug', slugs);
+
+    if (error) {
+      console.error("Database error fetching models for comparison:", error);
+      throw new Error(`Failed to fetch models for comparison: ${error.message}`);
+    }
+
+    const transformedData = data?.map(model => ({
+      ...model,
+      brand: model.brands
+    })) || [];
+
+    return transformedData;
+  } catch (error) {
+    console.error("Error in fetchModelsForComparison:", error);
+    throw error;
+  }
+};
+
 export const deleteMotorcycleModelCascade = async (modelId: string): Promise<boolean> => {
   try {
     console.log("Deleting motorcycle model with cascade:", modelId);
