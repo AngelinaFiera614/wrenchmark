@@ -1,5 +1,4 @@
 
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const fetchModelYears = async (modelId: string) => {
@@ -67,29 +66,39 @@ export const generateModelYears = async (modelId: string): Promise<boolean> => {
     
     console.log(`Generating years from ${startYear} to ${endYear} for model: ${model.name}`);
 
-    // Generate array of years to create
+    // Check if any years already exist to avoid duplicates
+    const { data: existingYears } = await supabase
+      .from('model_years')
+      .select('year')
+      .eq('motorcycle_id', modelId);
+
+    const existingYearNumbers = existingYears?.map(y => y.year) || [];
+    console.log("Existing years:", existingYearNumbers);
+
+    // Generate array of years to create (excluding existing ones)
     const years = [];
     for (let year = startYear; year <= endYear; year++) {
-      years.push({
-        motorcycle_id: modelId,
-        year: year,
-        changes: year === startYear ? 'Initial production year' : 'Production year',
-        is_available: year >= 2020 // Mark recent years as available
-      });
+      if (!existingYearNumbers.includes(year)) {
+        years.push({
+          motorcycle_id: modelId,
+          year: year,
+          changes: year === startYear ? 'Initial production year' : 'Production year',
+          is_available: year >= 2020 // Mark recent years as available
+        });
+      }
     }
 
     if (years.length === 0) {
-      console.error("No years to generate");
-      return false;
+      console.log("No new years to generate - all years already exist");
+      return true; // Return true since it's not really an error
     }
 
-    // Insert the model years, using upsert to avoid duplicates
+    console.log(`Inserting ${years.length} new model years:`, years.map(y => y.year));
+
+    // Insert the model years
     const { data, error } = await supabase
       .from('model_years')
-      .upsert(years, { 
-        onConflict: 'motorcycle_id,year',
-        ignoreDuplicates: true 
-      })
+      .insert(years)
       .select();
 
     if (error) {
@@ -135,6 +144,40 @@ export const deleteModelYear = async (yearId: string): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error("Error in deleteModelYear:", error);
+    return false;
+  }
+};
+
+// New function to create a single model year
+export const createModelYear = async (modelId: string, yearData: {
+  year: number;
+  changes?: string;
+  msrp_usd?: number;
+  marketing_tagline?: string;
+  is_available?: boolean;
+  image_url?: string;
+}): Promise<boolean> => {
+  try {
+    console.log("Creating model year:", yearData.year, "for model:", modelId);
+    
+    const { data, error } = await supabase
+      .from('model_years')
+      .insert({
+        motorcycle_id: modelId,
+        ...yearData
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating model year:", error);
+      return false;
+    }
+
+    console.log("Successfully created model year:", data);
+    return true;
+  } catch (error) {
+    console.error("Error in createModelYear:", error);
     return false;
   }
 };

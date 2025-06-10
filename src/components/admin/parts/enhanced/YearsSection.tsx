@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Trash2, Plus, RefreshCw } from "lucide-react";
+import { AlertCircle, Trash2, Plus, RefreshCw, Calendar } from "lucide-react";
 import { ModelYear, MotorcycleModel } from "@/types/motorcycle";
 import { useToast } from "@/hooks/use-toast";
 import { generateModelYears, deleteModelYear } from "@/services/models/modelYearService";
@@ -41,6 +41,24 @@ const YearsSection = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [addYearDialogOpen, setAddYearDialogOpen] = useState(false);
+
+  // Generate expected years from production data
+  const getExpectedYears = () => {
+    if (!selectedModelData?.production_start_year) return [];
+    
+    const startYear = selectedModelData.production_start_year;
+    const endYear = selectedModelData.production_end_year || new Date().getFullYear();
+    
+    const expectedYears = [];
+    for (let year = startYear; year <= endYear; year++) {
+      expectedYears.push(year);
+    }
+    return expectedYears;
+  };
+
+  const expectedYears = getExpectedYears();
+  const existingYearNumbers = modelYears.map(y => y.year);
+  const missingYears = expectedYears.filter(year => !existingYearNumbers.includes(year));
 
   const handleDeleteClick = (year: ModelYear, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -96,7 +114,6 @@ const YearsSection = ({
       return;
     }
 
-    // Check if production years are set
     if (!selectedModelData.production_start_year) {
       toast({
         variant: "destructive",
@@ -111,11 +128,10 @@ const YearsSection = ({
       const success = await generateModelYears(selectedModel);
       if (success) {
         const endYear = selectedModelData.production_end_year || new Date().getFullYear();
-        const yearCount = endYear - selectedModelData.production_start_year + 1;
         
         toast({
           title: "Years Generated",
-          description: `Successfully generated ${yearCount} model years (${selectedModelData.production_start_year}-${endYear}).`,
+          description: `Successfully generated model years for ${selectedModelData.production_start_year}-${endYear}.`,
         });
         queryClient.invalidateQueries({ queryKey: ["model-years", selectedModel] });
       } else {
@@ -164,7 +180,7 @@ const YearsSection = ({
           </CardTitle>
           
           {/* Year Management Actions */}
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -177,27 +193,42 @@ const YearsSection = ({
             
             {/* Show generation info and button */}
             {selectedModelData && (
-              <div className="flex items-center gap-2">
+              <>
                 {selectedModelData.production_start_year && (
-                  <span className="text-xs text-explorer-text-muted">
+                  <div className="flex items-center gap-2 text-xs text-explorer-text-muted">
+                    <Calendar className="h-3 w-3" />
                     Production: {selectedModelData.production_start_year}
                     {selectedModelData.production_end_year && ` - ${selectedModelData.production_end_year}`}
                     {!selectedModelData.production_end_year && ' - Present'}
-                  </span>
+                  </div>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleGenerateYears}
-                  disabled={isGenerating || !selectedModelData.production_start_year}
-                  className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
-                >
-                  <RefreshCw className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
-                  {isGenerating ? 'Generating...' : 'Generate Years'}
-                </Button>
-              </div>
+                
+                {missingYears.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateYears}
+                    disabled={isGenerating || !selectedModelData.production_start_year}
+                    className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
+                  >
+                    <RefreshCw className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                    {isGenerating ? 'Generating...' : `Generate ${missingYears.length} Missing Years`}
+                  </Button>
+                )}
+              </>
             )}
           </div>
+          
+          {/* Show missing years info */}
+          {missingYears.length > 0 && (
+            <div className="mt-2 p-2 bg-orange-500/10 border border-orange-500/20 rounded text-xs">
+              <span className="text-orange-400">Missing years:</span>{' '}
+              <span className="text-explorer-text-muted">
+                {missingYears.slice(0, 5).join(', ')}
+                {missingYears.length > 5 && ` and ${missingYears.length - 5} more`}
+              </span>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -209,12 +240,24 @@ const YearsSection = ({
             <div className="text-center py-8">
               <AlertCircle className="h-12 w-12 text-orange-400 mx-auto mb-4" />
               <p className="text-explorer-text-muted mb-2">No model years found</p>
-              <p className="text-xs text-explorer-text-muted mb-4">
-                {selectedModelData?.production_start_year 
-                  ? `Generate years from ${selectedModelData.production_start_year}${selectedModelData.production_end_year ? ` to ${selectedModelData.production_end_year}` : ' to present'}`
-                  : 'Set production years in the model details first'
-                }
-              </p>
+              {expectedYears.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-explorer-text-muted">
+                    Expected years based on production data: {expectedYears[0]} - {expectedYears[expectedYears.length - 1]}
+                  </p>
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {expectedYears.map(year => (
+                      <Badge key={year} variant="outline" className="text-xs">
+                        {year}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-explorer-text-muted">
+                  Set production years in the model details first
+                </p>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -248,6 +291,11 @@ const YearsSection = ({
                         {year.changes && (
                           <div className="text-xs text-explorer-text-muted">
                             {year.changes}
+                          </div>
+                        )}
+                        {year.configurations && year.configurations.length > 0 && (
+                          <div className="text-xs text-blue-400">
+                            {year.configurations.length} config{year.configurations.length !== 1 ? 's' : ''}
                           </div>
                         )}
                       </div>
