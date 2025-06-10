@@ -171,6 +171,9 @@ export interface MotorcycleModel {
   default_image_url: string;
   slug: string;
   ignore_autofill?: boolean;
+  is_draft: boolean;
+  created_at: string;
+  updated_at?: string;
   brand?: any;
   years?: ModelYear[];
 }
