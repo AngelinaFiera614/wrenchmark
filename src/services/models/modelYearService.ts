@@ -1,6 +1,39 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+export const fetchModelYears = async (modelId: string) => {
+  try {
+    console.log("Fetching model years for model:", modelId);
+    
+    const { data, error } = await supabase
+      .from('model_years')
+      .select(`
+        id,
+        year,
+        changes,
+        msrp_usd,
+        marketing_tagline,
+        is_available,
+        image_url,
+        created_at,
+        updated_at
+      `)
+      .eq('motorcycle_id', modelId)
+      .order('year', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching model years:", error);
+      throw new Error(`Failed to fetch model years: ${error.message}`);
+    }
+
+    console.log(`Successfully fetched ${data?.length || 0} model years`);
+    return data || [];
+  } catch (error) {
+    console.error("Error in fetchModelYears:", error);
+    throw error;
+  }
+};
+
 export const generateModelYears = async (modelId: string): Promise<boolean> => {
   try {
     console.log("Generating model years for model:", modelId);
