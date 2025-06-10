@@ -1,4 +1,5 @@
 
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const fetchModelYears = async (modelId: string) => {
@@ -16,7 +17,12 @@ export const fetchModelYears = async (modelId: string) => {
         is_available,
         image_url,
         created_at,
-        updated_at
+        updated_at,
+        configurations:model_configurations(
+          id,
+          name,
+          is_default
+        )
       `)
       .eq('motorcycle_id', modelId)
       .order('year', { ascending: false });
