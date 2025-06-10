@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route, Outlet, Navigate } from "react-router-dom";
@@ -23,6 +24,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminModels from "@/pages/admin/AdminModels";
 import AdminBrands from "@/pages/admin/AdminBrands";
+import AdminCategories from "@/pages/admin/AdminCategories";
 import { 
   AdminEnginesRedirect,
   AdminBrakeSystemsRedirect,
@@ -75,6 +77,7 @@ function App() {
             <Route path="models" element={<AdminModels />} />
             <Route path="models/:slug" element={<ModelDetailPage />} />
             <Route path="brands" element={<AdminBrands />} />
+            <Route path="categories" element={<AdminCategories />} />
             <Route path="engines" element={<AdminEnginesRedirect />} />
             <Route path="brake-systems" element={<AdminBrakeSystemsRedirect />} />
             <Route path="frames" element={<AdminFramesRedirect />} />
