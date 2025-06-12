@@ -1,14 +1,20 @@
 
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Trash2, Info, Archive, Palette, Wrench } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Configuration } from "@/types/motorcycle";
 import { deleteConfiguration } from "@/services/models/configurationService";
-import { getTrimColorAssignments } from "@/services/colorManagementService";
 
 interface EnhancedDeleteTrimDialogProps {
   open: boolean;
@@ -24,183 +30,112 @@ const EnhancedDeleteTrimDialog = ({
   onSuccess
 }: EnhancedDeleteTrimDialogProps) => {
   const { toast } = useToast();
-  const [deleting, setDeleting] = useState(false);
-  const [dependencies, setDependencies] = useState({
-    colors: 0,
-    components: 0,
-    images: 0
-  });
-
-  useEffect(() => {
-    if (open && configuration) {
-      loadDependencies();
-    }
-  }, [open, configuration]);
-
-  const loadDependencies = async () => {
-    try {
-      // Load color assignments
-      const colors = await getTrimColorAssignments(configuration.id);
-      
-      // Count components
-      const components = [
-        configuration.engine,
-        configuration.brakes,
-        configuration.frame,
-        configuration.suspension,
-        configuration.wheels
-      ].filter(Boolean).length;
-
-      setDependencies({
-        colors: colors.length,
-        components,
-        images: 0 // Could be enhanced to check for configuration-specific images
-      });
-    } catch (error) {
-      console.error("Error loading dependencies:", error);
-    }
-  };
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    setDeleting(true);
+    setIsDeleting(true);
+    
     try {
       const success = await deleteConfiguration(configuration.id);
       
       if (success) {
         toast({
-          title: "Success!",
-          description: `Trim level "${configuration.name}" has been deleted successfully.`
+          title: "Configuration Deleted",
+          description: `"${configuration.name}" has been successfully deleted.`
         });
         onSuccess();
         onClose();
+      } else {
+        throw new Error("Delete operation failed");
       }
-    } catch (error: any) {
-      console.error("Error deleting trim level:", error);
+    } catch (error) {
+      console.error("Error deleting configuration:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: `Failed to delete trim level: ${error.message}`
+        title: "Delete Failed",
+        description: "Failed to delete the configuration. Please try again."
       });
     } finally {
-      setDeleting(false);
+      setIsDeleting(false);
     }
   };
 
-  const hasDependencies = dependencies.colors > 0 || dependencies.components > 0 || dependencies.images > 0;
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="bg-explorer-card border-explorer-chrome/30 max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-red-600">
-            <AlertTriangle className="h-5 w-5" />
+          <DialogTitle className="text-explorer-text flex items-center gap-2">
+            <Trash2 className="h-5 w-5 text-red-400" />
             Delete Trim Level
           </DialogTitle>
+          <DialogDescription className="text-explorer-text-muted">
+            This action cannot be undone. This will permanently delete the trim level configuration.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Configuration Info */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">{configuration.name}</CardTitle>
-              <CardDescription>
-                {configuration.description || "No description"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
+          {/* Configuration Details */}
+          <div className="bg-explorer-dark/50 p-4 rounded-lg border border-explorer-chrome/30">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-explorer-text">
+                  {configuration.name || 'Unnamed Configuration'}
+                </span>
                 {configuration.is_default && (
-                  <Badge variant="outline" className="text-accent-teal border-accent-teal">
-                    Default
-                  </Badge>
-                )}
-                {configuration.market_region && (
-                  <Badge variant="outline">{configuration.market_region}</Badge>
-                )}
-                {configuration.trim_level && (
-                  <Badge variant="outline">{configuration.trim_level}</Badge>
+                  <Badge variant="secondary" className="text-xs">Default</Badge>
                 )}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Dependencies Warning */}
-          {hasDependencies && (
-            <Card className="border-orange-200 bg-orange-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2 text-orange-800">
-                  <Info className="h-5 w-5" />
-                  Dependencies Found
-                </CardTitle>
-                <CardDescription className="text-orange-700">
-                  This trim level has associated data that will also be deleted:
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {dependencies.colors > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-orange-800">
-                    <Palette className="h-4 w-4" />
-                    {dependencies.colors} color assignment{dependencies.colors !== 1 ? 's' : ''}
-                  </div>
-                )}
-                {dependencies.components > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-orange-800">
-                    <Wrench className="h-4 w-4" />
-                    {dependencies.components} component assignment{dependencies.components !== 1 ? 's' : ''}
-                  </div>
-                )}
-                {dependencies.images > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-orange-800">
-                    <Archive className="h-4 w-4" />
-                    {dependencies.images} image{dependencies.images !== 1 ? 's' : ''}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Confirmation */}
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-red-800">
-                  This action cannot be undone
-                </h4>
-                <p className="text-sm text-red-700 mt-1">
-                  The trim level "{configuration.name}" and all its associated data will be permanently deleted.
+              
+              {configuration.msrp_usd && (
+                <p className="text-sm text-explorer-text-muted">
+                  MSRP: ${configuration.msrp_usd.toLocaleString()}
                 </p>
-              </div>
+              )}
+              
+              <p className="text-xs text-explorer-text-muted">
+                ID: {configuration.id}
+              </p>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={deleting}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="flex-1"
-            >
-              {deleting ? (
-                <>Deleting...</>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Trim Level
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Warning Alert */}
+          <Alert className="border-red-400/30 bg-red-500/10">
+            <AlertTriangle className="h-4 w-4 text-red-400" />
+            <AlertDescription className="text-red-400">
+              <strong>Warning:</strong> Deleting this trim level will permanently remove all associated 
+              component assignments, dimensions, colors, and other configuration data.
+            </AlertDescription>
+          </Alert>
+
+          {/* Additional Warning for Default Configuration */}
+          {configuration.is_default && (
+            <Alert className="border-orange-400/30 bg-orange-500/10">
+              <AlertTriangle className="h-4 w-4 text-orange-400" />
+              <AlertDescription className="text-orange-400">
+                <strong>Note:</strong> This is the default trim level. You may want to set another 
+                configuration as default before deleting this one.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="border-explorer-chrome/30 text-explorer-text"
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-red-500 text-white hover:bg-red-600"
+          >
+            {isDeleting ? "Deleting..." : "Delete Trim Level"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
