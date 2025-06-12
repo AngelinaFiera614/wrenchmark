@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,7 +45,7 @@ const PaginatedModelSelector = ({
 
   const clearFilters = () => {
     handleModelSearch("");
-    handleModelFilter({ brand: "", category: "", status: "active" });
+    handleModelFilter({ brand: "", type: "", production_status: "active" });
   };
 
   const toggleFavorite = (modelId: string) => {
@@ -166,11 +165,11 @@ const PaginatedModelSelector = ({
       </div>
       
       <div className="flex flex-wrap gap-1 mb-2">
-        {model.category && (
-          <Badge variant="secondary" className="text-xs">{model.category}</Badge>
+        {model.type && (
+          <Badge variant="secondary" className="text-xs">{model.type}</Badge>
         )}
-        {model.status && model.status !== 'active' && (
-          <Badge variant="outline" className="text-xs">{model.status}</Badge>
+        {model.production_status && model.production_status !== 'active' && (
+          <Badge variant="outline" className="text-xs">{model.production_status}</Badge>
         )}
       </div>
       
@@ -215,12 +214,12 @@ const PaginatedModelSelector = ({
           </div>
           
           <div className="flex flex-wrap gap-2">
-            <Select value={modelFilters.category} onValueChange={(value) => handleFilterChange('category', value)}>
+            <Select value={modelFilters.type} onValueChange={(value) => handleFilterChange('type', value)}>
               <SelectTrigger className="w-[140px] bg-explorer-dark border-explorer-chrome/30 text-explorer-text">
-                <SelectValue placeholder="Category" />
+                <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent className="bg-explorer-card border-explorer-chrome/30">
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="">All Types</SelectItem>
                 <SelectItem value="sport">Sport</SelectItem>
                 <SelectItem value="cruiser">Cruiser</SelectItem>
                 <SelectItem value="touring">Touring</SelectItem>
@@ -229,7 +228,7 @@ const PaginatedModelSelector = ({
               </SelectContent>
             </Select>
             
-            <Select value={modelFilters.status} onValueChange={(value) => handleFilterChange('status', value)}>
+            <Select value={modelFilters.production_status} onValueChange={(value) => handleFilterChange('production_status', value)}>
               <SelectTrigger className="w-[120px] bg-explorer-dark border-explorer-chrome/30 text-explorer-text">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>

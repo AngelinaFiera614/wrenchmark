@@ -28,8 +28,8 @@ export const useOptimizedAdminData = (selectedModel: string | null, selectedYear
   const [modelSearch, setModelSearch] = useState("");
   const [modelFilters, setModelFilters] = useState({
     brand: "",
-    category: "",
-    status: "active"
+    type: "",
+    production_status: "active"
   });
 
   // Cached models query with pagination
@@ -55,11 +55,11 @@ export const useOptimizedAdminData = (selectedModel: string | null, selectedYear
       if (modelFilters.brand) {
         filteredModels = filteredModels.filter(model => model.brand?.id === modelFilters.brand);
       }
-      if (modelFilters.category) {
-        filteredModels = filteredModels.filter(model => model.category === modelFilters.category);
+      if (modelFilters.type) {
+        filteredModels = filteredModels.filter(model => model.type === modelFilters.type);
       }
-      if (modelFilters.status) {
-        filteredModels = filteredModels.filter(model => model.status === modelFilters.status);
+      if (modelFilters.production_status) {
+        filteredModels = filteredModels.filter(model => model.production_status === modelFilters.production_status);
       }
 
       // Pagination
