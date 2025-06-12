@@ -73,6 +73,10 @@ const QuickCopyDialog = ({
     }
   };
 
+  const handleOverwriteChange = (checked: boolean | "indeterminate") => {
+    setOverwriteExisting(checked === true);
+  };
+
   const sourceConfigs = availableConfigurations.filter(config => config.id !== targetConfiguration.id);
 
   return (
@@ -133,7 +137,7 @@ const QuickCopyDialog = ({
               <Checkbox
                 id="overwrite"
                 checked={overwriteExisting}
-                onCheckedChange={setOverwriteExisting}
+                onCheckedChange={handleOverwriteChange}
               />
               <Label htmlFor="overwrite" className="text-explorer-text text-sm">
                 Overwrite existing data
