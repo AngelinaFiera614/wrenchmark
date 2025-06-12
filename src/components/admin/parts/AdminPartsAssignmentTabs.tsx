@@ -62,6 +62,7 @@ const AdminPartsAssignmentTabs = ({
           onModelSelect={onModelSelect}
           onYearSelect={onYearSelect}
           onConfigSelect={onConfigSelect}
+          onConfigChange={refreshConfigurations}
           isLoading={isLoading}
         />
       </TabsContent>

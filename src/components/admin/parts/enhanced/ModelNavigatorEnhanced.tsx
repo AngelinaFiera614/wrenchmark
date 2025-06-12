@@ -23,6 +23,12 @@ interface ModelNavigatorEnhancedProps {
 const ModelNavigatorEnhanced = (props: ModelNavigatorEnhancedProps) => {
   const isLoading = props.modelsLoading || props.yearsLoading || props.configsLoading;
 
+  // Create a dummy onConfigChange handler since this component doesn't seem to use it
+  const handleConfigChange = () => {
+    // This component doesn't appear to need configuration change handling
+    // but the interface requires it for consistency
+  };
+
   return (
     <div className="space-y-6">
       {/* Enhanced Navigation Header */}
@@ -52,6 +58,7 @@ const ModelNavigatorEnhanced = (props: ModelNavigatorEnhancedProps) => {
         onModelSelect={props.handleModelSelect}
         onYearSelect={props.handleYearSelect}
         onConfigSelect={props.handleConfigSelect}
+        onConfigChange={handleConfigChange}
         isLoading={isLoading}
       />
     </div>
