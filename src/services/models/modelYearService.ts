@@ -62,9 +62,11 @@ export const generateModelYears = async (modelId: string): Promise<boolean> => {
 
     // Calculate the year range based on production dates
     const startYear = model.production_start_year;
-    const endYear = model.production_end_year || new Date().getFullYear();
+    // For current production models (no end year), go to current year + 1 for next model year
+    const currentYear = new Date().getFullYear();
+    const endYear = model.production_end_year || (model.production_status === 'active' ? currentYear + 1 : currentYear);
     
-    console.log(`Generating years from ${startYear} to ${endYear} for model: ${model.name}`);
+    console.log(`Generating years from ${startYear} to ${endYear} for model: ${model.name} (Status: ${model.production_status})`);
 
     // Check if any years already exist to avoid duplicates
     const { data: existingYears } = await supabase
@@ -82,8 +84,10 @@ export const generateModelYears = async (modelId: string): Promise<boolean> => {
         years.push({
           motorcycle_id: modelId,
           year: year,
-          changes: year === startYear ? 'Initial production year' : 'Production year',
-          is_available: year >= 2020 // Mark recent years as available
+          changes: year === startYear ? 'Initial production year' : 
+                   year === endYear && !model.production_end_year ? 'Current model year' : 
+                   'Production year',
+          is_available: year >= currentYear - 1 // Mark recent and current years as available
         });
       }
     }

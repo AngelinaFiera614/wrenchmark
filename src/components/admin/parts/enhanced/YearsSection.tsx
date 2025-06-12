@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Trash2, Plus, RefreshCw, Calendar } from "lucide-react";
+import { AlertCircle, Trash2, Plus, RefreshCw, Calendar, Info } from "lucide-react";
 import { ModelYear, MotorcycleModel } from "@/types/motorcycle";
 import { useToast } from "@/hooks/use-toast";
 import { generateModelYears, deleteModelYear } from "@/services/models/modelYearService";
@@ -47,7 +46,10 @@ const YearsSection = ({
     if (!selectedModelData?.production_start_year) return [];
     
     const startYear = selectedModelData.production_start_year;
-    const endYear = selectedModelData.production_end_year || new Date().getFullYear();
+    const currentYear = new Date().getFullYear();
+    // For active models without end year, include next year for upcoming models
+    const endYear = selectedModelData.production_end_year || 
+      (selectedModelData.production_status === 'active' ? currentYear + 1 : currentYear);
     
     const expectedYears = [];
     for (let year = startYear; year <= endYear; year++) {
@@ -59,6 +61,44 @@ const YearsSection = ({
   const expectedYears = getExpectedYears();
   const existingYearNumbers = modelYears.map(y => y.year);
   const missingYears = expectedYears.filter(year => !existingYearNumbers.includes(year));
+
+  const getProductionStatusInfo = () => {
+    if (!selectedModelData) return null;
+    
+    const { production_start_year, production_end_year, production_status } = selectedModelData;
+    
+    if (!production_start_year) {
+      return {
+        type: 'warning',
+        message: 'No production start year set. Please update model details first.',
+        action: null
+      };
+    }
+    
+    if (production_status === 'active' && !production_end_year) {
+      return {
+        type: 'info',
+        message: `Current production model (${production_start_year}-Present)`,
+        action: missingYears.length > 0 ? 'generate' : null
+      };
+    }
+    
+    if (production_end_year) {
+      return {
+        type: 'info',
+        message: `Production ended in ${production_end_year} (${production_start_year}-${production_end_year})`,
+        action: missingYears.length > 0 ? 'generate' : null
+      };
+    }
+    
+    return {
+      type: 'info',
+      message: `Production status: ${production_status}`,
+      action: missingYears.length > 0 ? 'generate' : null
+    };
+  };
+
+  const productionInfo = getProductionStatusInfo();
 
   const handleDeleteClick = (year: ModelYear, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -127,7 +167,9 @@ const YearsSection = ({
     try {
       const success = await generateModelYears(selectedModel);
       if (success) {
-        const endYear = selectedModelData.production_end_year || new Date().getFullYear();
+        const currentYear = new Date().getFullYear();
+        const endYear = selectedModelData.production_end_year || 
+          (selectedModelData.production_status === 'active' ? currentYear + 1 : currentYear);
         
         toast({
           title: "Years Generated",
@@ -179,6 +221,24 @@ const YearsSection = ({
             </Badge>
           </CardTitle>
           
+          {/* Production Status Info */}
+          {productionInfo && (
+            <div className={`p-3 rounded-md border ${
+              productionInfo.type === 'warning' 
+                ? 'bg-orange-500/10 border-orange-500/30 text-orange-400'
+                : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+            }`}>
+              <div className="flex items-center gap-2 text-sm">
+                {productionInfo.type === 'warning' ? (
+                  <AlertCircle className="h-4 w-4" />
+                ) : (
+                  <Info className="h-4 w-4" />
+                )}
+                <span>{productionInfo.message}</span>
+              </div>
+            </div>
+          )}
+          
           {/* Year Management Actions */}
           <div className="flex gap-2 pt-2 flex-wrap">
             <Button
@@ -191,31 +251,17 @@ const YearsSection = ({
               Add Year
             </Button>
             
-            {/* Show generation info and button */}
-            {selectedModelData && (
-              <>
-                {selectedModelData.production_start_year && (
-                  <div className="flex items-center gap-2 text-xs text-explorer-text-muted">
-                    <Calendar className="h-3 w-3" />
-                    Production: {selectedModelData.production_start_year}
-                    {selectedModelData.production_end_year && ` - ${selectedModelData.production_end_year}`}
-                    {!selectedModelData.production_end_year && ' - Present'}
-                  </div>
-                )}
-                
-                {missingYears.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGenerateYears}
-                    disabled={isGenerating || !selectedModelData.production_start_year}
-                    className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
-                  >
-                    <RefreshCw className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
-                    {isGenerating ? 'Generating...' : `Generate ${missingYears.length} Missing Years`}
-                  </Button>
-                )}
-              </>
+            {productionInfo?.action === 'generate' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleGenerateYears}
+                disabled={isGenerating}
+                className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
+              >
+                <RefreshCw className={`h-3 w-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                {isGenerating ? 'Generating...' : `Generate ${missingYears.length} Missing Years`}
+              </Button>
             )}
           </div>
           

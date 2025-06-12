@@ -1,11 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
-import ModelsColumn from "./hierarchy/ModelsColumn";
-import TrimLevelsColumn from "./hierarchy/TrimLevelsColumn";
-import YearsSection from "./enhanced/YearsSection";
-import { useHierarchyActions } from "./hierarchy/useHierarchyActions";
+import SimplifiedConfigurationManager from "./enhanced/SimplifiedConfigurationManager";
 
 interface ModelHierarchyNavigatorProps {
   models: MotorcycleModel[];
@@ -17,6 +14,7 @@ interface ModelHierarchyNavigatorProps {
   onModelSelect: (modelId: string) => void;
   onYearSelect: (yearId: string) => void;
   onConfigSelect: (configId: string) => void;
+  onConfigChange: () => void;
   isLoading: boolean;
 }
 
@@ -30,13 +28,9 @@ const ModelHierarchyNavigator = ({
   onModelSelect,
   onYearSelect,
   onConfigSelect,
+  onConfigChange,
   isLoading
 }: ModelHierarchyNavigatorProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  const { generatingYears, handleRetryModelYears, handleGenerateModelYears } = useHierarchyActions();
-
-  const selectedModelData = models?.find(m => m.id === selectedModel);
 
   if (isLoading) {
     return (
@@ -50,31 +44,19 @@ const ModelHierarchyNavigator = ({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <ModelsColumn
-        models={models}
-        selectedModel={selectedModel}
-        onModelSelect={onModelSelect}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
-
-      <YearsSection
-        modelYears={modelYears}
-        selectedModel={selectedModel}
-        selectedYear={selectedYear}
-        selectedModelData={selectedModelData}
-        onYearSelect={onYearSelect}
-        isLoading={isLoading}
-      />
-
-      <TrimLevelsColumn
-        configurations={configurations}
-        selectedYear={selectedYear}
-        selectedConfig={selectedConfig}
-        onConfigSelect={onConfigSelect}
-      />
-    </div>
+    <SimplifiedConfigurationManager
+      models={models}
+      modelYears={modelYears}
+      configurations={configurations}
+      selectedModel={selectedModel}
+      selectedYear={selectedYear}
+      selectedConfig={selectedConfig}
+      onModelSelect={onModelSelect}
+      onYearSelect={onYearSelect}
+      onConfigSelect={onConfigSelect}
+      onConfigChange={onConfigChange}
+      isLoading={isLoading}
+    />
   );
 };
 
