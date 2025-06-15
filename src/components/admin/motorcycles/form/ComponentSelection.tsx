@@ -44,12 +44,24 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
     queryFn: fetchWheels,
   });
 
-  // Very strict: must be a non-empty string (not null, undefined, or non-string)
-  const hasValidId = (item: any) =>
-    typeof item?.id === "string" &&
-    !!item.id.trim() &&
-    item.id !== "undefined" &&
-    item.id !== "null";
+  // Strict validator for component IDs
+  const hasValidId = (item: any) => {
+    if (
+      typeof item?.id !== "string" ||
+      !item.id.trim() ||
+      item.id === "undefined" ||
+      item.id === "null"
+    ) {
+      // For debugging: log bad values
+      console.log("Invalid component ID detected in admin/parts form:", item);
+      return false;
+    }
+    return true;
+  };
+
+  // Helper to clean defaultValue for Selects (undefined if blank/empty)
+  const cleanSelectValue = (val: any) =>
+    typeof val === "string" && val.trim() ? val : undefined;
 
   return (
     <div className="space-y-4">
@@ -65,7 +77,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
               <FormLabel>Engine</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select engine" />
                     </SelectTrigger>
@@ -76,11 +88,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                         Array.isArray(engines) && engines.filter(hasValidId).length > 0
                           ? engines
                               .filter(hasValidId)
-                              .map((engine) => (
-                                <SelectItem key={engine.id} value={engine.id}>
-                                  {engine.name} - {engine.displacement_cc}cc
-                                </SelectItem>
-                              ))
+                              .map((engine) =>
+                                hasValidId(engine) ? (
+                                  <SelectItem key={engine.id} value={engine.id}>
+                                    {engine.name} - {engine.displacement_cc}cc
+                                  </SelectItem>
+                                ) : null
+                              )
                           : <div className="px-4 py-2 text-muted-foreground">No valid engines found</div>
                       )}
                     </SelectContent>
@@ -109,7 +123,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
               <FormLabel>Brake System</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select brake system" />
                     </SelectTrigger>
@@ -120,11 +134,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                         Array.isArray(brakes) && brakes.filter(hasValidId).length > 0
                           ? brakes
                               .filter(hasValidId)
-                              .map((brake) => (
-                                <SelectItem key={brake.id} value={brake.id}>
-                                  {brake.name}
-                                </SelectItem>
-                              ))
+                              .map((brake) =>
+                                hasValidId(brake) ? (
+                                  <SelectItem key={brake.id} value={brake.id}>
+                                    {brake.name}
+                                  </SelectItem>
+                                ) : null
+                              )
                           : <div className="px-4 py-2 text-muted-foreground">No valid brake systems found</div>
                       )}
                     </SelectContent>
@@ -153,7 +169,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
               <FormLabel>Frame</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select frame" />
                     </SelectTrigger>
@@ -164,11 +180,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                         Array.isArray(frames) && frames.filter(hasValidId).length > 0
                           ? frames
                               .filter(hasValidId)
-                              .map((frame) => (
-                                <SelectItem key={frame.id} value={frame.id}>
-                                  {frame.name}
-                                </SelectItem>
-                              ))
+                              .map((frame) =>
+                                hasValidId(frame) ? (
+                                  <SelectItem key={frame.id} value={frame.id}>
+                                    {frame.name}
+                                  </SelectItem>
+                                ) : null
+                              )
                           : <div className="px-4 py-2 text-muted-foreground">No valid frames found</div>
                       )}
                     </SelectContent>
@@ -197,7 +215,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
               <FormLabel>Suspension</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select suspension" />
                     </SelectTrigger>
@@ -208,11 +226,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                         Array.isArray(suspensions) && suspensions.filter(hasValidId).length > 0
                           ? suspensions
                               .filter(hasValidId)
-                              .map((suspension) => (
-                                <SelectItem key={suspension.id} value={suspension.id}>
-                                  {suspension.name}
-                                </SelectItem>
-                              ))
+                              .map((suspension) =>
+                                hasValidId(suspension) ? (
+                                  <SelectItem key={suspension.id} value={suspension.id}>
+                                    {suspension.name}
+                                  </SelectItem>
+                                ) : null
+                              )
                           : <div className="px-4 py-2 text-muted-foreground">No valid suspensions found</div>
                       )}
                     </SelectContent>
@@ -241,7 +261,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
               <FormLabel>Wheels</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select wheels" />
                     </SelectTrigger>
@@ -252,11 +272,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                         Array.isArray(wheels) && wheels.filter(hasValidId).length > 0
                           ? wheels
                               .filter(hasValidId)
-                              .map((wheel) => (
-                                <SelectItem key={wheel.id} value={wheel.id}>
-                                  {wheel.name}
-                                </SelectItem>
-                              ))
+                              .map((wheel) =>
+                                hasValidId(wheel) ? (
+                                  <SelectItem key={wheel.id} value={wheel.id}>
+                                    {wheel.name}
+                                  </SelectItem>
+                                ) : null
+                              )
                           : <div className="px-4 py-2 text-muted-foreground">No valid wheels found</div>
                       )}
                     </SelectContent>
