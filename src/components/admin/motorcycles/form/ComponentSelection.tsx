@@ -44,8 +44,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
     queryFn: fetchWheels,
   });
 
-  // Defensive filter for valid id's (non-empty string)
-  const hasValidId = (item: any) => typeof item.id === "string" && item.id.trim() !== "";
+  // Stronger filter for valid id's (must be non-empty string!)
+  const hasValidId = (item: any) =>
+    typeof item.id === "string" &&
+    !!item.id &&
+    item.id.trim() !== "" &&
+    item.id !== null &&
+    item.id !== undefined;
 
   return (
     <div className="space-y-4">
@@ -69,11 +74,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {enginesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        engines?.filter(hasValidId).map((engine) => (
-                          <SelectItem key={engine.id} value={engine.id}>
-                            {engine.name} - {engine.displacement_cc}cc
-                          </SelectItem>
-                        ))
+                        Array.isArray(engines)
+                          ? engines.filter(hasValidId).map((engine) => (
+                              <SelectItem key={engine.id} value={engine.id}>
+                                {engine.name} - {engine.displacement_cc}cc
+                              </SelectItem>
+                            ))
+                          : null
                       )}
                     </SelectContent>
                   </Select>
@@ -109,11 +116,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {brakesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        brakes?.filter(hasValidId).map((brake) => (
-                          <SelectItem key={brake.id} value={brake.id}>
-                            {brake.name}
-                          </SelectItem>
-                        ))
+                        Array.isArray(brakes)
+                          ? brakes.filter(hasValidId).map((brake) => (
+                              <SelectItem key={brake.id} value={brake.id}>
+                                {brake.name}
+                              </SelectItem>
+                            ))
+                          : null
                       )}
                     </SelectContent>
                   </Select>
@@ -149,11 +158,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {framesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        frames?.filter(hasValidId).map((frame) => (
-                          <SelectItem key={frame.id} value={frame.id}>
-                            {frame.name}
-                          </SelectItem>
-                        ))
+                        Array.isArray(frames)
+                          ? frames.filter(hasValidId).map((frame) => (
+                              <SelectItem key={frame.id} value={frame.id}>
+                                {frame.name}
+                              </SelectItem>
+                            ))
+                          : null
                       )}
                     </SelectContent>
                   </Select>
@@ -189,11 +200,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {suspensionsLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        suspensions?.filter(hasValidId).map((suspension) => (
-                          <SelectItem key={suspension.id} value={suspension.id}>
-                            {suspension.name}
-                          </SelectItem>
-                        ))
+                        Array.isArray(suspensions)
+                          ? suspensions.filter(hasValidId).map((suspension) => (
+                              <SelectItem key={suspension.id} value={suspension.id}>
+                                {suspension.name}
+                              </SelectItem>
+                            ))
+                          : null
                       )}
                     </SelectContent>
                   </Select>
@@ -229,11 +242,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {wheelsLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        wheels?.filter(hasValidId).map((wheel) => (
-                          <SelectItem key={wheel.id} value={wheel.id}>
-                            {wheel.name}
-                          </SelectItem>
-                        ))
+                        Array.isArray(wheels)
+                          ? wheels.filter(hasValidId).map((wheel) => (
+                              <SelectItem key={wheel.id} value={wheel.id}>
+                                {wheel.name}
+                              </SelectItem>
+                            ))
+                          : null
                       )}
                     </SelectContent>
                   </Select>
