@@ -35,7 +35,7 @@ const ComponentsSection = ({ selectedYears, onManageComponents, onBulkAssign }: 
   const handleComponentLinked = () => {
     // Refresh configurations when a component is linked
     if (refreshConfigurations) {
-      refreshConfigurations(selectedYears);
+      refreshConfigurations();
     }
   };
 

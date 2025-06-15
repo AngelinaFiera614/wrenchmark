@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,7 +70,7 @@ const HorizontalPartsLayout = () => {
   const handleComponentLinked = async () => {
     console.log("Component linked - refreshing data");
     if (refreshConfigurations) {
-      await refreshConfigurations([selectedYear].filter(Boolean));
+      await refreshConfigurations();
     }
   };
 
