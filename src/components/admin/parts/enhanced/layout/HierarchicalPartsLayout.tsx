@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import ModelYearsColumn from "../../hierarchy/ModelYearsColumn";
 import TrimLevelsColumn from "../../hierarchy/TrimLevelsColumn";
 import SimpleComponentsManager from "../SimpleComponentsManager";
 import HorizontalTrimManager from "../HorizontalTrimManager";
-import { useAdminPartsLayoutState } from "./useAdminPartsLayoutState";
+import { useAdminPartsLayoutState } from "@/hooks/admin/useAdminPartsLayoutState";
 
 const HierarchicalPartsLayout = () => {
   const [searchQuery, setSearchQuery] = useState("");

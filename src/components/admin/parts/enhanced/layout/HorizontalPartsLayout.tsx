@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import EnhancedContextSidebar from "./EnhancedContextSidebar";
 import SimpleComponentsManager from "../SimpleComponentsManager";
 import UnifiedConfigurationManager from "../UnifiedConfigurationManager";
 import TrimLevelCard from "../../trim-level/TrimLevelCard";
-import { useAdminPartsLayoutState } from "./useAdminPartsLayoutState";
+import { useAdminPartsLayoutState } from "@/hooks/admin/useAdminPartsLayoutState";
 
 const HorizontalPartsLayout = () => {
   const [isCreatingNew, setIsCreatingNew] = useState(false);

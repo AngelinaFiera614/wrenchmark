@@ -6,7 +6,7 @@ import { Wrench, Database, Plus, CheckSquare, AlertTriangle } from "lucide-react
 import ComponentLibraryEnhanced from "./ComponentLibraryEnhanced";
 import BulkAssignDialog from "./BulkAssignDialog";
 import ValidationResultsDialog from "./ValidationResultsDialog";
-import { useAdminPartsLayoutState } from "./layout/useAdminPartsLayoutState";
+import { useAdminPartsLayoutState } from "@/hooks/admin/useAdminPartsLayoutState";
 import { validateConfiguration, ValidationResult } from "../validation/ValidationEngine";
 import { useToast } from "@/hooks/use-toast";
 
