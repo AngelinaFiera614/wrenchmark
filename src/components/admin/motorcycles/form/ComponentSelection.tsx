@@ -44,6 +44,9 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
     queryFn: fetchWheels,
   });
 
+  // Defensive filter for valid id's (non-empty string)
+  const hasValidId = (item: any) => typeof item.id === "string" && item.id.trim() !== "";
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Technical Components</h3>
@@ -66,7 +69,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {enginesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        engines?.filter(engine => engine.id).map((engine) => (
+                        engines?.filter(hasValidId).map((engine) => (
                           <SelectItem key={engine.id} value={engine.id}>
                             {engine.name} - {engine.displacement_cc}cc
                           </SelectItem>
@@ -106,7 +109,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {brakesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        brakes?.filter(brake => brake.id).map((brake) => (
+                        brakes?.filter(hasValidId).map((brake) => (
                           <SelectItem key={brake.id} value={brake.id}>
                             {brake.name}
                           </SelectItem>
@@ -146,7 +149,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {framesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        frames?.filter(frame => frame.id).map((frame) => (
+                        frames?.filter(hasValidId).map((frame) => (
                           <SelectItem key={frame.id} value={frame.id}>
                             {frame.name}
                           </SelectItem>
@@ -186,7 +189,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {suspensionsLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        suspensions?.filter(suspension => suspension.id).map((suspension) => (
+                        suspensions?.filter(hasValidId).map((suspension) => (
                           <SelectItem key={suspension.id} value={suspension.id}>
                             {suspension.name}
                           </SelectItem>
@@ -226,7 +229,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {wheelsLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        wheels?.filter(wheel => wheel.id).map((wheel) => (
+                        wheels?.filter(hasValidId).map((wheel) => (
                           <SelectItem key={wheel.id} value={wheel.id}>
                             {wheel.name}
                           </SelectItem>
