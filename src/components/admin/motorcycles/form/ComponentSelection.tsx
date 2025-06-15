@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -65,9 +64,9 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     </SelectTrigger>
                     <SelectContent>
                       {enginesLoading ? (
-                        <SelectItem value="" disabled>Loading...</SelectItem>
+                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        engines?.map((engine) => (
+                        engines?.filter(engine => engine.id).map((engine) => (
                           <SelectItem key={engine.id} value={engine.id}>
                             {engine.name} - {engine.displacement_cc}cc
                           </SelectItem>
@@ -105,9 +104,9 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     </SelectTrigger>
                     <SelectContent>
                       {brakesLoading ? (
-                        <SelectItem value="" disabled>Loading...</SelectItem>
+                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        brakes?.map((brake) => (
+                        brakes?.filter(brake => brake.id).map((brake) => (
                           <SelectItem key={brake.id} value={brake.id}>
                             {brake.name}
                           </SelectItem>
@@ -145,9 +144,9 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     </SelectTrigger>
                     <SelectContent>
                       {framesLoading ? (
-                        <SelectItem value="" disabled>Loading...</SelectItem>
+                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        frames?.map((frame) => (
+                        frames?.filter(frame => frame.id).map((frame) => (
                           <SelectItem key={frame.id} value={frame.id}>
                             {frame.name}
                           </SelectItem>
@@ -185,9 +184,9 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     </SelectTrigger>
                     <SelectContent>
                       {suspensionsLoading ? (
-                        <SelectItem value="" disabled>Loading...</SelectItem>
+                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        suspensions?.map((suspension) => (
+                        suspensions?.filter(suspension => suspension.id).map((suspension) => (
                           <SelectItem key={suspension.id} value={suspension.id}>
                             {suspension.name}
                           </SelectItem>
@@ -225,9 +224,9 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     </SelectTrigger>
                     <SelectContent>
                       {wheelsLoading ? (
-                        <SelectItem value="" disabled>Loading...</SelectItem>
+                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        wheels?.map((wheel) => (
+                        wheels?.filter(wheel => wheel.id).map((wheel) => (
                           <SelectItem key={wheel.id} value={wheel.id}>
                             {wheel.name}
                           </SelectItem>
