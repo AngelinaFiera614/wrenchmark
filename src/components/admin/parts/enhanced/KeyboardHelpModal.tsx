@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Keyboard, Badge, Button } from "lucide-react";
+import { Keyboard, Badge } from "lucide-react";
 
 interface KeyboardHelpModalProps {
   onClose: () => void;
@@ -43,3 +43,4 @@ const KeyboardHelpModal: React.FC<KeyboardHelpModalProps> = ({ onClose }) => (
 );
 
 export default KeyboardHelpModal;
+
