@@ -44,10 +44,12 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
     queryFn: fetchWheels,
   });
 
-  // Only accept string IDs that are strictly non-empty, non-whitespace, not undefined/null
+  // Very strict: must be a non-empty string (not null, undefined, or non-string)
   const hasValidId = (item: any) =>
     typeof item?.id === "string" &&
-    Boolean(item.id?.trim());
+    !!item.id.trim() &&
+    item.id !== "undefined" &&
+    item.id !== "null";
 
   return (
     <div className="space-y-4">
@@ -71,7 +73,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {enginesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        Array.isArray(engines)
+                        Array.isArray(engines) && engines.filter(hasValidId).length > 0
                           ? engines
                               .filter(hasValidId)
                               .map((engine) => (
@@ -79,7 +81,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                                   {engine.name} - {engine.displacement_cc}cc
                                 </SelectItem>
                               ))
-                          : null
+                          : <div className="px-4 py-2 text-muted-foreground">No valid engines found</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -115,7 +117,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {brakesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        Array.isArray(brakes)
+                        Array.isArray(brakes) && brakes.filter(hasValidId).length > 0
                           ? brakes
                               .filter(hasValidId)
                               .map((brake) => (
@@ -123,7 +125,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                                   {brake.name}
                                 </SelectItem>
                               ))
-                          : null
+                          : <div className="px-4 py-2 text-muted-foreground">No valid brake systems found</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -159,7 +161,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {framesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        Array.isArray(frames)
+                        Array.isArray(frames) && frames.filter(hasValidId).length > 0
                           ? frames
                               .filter(hasValidId)
                               .map((frame) => (
@@ -167,7 +169,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                                   {frame.name}
                                 </SelectItem>
                               ))
-                          : null
+                          : <div className="px-4 py-2 text-muted-foreground">No valid frames found</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -203,7 +205,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {suspensionsLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        Array.isArray(suspensions)
+                        Array.isArray(suspensions) && suspensions.filter(hasValidId).length > 0
                           ? suspensions
                               .filter(hasValidId)
                               .map((suspension) => (
@@ -211,7 +213,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                                   {suspension.name}
                                 </SelectItem>
                               ))
-                          : null
+                          : <div className="px-4 py-2 text-muted-foreground">No valid suspensions found</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -247,7 +249,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                       {wheelsLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
                       ) : (
-                        Array.isArray(wheels)
+                        Array.isArray(wheels) && wheels.filter(hasValidId).length > 0
                           ? wheels
                               .filter(hasValidId)
                               .map((wheel) => (
@@ -255,7 +257,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                                   {wheel.name}
                                 </SelectItem>
                               ))
-                          : null
+                          : <div className="px-4 py-2 text-muted-foreground">No valid wheels found</div>
                       )}
                     </SelectContent>
                   </Select>
