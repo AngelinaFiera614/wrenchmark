@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,19 +21,28 @@ const HierarchicalPartsLayout = () => {
   const [activeTab, setActiveTab] = useState("components");
   
   const { toast } = useToast();
-  const layoutState = useAdminPartsLayoutState();
-  const { adminData } = layoutState;
 
-  const selectedModel = adminData?.selectedModel || null;
-  const selectedYear = adminData?.selectedYear || null;
-  const selectedConfig = adminData?.selectedConfig || null;
+  // Destructure properties directly from hook
+  const {
+    selectedModel,
+    selectedYear,
+    selectedConfig,
+    selectedModelData,
+    modelYears,
+    models,
+    configurations,
+    handleModelSelect,
+    handleYearSelect,
+    handleConfigSelect,
+    refreshConfigurations
+  } = useAdminPartsLayoutState();
 
   const handleGenerateModelYears = async () => {
-    if (!selectedModel || !adminData.selectedModelData) return;
+    if (!selectedModel || !selectedModelData) return;
     
     setGeneratingYears(true);
     try {
-      console.log("Generating model years for model:", adminData.selectedModelData.name);
+      console.log("Generating model years for model:", selectedModelData.name);
       await generateModelYears(selectedModel);
       
       toast({
@@ -41,8 +51,8 @@ const HierarchicalPartsLayout = () => {
       });
       
       // Refresh model years data
-      if (adminData.refreshConfigurations) {
-        await adminData.refreshConfigurations();
+      if (refreshConfigurations) {
+        await refreshConfigurations();
       }
     } catch (error: any) {
       console.error("Error generating model years:", error);
@@ -57,14 +67,14 @@ const HierarchicalPartsLayout = () => {
   };
 
   const handleRetryModelYears = () => {
-    if (adminData.refreshConfigurations) {
-      adminData.refreshConfigurations();
+    if (refreshConfigurations) {
+      refreshConfigurations();
     }
   };
 
   const handleComponentLinked = () => {
-    if (adminData.refreshConfigurations) {
-      adminData.refreshConfigurations([selectedYear].filter(Boolean));
+    if (refreshConfigurations) {
+      refreshConfigurations([selectedYear].filter(Boolean));
     }
   };
 
@@ -118,20 +128,20 @@ const HierarchicalPartsLayout = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Models Column */}
         <ModelsColumn
-          models={adminData.models || []}
+          models={models || []}
           selectedModel={selectedModel}
-          onModelSelect={adminData.handleModelSelect}
+          onModelSelect={handleModelSelect}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
 
         {/* Model Years Column */}
         <ModelYearsColumn
-          modelYears={adminData.modelYears || []}
+          modelYears={modelYears || []}
           selectedModel={selectedModel}
           selectedYear={selectedYear}
-          selectedModelData={adminData.selectedModelData}
-          onYearSelect={adminData.handleYearSelect}
+          selectedModelData={selectedModelData}
+          onYearSelect={handleYearSelect}
           onRetryModelYears={handleRetryModelYears}
           onGenerateModelYears={handleGenerateModelYears}
           generatingYears={generatingYears}
@@ -140,10 +150,10 @@ const HierarchicalPartsLayout = () => {
 
         {/* Trim Levels Column */}
         <TrimLevelsColumn
-          configurations={adminData.configurations || []}
+          configurations={configurations || []}
           selectedYear={selectedYear}
           selectedConfig={selectedConfig}
-          onConfigSelect={adminData.handleConfigSelect}
+          onConfigSelect={handleConfigSelect}
         />
       </div>
 
@@ -183,8 +193,8 @@ const HierarchicalPartsLayout = () => {
                 </div>
               ) : (
                 <SimpleComponentsManager
-                  selectedModel={adminData.selectedModelData}
-                  selectedConfiguration={adminData.selectedConfigData}
+                  selectedModel={selectedModelData}
+                  selectedConfiguration={null}
                   onComponentLinked={handleComponentLinked}
                 />
               )}
@@ -192,8 +202,8 @@ const HierarchicalPartsLayout = () => {
 
             <TabsContent value="management" className="space-y-6">
               <SimpleComponentsManager
-                selectedModel={adminData.selectedModelData}
-                selectedConfiguration={adminData.selectedConfigData}
+                selectedModel={selectedModelData}
+                selectedConfiguration={null}
                 onComponentLinked={handleComponentLinked}
                 showManagementView={true}
               />

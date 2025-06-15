@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,19 +22,30 @@ const HorizontalPartsLayout = () => {
   const [assigningTrims, setAssigningTrims] = useState(false);
   
   const { toast } = useToast();
-  const layoutState = useAdminPartsLayoutState();
-  const { adminData } = layoutState;
 
-  const selectedModel = adminData?.selectedModel || null;
-  const selectedYear = adminData?.selectedYear || null;
-  const selectedConfig = adminData?.selectedConfig || null;
+  // Destructure properties directly from hook
+  const {
+    selectedModel,
+    selectedYear,
+    selectedConfig,
+    selectedModelData,
+    selectedYearData,
+    selectedConfigData,
+    models,
+    modelYears,
+    configurations,
+    handleModelSelect,
+    handleYearSelect,
+    handleConfigSelect,
+    refreshConfigurations
+  } = useAdminPartsLayoutState();
 
   const handleGenerateModelYears = async () => {
-    if (!selectedModel || !adminData.selectedModelData) return;
+    if (!selectedModel || !selectedModelData) return;
     
     setGeneratingYears(true);
     try {
-      console.log("Generating model years for model:", adminData.selectedModelData.name);
+      console.log("Generating model years for model:", selectedModelData.name);
       await generateModelYears(selectedModel);
       
       toast({
@@ -41,8 +53,8 @@ const HorizontalPartsLayout = () => {
         description: "Model years generated successfully."
       });
       
-      if (adminData.refreshConfigurations) {
-        await adminData.refreshConfigurations();
+      if (refreshConfigurations) {
+        await refreshConfigurations();
       }
     } catch (error: any) {
       console.error("Error generating model years:", error);
@@ -58,8 +70,8 @@ const HorizontalPartsLayout = () => {
 
   const handleComponentLinked = async () => {
     console.log("Component linked - refreshing data");
-    if (adminData.refreshConfigurations) {
-      await adminData.refreshConfigurations([selectedYear].filter(Boolean));
+    if (refreshConfigurations) {
+      await refreshConfigurations([selectedYear].filter(Boolean));
     }
   };
 
@@ -81,18 +93,18 @@ const HorizontalPartsLayout = () => {
     console.log("Configuration saved, refreshing data:", configData);
     setIsCreatingNew(false);
     setEditingConfig(null);
-    
+
     // Clear selections
     setSelectedYears(new Set());
     setSelectedTrims(new Set());
-    
+
     // Refresh data and select the new/updated config
     await handleComponentLinked();
-    
+
     // If we have the config ID, select it
     if (configData?.id) {
       setTimeout(() => {
-        adminData.handleConfigSelect(configData.id);
+        handleConfigSelect(configData.id);
       }, 500);
     }
   };
@@ -114,20 +126,20 @@ const HorizontalPartsLayout = () => {
     }
 
     setAssigningTrims(true);
-    
+
     try {
       const trimIds = Array.from(selectedTrims);
       const yearIds = Array.from(selectedYears);
-      
+
       console.log("Assigning trims to years:", { trimIds, yearIds });
-      
+
       let totalCreated = 0;
       let totalExisting = 0;
       let errors = [];
 
       for (const trimId of trimIds) {
         const result = await assignTrimToYears(trimId, yearIds);
-        
+
         if (result.success) {
           totalCreated += result.createdConfigurations?.length || 0;
           totalExisting += result.existingConfigurations?.length || 0;
@@ -146,7 +158,7 @@ const HorizontalPartsLayout = () => {
         const message = totalCreated > 0 
           ? `Created ${totalCreated} new configurations. ${totalExisting} already existed.`
           : `All ${totalExisting} configurations already existed.`;
-        
+
         toast({
           title: totalCreated > 0 ? "Success!" : "Already Complete",
           description: message
@@ -156,9 +168,9 @@ const HorizontalPartsLayout = () => {
       // Clear selections and refresh data
       setSelectedTrims(new Set());
       setSelectedYears(new Set());
-      
-      if (adminData.refreshConfigurations) {
-        await adminData.refreshConfigurations();
+
+      if (refreshConfigurations) {
+        await refreshConfigurations();
       }
     } catch (error: any) {
       console.error("Error assigning trims to years:", error);
@@ -193,25 +205,25 @@ const HorizontalPartsLayout = () => {
   };
 
   const getAllTrims = () => {
-    if (!adminData.modelYears || !adminData.configurations) return [];
-    
-    const allTrims = adminData.configurations.filter(config => {
-      return adminData.modelYears.some(year => year.id === config.model_year_id);
+    if (!modelYears || !configurations) return [];
+
+    const allTrims = configurations.filter(config => {
+      return modelYears.some(year => year.id === config.model_year_id);
     });
-    
+
     return allTrims;
   };
 
   const getTrimsForYear = (yearId: string) => {
-    if (!adminData.configurations) return [];
-    return adminData.configurations.filter(config => config.model_year_id === yearId);
+    if (!configurations) return [];
+    return configurations.filter(config => config.model_year_id === yearId);
   };
 
   const getYearsForTrim = (trimId: string) => {
-    const trim = adminData.configurations?.find(c => c.id === trimId);
+    const trim = configurations?.find(c => c.id === trimId);
     if (!trim) return [];
-    
-    const year = adminData.modelYears?.find(y => y.id === trim.model_year_id);
+
+    const year = modelYears?.find(y => y.id === trim.model_year_id);
     return year ? [year] : [];
   };
 
@@ -238,15 +250,15 @@ const HorizontalPartsLayout = () => {
           selectedModel={selectedModel}
           selectedYear={selectedYear}
           selectedConfig={selectedConfig}
-          selectedModelData={adminData.selectedModelData}
-          selectedYearData={adminData.selectedYearData}
-          selectedConfigData={adminData.selectedConfigData}
-          models={adminData.models || []}
-          modelYears={adminData.modelYears || []}
-          configurations={adminData.configurations || []}
-          onModelSelect={adminData.handleModelSelect}
-          onYearSelect={adminData.handleYearSelect}
-          onConfigSelect={adminData.handleConfigSelect}
+          selectedModelData={selectedModelData}
+          selectedYearData={selectedYearData}
+          selectedConfigData={selectedConfigData}
+          models={models || []}
+          modelYears={modelYears || []}
+          configurations={configurations || []}
+          onModelSelect={handleModelSelect}
+          onYearSelect={handleYearSelect}
+          onConfigSelect={handleConfigSelect}
         />
       </div>
 
@@ -315,7 +327,7 @@ const HorizontalPartsLayout = () => {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-explorer-text flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
-                  Model Years ({adminData.modelYears?.length || 0})
+                  Model Years ({modelYears?.length || 0})
                 </CardTitle>
                 <div className="flex gap-2">
                   <Button
@@ -345,13 +357,13 @@ const HorizontalPartsLayout = () => {
               )}
             </CardHeader>
             <CardContent>
-              {!adminData.modelYears || adminData.modelYears.length === 0 ? (
+              {!modelYears || modelYears.length === 0 ? (
                 <div className="text-center py-8 text-explorer-text-muted">
                   No model years found. Generate years for this model to get started.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {adminData.modelYears.map((year) => {
+                  {modelYears.map((year) => {
                     const yearTrims = getTrimsForYear(year.id);
                     const isSelected = selectedYears.has(year.id);
 
@@ -431,7 +443,7 @@ const HorizontalPartsLayout = () => {
                         isDeleting={false}
                         onClick={() => {
                           toggleTrimSelection(trim.id);
-                          adminData.handleConfigSelect(trim.id);
+                          handleConfigSelect(trim.id);
                         }}
                         onEdit={() => handleEditConfig(trim)}
                         onClone={() => {
@@ -481,8 +493,8 @@ const HorizontalPartsLayout = () => {
               </div>
             ) : (
               <SimpleComponentsManager
-                selectedModel={adminData.selectedModelData}
-                selectedConfiguration={adminData.selectedConfigData}
+                selectedModel={selectedModelData}
+                selectedConfiguration={selectedConfigData}
                 onComponentLinked={handleComponentLinked}
               />
             )}

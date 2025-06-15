@@ -21,18 +21,26 @@ const ComponentsSection = ({ selectedYears, onManageComponents, onBulkAssign }: 
   const [showBulkAssign, setShowBulkAssign] = useState(false);
   const [showValidationResults, setShowValidationResults] = useState(false);
   const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
-  const { adminData } = useAdminPartsLayoutState();
+  
+  // Access state directly (no adminData)
+  const {
+    configurations,
+    selectedModelData,
+    selectedConfigData,
+    refreshConfigurations
+  } = useAdminPartsLayoutState();
+
   const { toast } = useToast();
 
   const handleComponentLinked = () => {
     // Refresh configurations when a component is linked
-    if (adminData.refreshConfigurations) {
-      adminData.refreshConfigurations(selectedYears);
+    if (refreshConfigurations) {
+      refreshConfigurations(selectedYears);
     }
   };
 
   const handleRunValidation = () => {
-    if (!adminData.configurations || adminData.configurations.length === 0) {
+    if (!configurations || configurations.length === 0) {
       toast({
         variant: "destructive",
         title: "No Configurations",
@@ -41,14 +49,14 @@ const ComponentsSection = ({ selectedYears, onManageComponents, onBulkAssign }: 
       return;
     }
 
-    console.log("Running validation on configurations:", adminData.configurations.length);
+    console.log("Running validation on configurations:", configurations.length);
     
-    const results = adminData.configurations.map((config: any) => 
+    const results = configurations.map((config: any) => 
       validateConfiguration(
         config,
-        adminData.selectedModelData,
-        adminData.selectedYearData,
-        adminData.configurations
+        selectedModelData,
+        null, // selectedYearData is not available here, pass null
+        configurations
       )
     );
     
@@ -160,7 +168,7 @@ const ComponentsSection = ({ selectedYears, onManageComponents, onBulkAssign }: 
             </div>
           ) : (
             <ComponentLibraryEnhanced
-              selectedConfiguration={adminData.selectedConfigData}
+              selectedConfiguration={selectedConfigData}
               onComponentLinked={handleComponentLinked}
             />
           )}
@@ -171,7 +179,7 @@ const ComponentsSection = ({ selectedYears, onManageComponents, onBulkAssign }: 
       <BulkAssignDialog
         open={showBulkAssign}
         onClose={() => setShowBulkAssign(false)}
-        configurations={adminData.configurations || []}
+        configurations={configurations || []}
         onSuccess={handleBulkAssignSuccess}
       />
 
@@ -180,10 +188,11 @@ const ComponentsSection = ({ selectedYears, onManageComponents, onBulkAssign }: 
         open={showValidationResults}
         onClose={() => setShowValidationResults(false)}
         results={validationResults}
-        configurations={adminData.configurations || []}
+        configurations={configurations || []}
       />
     </>
   );
 };
 
 export default ComponentsSection;
+
