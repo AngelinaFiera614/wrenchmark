@@ -13,8 +13,6 @@ import {
   Target,
   Hammer,
   FileText,
-  Database,
-  Archive,
   Users,
   Settings,
 } from "lucide-react";
@@ -50,7 +48,7 @@ const ModernAdminSidebar = () => {
       title: "Content Management",
       items: [
         { icon: Bike, label: "Motorcycles", href: "/admin/motorcycles" },
-        { icon: Wrench, label: "Parts & Configs", href: "/admin/parts", badge: "Updated" },
+        { icon: Wrench, label: "Parts & Configurations", href: "/admin/parts", badge: "Enhanced" },
         { icon: Building2, label: "Brands", href: "/admin/brands" },
         { icon: Calendar, label: "Models", href: "/admin/models" },
         { icon: Palette, label: "Colors", href: "/admin/colors" },
@@ -65,15 +63,6 @@ const ModernAdminSidebar = () => {
         { icon: Target, label: "Riding Skills", href: "/admin/riding-skills" },
         { icon: Hammer, label: "Repair Skills", href: "/admin/repair-skills" },
         { icon: FileText, label: "Manuals", href: "/admin/manuals" },
-      ]
-    },
-    {
-      title: "Legacy Tools",
-      items: [
-        { icon: Database, label: "Component Library", href: "/admin/component-library" },
-        { icon: Archive, label: "Parts (Legacy)", href: "/admin/parts-legacy" },
-        { icon: Archive, label: "Parts (Enhanced)", href: "/admin/parts-enhanced" },
-        { icon: Archive, label: "Parts (Phase 3)", href: "/admin/parts-phase3" },
       ]
     },
     {

@@ -2,11 +2,14 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Plus, Check, AlertTriangle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Loader } from "lucide-react";
 
 interface ComponentSelectionDialogProps {
   open: boolean;
@@ -25,35 +28,23 @@ const ComponentSelectionDialog: React.FC<ComponentSelectionDialogProps> = ({
   currentComponentId,
   onComponentAssigned
 }) => {
-  const [selectedComponentId, setSelectedComponentId] = useState<string>(currentComponentId || "");
-  const [isAssigning, setIsAssigning] = useState(false);
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedComponentId, setSelectedComponentId] = useState<string>("");
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const getTableName = (type: string) => {
-    const typeMap: Record<string, string> = {
-      engine: 'engines',
-      brake_system: 'brake_systems',
-      frame: 'frames',
-      suspension: 'suspensions',
-      wheel: 'wheels'
-    };
-    return typeMap[type] || type;
-  };
-
-  const getFieldName = (type: string) => {
-    return type === 'brake_system' ? 'brake_system_id' : `${type}_id`;
-  };
-
+  // Fetch components based on type
   const { data: components = [], isLoading } = useQuery({
-    queryKey: [getTableName(componentType || ''), componentType],
+    queryKey: [componentType, 'components'],
     queryFn: async () => {
       if (!componentType) return [];
       
-      const tableName = getTableName(componentType);
+      const tableName = componentType === 'brake_system' ? 'brake_systems' : `${componentType}s`;
       const { data, error } = await supabase
         .from(tableName)
-        .select("*")
-        .order("name");
+        .select('*')
+        .order('name');
       
       if (error) throw error;
       return data || [];
@@ -61,134 +52,155 @@ const ComponentSelectionDialog: React.FC<ComponentSelectionDialogProps> = ({
     enabled: !!componentType && open
   });
 
+  const filteredComponents = components.filter(component =>
+    component.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const handleAssign = async () => {
     if (!selectedComponentId || !configurationId || !componentType) return;
 
     setIsAssigning(true);
     try {
-      const fieldName = getFieldName(componentType);
+      const updateField = `${componentType}_id`;
       const { error } = await supabase
-        .from("model_configurations")
-        .update({ [fieldName]: selectedComponentId })
-        .eq("id", configurationId);
+        .from('model_configurations')
+        .update({ [updateField]: selectedComponentId })
+        .eq('id', configurationId);
 
       if (error) throw error;
 
       toast({
         title: "Component Assigned",
-        description: `${componentType.replace('_', ' ')} has been successfully assigned.`
+        description: "Component has been successfully assigned to the configuration."
       });
 
       onComponentAssigned();
-    } catch (error) {
-      console.error("Error assigning component:", error);
+      onClose();
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Assignment Failed",
-        description: "Failed to assign component. Please try again."
+        description: error.message || "Failed to assign component."
       });
     } finally {
       setIsAssigning(false);
     }
   };
 
-  const getComponentDisplay = (component: any) => {
-    if (componentType === 'engine') {
-      return `${component.name} - ${component.displacement_cc}cc`;
-    }
-    if (componentType === 'frame') {
-      return `${component.type} (${component.material || 'Unknown material'})`;
-    }
-    if (componentType === 'suspension') {
-      return `${component.front_type || 'Standard'} / ${component.rear_type || 'Standard'}`;
-    }
-    if (componentType === 'wheel') {
-      return `${component.type || 'Standard'} - ${component.front_size || 'Unknown'} / ${component.rear_size || 'Unknown'}`;
-    }
-    return component.name || component.type || 'Unknown';
+  const handleCreateNew = () => {
+    setShowCreateForm(true);
   };
 
-  // Validate component ID - ensure it's a non-empty string
-  const getValidComponents = () => {
-    return components.filter(component => 
-      component.id && 
-      typeof component.id === 'string' && 
-      component.id.trim() !== '' &&
-      component.id !== 'undefined' &&
-      component.id !== 'null'
-    );
-  };
-
-  const validComponents = getValidComponents();
+  if (!componentType) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-explorer-card border-explorer-chrome/30">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="text-explorer-text">
-            Select {componentType?.replace('_', ' ')} Component
+          <DialogTitle className="flex items-center gap-2">
+            Select {componentType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            {currentComponentId && (
+              <Badge variant="outline">Currently Assigned</Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader className="h-6 w-6 animate-spin text-accent-teal" />
-              <span className="ml-2 text-explorer-text-muted">Loading components...</span>
+
+        <Tabs defaultValue="select" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="select">Select Existing</TabsTrigger>
+            <TabsTrigger value="create">Create New</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="select" className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-explorer-text-muted" />
+              <Input
+                placeholder={`Search ${componentType}s...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          ) : validComponents.length > 0 ? (
-            <div className="space-y-4">
-              <Select value={selectedComponentId} onValueChange={setSelectedComponentId}>
-                <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text">
-                  <SelectValue placeholder={`Select a ${componentType?.replace('_', ' ')} component`} />
-                </SelectTrigger>
-                <SelectContent className="bg-explorer-dark border-explorer-chrome/30">
-                  {validComponents.map((component) => (
-                    <SelectItem 
-                      key={component.id} 
-                      value={component.id}
-                      className="text-explorer-text hover:bg-explorer-chrome/20"
-                    >
-                      {getComponentDisplay(component)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={onClose}
-                  className="border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleAssign}
-                  disabled={!selectedComponentId || isAssigning}
-                  className="bg-accent-teal text-black hover:bg-accent-teal/80"
-                >
-                  {isAssigning ? (
-                    <>
-                      <Loader className="h-4 w-4 animate-spin mr-2" />
-                      Assigning...
-                    </>
-                  ) : (
-                    'Assign Component'
-                  )}
-                </Button>
-              </div>
+
+            <div className="max-h-96 overflow-y-auto space-y-2">
+              {isLoading ? (
+                <div className="text-center py-8">Loading components...</div>
+              ) : filteredComponents.length > 0 ? (
+                filteredComponents.map((component) => (
+                  <div
+                    key={component.id}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                      selectedComponentId === component.id
+                        ? 'border-accent-teal bg-accent-teal/10'
+                        : 'border-explorer-chrome/30 hover:bg-explorer-chrome/10'
+                    }`}
+                    onClick={() => setSelectedComponentId(component.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{component.name}</div>
+                        {component.displacement_cc && (
+                          <div className="text-sm text-explorer-text-muted">
+                            {component.displacement_cc}cc
+                          </div>
+                        )}
+                        {component.type && (
+                          <div className="text-sm text-explorer-text-muted">
+                            Type: {component.type}
+                          </div>
+                        )}
+                      </div>
+                      {selectedComponentId === component.id && (
+                        <Check className="h-5 w-5 text-accent-teal" />
+                      )}
+                      {currentComponentId === component.id && (
+                        <Badge variant="secondary">Current</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <AlertTriangle className="h-8 w-8 text-explorer-text-muted mx-auto mb-2" />
+                  <p className="text-explorer-text-muted">No components found</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCreateNew}
+                    className="mt-2"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Create New {componentType.replace('_', ' ')}
+                  </Button>
+                </div>
+              )}
             </div>
-          ) : (
+          </TabsContent>
+
+          <TabsContent value="create" className="space-y-4">
             <div className="text-center py-8">
+              <Plus className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
               <p className="text-explorer-text-muted">
-                No valid {componentType?.replace('_', ' ')} components found.
+                Component creation interface coming soon
               </p>
               <p className="text-sm text-explorer-text-muted mt-2">
-                Please create components in the Component Library first.
+                This will allow you to create new {componentType}s directly from here
               </p>
             </div>
-          )}
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-between pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAssign}
+            disabled={!selectedComponentId || isAssigning}
+            className="bg-accent-teal text-black hover:bg-accent-teal/80"
+          >
+            {isAssigning ? "Assigning..." : "Assign Component"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

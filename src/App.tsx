@@ -16,7 +16,6 @@ import CompareModels from './pages/CompareModels';
 import NotFound from './pages/NotFound';
 import AdminLayout from './components/layout/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPartsAssignment from './pages/admin/AdminPartsAssignment';
 import AdminModels from './pages/admin/AdminModels';
 import AdminRepairSkills from './pages/admin/AdminRepairSkills';
 import AdminManuals from './pages/admin/AdminManuals';
@@ -27,12 +26,9 @@ import AdminLessons from './pages/admin/AdminLessons';
 import AdminRidingSkills from './pages/admin/AdminRidingSkills';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminMotorcycles from './pages/admin/AdminMotorcycles';
+import AdminParts from './pages/admin/AdminParts';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './components/theme/theme-provider';
-import { cn } from './lib/utils';
-import AdminPartsAssignmentEnhanced from './pages/admin/AdminPartsAssignmentEnhanced';
-import AdminPartsAssignmentPhase3 from './pages/admin/AdminPartsAssignmentPhase3';
-import AdminPartsConsolidated from './pages/admin/AdminPartsConsolidated';
 
 const App: React.FC = () => {
   return (
@@ -52,10 +48,7 @@ const App: React.FC = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="motorcycles" element={<AdminMotorcycles />} />
-          <Route path="parts" element={<AdminPartsConsolidated />} />
-          <Route path="parts-legacy" element={<AdminPartsAssignment />} />
-          <Route path="parts-enhanced" element={<AdminPartsAssignmentEnhanced />} />
-          <Route path="parts-phase3" element={<AdminPartsAssignmentPhase3 />} />
+          <Route path="parts" element={<AdminParts />} />
           <Route path="models" element={<AdminModels />} />
           <Route path="repair-skills" element={<AdminRepairSkills />} />
           <Route path="manuals" element={<AdminManuals />} />
