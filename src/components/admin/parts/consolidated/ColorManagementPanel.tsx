@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,12 +13,14 @@ interface ColorManagementPanelProps {
   selectedYearData?: any;
   selectedConfigData?: any;
   onColorAssigned: () => void;
+  onRefresh?: () => void;
 }
 
 const ColorManagementPanel: React.FC<ColorManagementPanelProps> = ({
   selectedYearData,
   selectedConfigData,
-  onColorAssigned
+  onColorAssigned,
+  onRefresh
 }) => {
   const { toast } = useToast();
   const [showColorDialog, setShowColorDialog] = useState(false);
@@ -65,6 +66,7 @@ const ColorManagementPanel: React.FC<ColorManagementPanelProps> = ({
       });
 
       onColorAssigned();
+      onRefresh?.();
       setShowColorDialog(false);
       setSelectedColor("");
     } catch (error: any) {
@@ -99,6 +101,7 @@ const ColorManagementPanel: React.FC<ColorManagementPanelProps> = ({
         description: `${newColorName} has been created successfully.`
       });
 
+      onRefresh?.();
       setShowCreateColor(false);
       setNewColorName("");
       setNewColorHex("#000000");

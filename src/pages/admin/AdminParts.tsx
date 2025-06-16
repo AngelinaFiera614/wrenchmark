@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Palette, Database } from "lucide-react";
-import ConsolidatedAdminPartsLayout from "@/components/admin/parts/consolidated/ConsolidatedAdminPartsLayout";
+import ConsolidatedAdminPartsLayout from "@/components/admin/parts/ConsolidatedAdminPartsLayout";
 import ColorManagementPanel from "@/components/admin/parts/consolidated/ColorManagementPanel";
 import BulkOperationsPanel from "@/components/admin/parts/consolidated/BulkOperationsPanel";
 
