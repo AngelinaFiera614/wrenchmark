@@ -175,6 +175,8 @@ const ConsolidatedAdminPartsLayout = () => {
                     />
                     <ColorManagementPanel
                       selectedConfigData={selectedConfigData}
+                      selectedYearData={selectedYearData}
+                      onColorAssigned={() => refreshData()}
                       onRefresh={refreshData}
                     />
                   </>
