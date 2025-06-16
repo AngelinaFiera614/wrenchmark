@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   LayoutDashboard,
@@ -10,7 +11,7 @@ import {
   BookOpen,
   GraduationCap,
   Target,
-  Tool,
+  Hammer,
   FileText,
   Database,
   Archive,
@@ -23,13 +24,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useSidebar } from "@/components/ui/sidebar";
 import { NavLink } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
 const ModernAdminSidebar = () => {
-  const { isOpen, setIsOpen } = useSidebar();
-
   const navigationItems = [
     {
       title: "Overview",
@@ -54,7 +52,7 @@ const ModernAdminSidebar = () => {
         { icon: BookOpen, label: "Courses", href: "/admin/courses" },
         { icon: GraduationCap, label: "Lessons", href: "/admin/lessons" },
         { icon: Target, label: "Riding Skills", href: "/admin/riding-skills" },
-        { icon: Tool, label: "Repair Skills", href: "/admin/repair-skills" },
+        { icon: Hammer, label: "Repair Skills", href: "/admin/repair-skills" },
         { icon: FileText, label: "Manuals", href: "/admin/manuals" },
       ]
     },
@@ -77,11 +75,7 @@ const ModernAdminSidebar = () => {
   ];
 
   return (
-    <aside
-      className={`fixed left-0 top-0 z-50 flex flex-col h-full bg-explorer-card border-r border-explorer-chrome/30 transition-transform duration-300 ease-in-out w-64 ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      }`}
-    >
+    <aside className="fixed left-0 top-0 z-50 flex flex-col h-full bg-explorer-card border-r border-explorer-chrome/30 transition-transform duration-300 ease-in-out w-64">
       <div className="flex items-center justify-center h-16 border-b border-explorer-chrome/30">
         <span className="text-lg font-bold text-explorer-text">
           Admin Portal
@@ -109,7 +103,6 @@ const ModernAdminSidebar = () => {
                               : "text-explorer-text hover:bg-explorer-chrome/20"
                           }`
                         }
-                        onClick={() => setIsOpen(false)}
                       >
                         <item.icon className="h-4 w-4" />
                         <span>{item.label}</span>
