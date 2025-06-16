@@ -1,176 +1,132 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React from "react";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
-} from "@/components/ui/sidebar";
+  LayoutDashboard,
+  Bike,
+  Wrench,
+  Building2,
+  Calendar,
+  Palette,
+  Tag,
+  BookOpen,
+  GraduationCap,
+  Target,
+  Tool,
+  FileText,
+  Database,
+  Archive,
+  Users,
+  Settings,
+} from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  LayoutDashboard,
-  Bike,
-  Users,
-  FileText,
-  BookOpen,
-  GraduationCap,
-  Building2,
-  PaintBucket,
-  Camera,
-  Settings,
-  Database,
-} from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
+import { NavLink } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
-const navigationGroups = [
-  {
-    id: "overview",
-    label: "Overview",
-    items: [
-      { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { name: "Models", href: "/admin/models", icon: Bike },
-      { name: "Brands", href: "/admin/brands", icon: Building2 },
-      { name: "Configurations", href: "/admin/parts", icon: Settings },
-      { name: "Components", href: "/admin/components", icon: Database },
-    ]
-  },
-  {
-    id: "media",
-    label: "Media",
-    items: [
-      { name: "Enhanced Media", href: "/admin/enhanced-media", icon: Camera },
-      { name: "Images", href: "/admin/images", icon: Camera },
-    ]
-  },
-  {
-    id: "learning",
-    label: "Learning",
-    items: [
-      { name: "Manuals", href: "/admin/manuals", icon: FileText },
-      { name: "Riding Skills", href: "/admin/riding-skills", icon: GraduationCap },
-      { name: "Courses", href: "/admin/courses", icon: BookOpen },
-      { name: "Glossary", href: "/admin/glossary", icon: BookOpen },
-    ]
-  },
-  {
-    id: "marketplace",
-    label: "Marketplace",
-    items: [
-      { name: "Accessories", href: "/admin/accessories", icon: PaintBucket },
-    ]
-  },
-  {
-    id: "system",
-    label: "System",
-    items: [
-      { name: "Users", href: "/admin/users", icon: Users },
-    ]
-  }
-];
+const ModernAdminSidebar = () => {
+  const { isOpen, setIsOpen } = useSidebar();
 
-export default function ModernAdminSidebar() {
-  const location = useLocation();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(["overview"]);
-
-  const isActive = (href: string) => {
-    if (href === "/admin") {
-      return location.pathname === "/admin";
+  const navigationItems = [
+    {
+      title: "Overview",
+      items: [
+        { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
+      ]
+    },
+    {
+      title: "Content Management",
+      items: [
+        { icon: Bike, label: "Motorcycles", href: "/admin/motorcycles" },
+        { icon: Wrench, label: "Parts & Configs", href: "/admin/parts", badge: "Updated" },
+        { icon: Building2, label: "Brands", href: "/admin/brands" },
+        { icon: Calendar, label: "Models", href: "/admin/models" },
+        { icon: Palette, label: "Colors", href: "/admin/colors" },
+        { icon: Tag, label: "Tags", href: "/admin/tags" },
+      ]
+    },
+    {
+      title: "Learning Content",
+      items: [
+        { icon: BookOpen, label: "Courses", href: "/admin/courses" },
+        { icon: GraduationCap, label: "Lessons", href: "/admin/lessons" },
+        { icon: Target, label: "Riding Skills", href: "/admin/riding-skills" },
+        { icon: Tool, label: "Repair Skills", href: "/admin/repair-skills" },
+        { icon: FileText, label: "Manuals", href: "/admin/manuals" },
+      ]
+    },
+    {
+      title: "Legacy Tools",
+      items: [
+        { icon: Database, label: "Component Library", href: "/admin/component-library" },
+        { icon: Archive, label: "Parts (Legacy)", href: "/admin/parts-legacy" },
+        { icon: Archive, label: "Parts (Enhanced)", href: "/admin/parts-enhanced" },
+        { icon: Archive, label: "Parts (Phase 3)", href: "/admin/parts-phase3" },
+      ]
+    },
+    {
+      title: "System",
+      items: [
+        { icon: Users, label: "Users", href: "/admin/users" },
+        { icon: Settings, label: "System Settings", href: "/admin/system" },
+      ]
     }
-    return location.pathname.startsWith(href);
-  };
-
-  // Determine which groups should be expanded based on current route
-  const getDefaultExpandedGroups = () => {
-    const currentPath = location.pathname;
-    const activeGroups = navigationGroups
-      .filter(group => 
-        group.items.some(item => isActive(item.href))
-      )
-      .map(group => group.id);
-    
-    return activeGroups.length > 0 ? activeGroups : ["overview"];
-  };
-
-  React.useEffect(() => {
-    setExpandedGroups(getDefaultExpandedGroups());
-  }, [location.pathname]);
-
-  const handleAccordionChange = (value: string[]) => {
-    setExpandedGroups(value);
-  };
+  ];
 
   return (
-    <Sidebar className="border-r border-explorer-chrome/20 bg-explorer-dark">
-      <SidebarHeader className="border-b border-explorer-chrome/20 p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-teal/20">
-            <Database className="h-4 w-4 text-accent-teal" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-explorer-text">ADMIN PORTAL</h2>
-            <p className="text-xs text-explorer-text-muted">Content Management</p>
-          </div>
-        </div>
-      </SidebarHeader>
-      
-      <SidebarContent className="bg-explorer-dark overflow-hidden">
-        <div className="p-2">
-          <Accordion 
-            type="multiple" 
-            value={expandedGroups} 
-            onValueChange={handleAccordionChange}
-            className="space-y-1"
-          >
-            {navigationGroups.map((group) => (
-              <AccordionItem 
-                key={group.id} 
-                value={group.id}
-                className="border-none"
-              >
-                <AccordionTrigger className="px-3 py-2 text-explorer-text-muted text-xs font-medium uppercase tracking-wider hover:no-underline hover:bg-explorer-chrome/10 rounded-md">
-                  {group.label}
-                </AccordionTrigger>
-                <AccordionContent className="pb-1">
-                  <SidebarMenu className="space-y-1">
-                    {group.items.map((item) => (
-                      <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton 
-                          asChild 
-                          isActive={isActive(item.href)}
-                          className="data-[active=true]:bg-accent-teal/20 data-[active=true]:text-accent-teal hover:bg-explorer-chrome/10 hover:text-explorer-text transition-colors duration-200"
-                        >
-                          <Link to={item.href} className="flex items-center gap-3 px-3 py-2">
-                            <item.icon className="h-4 w-4 flex-shrink-0" />
-                            <span className="font-medium">{item.name}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+    <aside
+      className={`fixed left-0 top-0 z-50 flex flex-col h-full bg-explorer-card border-r border-explorer-chrome/30 transition-transform duration-300 ease-in-out w-64 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
+      <div className="flex items-center justify-center h-16 border-b border-explorer-chrome/30">
+        <span className="text-lg font-bold text-explorer-text">
+          Admin Portal
+        </span>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto p-4">
+        {navigationItems.map((section, index) => (
+          <Accordion type="single" collapsible key={index} className="w-full">
+            <AccordionItem value={`section-${index}`}>
+              <AccordionTrigger className="font-medium text-explorer-text hover:underline">
+                {section.title}
+              </AccordionTrigger>
+              <AccordionContent className="pl-4">
+                <ul className="space-y-2">
+                  {section.items.map((item) => (
+                    <li key={item.label}>
+                      <NavLink
+                        to={item.href}
+                        className={({ isActive }) =>
+                          `flex items-center space-x-2 py-2 rounded-md transition-colors duration-200
+                          ${
+                            isActive
+                              ? "text-accent-teal bg-accent-teal/10 font-semibold"
+                              : "text-explorer-text hover:bg-explorer-chrome/20"
+                          }`
+                        }
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                        {item.badge && (
+                          <Badge variant="secondary">{item.badge}</Badge>
+                        )}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
-        </div>
-      </SidebarContent>
-      
-      <SidebarFooter className="border-t border-explorer-chrome/20 p-4">
-        <div className="text-center">
-          <p className="text-xs text-explorer-text-muted">Wrenchmark Admin</p>
-          <p className="text-xs text-accent-teal font-medium">v2.0</p>
-        </div>
-      </SidebarFooter>
-    </Sidebar>
+        ))}
+      </nav>
+    </aside>
   );
-}
+};
+
+export default ModernAdminSidebar;
