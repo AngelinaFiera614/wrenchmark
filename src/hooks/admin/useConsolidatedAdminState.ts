@@ -12,7 +12,7 @@ export const useConsolidatedAdminState = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch models with debugging
+  // Fetch models with debugging and fixed foreign key reference
   const { data: models = [], isLoading: modelsLoading, error: modelsError } = useQuery({
     queryKey: ["admin-models"],
     queryFn: async () => {
@@ -27,7 +27,7 @@ export const useConsolidatedAdminState = () => {
             production_start_year,
             production_end_year,
             production_status,
-            brands!inner(name)
+            brands!motorcycle_models_brand_id_fkey(name)
           `)
           .order("name");
         
@@ -41,7 +41,29 @@ export const useConsolidatedAdminState = () => {
         return data || [];
       } catch (err) {
         console.error("💥 Models fetch failed:", err);
-        throw err;
+        // Fallback query without brand data if the join fails
+        try {
+          console.log("🔄 Attempting fallback query without brands...");
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("motorcycle_models")
+            .select(`
+              id,
+              name,
+              brand_id,
+              production_start_year,
+              production_end_year,
+              production_status
+            `)
+            .order("name");
+          
+          if (fallbackError) throw fallbackError;
+          
+          console.log("✅ Fallback query successful:", fallbackData?.length, "models");
+          return fallbackData || [];
+        } catch (fallbackErr) {
+          console.error("💥 Fallback query also failed:", fallbackErr);
+          throw err; // throw original error
+        }
       }
     }
   });
