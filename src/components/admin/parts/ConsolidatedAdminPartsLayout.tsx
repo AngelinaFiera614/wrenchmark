@@ -38,6 +38,7 @@ const ConsolidatedAdminPartsLayout = () => {
     modelsLoading,
     yearsLoading,
     configsLoading,
+    modelsError,
     handleModelSelect,
     handleYearSelect,
     handleConfigSelect,
@@ -136,6 +137,8 @@ const ConsolidatedAdminPartsLayout = () => {
                   selectedModel={selectedModel}
                   onModelSelect={handleModelSelect}
                   loading={modelsLoading}
+                  error={modelsError}
+                  onRefresh={refreshData}
                 />
               </div>
               

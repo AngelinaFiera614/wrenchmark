@@ -12,27 +12,51 @@ export const useConsolidatedAdminState = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch models
-  const { data: models = [], isLoading: modelsLoading } = useQuery({
+  // Fetch models with debugging
+  const { data: models = [], isLoading: modelsLoading, error: modelsError } = useQuery({
     queryKey: ["admin-models"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("motorcycle_models")
-        .select(`
-          id,
-          name,
-          brand_id,
-          production_start_year,
-          production_end_year,
-          production_status,
-          brands!inner(name)
-        `)
-        .order("name");
-      
-      if (error) throw error;
-      return data || [];
+      console.log("🔍 Fetching models...");
+      try {
+        const { data, error } = await supabase
+          .from("motorcycle_models")
+          .select(`
+            id,
+            name,
+            brand_id,
+            production_start_year,
+            production_end_year,
+            production_status,
+            brands!inner(name)
+          `)
+          .order("name");
+        
+        if (error) {
+          console.error("❌ Models query error:", error);
+          throw error;
+        }
+        
+        console.log("✅ Models fetched successfully:", data?.length, "models");
+        console.log("📊 Sample model:", data?.[0]);
+        return data || [];
+      } catch (err) {
+        console.error("💥 Models fetch failed:", err);
+        throw err;
+      }
     }
   });
+
+  // Log any models loading error
+  useEffect(() => {
+    if (modelsError) {
+      console.error("🚨 Models loading error:", modelsError);
+      toast({
+        variant: "destructive",
+        title: "Failed to Load Models",
+        description: "Unable to fetch motorcycle models. Please check your connection and try again."
+      });
+    }
+  }, [modelsError, toast]);
 
   // Fetch model years for selected model
   const { data: modelYears = [], isLoading: yearsLoading } = useQuery({
@@ -40,13 +64,19 @@ export const useConsolidatedAdminState = () => {
     queryFn: async () => {
       if (!selectedModel) return [];
       
+      console.log("🔍 Fetching years for model:", selectedModel);
       const { data, error } = await supabase
         .from("model_years")
         .select("*")
         .eq("motorcycle_id", selectedModel)
         .order("year", { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Years query error:", error);
+        throw error;
+      }
+      
+      console.log("✅ Years fetched:", data?.length, "years");
       return data || [];
     },
     enabled: !!selectedModel
@@ -58,6 +88,7 @@ export const useConsolidatedAdminState = () => {
     queryFn: async () => {
       if (!selectedYear) return [];
       
+      console.log("🔍 Fetching configurations for year:", selectedYear);
       const { data, error } = await supabase
         .from("model_configurations")
         .select(`
@@ -71,7 +102,12 @@ export const useConsolidatedAdminState = () => {
         .eq("model_year_id", selectedYear)
         .order("name");
       
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Configurations query error:", error);
+        throw error;
+      }
+      
+      console.log("✅ Configurations fetched:", data?.length, "configurations");
       return data || [];
     },
     enabled: !!selectedYear
@@ -82,23 +118,39 @@ export const useConsolidatedAdminState = () => {
   const selectedYearData = modelYears.find(y => y.id === selectedYear);
   const selectedConfigData = configurations.find(c => c.id === selectedConfig);
 
+  // Debug selected data
+  useEffect(() => {
+    console.log("📊 Current selection state:", {
+      selectedModel,
+      selectedYear,
+      selectedConfig,
+      modelsCount: models.length,
+      yearsCount: modelYears.length,
+      configsCount: configurations.length
+    });
+  }, [selectedModel, selectedYear, selectedConfig, models.length, modelYears.length, configurations.length]);
+
   // Handlers
   const handleModelSelect = useCallback((modelId: string) => {
+    console.log("🎯 Model selected:", modelId);
     setSelectedModel(modelId);
     setSelectedYear(null);
     setSelectedConfig(null);
   }, []);
 
   const handleYearSelect = useCallback((yearId: string) => {
+    console.log("🎯 Year selected:", yearId);
     setSelectedYear(yearId);
     setSelectedConfig(null);
   }, []);
 
   const handleConfigSelect = useCallback((configId: string) => {
+    console.log("🎯 Config selected:", configId);
     setSelectedConfig(configId);
   }, []);
 
   const refreshData = useCallback(() => {
+    console.log("🔄 Refreshing all data...");
     queryClient.invalidateQueries({ queryKey: ["admin-models"] });
     if (selectedModel) {
       queryClient.invalidateQueries({ queryKey: ["admin-model-years", selectedModel] });
@@ -126,6 +178,7 @@ export const useConsolidatedAdminState = () => {
     modelsLoading,
     yearsLoading,
     configsLoading,
+    modelsError,
     handleModelSelect,
     handleYearSelect,
     handleConfigSelect,

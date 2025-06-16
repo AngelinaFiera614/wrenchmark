@@ -4,20 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Building2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Search, Building2, AlertCircle, RefreshCw } from "lucide-react";
 
 interface ModelSelectionPanelProps {
   models: any[];
   selectedModel: string | null;
   onModelSelect: (modelId: string) => void;
   loading: boolean;
+  error?: any;
+  onRefresh?: () => void;
 }
 
 const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
   models,
   selectedModel,
   onModelSelect,
-  loading
+  loading,
+  error,
+  onRefresh
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -29,13 +34,26 @@ const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
   return (
     <Card className="bg-explorer-card border-explorer-chrome/30">
       <CardHeader>
-        <CardTitle className="text-explorer-text flex items-center gap-2">
-          <Building2 className="h-5 w-5" />
-          Models
-          <Badge variant="secondary" className="ml-auto">
-            {models.length}
-          </Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-explorer-text flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Models
+            <Badge variant="secondary" className="ml-auto">
+              {models.length}
+            </Badge>
+          </CardTitle>
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              disabled={loading}
+              className="border-explorer-chrome/30"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          )}
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-explorer-text-muted" />
           <Input
@@ -47,11 +65,38 @@ const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
         </div>
       </CardHeader>
       <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load models: {error.message || 'Unknown error'}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {loading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="h-16 bg-explorer-chrome/20 rounded animate-pulse" />
             ))}
+          </div>
+        ) : models.length === 0 ? (
+          <div className="text-center py-8">
+            <Building2 className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
+            <p className="text-explorer-text-muted mb-2">No models found</p>
+            <p className="text-sm text-explorer-text-muted">
+              Check your database connection or add some motorcycle models first.
+            </p>
+            {onRefresh && (
+              <Button
+                variant="outline"
+                onClick={onRefresh}
+                className="mt-4 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/10"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry Loading
+              </Button>
+            )}
           </div>
         ) : filteredModels.length > 0 ? (
           <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -78,8 +123,15 @@ const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
           </div>
         ) : (
           <div className="text-center py-8">
-            <Building2 className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
-            <p className="text-explorer-text-muted">No models found</p>
+            <Search className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
+            <p className="text-explorer-text-muted">No models match your search</p>
+            <Button
+              variant="ghost"
+              onClick={() => setSearchTerm("")}
+              className="mt-2 text-accent-teal hover:bg-accent-teal/10"
+            >
+              Clear search
+            </Button>
           </div>
         )}
       </CardContent>
