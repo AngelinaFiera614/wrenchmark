@@ -76,14 +76,17 @@ const UserMenu = () => {
           </Link>
         </DropdownMenuItem>
         
-        {/* Admin dashboard link */}
+        {/* Admin dashboard link - only show for admin users */}
         {isAdmin && (
-          <DropdownMenuItem asChild>
-            <Link to="/admin" className="cursor-pointer flex items-center">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Admin Dashboard
-            </Link>
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem asChild>
+              <Link to="/admin" className="cursor-pointer flex items-center">
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                Admin Dashboard
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
         )}
         
         <DropdownMenuItem asChild>
