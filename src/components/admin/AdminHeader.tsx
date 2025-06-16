@@ -1,53 +1,57 @@
 
-import { Link } from "react-router-dom";
+import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useAuth } from "@/context/auth";
-import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { useLocation } from "react-router-dom";
 
 export function AdminHeader() {
-  const { user, profile } = useAuth();
+  const location = useLocation();
+  
+  // Generate breadcrumb items from current path
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const breadcrumbItems = pathSegments.map((segment, index) => {
+    const href = '/' + pathSegments.slice(0, index + 1).join('/');
+    const label = segment.charAt(0).toUpperCase() + segment.slice(1).replace('-', ' ');
+    return { href, label };
+  });
 
   return (
-    <header className="sticky top-0 z-30 flex items-center h-16 bg-explorer-dark/95 backdrop-blur supports-[backdrop-filter]:bg-explorer-dark/90 px-4 border-b border-explorer-chrome/20">
-      <div className="flex items-center gap-4">
-        <SidebarTrigger className="text-explorer-text hover:text-accent-teal transition-colors" />
-        
-        <div className="flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-2 group">
-            <img 
-              src="/wrenchmark-monogram.png" 
-              alt="Wrenchmark logo" 
-              className="h-8 w-auto group-hover:opacity-80 transition-opacity"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const fallback = document.createElement('span');
-                fallback.textContent = 'W';
-                fallback.className = 'text-xl font-bold text-accent-teal';
-                target.parentNode?.appendChild(fallback);
-              }}
-            />
-            <span className="hidden md:block text-sm text-explorer-text-muted group-hover:text-explorer-text transition-colors">
-              Back to App
-            </span>
-          </Link>
-          
-          <Badge variant="outline" className="bg-accent-teal/20 text-accent-teal border-accent-teal/30">
-            Admin Portal
-          </Badge>
-        </div>
-      </div>
-      
-      <div className="ml-auto flex items-center gap-4">
-        {profile && (
-          <div className="text-sm text-right">
-            <p className="font-medium text-explorer-text">{profile.username || user?.email}</p>
-            <p className="text-xs text-explorer-text-muted">Administrator</p>
-          </div>
-        )}
-      </div>
+    <header className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-explorer-chrome/30 bg-explorer-card">
+      <SidebarTrigger className="-ml-1" />
+      <Separator orientation="vertical" className="mr-2 h-4" />
+      <Breadcrumb>
+        <BreadcrumbList>
+          {breadcrumbItems.map((item, index) => (
+            <React.Fragment key={item.href}>
+              <BreadcrumbItem className="hidden md:block">
+                {index === breadcrumbItems.length - 1 ? (
+                  <BreadcrumbPage className="text-explorer-text">
+                    {item.label}
+                  </BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink 
+                    href={item.href}
+                    className="text-explorer-text-muted hover:text-accent-teal"
+                  >
+                    {item.label}
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+              {index < breadcrumbItems.length - 1 && (
+                <BreadcrumbSeparator className="hidden md:block" />
+              )}
+            </React.Fragment>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
     </header>
   );
 }
-
-export default AdminHeader;

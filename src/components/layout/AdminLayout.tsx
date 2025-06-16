@@ -47,10 +47,10 @@ const AdminLayout = () => {
   if (isAdminVerified || isAdmin) {
     return (
       <div className="min-h-screen bg-explorer-dark">
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={true}>
           <div className="flex min-h-screen w-full">
             <ModernAdminSidebar />
-            <SidebarInset className="flex flex-col flex-1">
+            <SidebarInset className="flex flex-col flex-1 min-w-0">
               <AdminHeader />
               <main className="flex-1 p-6 overflow-auto bg-explorer-dark">
                 <Outlet />

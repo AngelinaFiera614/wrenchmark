@@ -7,6 +7,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { useAuth } from './context/auth';
+import Home from './pages/Home';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Motorcycles from './pages/Motorcycles';
@@ -25,6 +26,7 @@ import AdminCourses from './pages/admin/AdminCourses';
 import AdminLessons from './pages/admin/AdminLessons';
 import AdminRidingSkills from './pages/admin/AdminRidingSkills';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminMotorcycles from './pages/admin/AdminMotorcycles';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './components/theme/theme-provider';
 import { cn } from './lib/utils';
@@ -38,7 +40,7 @@ const App: React.FC = () => {
       <ScrollToTop />
       <Routes>
         {/* Public Routes - Accessible to everyone */}
-        <Route path="/" element={<div className="min-h-screen bg-explorer-dark text-explorer-text flex items-center justify-center"><h1 className="text-4xl font-bold">Welcome to Wrenchmark</h1></div>} />
+        <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/motorcycles" element={<Motorcycles />} />
@@ -49,6 +51,7 @@ const App: React.FC = () => {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="motorcycles" element={<AdminMotorcycles />} />
           <Route path="parts" element={<AdminPartsConsolidated />} />
           <Route path="parts-legacy" element={<AdminPartsAssignment />} />
           <Route path="parts-enhanced" element={<AdminPartsAssignmentEnhanced />} />

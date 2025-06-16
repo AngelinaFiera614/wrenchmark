@@ -19,13 +19,24 @@ import {
   Settings,
 } from "lucide-react";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
 import { NavLink } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const ModernAdminSidebar = () => {
   const navigationItems = [
@@ -75,50 +86,61 @@ const ModernAdminSidebar = () => {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 z-50 flex flex-col h-full bg-explorer-card border-r border-explorer-chrome/30 transition-transform duration-300 ease-in-out w-64">
-      <div className="flex items-center justify-center h-16 border-b border-explorer-chrome/30">
-        <span className="text-lg font-bold text-explorer-text">
-          Admin Portal
-        </span>
-      </div>
+    <Sidebar className="border-r border-explorer-chrome/30 bg-explorer-card">
+      <SidebarHeader className="border-b border-explorer-chrome/30 p-4">
+        <div className="flex items-center justify-center">
+          <span className="text-lg font-bold text-explorer-text">
+            Admin Portal
+          </span>
+        </div>
+      </SidebarHeader>
 
-      <nav className="flex-1 overflow-y-auto p-4">
+      <SidebarContent className="p-2">
         {navigationItems.map((section, index) => (
-          <Accordion type="single" collapsible key={index} className="w-full">
-            <AccordionItem value={`section-${index}`}>
-              <AccordionTrigger className="font-medium text-explorer-text hover:underline">
-                {section.title}
-              </AccordionTrigger>
-              <AccordionContent className="pl-4">
-                <ul className="space-y-2">
-                  {section.items.map((item) => (
-                    <li key={item.label}>
-                      <NavLink
-                        to={item.href}
-                        className={({ isActive }) =>
-                          `flex items-center space-x-2 py-2 rounded-md transition-colors duration-200
-                          ${
-                            isActive
-                              ? "text-accent-teal bg-accent-teal/10 font-semibold"
-                              : "text-explorer-text hover:bg-explorer-chrome/20"
-                          }`
-                        }
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                        {item.badge && (
-                          <Badge variant="secondary">{item.badge}</Badge>
-                        )}
-                      </NavLink>
-                    </li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <SidebarGroup key={index}>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger asChild>
+                <SidebarGroupLabel className="font-medium text-explorer-text hover:text-accent-teal cursor-pointer">
+                  {section.title}
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {section.items.map((item) => (
+                      <SidebarMenuItem key={item.label}>
+                        <SidebarMenuButton asChild>
+                          <NavLink
+                            to={item.href}
+                            className={({ isActive }) =>
+                              `flex items-center space-x-2 py-2 px-2 rounded-md transition-colors duration-200 w-full
+                              ${
+                                isActive
+                                  ? "text-accent-teal bg-accent-teal/10 font-semibold"
+                                  : "text-explorer-text hover:bg-explorer-chrome/20"
+                              }`
+                            }
+                          >
+                            <item.icon className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{item.label}</span>
+                            {item.badge && (
+                              <Badge variant="secondary" className="ml-auto">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+            {index < navigationItems.length - 1 && <SidebarSeparator />}
+          </SidebarGroup>
         ))}
-      </nav>
-    </aside>
+      </SidebarContent>
+    </Sidebar>
   );
 };
 
