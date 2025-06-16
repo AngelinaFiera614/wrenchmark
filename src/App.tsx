@@ -27,7 +27,7 @@ import AdminLessons from './pages/admin/AdminLessons';
 import AdminRidingSkills from './pages/admin/AdminRidingSkills';
 import AdminUsers from './pages/admin/AdminUsers';
 import { Toaster } from 'sonner';
-import { ThemeProvider } from './components/ui/theme-provider';
+import { ThemeProvider } from './components/theme/theme-provider';
 import { cn } from './lib/utils';
 import AdminPartsAssignmentEnhanced from './pages/admin/AdminPartsAssignmentEnhanced';
 import AdminPartsAssignmentPhase3 from './pages/admin/AdminPartsAssignmentPhase3';
