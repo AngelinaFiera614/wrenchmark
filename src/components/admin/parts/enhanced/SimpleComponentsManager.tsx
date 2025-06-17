@@ -125,10 +125,11 @@ const SimpleComponentsManager = ({
           const modelKey = `${component.id}-${component.type}-model`;
           const configKey = `${component.id}-${component.type}-config`;
 
-          // Check model assignment
+          // Check model assignment - fixed to pass component ID as third argument
           newModelStates[modelKey] = await isComponentAssignedToModel(
             selectedModel.id,
-            normalizedType as any
+            normalizedType as any,
+            component.id
           );
 
           // Check configuration assignment if we have a selected config

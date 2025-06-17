@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MotorcycleModel } from '@/types/motorcycle';
+import { MotorcycleModel, ModelYear, Configuration } from '@/types/motorcycle';
 import { fetchModelsForComparison } from '@/services/models/modelComparison';
 
 export interface SelectedState {
@@ -9,18 +9,6 @@ export interface SelectedState {
     yearId?: string;
     configId?: string;
   };
-}
-
-// Define simplified interfaces for comparison
-interface ModelYear {
-  id: string;
-  year: number;
-  configurations?: Configuration[];
-}
-
-interface Configuration {
-  id: string;
-  name?: string;
 }
 
 export const useModelComparison = () => {
@@ -73,17 +61,38 @@ export const useModelComparison = () => {
     }));
   };
 
-  const getSelectedYear = (model: MotorcycleModel): ModelYear | undefined => {
+  const getSelectedYear = (model: MotorcycleModel): ModelYear => {
     const yearId = selectedState[model.id]?.yearId;
-    // Since MotorcycleModel doesn't have model_years, return undefined for now
-    // This will need to be implemented when the model structure is updated
-    return undefined;
+    // Return a default ModelYear if none found
+    if (model.years && yearId) {
+      const foundYear = model.years.find(year => year.id === yearId);
+      if (foundYear) return foundYear;
+    }
+    
+    // Return a default ModelYear structure
+    return {
+      id: '',
+      year: new Date().getFullYear(),
+      motorcycle_id: model.id,
+      configurations: []
+    };
   };
 
-  const getSelectedConfig = (model: MotorcycleModel): Configuration | undefined => {
+  const getSelectedConfig = (model: MotorcycleModel): Configuration => {
     const configId = selectedState[model.id]?.configId;
     const selectedYear = getSelectedYear(model);
-    return selectedYear?.configurations?.find(config => config.id === configId);
+    
+    if (selectedYear?.configurations && configId) {
+      const foundConfig = selectedYear.configurations.find(config => config.id === configId);
+      if (foundConfig) return foundConfig;
+    }
+    
+    // Return a default Configuration structure
+    return {
+      id: '',
+      model_year_id: selectedYear.id || '',
+      name: 'Standard'
+    };
   };
 
   const clearComparison = () => {
