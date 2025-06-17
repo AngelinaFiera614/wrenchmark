@@ -1,98 +1,94 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { ColorOption, ColorFormState } from "@/types/colors";
+import { supabase } from '@/integrations/supabase/client';
 
-// Fetch all colors for a configuration
-export const getColorsForConfiguration = async (configurationId: string): Promise<ColorOption[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('color_options')
-      .select('*')
-      .eq('model_year_id', configurationId)
-      .order('name');
-      
-    if (error) {
-      console.error("Error fetching colors:", error);
-      return [];
-    }
-    
-    return data as unknown as ColorOption[];
-  } catch (error) {
-    console.error("Error in getColorsForConfiguration:", error);
-    return [];
-  }
-};
+export interface ColorVariant {
+  id: string;
+  name: string;
+  color_code: string;
+  hex_code?: string;
+  description?: string;
+  brand_id?: string;
+  year_introduced?: number;
+  year_discontinued?: number;
+  is_metallic?: boolean;
+  is_pearl?: boolean;
+  is_matte?: boolean;
+  image_url?: string;
+  created_at: string;
+  updated_at: string;
+}
 
-// Create a new color option
-export const createColor = async (configurationId: string, colorData: ColorFormState): Promise<ColorOption | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('color_options')
-      .insert({
-        model_year_id: configurationId,
-        name: colorData.name,
-        hex_code: colorData.hex_code,
-        image_url: colorData.image_url,
-        is_limited: colorData.is_limited
-      })
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Error creating color option:", error);
-      return null;
-    }
-    
-    return data as unknown as ColorOption;
-  } catch (error) {
-    console.error("Error in createColor:", error);
-    return null;
-  }
-};
+export async function fetchAllColorVariants(): Promise<ColorVariant[]> {
+  const { data, error } = await supabase
+    .from('color_variants')
+    .select('*')
+    .order('name', { ascending: true });
 
-// Update a color option
-export const updateColor = async (colorId: string, colorData: Partial<ColorFormState>): Promise<ColorOption | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('color_options')
-      .update({
-        name: colorData.name,
-        hex_code: colorData.hex_code,
-        image_url: colorData.image_url,
-        is_limited: colorData.is_limited
-      })
-      .eq('id', colorId)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error("Error updating color option:", error);
-      return null;
-    }
-    
-    return data as unknown as ColorOption;
-  } catch (error) {
-    console.error("Error in updateColor:", error);
-    return null;
+  if (error) {
+    console.error('Error fetching color variants:', error);
+    throw error;
   }
-};
 
-// Delete a color option
-export const deleteColor = async (colorId: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('color_options')
-      .delete()
-      .eq('id', colorId);
-      
-    if (error) {
-      console.error("Error deleting color option:", error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error in deleteColor:", error);
-    return false;
+  return data || [];
+}
+
+export async function createColorVariant(color: Partial<ColorVariant>): Promise<ColorVariant> {
+  const { data, error } = await supabase
+    .from('color_variants')
+    .insert(color)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating color variant:', error);
+    throw error;
   }
-};
+
+  return data;
+}
+
+export async function updateColorVariant(id: string, updates: Partial<ColorVariant>): Promise<ColorVariant> {
+  const { data, error } = await supabase
+    .from('color_variants')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating color variant:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function deleteColorVariant(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('color_variants')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting color variant:', error);
+    throw error;
+  }
+}
+
+export function validateHexCode(hexCode: string): boolean {
+  const hexPattern = /^#[0-9A-Fa-f]{6}$/;
+  return hexPattern.test(hexCode);
+}
+
+export function processHexCode(input: string): string {
+  let processed = input.trim().toUpperCase();
+  if (!processed.startsWith('#')) {
+    processed = '#' + processed;
+  }
+  return processed;
+}
+
+export function normalizeColorCode(colorCode: string): string {
+  // Remove any spaces and convert to uppercase
+  return colorCode.trim().toUpperCase().replace(/\s+/g, '');
+}

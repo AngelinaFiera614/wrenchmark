@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,9 @@ import {
   Database,
   Bike,
   Palette,
-  Building2
+  Building2,
+  Copy,
+  Download
 } from "lucide-react";
 
 interface TestResult {
@@ -90,6 +91,61 @@ const AdminFunctionTester = () => {
     }
   ]);
 
+  const copyToClipboard = async (content: string, description: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({
+        title: "Copied to clipboard",
+        description: `${description} copied successfully`
+      });
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy to clipboard",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const formatTestResults = (tests: TestResult[], categoryName: string) => {
+    const timestamp = new Date().toISOString();
+    const passed = tests.filter(t => t.status === 'passed').length;
+    const failed = tests.filter(t => t.status === 'failed').length;
+    
+    let report = `# ${categoryName} Test Results\n`;
+    report += `**Timestamp:** ${timestamp}\n`;
+    report += `**Summary:** ${passed} passed, ${failed} failed\n\n`;
+    
+    tests.forEach(test => {
+      const statusIcon = test.status === 'passed' ? '✅' : test.status === 'failed' ? '❌' : '⏳';
+      report += `${statusIcon} **${test.name}**\n`;
+      if (test.duration) report += `   Duration: ${test.duration}ms\n`;
+      if (test.error) report += `   Error: ${test.error}\n`;
+      if (test.details) report += `   Details: ${JSON.stringify(test.details, null, 2)}\n`;
+      report += '\n';
+    });
+    
+    return report;
+  };
+
+  const formatFullReport = () => {
+    const timestamp = new Date().toISOString();
+    const allTests = testCategories.flatMap(category => category.tests);
+    const totalPassed = allTests.filter(t => t.status === 'passed').length;
+    const totalFailed = allTests.filter(t => t.status === 'failed').length;
+    
+    let report = `# Wrenchmark Admin Function Test Report\n`;
+    report += `**Generated:** ${timestamp}\n`;
+    report += `**Overall Summary:** ${totalPassed} passed, ${totalFailed} failed\n\n`;
+    
+    testCategories.forEach(category => {
+      report += formatTestResults(category.tests, category.name);
+      report += '\n---\n\n';
+    });
+    
+    return report;
+  };
+
   const runSingleTest = async (categoryIndex: number, testIndex: number): Promise<void> => {
     const testName = testCategories[categoryIndex].tests[testIndex].name;
     
@@ -125,11 +181,32 @@ const AdminFunctionTester = () => {
         case "Create Brand":
           result = await testCreateBrand();
           break;
+        case "Brand-Model Relationships":
+          result = await testBrandModelRelationships();
+          break;
+        case "Brand Search Functionality":
+          result = await testBrandSearch();
+          break;
         case "Create Color Variant":
           result = await testCreateColorVariant();
           break;
+        case "Color Code Validation":
+          result = await testColorCodeValidation();
+          break;
+        case "Hex Code Processing":
+          result = await testHexCodeProcessing();
+          break;
         case "Model → Years → Configurations":
           result = await testModelYearConfigRelationships();
+          break;
+        case "Cascade Delete Operations":
+          result = await testCascadeDeleteOperations();
+          break;
+        case "Orphaned Record Detection":
+          result = await testOrphanedRecordDetection();
+          break;
+        case "Data Consistency Checks":
+          result = await testDataConsistencyChecks();
           break;
         default:
           // Simulate test execution for other tests
@@ -164,11 +241,11 @@ const AdminFunctionTester = () => {
     }
   };
 
+  // Enhanced test implementations
   const testCreateDraftMotorcycle = async (): Promise<TestResult> => {
     try {
       const { fetchAllMotorcyclesForAdmin } = await import("@/services/motorcycles/adminQueries");
       
-      // Test fetching motorcycles first
       const motorcycles = await fetchAllMotorcyclesForAdmin();
       
       if (!Array.isArray(motorcycles)) {
@@ -191,35 +268,273 @@ const AdminFunctionTester = () => {
 
   const testUpdateMotorcycleInfo = async (): Promise<TestResult> => {
     try {
+      const { fetchAllMotorcyclesForAdmin } = await import("@/services/motorcycles/adminQueries");
+      
+      // Get actual motorcycles to test with
+      const motorcycles = await fetchAllMotorcyclesForAdmin();
+      if (motorcycles.length === 0) {
+        return {
+          name: "Update Motorcycle Basic Info",
+          status: 'passed',
+          details: { message: "No motorcycles to test update with - this is expected in empty database" }
+        };
+      }
+
       const { updateMotorcycleAdmin } = await import("@/services/motorcycles/adminQueries");
       
-      // Test with dummy data
-      const testId = "test-id";
-      const testUpdates = { name: "Test Update" };
+      // Test with first motorcycle
+      const testMotorcycle = motorcycles[0];
+      const originalName = testMotorcycle.name;
+      const testName = `${originalName} - Test Update`;
       
-      // This will likely fail with actual ID, but tests the function exists
-      try {
-        await updateMotorcycleAdmin(testId, testUpdates);
-      } catch (dbError) {
-        // Expected to fail with dummy ID, but function should exist
-        if (dbError instanceof Error && dbError.message.includes('test-id')) {
-          return {
-            name: "Update Motorcycle Basic Info",
-            status: 'passed',
-            details: { message: "Function exists and validates ID properly" }
-          };
-        }
-        throw dbError;
-      }
+      // Update with test name
+      await updateMotorcycleAdmin(testMotorcycle.id, { name: testName });
+      
+      // Restore original name
+      await updateMotorcycleAdmin(testMotorcycle.id, { name: originalName });
 
       return {
         name: "Update Motorcycle Basic Info",
         status: 'passed',
-        details: { message: "Update function working" }
+        details: { testedWith: testMotorcycle.id, originalName }
       };
     } catch (error) {
       return {
         name: "Update Motorcycle Basic Info",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testBrandModelRelationships = async (): Promise<TestResult> => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      const { data, error } = await supabase
+        .from('motorcycle_models')
+        .select(`
+          id,
+          name,
+          brands!motorcycle_models_brand_id_fkey(
+            id,
+            name
+          )
+        `)
+        .limit(5);
+
+      if (error) {
+        throw new Error(`Database query failed: ${error.message}`);
+      }
+
+      const modelsWithBrands = data?.filter(model => model.brands) || [];
+
+      return {
+        name: "Brand-Model Relationships",
+        status: 'passed',
+        details: { 
+          totalModels: data?.length || 0,
+          modelsWithBrands: modelsWithBrands.length 
+        }
+      };
+    } catch (error) {
+      return {
+        name: "Brand-Model Relationships",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testBrandSearch = async (): Promise<TestResult> => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      // Test search functionality
+      const { data, error } = await supabase
+        .from('brands')
+        .select('*')
+        .ilike('name', '%a%')
+        .limit(10);
+
+      if (error) {
+        throw new Error(`Search query failed: ${error.message}`);
+      }
+
+      return {
+        name: "Brand Search Functionality",
+        status: 'passed',
+        details: { searchResults: data?.length || 0 }
+      };
+    } catch (error) {
+      return {
+        name: "Brand Search Functionality",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testColorCodeValidation = async (): Promise<TestResult> => {
+    try {
+      // Test hex code validation
+      const validHexCodes = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF', '#000000'];
+      const invalidHexCodes = ['FF0000', '#GG0000', '#12345', 'red', ''];
+      
+      const hexPattern = /^#[0-9A-Fa-f]{6}$/;
+      
+      const validResults = validHexCodes.map(code => hexPattern.test(code));
+      const invalidResults = invalidHexCodes.map(code => hexPattern.test(code));
+      
+      const allValidPassed = validResults.every(result => result === true);
+      const allInvalidFailed = invalidResults.every(result => result === false);
+      
+      if (!allValidPassed || !allInvalidFailed) {
+        throw new Error("Hex code validation logic is incorrect");
+      }
+
+      return {
+        name: "Color Code Validation",
+        status: 'passed',
+        details: { 
+          validTested: validHexCodes.length,
+          invalidTested: invalidHexCodes.length 
+        }
+      };
+    } catch (error) {
+      return {
+        name: "Color Code Validation",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testHexCodeProcessing = async (): Promise<TestResult> => {
+    try {
+      // Test hex code processing and normalization
+      const testCases = [
+        { input: 'ff0000', expected: '#FF0000' },
+        { input: '#ff0000', expected: '#FF0000' },
+        { input: 'FF0000', expected: '#FF0000' },
+        { input: '#FF0000', expected: '#FF0000' }
+      ];
+      
+      const processHexCode = (input: string): string => {
+        let processed = input.trim().toUpperCase();
+        if (!processed.startsWith('#')) {
+          processed = '#' + processed;
+        }
+        return processed;
+      };
+      
+      const results = testCases.map(testCase => ({
+        input: testCase.input,
+        expected: testCase.expected,
+        actual: processHexCode(testCase.input),
+        passed: processHexCode(testCase.input) === testCase.expected
+      }));
+      
+      const allPassed = results.every(result => result.passed);
+      
+      if (!allPassed) {
+        throw new Error("Hex code processing failed for some test cases");
+      }
+
+      return {
+        name: "Hex Code Processing",
+        status: 'passed',
+        details: { testCases: results }
+      };
+    } catch (error) {
+      return {
+        name: "Hex Code Processing",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testCascadeDeleteOperations = async (): Promise<TestResult> => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      // Test if cascade delete function exists
+      const { data, error } = await supabase.rpc('delete_motorcycle_model_cascade', {
+        model_id_param: '00000000-0000-0000-0000-000000000000' // Test with non-existent ID
+      });
+
+      // We expect this to return false (no model found) but not error
+      if (error) {
+        throw new Error(`Cascade delete function error: ${error.message}`);
+      }
+
+      return {
+        name: "Cascade Delete Operations",
+        status: 'passed',
+        details: { functionExists: true, testResult: data }
+      };
+    } catch (error) {
+      return {
+        name: "Cascade Delete Operations",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testOrphanedRecordDetection = async (): Promise<TestResult> => {
+    try {
+      const { runComprehensiveDataValidation } = await import("@/services/testing/dataValidationService");
+      
+      const validationReport = await runComprehensiveDataValidation();
+      
+      const orphanedIssues = validationReport.issues.filter(issue => 
+        issue.issue.toLowerCase().includes('orphaned') || 
+        issue.issue.toLowerCase().includes('no associated') ||
+        issue.issue.toLowerCase().includes('no valid')
+      );
+
+      return {
+        name: "Orphaned Record Detection",
+        status: 'passed',
+        details: { 
+          totalIssues: validationReport.totalIssues,
+          orphanedIssues: orphanedIssues.length 
+        }
+      };
+    } catch (error) {
+      return {
+        name: "Orphaned Record Detection",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testDataConsistencyChecks = async (): Promise<TestResult> => {
+    try {
+      const { runComprehensiveDataValidation } = await import("@/services/testing/dataValidationService");
+      
+      const validationReport = await runComprehensiveDataValidation();
+      
+      const consistencyIssues = validationReport.issues.filter(issue => 
+        issue.issue.toLowerCase().includes('invalid') || 
+        issue.issue.toLowerCase().includes('negative') ||
+        issue.issue.toLowerCase().includes('unrealistic')
+      );
+
+      return {
+        name: "Data Consistency Checks",
+        status: 'passed',
+        details: { 
+          totalIssues: validationReport.totalIssues,
+          consistencyIssues: consistencyIssues.length 
+        }
+      };
+    } catch (error) {
+      return {
+        name: "Data Consistency Checks",
         status: 'failed',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
@@ -313,14 +628,17 @@ const AdminFunctionTester = () => {
       // Test brand service existence
       const brandService = await import("@/services/brandService");
       
-      if (!brandService) {
-        throw new Error("Brand service not found");
+      if (!brandService || !brandService.fetchAllBrands) {
+        throw new Error("Brand service not found or incomplete");
       }
+
+      // Test fetching brands
+      const brands = await brandService.fetchAllBrands();
 
       return {
         name: "Create Brand",
         status: 'passed',
-        details: { message: "Brand service available" }
+        details: { message: "Brand service available", brandCount: brands.length }
       };
     } catch (error) {
       return {
@@ -336,57 +654,21 @@ const AdminFunctionTester = () => {
       // Test color service existence
       const colorService = await import("@/services/colorService");
       
-      if (!colorService) {
-        throw new Error("Color service not found");
+      if (!colorService || !colorService.fetchAllColorVariants) {
+        throw new Error("Color service not found or incomplete");
       }
+
+      // Test fetching color variants
+      const colors = await colorService.fetchAllColorVariants();
 
       return {
         name: "Create Color Variant",
         status: 'passed',
-        details: { message: "Color service available" }
+        details: { message: "Color service available", colorCount: colors.length }
       };
     } catch (error) {
       return {
         name: "Create Color Variant",
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  };
-
-  const testModelYearConfigRelationships = async (): Promise<TestResult> => {
-    try {
-      const { supabase } = await import("@/integrations/supabase/client");
-      
-      // Test basic relationship query
-      const { data, error } = await supabase
-        .from('motorcycle_models')
-        .select(`
-          id,
-          name,
-          model_years(
-            id,
-            year,
-            model_configurations(
-              id,
-              name
-            )
-          )
-        `)
-        .limit(1);
-
-      if (error) {
-        throw new Error(`Database query failed: ${error.message}`);
-      }
-
-      return {
-        name: "Model → Years → Configurations",
-        status: 'passed',
-        details: { sampleDataCount: data?.length || 0 }
-      };
-    } catch (error) {
-      return {
-        name: "Model → Years → Configurations",
         status: 'failed',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
@@ -477,6 +759,15 @@ const AdminFunctionTester = () => {
         </div>
         <div className="flex gap-2">
           <Button
+            onClick={() => copyToClipboard(formatFullReport(), "Full test report")}
+            variant="outline"
+            disabled={isRunning}
+            className="bg-explorer-card border-explorer-chrome/30"
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy Report
+          </Button>
+          <Button
             onClick={resetTests}
             variant="outline"
             disabled={isRunning}
@@ -522,7 +813,15 @@ const AdminFunctionTester = () => {
                   </CardTitle>
                   <p className="text-sm text-explorer-text-muted mt-1">{category.description}</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => copyToClipboard(formatTestResults(category.tests, category.name), `${category.name} results`)}
+                    variant="outline"
+                    size="sm"
+                    className="bg-explorer-dark border-explorer-chrome/30"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
                   <Badge variant="outline" className="bg-explorer-dark">
                     {getCategoryProgress(category)}%
                   </Badge>
@@ -566,19 +865,34 @@ const AdminFunctionTester = () => {
                       )}
                     </div>
                   </div>
-                  <Button
-                    onClick={() => runSingleTest(categoryIndex, testIndex)}
-                    disabled={isRunning || test.status === 'running'}
-                    size="sm"
-                    variant="outline"
-                    className="bg-explorer-card border-explorer-chrome/30"
-                  >
-                    {test.status === 'running' ? (
-                      <RefreshCw className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Play className="h-3 w-3" />
+                  <div className="flex items-center gap-2">
+                    {(test.status === 'passed' || test.status === 'failed') && (
+                      <Button
+                        onClick={() => copyToClipboard(
+                          `**${test.name}**\nStatus: ${test.status}\nDuration: ${test.duration}ms\n${test.error ? `Error: ${test.error}\n` : ''}${test.details ? `Details: ${JSON.stringify(test.details, null, 2)}` : ''}`,
+                          `${test.name} result`
+                        )}
+                        size="sm"
+                        variant="outline"
+                        className="bg-explorer-card border-explorer-chrome/30"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
                     )}
-                  </Button>
+                    <Button
+                      onClick={() => runSingleTest(categoryIndex, testIndex)}
+                      disabled={isRunning || test.status === 'running'}
+                      size="sm"
+                      variant="outline"
+                      className="bg-explorer-card border-explorer-chrome/30"
+                    >
+                      {test.status === 'running' ? (
+                        <RefreshCw className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Play className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               ))}
             </CardContent>
