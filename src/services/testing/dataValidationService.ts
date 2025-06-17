@@ -282,56 +282,81 @@ async function checkDuplicateRecords(): Promise<ValidationIssue[]> {
   const issues: ValidationIssue[] = [];
 
   try {
-    // Check for duplicate motorcycle names within same brand
-    const { data: duplicateMotorcycles } = await supabase
+    // Check for duplicate motorcycle names within same brand - simplified approach
+    const { data: motorcycles } = await supabase
       .from('motorcycle_models')
-      .select('name, brand_id, count(*)')
-      .group('name, brand_id')
-      .having('count(*)', 'gt', 1);
+      .select('id, name, brand_id');
 
-    duplicateMotorcycles?.forEach(duplicate => {
-      issues.push({
-        id: `duplicate-motorcycle-${duplicate.name}-${duplicate.brand_id}`,
-        table: 'motorcycle_models',
-        issue: `Duplicate motorcycle name: "${duplicate.name}" appears ${duplicate.count} times for same brand`,
-        severity: 'medium',
-        details: { name: duplicate.name, brandId: duplicate.brand_id, count: duplicate.count }
+    if (motorcycles) {
+      const nameMap = new Map<string, number>();
+      motorcycles.forEach(motorcycle => {
+        const key = `${motorcycle.name}-${motorcycle.brand_id}`;
+        nameMap.set(key, (nameMap.get(key) || 0) + 1);
       });
-    });
+
+      nameMap.forEach((count, key) => {
+        if (count > 1) {
+          const [name, brandId] = key.split('-');
+          issues.push({
+            id: `duplicate-motorcycle-${key}`,
+            table: 'motorcycle_models',
+            issue: `Duplicate motorcycle name: "${name}" appears ${count} times for same brand`,
+            severity: 'medium',
+            details: { name, brandId, count }
+          });
+        }
+      });
+    }
 
     // Check for duplicate brand names
-    const { data: duplicateBrands } = await supabase
+    const { data: brands } = await supabase
       .from('brands')
-      .select('name, count(*)')
-      .group('name')
-      .having('count(*)', 'gt', 1);
+      .select('id, name');
 
-    duplicateBrands?.forEach(duplicate => {
-      issues.push({
-        id: `duplicate-brand-${duplicate.name}`,
-        table: 'brands',
-        issue: `Duplicate brand name: "${duplicate.name}" appears ${duplicate.count} times`,
-        severity: 'high',
-        details: { name: duplicate.name, count: duplicate.count }
+    if (brands) {
+      const brandNameMap = new Map<string, number>();
+      brands.forEach(brand => {
+        brandNameMap.set(brand.name, (brandNameMap.get(brand.name) || 0) + 1);
       });
-    });
+
+      brandNameMap.forEach((count, name) => {
+        if (count > 1) {
+          issues.push({
+            id: `duplicate-brand-${name}`,
+            table: 'brands',
+            issue: `Duplicate brand name: "${name}" appears ${count} times`,
+            severity: 'high',
+            details: { name, count }
+          });
+        }
+      });
+    }
 
     // Check for duplicate slugs
-    const { data: duplicateSlugs } = await supabase
+    const { data: motorcycleSlugs } = await supabase
       .from('motorcycle_models')
-      .select('slug, count(*)')
-      .group('slug')
-      .having('count(*)', 'gt', 1);
+      .select('id, slug');
 
-    duplicateSlugs?.forEach(duplicate => {
-      issues.push({
-        id: `duplicate-slug-${duplicate.slug}`,
-        table: 'motorcycle_models',
-        issue: `Duplicate slug: "${duplicate.slug}" appears ${duplicate.count} times`,
-        severity: 'critical',
-        details: { slug: duplicate.slug, count: duplicate.count }
+    if (motorcycleSlugs) {
+      const slugMap = new Map<string, number>();
+      motorcycleSlugs.forEach(motorcycle => {
+        if (motorcycle.slug) {
+          slugMap.set(motorcycle.slug, (slugMap.get(motorcycle.slug) || 0) + 1);
+        }
       });
-    });
+
+      slugMap.forEach((count, slug) => {
+        if (count > 1) {
+          issues.push({
+            id: `duplicate-slug-${slug}`,
+            table: 'motorcycle_models',
+            issue: `Duplicate slug: "${slug}" appears ${count} times`,
+            severity: 'critical',
+            details: { slug, count }
+          });
+        }
+      });
+    }
 
   } catch (error) {
     console.error('Error checking duplicate records:', error);
