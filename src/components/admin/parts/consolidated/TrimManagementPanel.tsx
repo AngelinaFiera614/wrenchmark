@@ -3,11 +3,11 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Settings, Plus, Copy, Edit } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Settings, Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import EnhancedConfigurationForm from "./EnhancedConfigurationForm";
 
 interface TrimManagementPanelProps {
   configurations: any[];
@@ -25,48 +25,44 @@ const TrimManagementPanel: React.FC<TrimManagementPanelProps> = ({
   loading
 }) => {
   const { toast } = useToast();
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newConfigName, setNewConfigName] = useState("");
-  const [newTrimLevel, setNewTrimLevel] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingConfig, setEditingConfig] = useState<any>(null);
+  const [deletingConfig, setDeletingConfig] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleCreateConfiguration = async () => {
-    if (!newConfigName || !selectedYearData) return;
+  const handleDeleteConfiguration = async () => {
+    if (!deletingConfig) return;
 
-    setIsCreating(true);
+    setIsDeleting(true);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('model_configurations')
-        .insert({
-          model_year_id: selectedYearData.id,
-          name: newConfigName,
-          trim_level: newTrimLevel || null,
-          is_default: configurations.length === 0 // First config becomes default
-        })
-        .select()
-        .single();
+        .delete()
+        .eq('id', deletingConfig.id);
 
       if (error) throw error;
 
       toast({
-        title: "Configuration Created",
-        description: `${newConfigName} configuration has been created successfully.`
+        title: "Configuration Deleted",
+        description: `${deletingConfig.name} has been deleted successfully.`
       });
 
-      setShowCreateDialog(false);
-      setNewConfigName("");
-      setNewTrimLevel("");
-      
-      // Auto-select the new configuration
-      onConfigSelect(data.id);
+      // Clear selection if the deleted config was selected
+      if (selectedConfig === deletingConfig.id) {
+        onConfigSelect("");
+      }
+
+      setDeletingConfig(null);
+      // Trigger refresh by calling onConfigSelect with current selection
+      onConfigSelect(selectedConfig || "");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Creation Failed",
-        description: error.message || "Failed to create configuration."
+        title: "Delete Failed",
+        description: error.message || "Failed to delete configuration."
       });
     } finally {
-      setIsCreating(false);
+      setIsDeleting(false);
     }
   };
 
@@ -77,6 +73,11 @@ const TrimManagementPanel: React.FC<TrimManagementPanelProps> = ({
     const percentage = Math.round((completed / total) * 100);
     
     return { completed, total, percentage };
+  };
+
+  const handleFormSuccess = () => {
+    // Refresh configurations by triggering a re-fetch
+    onConfigSelect(selectedConfig || "");
   };
 
   if (!selectedYearData) {
@@ -111,7 +112,7 @@ const TrimManagementPanel: React.FC<TrimManagementPanelProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowCreateDialog(true)}
+              onClick={() => setShowCreateForm(true)}
               className="border-accent-teal/30 text-accent-teal hover:bg-accent-teal/10"
             >
               <Plus className="h-4 w-4 mr-1" />
@@ -134,54 +135,82 @@ const TrimManagementPanel: React.FC<TrimManagementPanelProps> = ({
               {configurations.map((config) => {
                 const status = getCompletionStatus(config);
                 return (
-                  <Button
+                  <div
                     key={config.id}
-                    variant={selectedConfig === config.id ? "default" : "ghost"}
-                    onClick={() => onConfigSelect(config.id)}
-                    className={`w-full justify-start text-left h-auto p-3 ${
+                    className={`p-3 rounded-lg border transition-colors ${
                       selectedConfig === config.id
-                        ? "bg-accent-teal text-black hover:bg-accent-teal/80"
-                        : "text-explorer-text hover:bg-explorer-chrome/20"
+                        ? "bg-accent-teal/20 border-accent-teal"
+                        : "bg-explorer-dark border-explorer-chrome/30 hover:border-explorer-chrome/50"
                     }`}
                   >
-                    <div className="w-full">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="font-medium">
-                          {config.name || "Standard"}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {config.is_default && (
-                            <Badge variant="secondary" className="text-xs">
-                              Default
-                            </Badge>
-                          )}
-                          <div className="text-xs">
-                            {status.percentage}%
+                    <div className="flex items-center justify-between">
+                      <div 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => onConfigSelect(config.id)}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="font-medium text-explorer-text">
+                            {config.name || "Standard"}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {config.is_default && (
+                              <Badge variant="secondary" className="text-xs">
+                                Default
+                              </Badge>
+                            )}
+                            <div className="text-xs text-explorer-text">
+                              {status.percentage}%
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      {config.trim_level && (
-                        <div className="text-sm opacity-70 mb-1">
-                          {config.trim_level}
+                        
+                        {config.trim_level && (
+                          <div className="text-sm text-explorer-text-muted mb-1">
+                            {config.trim_level}
+                          </div>
+                        )}
+                        
+                        <div className="w-full bg-explorer-chrome/30 rounded-full h-1 mb-2">
+                          <div
+                            className={`h-1 rounded-full transition-all ${
+                              status.percentage >= 80 ? 'bg-green-400' :
+                              status.percentage >= 60 ? 'bg-yellow-400' : 'bg-red-400'
+                            }`}
+                            style={{ width: `${status.percentage}%` }}
+                          />
                         </div>
-                      )}
-                      
-                      <div className="w-full bg-explorer-chrome/30 rounded-full h-1">
-                        <div
-                          className={`h-1 rounded-full transition-all ${
-                            status.percentage >= 80 ? 'bg-green-400' :
-                            status.percentage >= 60 ? 'bg-yellow-400' : 'bg-red-400'
-                          }`}
-                          style={{ width: `${status.percentage}%` }}
-                        />
+                        
+                        <div className="text-xs text-explorer-text-muted">
+                          {status.completed}/{status.total} components assigned
+                        </div>
                       </div>
-                      
-                      <div className="text-xs opacity-60 mt-1">
-                        {status.completed}/{status.total} components assigned
+
+                      <div className="flex items-center gap-1 ml-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingConfig(config);
+                          }}
+                          className="h-8 w-8 p-0 text-explorer-text hover:bg-explorer-chrome/20"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingConfig(config);
+                          }}
+                          className="h-8 w-8 p-0 text-red-400 hover:bg-red-400/10"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
-                  </Button>
+                  </div>
                 );
               })}
             </div>
@@ -191,7 +220,7 @@ const TrimManagementPanel: React.FC<TrimManagementPanelProps> = ({
               <p className="text-explorer-text-muted mb-4">No configurations found</p>
               <Button
                 variant="outline"
-                onClick={() => setShowCreateDialog(true)}
+                onClick={() => setShowCreateForm(true)}
                 className="border-accent-teal/30 text-accent-teal hover:bg-accent-teal/10"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -202,46 +231,45 @@ const TrimManagementPanel: React.FC<TrimManagementPanelProps> = ({
         </CardContent>
       </Card>
 
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Configuration</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Configuration Name</label>
-              <Input
-                value={newConfigName}
-                onChange={(e) => setNewConfigName(e.target.value)}
-                placeholder="Standard, Sport, Touring, etc."
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Trim Level (Optional)</label>
-              <Input
-                value={newTrimLevel}
-                onChange={(e) => setNewTrimLevel(e.target.value)}
-                placeholder="Base, Premium, Limited, etc."
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowCreateDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateConfiguration}
-                disabled={!newConfigName || isCreating}
-                className="bg-accent-teal text-black hover:bg-accent-teal/80"
-              >
-                {isCreating ? "Creating..." : "Create Configuration"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Enhanced Configuration Form */}
+      <EnhancedConfigurationForm
+        open={showCreateForm || !!editingConfig}
+        onClose={() => {
+          setShowCreateForm(false);
+          setEditingConfig(null);
+        }}
+        selectedYearData={selectedYearData}
+        configurationToEdit={editingConfig}
+        onSuccess={handleFormSuccess}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingConfig} onOpenChange={() => setDeletingConfig(null)}>
+        <AlertDialogContent className="bg-explorer-card border-explorer-chrome/30">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-explorer-text">Delete Configuration</AlertDialogTitle>
+            <AlertDialogDescription className="text-explorer-text-muted">
+              Are you sure you want to delete the "{deletingConfig?.name}" configuration? 
+              This action cannot be undone and will remove all associated component assignments.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              disabled={isDeleting}
+              className="bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfiguration}
+              disabled={isDeleting}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete Configuration"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
