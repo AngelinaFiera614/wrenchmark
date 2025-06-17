@@ -136,8 +136,8 @@ const SimpleComponentsManager = ({
           if (selectedConfiguration?.id) {
             newConfigStates[configKey] = await isComponentAssignedToConfiguration(
               selectedConfiguration.id,
-              normalizedType as any,
-              component.id
+              component.id,
+              normalizedType as any
             );
           }
         }
@@ -171,8 +171,8 @@ const SimpleComponentsManager = ({
 
       const result = await linkComponentToModel(
         selectedModel.id,
-        normalizeComponentType(componentType) as any,
-        componentId
+        componentId,
+        normalizeComponentType(componentType) as any
       );
 
       if (result.success) {
@@ -223,6 +223,7 @@ const SimpleComponentsManager = ({
     try {
       const result = await unlinkComponentFromModel(
         selectedModel.id,
+        componentId,
         normalizeComponentType(componentType) as any
       );
 
