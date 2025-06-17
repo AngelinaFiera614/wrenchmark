@@ -49,7 +49,7 @@ export function DesktopNav() {
         
         <CompareButton />
         
-        {/* Admin Access Button - Show prominently for admin users */}
+        {/* Admin Access Button - Show for admin users only */}
         {isAdmin && (
           <Button asChild variant="outline" className="bg-accent-teal/10 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/20">
             <Link to="/admin" className="flex items-center gap-2">

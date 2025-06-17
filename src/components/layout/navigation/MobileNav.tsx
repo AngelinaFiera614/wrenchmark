@@ -1,9 +1,10 @@
 
 import React, { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth";
 import CompareButton from "./CompareButton";
@@ -19,8 +20,16 @@ const mobileNavLinks = [
   { label: "Glossary", href: "/glossary" },
 ];
 
+const adminNavLinks = [
+  { label: "Dashboard", href: "/admin", icon: Settings },
+  { label: "Motorcycles", href: "/admin/motorcycles" },
+  { label: "Parts & Components", href: "/admin/parts" },
+  { label: "Brands", href: "/admin/brands" },
+  { label: "Users", href: "/admin/users" },
+];
+
 export function MobileNav() {
-  const { user, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   
@@ -62,27 +71,83 @@ export function MobileNav() {
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[80vw] sm:w-[350px]">
+          <SheetContent side="left" className="w-[80vw] sm:w-[350px]">
             <SheetHeader>
               <SheetTitle className="text-left">Menu</SheetTitle>
             </SheetHeader>
+            
             <div className="flex flex-col space-y-3 mt-4">
-              {mobileNavLinks.map((link) => (
-                <NavLink
-                  key={link.href}
-                  to={link.href}
-                  className={({ isActive }) =>
-                    cn(
-                      "px-2 py-1 text-lg rounded-md transition-colors",
-                      isActive 
-                        ? "bg-accent-teal/10 text-accent-teal font-medium" 
-                        : "text-foreground hover:bg-muted"
-                    )
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              ))}
+              {/* Main Navigation */}
+              <div className="space-y-3">
+                {mobileNavLinks.map((link) => (
+                  <NavLink
+                    key={link.href}
+                    to={link.href}
+                    className={({ isActive }) =>
+                      cn(
+                        "px-2 py-1 text-lg rounded-md transition-colors block",
+                        isActive 
+                          ? "bg-accent-teal/10 text-accent-teal font-medium" 
+                          : "text-foreground hover:bg-muted"
+                      )
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+              </div>
+
+              {/* Admin Section for Admin Users */}
+              {isAdmin && (
+                <>
+                  <Separator className="my-4" />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 px-2 py-1">
+                      <Shield className="h-4 w-4 text-accent-teal" />
+                      <span className="text-sm font-medium text-accent-teal">Administrator</span>
+                    </div>
+                    
+                    {adminNavLinks.map((link) => (
+                      <NavLink
+                        key={link.href}
+                        to={link.href}
+                        className={({ isActive }) =>
+                          cn(
+                            "px-2 py-1 text-md rounded-md transition-colors block pl-6",
+                            isActive 
+                              ? "bg-accent-teal/10 text-accent-teal font-medium" 
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          )
+                        }
+                      >
+                        {link.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              {/* User Account Section */}
+              {user && (
+                <>
+                  <Separator className="my-4" />
+                  <div className="space-y-3">
+                    <NavLink
+                      to="/profile"
+                      className={({ isActive }) =>
+                        cn(
+                          "px-2 py-1 text-lg rounded-md transition-colors block",
+                          isActive 
+                            ? "bg-accent-teal/10 text-accent-teal font-medium" 
+                            : "text-foreground hover:bg-muted"
+                        )
+                      }
+                    >
+                      Profile
+                    </NavLink>
+                  </div>
+                </>
+              )}
             </div>
           </SheetContent>
         </Sheet>
