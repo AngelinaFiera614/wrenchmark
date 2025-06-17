@@ -7,7 +7,7 @@ export interface DataCompletenessStatus {
   hasWheels: boolean;
   hasDimensions: boolean;
   completionPercentage: number;
-  missingComponents: string[];
+  missingCriticalFields: string[];
 }
 
 export function calculateDataCompleteness(motorcycle: any, selectedConfiguration?: any): DataCompletenessStatus {
@@ -34,13 +34,13 @@ export function calculateDataCompleteness(motorcycle: any, selectedConfiguration
   const completeComponents = components.filter(Boolean).length;
   const completionPercentage = Math.round((completeComponents / components.length) * 100);
 
-  const missingComponents = [];
-  if (!hasEngine) missingComponents.push('Engine');
-  if (!hasBrakes) missingComponents.push('Brakes');
-  if (!hasFrame) missingComponents.push('Frame');
-  if (!hasSuspension) missingComponents.push('Suspension');
-  if (!hasWheels) missingComponents.push('Wheels');
-  if (!hasDimensions) missingComponents.push('Dimensions');
+  const missingCriticalFields = [];
+  if (!hasEngine) missingCriticalFields.push('Engine');
+  if (!hasBrakes) missingCriticalFields.push('Brakes');
+  if (!hasFrame) missingCriticalFields.push('Frame');
+  if (!hasSuspension) missingCriticalFields.push('Suspension');
+  if (!hasWheels) missingCriticalFields.push('Wheels');
+  if (!hasDimensions) missingCriticalFields.push('Dimensions');
 
   return {
     hasEngine,
@@ -50,7 +50,7 @@ export function calculateDataCompleteness(motorcycle: any, selectedConfiguration
     hasWheels,
     hasDimensions,
     completionPercentage,
-    missingComponents
+    missingCriticalFields
   };
 }
 
