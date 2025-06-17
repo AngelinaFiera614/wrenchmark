@@ -1,7 +1,7 @@
 
 import { Motorcycle } from "@/types";
 
-// Remove placeholder motorcycles that don't match real structure
+// Generate a single placeholder motorcycle
 export const generatePlaceholderMotorcycle = (
   make: string,
   model: string,
@@ -39,6 +39,9 @@ export const generatePlaceholderMotorcycle = (
     updated_at: new Date().toISOString()
   };
 };
+
+// Add alias for backward compatibility
+export const createPlaceholderMotorcycle = generatePlaceholderMotorcycle;
 
 // Create placeholder motorcycles for missing combinations
 export const createPlaceholderMotorcycles = (

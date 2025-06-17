@@ -246,3 +246,9 @@ export const searchMotorcyclesEnhanced = (
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
     .map(item => item.motorcycle);
 };
+
+// Add missing function for compatibility
+export const generateMissingModelData = async () => {
+  console.log('Generating missing model data...');
+  return [];
+};

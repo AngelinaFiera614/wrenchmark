@@ -30,9 +30,14 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
     smart_features: rawData.smart_features || [],
     summary: rawData.summary || rawData.description || rawData.base_description || '',
     created_at: rawData.created_at,
-    updated_at: rawData.updated_at
+    updated_at: rawData.updated_at,
+    is_placeholder: rawData.is_placeholder || false,
+    migration_status: rawData.migration_status || 'none'
   };
 };
+
+// Add alias for backward compatibility
+export const transformToMotorcycle = transformMotorcycleData;
 
 // Transform multiple motorcycles
 export const transformMotorcycles = (rawDataArray: any[]): Motorcycle[] => {
@@ -87,3 +92,10 @@ export const normalizeMotorcycleData = (motorcycle: Motorcycle): Motorcycle => {
     summary: motorcycle.summary || ''
   };
 };
+
+// ComponentData interface for compatibility
+export interface ComponentData {
+  id: string;
+  type: string;
+  data: any;
+}
