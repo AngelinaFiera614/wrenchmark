@@ -203,7 +203,12 @@ const ModelAssignmentsPage = () => {
         {filteredModels.map((model) => (
           <ModelCard
             key={model.id}
-            model={model}
+            model={{
+              ...model,
+              brands: Array.isArray(model.brands) && model.brands.length > 0 
+                ? { name: model.brands[0].name }
+                : { name: 'Unknown Brand' }
+            }}
             onManage={handleManageModel}
             assignmentStatus={getAssignmentStatus(model.id)}
           />

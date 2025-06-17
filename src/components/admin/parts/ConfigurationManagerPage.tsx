@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -75,7 +74,9 @@ const ModelYearSelector: React.FC<ModelYearSelectorProps> = ({
           <SelectContent className="bg-explorer-card border-explorer-chrome/30">
             {models.map((model) => (
               <SelectItem key={model.id} value={model.id}>
-                {model.brands?.name} {model.name}
+                {Array.isArray(model.brands) && model.brands.length > 0 
+                  ? model.brands[0].name 
+                  : 'Unknown Brand'} {model.name}
               </SelectItem>
             ))}
           </SelectContent>

@@ -9,7 +9,7 @@ import {
   Plus, 
   Edit, 
   Trash2,
-  Engine,
+  Cog,
   Disc,
   Box,
   Zap,
@@ -182,7 +182,7 @@ const ComponentsLibraryPage = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <ComponentTypeCard
           title="Engines"
-          icon={<Engine className="h-5 w-5" />}
+          icon={<Cog className="h-5 w-5" />}
           data={engines}
           loading={enginesLoading}
           onAdd={() => handleAdd('engine')}
