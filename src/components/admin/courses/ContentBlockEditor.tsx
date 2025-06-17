@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,7 @@ import EnhancedContentBlockPalette from './lesson-form/EnhancedContentBlockPalet
 import BulkOperationsToolbar from './lesson-form/BulkOperationsToolbar';
 import AdvancedPreviewModes from './lesson-form/AdvancedPreviewModes';
 import { useBulkOperations } from './lesson-form/useBulkOperations';
+import EnhancedMediaBlockEditor from './lesson-form/EnhancedMediaBlockEditor';
 
 interface ContentBlockEditorProps {
   contentBlocks: ContentBlock[];
@@ -297,6 +297,9 @@ function ContentBlockEditForm({
 }: ContentBlockEditFormProps) {
   const blockType = blockTypes.find(t => t.name === block.type);
 
+  // Check if this is a media block type
+  const isMediaBlock = ['video', 'audio_player', 'image_gallery', 'interactive_image'].includes(block.type);
+
   return (
     <Card className={isSelected ? 'ring-2 ring-accent-teal' : ''}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -324,47 +327,85 @@ function ContentBlockEditForm({
           onChange={(e) => onUpdate({ title: e.target.value })}
         />
         
-        {block.type === 'text' && (
-          <div className="space-y-2">
-            <Select
-              value={block.data.format || 'markdown'}
-              onValueChange={(format) => onUpdate({ data: { ...block.data, format } })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="markdown">Markdown</SelectItem>
-                <SelectItem value="html">HTML</SelectItem>
-              </SelectContent>
-            </Select>
-            <Textarea
-              placeholder="Enter your content..."
-              value={block.data.content || ''}
-              onChange={(e) => onUpdate({ data: { ...block.data, content: e.target.value } })}
-              className="min-h-[150px]"
-            />
-          </div>
-        )}
+        {/* Use enhanced media editor for media blocks */}
+        {isMediaBlock ? (
+          <EnhancedMediaBlockEditor
+            block={block}
+            onUpdate={onUpdate}
+          />
+        ) : (
+          <>
+            {/* Keep existing editors for non-media blocks */}
+            {block.type === 'text' && (
+              <div className="space-y-2">
+                <Select
+                  value={block.data.format || 'markdown'}
+                  onValueChange={(format) => onUpdate({ data: { ...block.data, format } })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="markdown">Markdown</SelectItem>
+                    <SelectItem value="html">HTML</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Textarea
+                  placeholder="Enter your content..."
+                  value={block.data.content || ''}
+                  onChange={(e) => onUpdate({ data: { ...block.data, content: e.target.value } })}
+                  className="min-h-[150px]"
+                />
+              </div>
+            )}
 
-        {block.type === 'video' && (
-          <div className="space-y-2">
-            <Input
-              placeholder="Video URL"
-              value={block.data.url || ''}
-              onChange={(e) => onUpdate({ data: { ...block.data, url: e.target.value } })}
-            />
-            <Input
-              placeholder="Video title"
-              value={block.data.title || ''}
-              onChange={(e) => onUpdate({ data: { ...block.data, title: e.target.value } })}
-            />
-            <Textarea
-              placeholder="Video description"
-              value={block.data.description || ''}
-              onChange={(e) => onUpdate({ data: { ...block.data, description: e.target.value } })}
-            />
-          </div>
+            {block.type === 'rich_text' && (
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Enter rich text content..."
+                  value={block.data.content || ''}
+                  onChange={(e) => onUpdate({ data: { ...block.data, content: e.target.value } })}
+                  className="min-h-[150px]"
+                />
+              </div>
+            )}
+
+            {block.type === 'code_highlight' && (
+              <div className="space-y-2">
+                <Input
+                  placeholder="Language (e.g., javascript)"
+                  value={block.data.language || ''}
+                  onChange={(e) => onUpdate({ data: { ...block.data, language: e.target.value } })}
+                />
+                <Textarea
+                  placeholder="Enter your code..."
+                  value={block.data.code || ''}
+                  onChange={(e) => onUpdate({ data: { ...block.data, code: e.target.value } })}
+                  className="min-h-[150px] font-mono"
+                />
+              </div>
+            )}
+
+            {block.type === 'download' && (
+              <div className="space-y-2">
+                <Input
+                  placeholder="File URL"
+                  value={block.data.file_url || ''}
+                  onChange={(e) => onUpdate({ data: { ...block.data, file_url: e.target.value } })}
+                />
+                <Input
+                  placeholder="File title"
+                  value={block.data.title || ''}
+                  onChange={(e) => onUpdate({ data: { ...block.data, title: e.target.value } })}
+                />
+                <Textarea
+                  placeholder="File description"
+                  value={block.data.description || ''}
+                  onChange={(e) => onUpdate({ data: { ...block.data, description: e.target.value } })}
+                />
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
