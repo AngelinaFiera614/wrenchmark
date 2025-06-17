@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -138,37 +137,35 @@ const AdminMotorcycleDialog = ({
     return isNaN(num) ? "" : num;
   };
 
-  // When editing an existing motorcycle, populate form with imperial values
+  // Initialize form when motorcycle changes
   useEffect(() => {
-    if (motorcycle) {
-      console.log("Populating form with motorcycle data:", motorcycle);
-      
+    if (motorcycle && open) {
       form.reset({
-        name: motorcycle.model || "",
+        name: motorcycle.name || "",
         brand_id: motorcycle.brand_id || "",
-        type: motorcycle.category || "Standard",
+        type: motorcycle.type || "Standard",
         category: motorcycle.category || "",
-        production_start_year: motorcycle.year || new Date().getFullYear(),
-        production_status: motorcycle.status || "active",
-        base_description: motorcycle.summary || "",
+        production_start_year: motorcycle.production_start_year || new Date().getFullYear(),
+        production_status: motorcycle.production_status || "active",
+        base_description: motorcycle.base_description || "",
         summary: motorcycle.summary || "",
-        default_image_url: motorcycle.image_url || "",
+        default_image_url: motorcycle.default_image_url || "",
         slug: motorcycle.slug || "",
         engine_size: motorcycle.engine_size || "",
         horsepower: motorcycle.horsepower || "",
         torque_nm: motorcycle.torque_nm || "",
-        top_speed_mph: safeParseNumber(formatSpeedForForm(motorcycle.top_speed_kph)),
-        has_abs: motorcycle.abs || false,
-        weight_lbs: safeParseNumber(formatWeightForForm(motorcycle.weight_kg)),
-        seat_height_in: safeParseNumber(formatLengthForForm(motorcycle.seat_height_mm)),
-        wheelbase_in: safeParseNumber(formatLengthForForm(motorcycle.wheelbase_mm)),
-        ground_clearance_in: safeParseNumber(formatLengthForForm(motorcycle.ground_clearance_mm)),
-        fuel_capacity_gal: safeParseNumber(formatVolumeForForm(motorcycle.fuel_capacity_l)),
+        top_speed_mph: motorcycle.top_speed_kph ? Math.round(motorcycle.top_speed_kph * 0.621371) : "",
+        has_abs: motorcycle.has_abs || false,
+        weight_lbs: motorcycle.weight_kg ? Math.round(motorcycle.weight_kg * 2.20462) : "",
+        seat_height_in: motorcycle.seat_height_mm ? Math.round(motorcycle.seat_height_mm * 0.0393701) : "",
+        wheelbase_in: motorcycle.wheelbase_mm ? Math.round(motorcycle.wheelbase_mm * 0.0393701) : "",
+        ground_clearance_in: motorcycle.ground_clearance_mm ? Math.round(motorcycle.ground_clearance_mm * 0.0393701) : "",
+        fuel_capacity_gal: motorcycle.fuel_capacity_l ? Math.round(motorcycle.fuel_capacity_l * 0.264172 * 100) / 100 : "",
         difficulty_level: motorcycle.difficulty_level || 3,
-        status: motorcycle.status || "active",
-        is_draft: motorcycle.is_draft || false,
+        status: motorcycle.status || "",
+        is_draft: motorcycle.is_draft ?? true,
       });
-    } else {
+    } else if (open) {
       // Reset for new motorcycle
       form.reset({
         name: "",
@@ -196,7 +193,7 @@ const AdminMotorcycleDialog = ({
         is_draft: true,
       });
     }
-  }, [motorcycle, form]);
+  }, [motorcycle, open, form]);
 
   const generateSlug = () => {
     const name = form.getValues("name");

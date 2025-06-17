@@ -69,6 +69,28 @@ export interface MotorcycleModel {
   brands?: { name: string };
   brand?: { name: string }; // For backward compatibility
   years?: ModelYear[];
+  default_image_url?: string;
+  base_description?: string;
+  summary?: string;
+  category?: string;
+  status?: string;
+  engine_size?: number;
+  horsepower?: number;
+  torque_nm?: number;
+  top_speed_kph?: number;
+  has_abs?: boolean;
+  weight_kg?: number;
+  seat_height_mm?: number;
+  wheelbase_mm?: number;
+  ground_clearance_mm?: number;
+  fuel_capacity_l?: number;
+  difficulty_level?: number;
+  // Legacy properties for backward compatibility
+  model?: string;
+  year?: number;
+  image_url?: string;
+  abs?: boolean;
+  make?: string;
 }
 
 // Legacy Motorcycle interface for backward compatibility
@@ -87,6 +109,28 @@ export interface Motorcycle {
   brands?: { name: string };
   brand?: { name: string };
   years?: ModelYear[];
+  default_image_url?: string;
+  base_description?: string;
+  summary?: string;
+  category?: string;
+  status?: string;
+  engine_size?: number;
+  horsepower?: number;
+  torque_nm?: number;
+  top_speed_kph?: number;
+  has_abs?: boolean;
+  weight_kg?: number;
+  seat_height_mm?: number;
+  wheelbase_mm?: number;
+  ground_clearance_mm?: number;
+  fuel_capacity_l?: number;
+  difficulty_level?: number;
+  // Legacy properties for backward compatibility
+  model?: string;
+  year?: number;
+  image_url?: string;
+  abs?: boolean;
+  make?: string;
 }
 
 export interface MotorcycleCategory {
