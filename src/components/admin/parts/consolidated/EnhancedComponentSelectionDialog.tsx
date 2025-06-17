@@ -17,14 +17,14 @@ import {
 } from "lucide-react";
 import ComponentLibraryIntegration from "./ComponentLibraryIntegration";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { assignComponentToModel, removeComponentFromModel } from "@/services/modelComponentService";
 import { useToast } from "@/hooks/use-toast";
 
 interface EnhancedComponentSelectionDialogProps {
   open: boolean;
   onClose: () => void;
   componentType: string | null;
-  configurationId?: string;
+  modelId?: string;
   currentComponentId?: string;
   onComponentAssigned: () => void;
 }
@@ -33,7 +33,7 @@ const EnhancedComponentSelectionDialog: React.FC<EnhancedComponentSelectionDialo
   open,
   onClose,
   componentType,
-  configurationId,
+  modelId,
   currentComponentId,
   onComponentAssigned
 }) => {
@@ -56,27 +56,20 @@ const EnhancedComponentSelectionDialog: React.FC<EnhancedComponentSelectionDialo
   // Assign component mutation
   const assignComponentMutation = useMutation({
     mutationFn: async (componentId: string | null) => {
-      if (!configurationId || !componentType) throw new Error("Missing configuration or component type");
+      if (!modelId || !componentType) throw new Error("Missing model ID or component type");
       
-      const fieldName = `${componentType}_id`;
-      const overrideField = `${componentType}_override`;
-      
-      const { error } = await supabase
-        .from("model_configurations")
-        .update({ 
-          [fieldName]: componentId,
-          [overrideField]: true // Enable override when assigning
-        })
-        .eq("id", configurationId);
-      
-      if (error) throw error;
+      if (componentId) {
+        return await assignComponentToModel(modelId, componentType as any, componentId);
+      } else {
+        return await removeComponentFromModel(modelId, componentType as any);
+      }
     },
     onSuccess: () => {
       toast({
-        title: "Component Assigned",
-        description: `${getComponentTypeLabel(componentType)} has been assigned successfully.`
+        title: "Component Assignment Updated",
+        description: `${getComponentTypeLabel(componentType)} has been ${selectedComponentId ? 'assigned' : 'removed'} successfully.`
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-configurations"] });
+      queryClient.invalidateQueries({ queryKey: ["model-component-assignments"] });
       onComponentAssigned();
       onClose();
     },
@@ -85,7 +78,7 @@ const EnhancedComponentSelectionDialog: React.FC<EnhancedComponentSelectionDialo
       toast({
         variant: "destructive",
         title: "Assignment Failed",
-        description: "Failed to assign component. Please try again."
+        description: "Failed to update component assignment. Please try again."
       });
     }
   });

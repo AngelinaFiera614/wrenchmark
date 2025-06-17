@@ -15,6 +15,11 @@ export const useMotorcycleForm = (motorcycle: Motorcycle, onSuccess?: () => void
     setHasUnsavedChanges(true);
   };
 
+  const updateData = (data: Partial<Motorcycle>) => {
+    setFormData(prev => ({ ...prev, ...data }));
+    setHasUnsavedChanges(true);
+  };
+
   const saveChanges = async () => {
     if (!hasUnsavedChanges) return;
     
@@ -48,6 +53,7 @@ export const useMotorcycleForm = (motorcycle: Motorcycle, onSuccess?: () => void
     saving,
     hasUnsavedChanges,
     updateField,
+    updateData,
     saveChanges,
     discardChanges
   };

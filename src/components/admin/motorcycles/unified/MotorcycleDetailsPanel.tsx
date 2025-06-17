@@ -28,6 +28,7 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
     saving,
     hasUnsavedChanges,
     updateField,
+    updateData,
     saveChanges,
     discardChanges
   } = useMotorcycleForm(motorcycle, () => {
@@ -134,7 +135,7 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
               <MotorcycleBasicInfoForm
                 motorcycle={formData as Motorcycle}
                 isEditing={isEditing}
-                onUpdate={updateField}
+                onUpdate={updateData}
               />
             </TabsContent>
 
@@ -150,7 +151,7 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
               <MotorcycleComponentsForm
                 motorcycle={formData as Motorcycle}
                 isEditing={isEditing}
-                onUpdate={updateField}
+                onUpdate={updateData}
               />
             </TabsContent>
 
@@ -158,7 +159,7 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
               <MotorcycleYearsForm
                 motorcycle={formData as Motorcycle}
                 isEditing={isEditing}
-                onUpdate={updateField}
+                onUpdate={updateData}
               />
             </TabsContent>
 
