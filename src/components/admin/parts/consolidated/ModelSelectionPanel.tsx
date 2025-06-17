@@ -41,38 +41,48 @@ const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
   };
 
   return (
-    <Card className="bg-explorer-card border-explorer-chrome/30">
+    <Card className="bg-explorer-card border-explorer-chrome/30 w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-explorer-text flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Models
-            <Badge variant="secondary" className="ml-auto">
-              {models.length}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-explorer-text flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Select Motorcycle Model
+            </CardTitle>
+            <p className="text-sm text-explorer-text-muted mt-1">
+              Choose a motorcycle model to manage its configurations
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs">
+              {models.length} models
             </Badge>
-          </CardTitle>
-          {onRefresh && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRefresh}
-              disabled={loading}
-              className="border-explorer-chrome/30"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          )}
+            {onRefresh && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRefresh}
+                disabled={loading}
+                className="border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="relative">
+        
+        <div className="relative mt-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-explorer-text-muted" />
           <Input
-            placeholder="Search models..."
+            placeholder="Search by model name or brand..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 bg-explorer-dark border-explorer-chrome/30 text-explorer-text"
           />
         </div>
       </CardHeader>
+      
       <CardContent>
         {error && (
           <Alert variant="destructive" className="mb-4">
@@ -95,23 +105,23 @@ const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
         )}
         
         {loading ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-16 bg-explorer-chrome/20 rounded animate-pulse" />
+              <div key={i} className="h-20 bg-explorer-chrome/20 rounded animate-pulse" />
             ))}
           </div>
         ) : models.length === 0 ? (
-          <div className="text-center py-8">
-            <Database className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
-            <p className="text-explorer-text-muted mb-2">No models found</p>
-            <p className="text-sm text-explorer-text-muted">
+          <div className="text-center py-12">
+            <Database className="h-16 w-16 text-explorer-text-muted mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-explorer-text mb-2">No Models Found</h3>
+            <p className="text-sm text-explorer-text-muted mb-4">
               {error ? "Database connection issue" : "No motorcycle models available"}
             </p>
             {onRefresh && (
               <Button
                 variant="outline"
                 onClick={onRefresh}
-                className="mt-4 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/10"
+                className="border-accent-teal/30 text-accent-teal hover:bg-accent-teal/10"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 {error ? "Retry Connection" : "Refresh Models"}
@@ -119,7 +129,7 @@ const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
             )}
           </div>
         ) : filteredModels.length > 0 ? (
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="space-y-3 max-h-96 overflow-y-auto">
             {filteredModels.map((model) => {
               const { brandName, productionYears } = getModelDisplayName(model);
               
@@ -128,16 +138,28 @@ const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
                   key={model.id}
                   variant={selectedModel === model.id ? "default" : "ghost"}
                   onClick={() => onModelSelect(model.id)}
-                  className={`w-full justify-start text-left h-auto p-3 ${
+                  className={`w-full justify-start text-left h-auto p-4 ${
                     selectedModel === model.id
                       ? "bg-accent-teal text-black hover:bg-accent-teal/80"
                       : "text-explorer-text hover:bg-explorer-chrome/20"
                   }`}
                 >
                   <div className="w-full">
-                    <div className="font-medium">{model.name}</div>
-                    <div className="text-sm opacity-70">
-                      {brandName} • {productionYears}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="font-semibold text-base">{model.name}</div>
+                      {selectedModel === model.id && (
+                        <Badge variant="secondary" className="bg-black/20 text-black text-xs">
+                          Selected
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm opacity-80 font-medium">
+                        {brandName}
+                      </div>
+                      <div className="text-sm opacity-70">
+                        {productionYears}
+                      </div>
                     </div>
                   </div>
                 </Button>
@@ -147,11 +169,11 @@ const ModelSelectionPanel: React.FC<ModelSelectionPanelProps> = ({
         ) : (
           <div className="text-center py-8">
             <Search className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
-            <p className="text-explorer-text-muted">No models match your search</p>
+            <p className="text-explorer-text-muted mb-2">No models match your search</p>
             <Button
               variant="ghost"
               onClick={() => setSearchTerm("")}
-              className="mt-2 text-accent-teal hover:bg-accent-teal/10"
+              className="text-accent-teal hover:bg-accent-teal/10"
             >
               Clear search
             </Button>

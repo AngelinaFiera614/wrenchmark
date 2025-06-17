@@ -14,6 +14,7 @@ import YearManagementPanel from "./consolidated/YearManagementPanel";
 import TrimManagementPanel from "./consolidated/TrimManagementPanel";
 import ComponentManagementPanel from "./consolidated/ComponentManagementPanel";
 import ColorManagementPanel from "./consolidated/ColorManagementPanel";
+import SelectionBreadcrumb from "./consolidated/SelectionBreadcrumb";
 import { useConsolidatedAdminState } from "@/hooks/admin/useConsolidatedAdminState";
 
 const ConsolidatedAdminPartsLayout = () => {
@@ -60,9 +61,16 @@ const ConsolidatedAdminPartsLayout = () => {
   const isLoading = modelsLoading || yearsLoading || configsLoading;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Breadcrumb Navigation */}
+      <SelectionBreadcrumb 
+        selectedModelData={selectedModelData}
+        selectedYearData={selectedYearData}
+        selectedConfigData={selectedConfigData}
+      />
+
       {/* Status Header */}
-      <div className="flex items-center justify-between p-4 bg-explorer-card rounded-lg border border-explorer-chrome/30">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 bg-explorer-card rounded-lg border border-explorer-chrome/30">
         <div>
           <h3 className="text-lg font-semibold text-explorer-text">Management Interface</h3>
           <p className="text-sm text-explorer-text-muted">
@@ -70,7 +78,7 @@ const ConsolidatedAdminPartsLayout = () => {
           </p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           {selectedModel && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-explorer-text-muted">Completeness:</span>
@@ -104,64 +112,61 @@ const ConsolidatedAdminPartsLayout = () => {
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Model Selection - 3 columns */}
-        <div className="xl:col-span-3">
-          <ModelSelectionPanel
-            models={models}
-            selectedModel={selectedModel}
-            onModelSelect={handleModelSelect}
-            loading={modelsLoading}
-            error={modelsError}
-            onRefresh={refreshData}
+      {/* Model Selection Section */}
+      <div className="space-y-4">
+        <ModelSelectionPanel
+          models={models}
+          selectedModel={selectedModel}
+          onModelSelect={handleModelSelect}
+          loading={modelsLoading}
+          error={modelsError}
+          onRefresh={refreshData}
+        />
+      </div>
+      
+      {/* Year Management Section */}
+      {selectedModel && (
+        <div className="space-y-4">
+          <YearManagementPanel
+            modelYears={modelYears}
+            selectedYear={selectedYear}
+            selectedModelData={selectedModelData}
+            onYearSelect={handleYearSelect}
+            loading={yearsLoading}
           />
         </div>
-        
-        {/* Year Management - 3 columns */}
-        <div className="xl:col-span-3">
-          {selectedModel && (
-            <YearManagementPanel
-              modelYears={modelYears}
-              selectedYear={selectedYear}
-              selectedModelData={selectedModelData}
-              onYearSelect={handleYearSelect}
-              loading={yearsLoading}
-            />
-          )}
+      )}
+      
+      {/* Configuration Management Section */}
+      {selectedYear && (
+        <div className="space-y-4">
+          <TrimManagementPanel
+            configurations={configurations}
+            selectedConfig={selectedConfig}
+            selectedYearData={selectedYearData}
+            onConfigSelect={handleConfigSelect}
+            loading={configsLoading}
+          />
         </div>
-        
-        {/* Trim Management - 3 columns */}
-        <div className="xl:col-span-3">
-          {selectedYear && (
-            <TrimManagementPanel
-              configurations={configurations}
-              selectedConfig={selectedConfig}
+      )}
+      
+      {/* Component & Color Management Section */}
+      {selectedConfig && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <ComponentManagementPanel
+              selectedConfigData={selectedConfigData}
+              onRefresh={refreshData}
+            />
+            <ColorManagementPanel
+              selectedConfigData={selectedConfigData}
               selectedYearData={selectedYearData}
-              onConfigSelect={handleConfigSelect}
-              loading={configsLoading}
+              onColorAssigned={() => refreshData()}
+              onRefresh={refreshData}
             />
-          )}
+          </div>
         </div>
-        
-        {/* Component & Color Management - 3 columns */}
-        <div className="xl:col-span-3 space-y-6">
-          {selectedConfig && (
-            <>
-              <ComponentManagementPanel
-                selectedConfigData={selectedConfigData}
-                onRefresh={refreshData}
-              />
-              <ColorManagementPanel
-                selectedConfigData={selectedConfigData}
-                selectedYearData={selectedYearData}
-                onColorAssigned={() => refreshData()}
-                onRefresh={refreshData}
-              />
-            </>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };
