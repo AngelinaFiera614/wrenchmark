@@ -115,23 +115,46 @@ const ComponentAssignmentTab: React.FC<ComponentAssignmentTabProps> = ({
     
     // Handle different component types with their display properties
     if (component) {
+      // First check for a name property (most components have this)
       if (component.name) return component.name;
+      
+      // Type-specific fallbacks based on component type
+      switch (componentType) {
+        case 'engine':
+          if (component.displacement_cc) {
+            return `${component.displacement_cc}cc Engine`;
+          }
+          break;
+        case 'brake_system':
+          if (component.type) {
+            return `${component.type} Brake System`;
+          }
+          break;
+        case 'frame':
+          if (component.material) {
+            return `${component.material} Frame`;
+          }
+          if (component.type) {
+            return `${component.type} Frame`;
+          }
+          break;
+        case 'suspension':
+          if (component.front_type) {
+            return `${component.front_type} Suspension`;
+          }
+          break;
+        case 'wheel':
+          if (component.front_size) {
+            return `${component.front_size} Wheels`;
+          }
+          if (component.type) {
+            return `${component.type} Wheels`;
+          }
+          break;
+      }
+      
+      // Final fallback - use type if available
       if (component.type) return component.type;
-      if (componentType === 'engine' && component.displacement_cc) {
-        return `${component.displacement_cc}cc Engine`;
-      }
-      if (componentType === 'brake_system' && component.type) {
-        return `${component.type} Brake System`;
-      }
-      if (componentType === 'frame' && component.material) {
-        return `${component.material} Frame`;
-      }
-      if (componentType === 'suspension' && component.front_type) {
-        return `${component.front_type} Suspension`;
-      }
-      if (componentType === 'wheel' && component.front_size) {
-        return `${component.front_size} Wheels`;
-      }
     }
     
     return 'Unknown Component';
