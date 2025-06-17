@@ -1,3 +1,4 @@
+
 export interface Configuration {
   id: string;
   name?: string;
@@ -63,6 +64,7 @@ export interface MotorcycleModel {
   production_end_year?: number;
   production_status?: string;
   is_draft: boolean;
+  ignore_autofill?: boolean;
   created_at?: string;
   updated_at?: string;
   brands?: { name: string };
@@ -92,7 +94,7 @@ export interface MotorcycleModel {
   make?: string;
 }
 
-// Legacy Motorcycle interface for backward compatibility
+// Updated Motorcycle interface with all required properties
 export interface Motorcycle {
   id: string;
   name: string;
@@ -116,7 +118,9 @@ export interface Motorcycle {
   engine_size?: number;
   horsepower?: number;
   torque_nm?: number;
+  torque_rpm?: number;
   top_speed_kph?: number;
+  top_speed_mph?: number;
   has_abs?: boolean;
   weight_kg?: number;
   seat_height_mm?: number;
@@ -149,6 +153,8 @@ export interface Motorcycle {
   power_to_weight_ratio?: number;
   use_cases?: string[];
   wet_weight_kg?: number;
+  is_placeholder?: boolean;
+  migration_status?: string;
   _componentData?: any;
 }
 

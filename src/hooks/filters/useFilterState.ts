@@ -30,6 +30,7 @@ export function useFilterState(startingFilters: MotorcycleFilters) {
   } = useSearchFilter(startingFilters.searchTerm);
 
   const currentFilters = useMemo<MotorcycleFilters>(() => ({
+    search: searchTerm || "",
     categories,
     make,
     yearRange,

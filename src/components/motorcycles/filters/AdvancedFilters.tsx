@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
@@ -401,7 +400,7 @@ export default function AdvancedFilters({ filters, onFilterChange }: AdvancedFil
                   <div key={count} className="flex items-center space-x-2">
                     <Checkbox
                       id={`cylinder-${count}`}
-                      checked={filters.advancedSearch?.cylinderCount?.includes(count) || false}
+                      checked={filters.advancedSearch?.cylinderCount?.includes(count.toString()) || false}
                       onCheckedChange={(checked) => 
                         handleAdvancedSearchChange('cylinderCount', count.toString(), checked as boolean)
                       }
