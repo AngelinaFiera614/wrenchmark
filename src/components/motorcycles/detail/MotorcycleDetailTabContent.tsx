@@ -53,7 +53,7 @@ export function MotorcycleDetailTabContent({
                       showDetails 
                     />
                     <p className="text-sm text-orange-700 mt-2">
-                      Some specifications may be incomplete. Missing: {dataCompleteness.missingComponents.join(', ')}
+                      Some specifications may be incomplete. Missing: {dataCompleteness.missingCriticalFields.join(', ')}
                     </p>
                   </div>
                 </div>

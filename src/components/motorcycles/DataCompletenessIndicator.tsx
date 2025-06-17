@@ -16,7 +16,7 @@ export function DataCompletenessIndicator({
   variant = 'card', 
   showDetails = false 
 }: DataCompletenessIndicatorProps) {
-  const { completionPercentage, missingComponents } = status;
+  const { completionPercentage, missingCriticalFields } = status;
 
   if (completionPercentage === 100) {
     return variant === 'card' ? (
@@ -45,7 +45,7 @@ export function DataCompletenessIndicator({
     </Badge>
   );
 
-  if (!showDetails && missingComponents.length === 0) {
+  if (!showDetails && missingCriticalFields.length === 0) {
     return content;
   }
 
@@ -60,11 +60,11 @@ export function DataCompletenessIndicator({
             <div className="font-medium">
               Data Completeness: {completionPercentage}%
             </div>
-            {missingComponents.length > 0 && (
+            {missingCriticalFields.length > 0 && (
               <div>
                 <div className="text-sm font-medium mb-1">Missing:</div>
                 <div className="text-sm text-muted-foreground">
-                  {missingComponents.join(', ')}
+                  {missingCriticalFields.join(', ')}
                 </div>
               </div>
             )}
