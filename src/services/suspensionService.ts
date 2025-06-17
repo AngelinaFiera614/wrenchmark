@@ -11,7 +11,6 @@ export interface Suspension {
   rear_travel_mm?: number;
   damping_system?: string;
   notes?: string;
-  name?: string; // Computed field for display purposes
   created_at?: string;
   updated_at?: string;
 }
@@ -26,14 +25,10 @@ export const fetchSuspensions = async (): Promise<Suspension[]> => {
     throw error;
   }
 
-  // Add computed name field for display
-  return (data || []).map(suspension => ({
-    ...suspension,
-    name: suspension.front_type || suspension.brand || `Suspension ${suspension.id.slice(0, 8)}`
-  }));
+  return data || [];
 };
 
-export const createSuspension = async (suspensionData: Omit<Suspension, 'id' | 'created_at' | 'updated_at' | 'name'>): Promise<Suspension> => {
+export const createSuspension = async (suspensionData: Omit<Suspension, 'id' | 'created_at' | 'updated_at'>): Promise<Suspension> => {
   const { data, error } = await supabase
     .from('suspensions')
     .insert([suspensionData])
@@ -44,10 +39,7 @@ export const createSuspension = async (suspensionData: Omit<Suspension, 'id' | '
     throw error;
   }
 
-  return {
-    ...data,
-    name: data.front_type || data.brand || `Suspension ${data.id.slice(0, 8)}`
-  };
+  return data;
 };
 
 export const updateSuspension = async (id: string, suspensionData: Partial<Suspension>): Promise<Suspension> => {
@@ -62,10 +54,7 @@ export const updateSuspension = async (id: string, suspensionData: Partial<Suspe
     throw error;
   }
 
-  return {
-    ...data,
-    name: data.front_type || data.brand || `Suspension ${data.id.slice(0, 8)}`
-  };
+  return data;
 };
 
 export const deleteSuspension = async (id: string): Promise<void> => {
@@ -90,8 +79,5 @@ export const fetchSuspensionById = async (id: string): Promise<Suspension> => {
     throw error;
   }
 
-  return {
-    ...data,
-    name: data.front_type || data.brand || `Suspension ${data.id.slice(0, 8)}`
-  };
+  return data;
 };

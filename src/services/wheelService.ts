@@ -11,7 +11,6 @@ export interface Wheel {
   rim_material?: string;
   tubeless?: boolean;
   notes?: string;
-  name?: string; // Computed field for display purposes
   created_at?: string;
   updated_at?: string;
 }
@@ -26,14 +25,10 @@ export const fetchWheels = async (): Promise<Wheel[]> => {
     throw error;
   }
 
-  // Add computed name field for display
-  return (data || []).map(wheel => ({
-    ...wheel,
-    name: wheel.type || `${wheel.front_size}/${wheel.rear_size}` || `Wheel ${wheel.id.slice(0, 8)}`
-  }));
+  return data || [];
 };
 
-export const createWheel = async (wheelData: Omit<Wheel, 'id' | 'created_at' | 'updated_at' | 'name'>): Promise<Wheel> => {
+export const createWheel = async (wheelData: Omit<Wheel, 'id' | 'created_at' | 'updated_at'>): Promise<Wheel> => {
   const { data, error } = await supabase
     .from('wheels')
     .insert([wheelData])
@@ -44,10 +39,7 @@ export const createWheel = async (wheelData: Omit<Wheel, 'id' | 'created_at' | '
     throw error;
   }
 
-  return {
-    ...data,
-    name: data.type || `${data.front_size}/${data.rear_size}` || `Wheel ${data.id.slice(0, 8)}`
-  };
+  return data;
 };
 
 export const updateWheel = async (id: string, wheelData: Partial<Wheel>): Promise<Wheel> => {
@@ -62,10 +54,7 @@ export const updateWheel = async (id: string, wheelData: Partial<Wheel>): Promis
     throw error;
   }
 
-  return {
-    ...data,
-    name: data.type || `${data.front_size}/${data.rear_size}` || `Wheel ${data.id.slice(0, 8)}`
-  };
+  return data;
 };
 
 export const deleteWheel = async (id: string): Promise<void> => {
@@ -90,8 +79,5 @@ export const fetchWheelById = async (id: string): Promise<Wheel> => {
     throw error;
   }
 
-  return {
-    ...data,
-    name: data.type || `${data.front_size}/${data.rear_size}` || `Wheel ${data.id.slice(0, 8)}`
-  };
+  return data;
 };
