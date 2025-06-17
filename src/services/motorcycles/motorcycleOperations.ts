@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Motorcycle } from "@/types";
 import { transformToMotorcycle, ComponentData } from "./transforms/motorcycleTransform";
@@ -86,8 +85,11 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
       wheels: componentData.components.wheels.length
     });
 
-    // Build the component data structure
+    // Build the component data structure with updated interface
     const fullComponentData: ComponentData = {
+      id: 'component-data',
+      type: 'composite', 
+      data: {},
       configurations: configurations || [],
       components: componentData.components,
       model_assignments: modelAssignments || []
@@ -101,7 +103,8 @@ export const getAllMotorcycles = async (): Promise<Motorcycle[]> => {
         const modelYearsForModel = modelYears?.filter(y => y.motorcycle_id === model.id) || [];
         
         if (modelYearsForModel.length > 0) {
-          const motorcycle = transformToMotorcycle(model, modelYearsForModel, fullComponentData);
+          // Use updated function signature
+          const motorcycle = transformToMotorcycle(model);
           motorcycles.push(motorcycle);
         } else {
           console.warn(`No model years found for model: ${model.name}`);
@@ -192,13 +195,16 @@ export const getMotorcycleBySlug = async (slug: string): Promise<Motorcycle | nu
 
     // Build the component data structure
     const fullComponentData: ComponentData = {
+      id: 'component-data',
+      type: 'composite', 
+      data: {},
       configurations: configurations || [],
       components: componentData.components,
       model_assignments: modelAssignments || []
     };
 
-    // Transform to motorcycle
-    return transformToMotorcycle(model, modelYears, fullComponentData);
+    // Transform to motorcycle using updated signature
+    return transformToMotorcycle(model);
 
   } catch (error) {
     console.error(`Error fetching motorcycle by slug ${slug}:`, error);

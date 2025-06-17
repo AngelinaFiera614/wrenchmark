@@ -1,4 +1,3 @@
-
 import { Motorcycle } from "@/types";
 
 // Transform raw database data to Motorcycle interface
@@ -93,9 +92,24 @@ export const normalizeMotorcycleData = (motorcycle: Motorcycle): Motorcycle => {
   };
 };
 
-// ComponentData interface for compatibility
+// Updated ComponentData interface
 export interface ComponentData {
   id: string;
   type: string;
   data: any;
+  // Add configurations property for motorcycle operations
+  configurations?: any[];
+  components?: {
+    engines: any[];
+    brakes: any[];
+    frames: any[];
+    suspensions: any[];
+    wheels: any[];
+  };
+  model_assignments?: any[];
 }
+
+// Update transformToMotorcycle to accept single model parameter
+export const transformToMotorcycle = (model: any): Motorcycle => {
+  return transformMotorcycleData(model);
+};

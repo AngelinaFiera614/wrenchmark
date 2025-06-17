@@ -1,8 +1,7 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useOptimizedAdminData = () => {
+export const useOptimizedAdminData = (selectedModel?: string | null, selectedConfiguration?: string | null) => {
   // Fetch brands for filtering and reference
   const {
     data: brands = [],
@@ -101,11 +100,26 @@ export const useOptimizedAdminData = () => {
   const isLoading = brandsLoading || modelsLoading || statsLoading;
   const error = brandsError || modelsError || statsError;
 
-  // Add missing properties for compatibility
-  const refreshCache = () => {
-    // Trigger refetch for all queries
-    // Note: In a real implementation, you would use queryClient.invalidateQueries
-    console.log('Refreshing admin data cache...');
+  // Update refreshCache to accept string parameter
+  const refreshCache = (scope: string = 'all') => {
+    console.log('Refreshing admin data cache...', scope);
+    // In a real implementation, you would use queryClient.invalidateQueries based on scope
+  };
+
+  // Add missing pagination properties
+  const modelsPaginationInfo = {
+    page: 1,
+    limit: 25,
+    total: models.length,
+    hasNextPage: models.length > 25,
+    hasPreviousPage: false
+  };
+
+  // Add missing filter properties
+  const modelFilters = {
+    brand: '',
+    type: '',
+    production_status: 'active'
   };
 
   return {
@@ -118,12 +132,8 @@ export const useOptimizedAdminData = () => {
     // Additional properties for backward compatibility
     modelsLoading,
     modelSearch: '',
-    modelFilters: {},
-    modelsPaginationInfo: {
-      page: 1,
-      limit: 10,
-      total: models.length
-    },
+    modelFilters,
+    modelsPaginationInfo,
     handleModelSearch: (term: string) => console.log('Model search:', term),
     handleModelFilter: (filters: any) => console.log('Model filter:', filters),
     handleModelsPageChange: (page: number) => console.log('Page change:', page),
