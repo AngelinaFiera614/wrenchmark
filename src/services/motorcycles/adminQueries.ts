@@ -18,6 +18,34 @@ export async function fetchAllMotorcyclesForAdmin(): Promise<Motorcycle[]> {
   return data || [];
 }
 
+export async function publishMotorcycle(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('motorcycles')
+    .update({ is_draft: false })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error publishing motorcycle:', error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function unpublishMotorcycle(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('motorcycles')
+    .update({ is_draft: true })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error unpublishing motorcycle:', error);
+    return false;
+  }
+
+  return true;
+}
+
 export async function updateMotorcycleAdmin(id: string, updates: Partial<Motorcycle>) {
   const { data, error } = await supabase
     .from('motorcycles')
