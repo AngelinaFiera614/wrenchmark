@@ -112,7 +112,29 @@ const ComponentAssignmentTab: React.FC<ComponentAssignmentTabProps> = ({
   const getComponentName = (componentType: string, componentId: string) => {
     const typeData = componentTypes.find(t => t.key === componentType)?.data;
     const component = typeData?.find((c: any) => c.id === componentId);
-    return component?.name || component?.type || 'Unknown Component';
+    
+    // Handle different component types with their display properties
+    if (component) {
+      if (component.name) return component.name;
+      if (component.type) return component.type;
+      if (componentType === 'engine' && component.displacement_cc) {
+        return `${component.displacement_cc}cc Engine`;
+      }
+      if (componentType === 'brake_system' && component.type) {
+        return `${component.type} Brake System`;
+      }
+      if (componentType === 'frame' && component.material) {
+        return `${component.material} Frame`;
+      }
+      if (componentType === 'suspension' && component.front_type) {
+        return `${component.front_type} Suspension`;
+      }
+      if (componentType === 'wheel' && component.front_size) {
+        return `${component.front_size} Wheels`;
+      }
+    }
+    
+    return 'Unknown Component';
   };
 
   const renderComponentCard = (componentType: any) => {
@@ -180,7 +202,7 @@ const ComponentAssignmentTab: React.FC<ComponentAssignmentTabProps> = ({
                   <SelectItem value="">No component assigned</SelectItem>
                   {componentType.data.map((component: any) => (
                     <SelectItem key={component.id} value={component.id}>
-                      {component.name || component.type}
+                      {getComponentName(componentType.key, component.id)}
                     </SelectItem>
                   ))}
                 </SelectContent>

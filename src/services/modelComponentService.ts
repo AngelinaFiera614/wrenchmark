@@ -1,6 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Re-export everything from the modular service files
+export * from './modelComponent/index';
+
 export interface ModelComponentAssignment {
   id: string;
   model_id: string;
