@@ -1,88 +1,77 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { 
-  User, 
-  LogOut, 
-  Settings,
-  LayoutDashboard,
-  ChevronDown
-} from "lucide-react";
-import { useAuth } from "@/context/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/context/auth";
+import { User, LogOut, Settings, Shield } from "lucide-react";
 
 const UserMenu = () => {
-  const { user, profile, signOut, isAdmin } = useAuth();
-  
-  const handleSignOut = async () => {
-    await signOut();
-  };
-  
-  // If not logged in, show login button
-  if (!user) {
-    return (
-      <Link to="/auth">
-        <Button variant="secondary" size="sm" className="flex items-center gap-1">
-          <User className="h-4 w-4" />
-          <span className="hidden sm:inline">Sign In</span>
-        </Button>
-      </Link>
-    );
-  }
+  const { user, profile, isAdmin, signOut } = useAuth();
 
-  // Get user initials for avatar
   const getInitials = () => {
     if (profile?.username) {
-      return profile.username.substring(0, 2).toUpperCase();
+      return profile.username.slice(0, 2).toUpperCase();
     }
-    
     if (user?.email) {
-      return user.email.substring(0, 2).toUpperCase();
+      return user.email.slice(0, 2).toUpperCase();
     }
-    
-    return "WM";
+    return "U";
   };
 
-  // If logged in, show user menu
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="px-1 flex items-center gap-1 hover:bg-accent rounded-full">
-          <Avatar className="h-8 w-8 border border-border">
-            <AvatarFallback className="bg-accent-teal/20 text-accent-teal">
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-accent-teal text-black text-xs font-medium">
               {getInitials()}
             </AvatarFallback>
           </Avatar>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <div className="px-2 py-1.5 text-sm font-medium">
-          {profile?.username || user.email}
-        </div>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">
+              {profile?.username || "User"}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user?.email}
+            </p>
+            {isAdmin && (
+              <div className="flex items-center gap-1 mt-1">
+                <Shield className="h-3 w-3 text-accent-teal" />
+                <span className="text-xs text-accent-teal font-medium">Administrator</span>
+              </div>
+            )}
+          </div>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/profile" className="cursor-pointer flex items-center">
-            <User className="mr-2 h-4 w-4" />
-            My Profile
-          </Link>
-        </DropdownMenuItem>
         
-        {/* Admin dashboard link - only show for admin users */}
+        {/* Admin Portal Access - Make it prominent */}
         {isAdmin && (
           <>
             <DropdownMenuItem asChild>
-              <Link to="/admin" className="cursor-pointer flex items-center">
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Admin Dashboard
+              <Link to="/admin" className="flex items-center gap-2 text-accent-teal">
+                <Settings className="h-4 w-4" />
+                Admin Portal
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -90,18 +79,16 @@ const UserMenu = () => {
         )}
         
         <DropdownMenuItem asChild>
-          <Link to="/profile" className="cursor-pointer flex items-center">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
+          <Link to="/profile" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Profile
           </Link>
         </DropdownMenuItem>
+        
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={handleSignOut}
-          className="cursor-pointer text-destructive focus:text-destructive"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign out
+        <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">
+          <LogOut className="h-4 w-4" />
+          Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

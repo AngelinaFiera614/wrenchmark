@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import UserMenu from "./UserMenu";
 import CompareButton from "./CompareButton";
 import { MeasurementToggle } from "@/components/theme/MeasurementToggle";
+import { Settings } from "lucide-react";
 
 const mainNavLinks = [
   { label: "Motorcycles", href: "/motorcycles" },
@@ -19,7 +20,7 @@ const mainNavLinks = [
 ];
 
 export function DesktopNav() {
-  const { user, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   
   return (
     <nav className="hidden lg:flex items-center space-x-4">
@@ -47,6 +48,16 @@ export function DesktopNav() {
         <ThemeToggle />
         
         <CompareButton />
+        
+        {/* Admin Access Button - Show prominently for admin users */}
+        {isAdmin && (
+          <Button asChild variant="outline" className="bg-accent-teal/10 border-accent-teal/30 text-accent-teal hover:bg-accent-teal/20">
+            <Link to="/admin" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Admin
+            </Link>
+          </Button>
+        )}
         
         {user ? (
           <UserMenu />

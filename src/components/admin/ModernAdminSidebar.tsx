@@ -14,6 +14,7 @@ import {
   FileText,
   Users,
   Settings,
+  TestTube,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,7 +41,7 @@ const ModernAdminSidebar = () => {
     {
       title: "Overview",
       items: [
-        { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
+        { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
       ]
     },
     {
@@ -67,6 +68,7 @@ const ModernAdminSidebar = () => {
       title: "System",
       items: [
         { icon: Users, label: "Users", href: "/admin/users" },
+        { icon: TestTube, label: "Testing Suite", href: "/admin/testing" },
         { icon: Settings, label: "System Settings", href: "/admin/system" },
       ]
     }

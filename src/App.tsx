@@ -75,7 +75,6 @@ const App: React.FC = () => {
           </ProtectedRoute>
         }>
           <Route index element={<AdminDashboard />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="motorcycles" element={<AdminMotorcycles />} />
           <Route path="parts" element={<AdminParts />} />
           <Route path="models" element={<AdminModels />} />
@@ -88,6 +87,7 @@ const App: React.FC = () => {
           <Route path="riding-skills" element={<AdminRidingSkills />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="testing" element={<AdminTestingSuite />} />
+          <Route path="system" element={<AdminSystemSettings />} />
         </Route>
 
         {/* Catch-all route for 404 Not Found */}
@@ -107,6 +107,16 @@ const ScrollToTop: React.FC = () => {
   }, [pathname]);
 
   return null;
+};
+
+// Create a simple system settings component for now
+const AdminSystemSettings = () => {
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold text-explorer-text mb-4">System Settings</h1>
+      <p className="text-explorer-text-muted">System configuration and settings will be available here.</p>
+    </div>
+  );
 };
 
 export default App;
