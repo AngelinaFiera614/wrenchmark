@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { ColorFormState } from '@/types/colors';
 
 export interface ColorVariant {
   id: string;
@@ -16,6 +17,14 @@ export interface ColorVariant {
   image_url?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ColorOption {
+  id: string;
+  name: string;
+  hex_code: string;
+  image_url?: string;
+  is_limited: boolean;
 }
 
 export async function fetchAllColorVariants(): Promise<ColorVariant[]> {
@@ -73,6 +82,69 @@ export async function deleteColorVariant(id: string): Promise<void> {
     console.error('Error deleting color variant:', error);
     throw error;
   }
+}
+
+export async function getColorsForConfiguration(configurationId: string): Promise<ColorOption[]> {
+  const { data, error } = await supabase
+    .from('color_options')
+    .select('*')
+    .eq('configuration_id', configurationId)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching colors for configuration:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+export async function createColor(configurationId: string, colorData: ColorFormState): Promise<ColorOption> {
+  const { data, error } = await supabase
+    .from('color_options')
+    .insert({
+      ...colorData,
+      configuration_id: configurationId
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating color:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function updateColor(colorId: string, colorData: ColorFormState): Promise<ColorOption> {
+  const { data, error } = await supabase
+    .from('color_options')
+    .update(colorData)
+    .eq('id', colorId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating color:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function deleteColor(colorId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('color_options')
+    .delete()
+    .eq('id', colorId);
+
+  if (error) {
+    console.error('Error deleting color:', error);
+    return false;
+  }
+
+  return true;
 }
 
 export function validateHexCode(hexCode: string): boolean {

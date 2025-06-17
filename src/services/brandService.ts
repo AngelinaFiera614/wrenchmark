@@ -10,6 +10,9 @@ export interface Brand {
   country?: string;
   logo_url?: string;
   website_url?: string;
+  known_for?: string[];
+  knownFor?: string[];
+  logo?: string;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +29,27 @@ export async function fetchAllBrands(): Promise<Brand[]> {
   }
 
   return data || [];
+}
+
+// Alias for backward compatibility
+export const getAllBrands = fetchAllBrands;
+
+export async function getBrandBySlug(slug: string): Promise<Brand | null> {
+  const { data, error } = await supabase
+    .from('brands')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null; // No brand found
+    }
+    console.error('Error fetching brand by slug:', error);
+    throw error;
+  }
+
+  return data;
 }
 
 export async function createBrand(brand: Partial<Brand>): Promise<Brand> {
@@ -84,4 +108,8 @@ export async function searchBrands(query: string): Promise<Brand[]> {
   }
 
   return data || [];
+}
+
+export function createMilestonesField(): Array<{ year: number; description: string }> {
+  return [{ year: new Date().getFullYear(), description: '' }];
 }

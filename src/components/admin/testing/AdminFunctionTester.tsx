@@ -197,7 +197,7 @@ const AdminFunctionTester = () => {
           result = await testHexCodeProcessing();
           break;
         case "Model → Years → Configurations":
-          result = await testModelYearConfigRelationships();
+          result = await testModelYearConfigurationRelationships();
           break;
         case "Cascade Delete Operations":
           result = await testCascadeDeleteOperations();
@@ -669,6 +669,48 @@ const AdminFunctionTester = () => {
     } catch (error) {
       return {
         name: "Create Color Variant",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testModelYearConfigurationRelationships = async (): Promise<TestResult> => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      const { data, error } = await supabase
+        .from('model_years')
+        .select(`
+          id,
+          year,
+          motorcycle_id,
+          model_configurations(
+            id,
+            name
+          )
+        `)
+        .limit(5);
+
+      if (error) {
+        throw new Error(`Database query failed: ${error.message}`);
+      }
+
+      const yearsWithConfigurations = data?.filter(year => 
+        year.model_configurations && year.model_configurations.length > 0
+      ) || [];
+
+      return {
+        name: "Model → Years → Configurations",
+        status: 'passed',
+        details: { 
+          totalYears: data?.length || 0,
+          yearsWithConfigurations: yearsWithConfigurations.length 
+        }
+      };
+    } catch (error) {
+      return {
+        name: "Model → Years → Configurations",
         status: 'failed',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
