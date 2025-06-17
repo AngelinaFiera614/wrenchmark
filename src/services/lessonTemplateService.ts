@@ -95,10 +95,23 @@ export async function deleteLessonTemplate(id: string): Promise<void> {
 }
 
 export async function incrementTemplateUsage(id: string): Promise<void> {
+  // First get the current usage count
+  const { data: currentTemplate, error: fetchError } = await supabase
+    .from('lesson_templates')
+    .select('usage_count')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching current template usage:', fetchError);
+    throw fetchError;
+  }
+
+  // Then increment it
   const { error } = await supabase
     .from('lesson_templates')
     .update({ 
-      usage_count: supabase.raw('usage_count + 1')
+      usage_count: (currentTemplate?.usage_count || 0) + 1
     })
     .eq('id', id);
 
