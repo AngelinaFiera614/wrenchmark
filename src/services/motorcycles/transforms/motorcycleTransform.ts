@@ -1,3 +1,4 @@
+
 import { Motorcycle } from "@/types";
 
 // Transform raw database data to Motorcycle interface
@@ -35,14 +36,6 @@ export const transformMotorcycleData = (rawData: any): Motorcycle => {
   };
 };
 
-// Add alias for backward compatibility
-export const transformToMotorcycle = transformMotorcycleData;
-
-// Transform multiple motorcycles
-export const transformMotorcycles = (rawDataArray: any[]): Motorcycle[] => {
-  return rawDataArray.map(transformMotorcycleData);
-};
-
 // Transform with brand information
 export const transformMotorcycleWithBrand = (rawData: any): Motorcycle => {
   const baseTransform = transformMotorcycleData(rawData);
@@ -71,6 +64,11 @@ export const transformForAdminDisplay = (rawData: any): Motorcycle => {
   };
 };
 
+// Transform multiple motorcycles
+export const transformMotorcycles = (rawDataArray: any[]): Motorcycle[] => {
+  return rawDataArray.map(transformMotorcycleData);
+};
+
 // Normalize motorcycle data for consistency
 export const normalizeMotorcycleData = (motorcycle: Motorcycle): Motorcycle => {
   return {
@@ -92,12 +90,11 @@ export const normalizeMotorcycleData = (motorcycle: Motorcycle): Motorcycle => {
   };
 };
 
-// Updated ComponentData interface
+// Enhanced ComponentData interface
 export interface ComponentData {
   id: string;
   type: string;
   data: any;
-  // Add configurations property for motorcycle operations
   configurations?: any[];
   components?: {
     engines: any[];
@@ -109,7 +106,7 @@ export interface ComponentData {
   model_assignments?: any[];
 }
 
-// Update transformToMotorcycle to accept single model parameter
+// Main transform function for motorcycles (single export to avoid redeclaration)
 export const transformToMotorcycle = (model: any): Motorcycle => {
   return transformMotorcycleData(model);
 };

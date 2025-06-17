@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,7 @@ const PaginatedModelSelector = ({
     handleModelFilter,
     handleModelsPageChange,
     handleModelsLimitChange
-  } = useOptimizedAdminData(selectedModel, null);
+  } = useOptimizedAdminData();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleModelSearch(e.target.value);
@@ -128,61 +129,78 @@ const PaginatedModelSelector = ({
     );
   };
 
-  const ModelCard = ({ model }: { model: MotorcycleModel }) => (
-    <div
-      key={model.id}
-      className={`
-        p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md
-        ${selectedModel === model.id 
-          ? 'border-accent-teal bg-accent-teal/10' 
-          : 'border-explorer-chrome/30 bg-explorer-card'
-        }
-      `}
-      onClick={() => onModelSelect(model.id)}
-    >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <h4 className="font-medium text-explorer-text">{model.name}</h4>
-          <p className="text-sm text-explorer-text-muted">{model.brand?.name}</p>
+  // Transform model data to match MotorcycleModel interface
+  const transformModelForDisplay = (model: any): MotorcycleModel => {
+    return {
+      ...model,
+      // Fix the brands property to match the expected interface
+      brands: model.brands && Array.isArray(model.brands) && model.brands.length > 0 
+        ? { name: model.brands[0].name } 
+        : model.brand_name 
+          ? { name: model.brand_name }
+          : { name: 'Unknown Brand' }
+    };
+  };
+
+  const ModelCard = ({ model }: { model: any }) => {
+    const transformedModel = transformModelForDisplay(model);
+    
+    return (
+      <div
+        key={model.id}
+        className={`
+          p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md
+          ${selectedModel === model.id 
+            ? 'border-accent-teal bg-accent-teal/10' 
+            : 'border-explorer-chrome/30 bg-explorer-card'
+          }
+        `}
+        onClick={() => onModelSelect(model.id)}
+      >
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
+            <h4 className="font-medium text-explorer-text">{model.name}</h4>
+            <p className="text-sm text-explorer-text-muted">{transformedModel.brands?.name}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(model.id);
+            }}
+          >
+            <Star 
+              className={`h-4 w-4 ${
+                favorites.has(model.id) 
+                  ? 'fill-yellow-400 text-yellow-400' 
+                  : 'text-explorer-text-muted'
+              }`} 
+            />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(model.id);
-          }}
-        >
-          <Star 
-            className={`h-4 w-4 ${
-              favorites.has(model.id) 
-                ? 'fill-yellow-400 text-yellow-400' 
-                : 'text-explorer-text-muted'
-            }`} 
-          />
-        </Button>
+        
+        <div className="flex flex-wrap gap-1 mb-2">
+          {model.type && (
+            <Badge variant="secondary" className="text-xs">{model.type}</Badge>
+          )}
+          {model.production_status && model.production_status !== 'active' && (
+            <Badge variant="outline" className="text-xs">{model.production_status}</Badge>
+          )}
+        </div>
+        
+        <div className="text-xs text-explorer-text-muted">
+          {model.production_start_year && (
+            <span>
+              {model.production_start_year}
+              {model.production_end_year ? `-${model.production_end_year}` : '-Present'}
+            </span>
+          )}
+        </div>
       </div>
-      
-      <div className="flex flex-wrap gap-1 mb-2">
-        {model.type && (
-          <Badge variant="secondary" className="text-xs">{model.type}</Badge>
-        )}
-        {model.production_status && model.production_status !== 'active' && (
-          <Badge variant="outline" className="text-xs">{model.production_status}</Badge>
-        )}
-      </div>
-      
-      <div className="text-xs text-explorer-text-muted">
-        {model.production_start_year && (
-          <span>
-            {model.production_start_year}
-            {model.production_end_year ? `-${model.production_end_year}` : '-Present'}
-          </span>
-        )}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Card className={`bg-explorer-card border-explorer-chrome/30 ${className}`}>
