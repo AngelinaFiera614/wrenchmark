@@ -1,123 +1,85 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export interface ComponentLinkResult {
-  success: boolean;
-  error?: string;
+export interface ComponentAssignment {
+  id: string;
+  model_id: string;
+  component_id: string;
+  component_type: string;
+  assignment_type: string;
+  effective_from_year?: number;
+  effective_to_year?: number;
+  is_default: boolean;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export const linkComponentToConfiguration = async (
-  configurationId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
-  componentId: string
-): Promise<ComponentLinkResult> => {
+export interface ComponentLinkingStats {
+  totalAssignments: number;
+  assignmentsByType: Record<string, number>;
+  modelsWithComponents: number;
+  componentsInUse: number;
+}
+
+// Link a component to a motorcycle model
+export async function linkComponentToModel(
+  modelId: string, 
+  componentId: string, 
+  componentType: string,
+  assignmentType: string = 'standard',
+  effectiveFromYear?: number,
+  effectiveToYear?: number,
+  notes?: string
+): Promise<ComponentAssignment | null> {
   try {
-    const fieldName = `${componentType}_id`;
-    
-    const { error } = await supabase
-      .from('model_configurations')
-      .update({ [fieldName]: componentId })
-      .eq('id', configurationId);
-
-    if (error) throw error;
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error linking component:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-export const unlinkComponentFromConfiguration = async (
-  configurationId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
-): Promise<ComponentLinkResult> => {
-  try {
-    const fieldName = `${componentType}_id`;
-    
-    const { error } = await supabase
-      .from('model_configurations')
-      .update({ [fieldName]: null })
-      .eq('id', configurationId);
-
-    if (error) throw error;
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error unlinking component:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-export const getComponentUsageInConfigurations = async (
-  componentId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
-) => {
-  try {
-    const fieldName = `${componentType}_id`;
-    
     const { data, error } = await supabase
-      .from('model_configurations')
-      .select('id, name, model_year_id')
-      .eq(fieldName, componentId);
-
-    if (error) throw error;
-
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching component usage:', error);
-    return [];
-  }
-};
-
-// Additional functions for model-level assignments
-export const linkComponentToModel = async (
-  modelId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
-  componentId: string
-): Promise<ComponentLinkResult> => {
-  try {
-    const { error } = await supabase
       .from('model_component_assignments')
       .insert({
         model_id: modelId,
-        component_type: componentType,
         component_id: componentId,
-        is_default: true
-      });
+        component_type: componentType,
+        assignment_type: assignmentType,
+        effective_from_year: effectiveFromYear,
+        effective_to_year: effectiveToYear,
+        is_default: true,
+        notes: notes
+      })
+      .select()
+      .single();
 
     if (error) throw error;
-
-    return { success: true };
-  } catch (error: any) {
+    return data;
+  } catch (error) {
     console.error('Error linking component to model:', error);
-    return { success: false, error: error.message };
+    return null;
   }
-};
+}
 
-export const unlinkComponentFromModel = async (
+// Unlink a component from a motorcycle model
+export async function unlinkComponentFromModel(
   modelId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
-  componentId: string
-): Promise<ComponentLinkResult> => {
+  componentId: string,
+  componentType: string
+): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('model_component_assignments')
       .delete()
       .eq('model_id', modelId)
-      .eq('component_type', componentType)
-      .eq('component_id', componentId);
+      .eq('component_id', componentId)
+      .eq('component_type', componentType);
 
     if (error) throw error;
-
-    return { success: true };
-  } catch (error: any) {
+    return true;
+  } catch (error) {
     console.error('Error unlinking component from model:', error);
-    return { success: false, error: error.message };
+    return false;
   }
-};
+}
 
-export const getModelComponentAssignments = async (modelId: string) => {
+// Get all component assignments for a model
+export async function getModelComponentAssignments(modelId: string): Promise<ComponentAssignment[]> {
   try {
     const { data, error } = await supabase
       .from('model_component_assignments')
@@ -125,56 +87,149 @@ export const getModelComponentAssignments = async (modelId: string) => {
       .eq('model_id', modelId);
 
     if (error) throw error;
-
     return data || [];
   } catch (error) {
     console.error('Error fetching model component assignments:', error);
     return [];
   }
-};
+}
 
-export const isComponentAssignedToModel = async (
+// Check if a component is assigned to a model
+export async function isComponentAssignedToModel(
   modelId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
-  componentId: string
-): Promise<boolean> => {
+  componentId: string,
+  componentType: string
+): Promise<boolean> {
   try {
     const { data, error } = await supabase
       .from('model_component_assignments')
       .select('id')
       .eq('model_id', modelId)
-      .eq('component_type', componentType)
       .eq('component_id', componentId)
+      .eq('component_type', componentType)
       .single();
 
     if (error && error.code !== 'PGRST116') throw error;
-
     return !!data;
   } catch (error) {
     console.error('Error checking component assignment:', error);
     return false;
   }
-};
+}
 
-export const isComponentAssignedToConfiguration = async (
+// Link component to configuration
+export async function linkComponentToConfiguration(
   configurationId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
-  componentId: string
-): Promise<boolean> => {
+  componentId: string,
+  componentType: string
+): Promise<boolean> {
   try {
-    const fieldName = `${componentType}_id`;
-    
+    const updateField = `${componentType}_id`;
+    const { error } = await supabase
+      .from('model_configurations')
+      .update({ [updateField]: componentId })
+      .eq('id', configurationId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error linking component to configuration:', error);
+    return false;
+  }
+}
+
+// Check if component is assigned to configuration
+export async function isComponentAssignedToConfiguration(
+  configurationId: string,
+  componentId: string,
+  componentType: string
+): Promise<boolean> {
+  try {
+    const selectField = `${componentType}_id`;
     const { data, error } = await supabase
       .from('model_configurations')
-      .select(fieldName)
+      .select(selectField)
       .eq('id', configurationId)
       .single();
 
     if (error) throw error;
-
-    return data?.[fieldName] === componentId;
+    return data?.[selectField] === componentId;
   } catch (error) {
-    console.error('Error checking configuration component assignment:', error);
+    console.error('Error checking configuration assignment:', error);
     return false;
   }
-};
+}
+
+// Get component linking statistics
+export async function getComponentLinkingStats(): Promise<ComponentLinkingStats> {
+  try {
+    const { data: assignments, error } = await supabase
+      .from('model_component_assignments')
+      .select('component_type, model_id, component_id');
+
+    if (error) throw error;
+
+    const totalAssignments = assignments.length;
+    const assignmentsByType: Record<string, number> = {};
+    const uniqueModels = new Set();
+    const uniqueComponents = new Set();
+
+    assignments.forEach(assignment => {
+      assignmentsByType[assignment.component_type] = 
+        (assignmentsByType[assignment.component_type] || 0) + 1;
+      uniqueModels.add(assignment.model_id);
+      uniqueComponents.add(assignment.component_id);
+    });
+
+    return {
+      totalAssignments,
+      assignmentsByType,
+      modelsWithComponents: uniqueModels.size,
+      componentsInUse: uniqueComponents.size
+    };
+  } catch (error) {
+    console.error('Error fetching component linking stats:', error);
+    return {
+      totalAssignments: 0,
+      assignmentsByType: {},
+      modelsWithComponents: 0,
+      componentsInUse: 0
+    };
+  }
+}
+
+// Bulk link components to multiple models
+export async function bulkLinkComponents(
+  assignments: Array<{
+    modelId: string;
+    componentId: string;
+    componentType: string;
+    assignmentType?: string;
+    effectiveFromYear?: number;
+    effectiveToYear?: number;
+    notes?: string;
+  }>
+): Promise<boolean> {
+  try {
+    const insertData = assignments.map(assignment => ({
+      model_id: assignment.modelId,
+      component_id: assignment.componentId,
+      component_type: assignment.componentType,
+      assignment_type: assignment.assignmentType || 'standard',
+      effective_from_year: assignment.effectiveFromYear,
+      effective_to_year: assignment.effectiveToYear,
+      is_default: true,
+      notes: assignment.notes
+    }));
+
+    const { error } = await supabase
+      .from('model_component_assignments')
+      .insert(insertData);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error bulk linking components:', error);
+    return false;
+  }
+}

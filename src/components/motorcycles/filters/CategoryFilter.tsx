@@ -22,9 +22,14 @@ export default function CategoryFilter({
   
   const checkboxItems = categories.map(category => ({
     id: category.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-    label: category,
-    value: category
+    label: category as string, // Convert to string for display
+    value: category as string  // Convert to string for value
   }));
+
+  // Convert the handler to work with strings
+  const handleChange = (value: string, checked: boolean) => {
+    onChange(value as MotorcycleCategory, checked);
+  };
 
   return (
     <FilterSection 
@@ -36,8 +41,8 @@ export default function CategoryFilter({
     >
       <CheckboxList
         items={checkboxItems}
-        selectedValues={selectedCategories}
-        onChange={onChange}
+        selectedValues={selectedCategories as string[]}
+        onChange={handleChange}
         idPrefix={isMobile ? "category-mobile" : "category-desktop"}
       />
     </FilterSection>

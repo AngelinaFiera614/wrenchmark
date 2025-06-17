@@ -4,6 +4,8 @@ import { Motorcycle } from "@/types";
 export interface ComparisonMotorcycle extends Motorcycle {
   name: string;
   shortName: string;
+  make: string; // Make this required instead of optional
+  model: string; // Make this required instead of optional
   powerToWeight?: number;
   torqueToWeight?: number;
   powerPerCC?: number;
