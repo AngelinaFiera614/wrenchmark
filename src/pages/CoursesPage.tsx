@@ -1,50 +1,45 @@
 
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/context/auth";
-import { getCoursesWithProgress } from "@/services/courseService";
-import { CourseWithProgress } from "@/types/course";
-import { toast } from "sonner";
-import { Helmet } from "react-helmet-async";
-import CourseGrid from "@/components/learning/CourseGrid";
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
+import Layout from '@/components/layout/Layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GraduationCap } from 'lucide-react';
 
 const CoursesPage: React.FC = () => {
-  const [courses, setCourses] = useState<CourseWithProgress[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const { user } = useAuth();
-
-  useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        setLoading(true);
-        const coursesData = await getCoursesWithProgress();
-        setCourses(coursesData);
-      } catch (error) {
-        console.error("Error loading courses:", error);
-        toast.error("Failed to load courses");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCourses();
-  }, [user]);
-
   return (
     <>
       <Helmet>
         <title>Courses | Wrenchmark</title>
       </Helmet>
       
-      <div className="container py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Courses</h1>
-          <p className="text-muted-foreground">
-            Learn motorcycle maintenance, riding techniques, and more with our interactive courses
-          </p>
-        </div>
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-foreground mb-4">Courses</h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Structured learning paths for motorcycle maintenance, repair, and riding improvement.
+            </p>
+          </div>
 
-        <CourseGrid courses={courses} loading={loading} />
-      </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" />
+                Course Catalog
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">Course Platform Coming Soon</h3>
+                <p className="text-muted-foreground">
+                  Comprehensive courses on motorcycle maintenance, repair techniques, and riding skills are being developed.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
     </>
   );
 };
