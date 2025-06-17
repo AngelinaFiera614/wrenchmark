@@ -121,40 +121,46 @@ const ComponentAssignmentTab: React.FC<ComponentAssignmentTabProps> = ({
       // Type-specific fallbacks based on component type
       switch (componentType) {
         case 'engine':
-          if (component.displacement_cc) {
-            return `${component.displacement_cc}cc Engine`;
+          const engine = component as any;
+          if (engine.displacement_cc) {
+            return `${engine.displacement_cc}cc Engine`;
           }
           break;
         case 'brake_system':
-          if (component.type) {
-            return `${component.type} Brake System`;
+          const brake = component as any;
+          if (brake.type) {
+            return `${brake.type} Brake System`;
           }
           break;
         case 'frame':
-          if (component.material) {
-            return `${component.material} Frame`;
+          const frame = component as any;
+          if (frame.material) {
+            return `${frame.material} Frame`;
           }
-          if (component.type) {
-            return `${component.type} Frame`;
+          if (frame.type) {
+            return `${frame.type} Frame`;
           }
           break;
         case 'suspension':
-          if (component.front_type) {
-            return `${component.front_type} Suspension`;
+          const suspension = component as any;
+          if (suspension.front_type) {
+            return `${suspension.front_type} Suspension`;
           }
           break;
         case 'wheel':
-          if (component.front_size) {
-            return `${component.front_size} Wheels`;
+          const wheel = component as any;
+          if (wheel.front_size) {
+            return `${wheel.front_size} Wheels`;
           }
-          if (component.type) {
-            return `${component.type} Wheels`;
+          if (wheel.type) {
+            return `${wheel.type} Wheels`;
           }
           break;
       }
       
       // Final fallback - use type if available
-      if (component.type) return component.type;
+      const genericComponent = component as any;
+      if (genericComponent.type) return genericComponent.type;
     }
     
     return 'Unknown Component';
