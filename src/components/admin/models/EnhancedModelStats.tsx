@@ -11,8 +11,8 @@ interface EnhancedModelStatsProps {
 const EnhancedModelStats: React.FC<EnhancedModelStatsProps> = ({ models, filteredModels }) => {
   const publishedCount = models.filter(m => !m.is_draft).length;
   const draftCount = models.filter(m => m.is_draft).length;
-  const activeProductionCount = models.filter(m => m.production_status === 'active').length;
-  const discontinuedCount = models.filter(m => m.production_status === 'discontinued').length;
+  const activeProductionCount = models.filter(m => (m.production_status || 'active') === 'active').length;
+  const discontinuedCount = models.filter(m => (m.production_status || 'active') === 'discontinued').length;
   const uniqueBrands = new Set(models.map(m => m.brand_id)).size;
   const uniqueCategories = new Set(models.map(m => m.type)).size;
 
@@ -38,13 +38,13 @@ const EnhancedModelStats: React.FC<EnhancedModelStatsProps> = ({ models, filtere
     {
       title: 'Active Production',
       value: activeProductionCount,
-      filtered: filteredModels.filter(m => m.production_status === 'active').length,
+      filtered: filteredModels.filter(m => (m.production_status || 'active') === 'active').length,
       color: 'text-accent-teal'
     },
     {
       title: 'Discontinued',
       value: discontinuedCount,
-      filtered: filteredModels.filter(m => m.production_status === 'discontinued').length,
+      filtered: filteredModels.filter(m => (m.production_status || 'active') === 'discontinued').length,
       color: 'text-red-400'
     },
     {

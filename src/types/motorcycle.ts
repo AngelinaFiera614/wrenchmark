@@ -31,6 +31,13 @@ export interface Configuration {
   frame_override?: boolean;
   suspension_override?: boolean;
   wheel_override?: boolean;
+  // Related component data
+  engine?: any;
+  brakes?: any;
+  frame?: any;
+  suspension?: any;
+  wheels?: any;
+  model_year?: ModelYear;
 }
 
 export interface ModelYear {
@@ -44,6 +51,7 @@ export interface ModelYear {
   image_url?: string;
   created_at?: string;
   updated_at?: string;
+  configurations?: Configuration[];
 }
 
 export interface MotorcycleModel {
@@ -54,8 +62,38 @@ export interface MotorcycleModel {
   type: string;
   production_start_year?: number;
   production_end_year?: number;
+  production_status?: string;
   is_draft: boolean;
   created_at?: string;
   updated_at?: string;
   brands?: { name: string };
+  brand?: { name: string }; // For backward compatibility
+  years?: ModelYear[];
+}
+
+// Legacy Motorcycle interface for backward compatibility
+export interface Motorcycle {
+  id: string;
+  name: string;
+  slug: string;
+  brand_id: string;
+  type: string;
+  production_start_year?: number;
+  production_end_year?: number;
+  production_status?: string;
+  is_draft: boolean;
+  created_at?: string;
+  updated_at?: string;
+  brands?: { name: string };
+  brand?: { name: string };
+  years?: ModelYear[];
+}
+
+export interface MotorcycleCategory {
+  id: string;
+  name: string;
+  description?: string;
+  slug: string;
+  created_at?: string;
+  updated_at?: string;
 }

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,10 @@ const ModelsTable = () => {
   const getBrandName = (model: any) => {
     if (!model.brand) return 'Unknown Brand';
     return model.brand.name || 'Unknown Brand';
+  };
+
+  const getProductionStatus = (model: any) => {
+    return model.production_status || 'active';
   };
 
   const handleDeleteClick = (model) => {
@@ -140,6 +145,7 @@ const ModelsTable = () => {
               <TableBody>
                 {filteredModels.map((model) => {
                   const brandName = getBrandName(model);
+                  const productionStatus = getProductionStatus(model);
                   return (
                     <TableRow key={model.id} className="border-explorer-chrome/20">
                       <TableCell className="text-explorer-text">
@@ -161,12 +167,12 @@ const ModelsTable = () => {
                         <Badge 
                           variant="outline" 
                           className={`${
-                            model.production_status === 'active' 
+                            productionStatus === 'active' 
                               ? 'bg-green-400/20 text-green-400 border-green-400/30' 
                               : 'bg-explorer-chrome/20 text-explorer-text border-explorer-chrome/30'
                           }`}
                         >
-                          {model.production_status}
+                          {productionStatus}
                         </Badge>
                       </TableCell>
                       <TableCell>

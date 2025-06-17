@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,6 +63,12 @@ const AdminModelYearDialog: React.FC<AdminModelYearDialogProps> = ({
     },
   });
 
+  const getBrandName = (model: MotorcycleModel) => {
+    if (model.brands?.name) return model.brands.name;
+    if (model.brand?.name) return model.brand.name;
+    return 'Unknown Brand';
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!model) return;
 
@@ -85,7 +90,7 @@ const AdminModelYearDialog: React.FC<AdminModelYearDialogProps> = ({
 
       toast({
         title: "Model Year Added",
-        description: `${values.year} model year has been created for ${model.brand?.name} ${model.name}.`,
+        description: `${values.year} model year has been created for ${getBrandName(model)} ${model.name}.`,
       });
 
       // Refresh the model years data
@@ -119,7 +124,7 @@ const AdminModelYearDialog: React.FC<AdminModelYearDialogProps> = ({
             Add Model Year
           </DialogTitle>
           <DialogDescription className="text-explorer-text-muted">
-            {model && `Add a new model year for ${model.brand?.name} ${model.name}`}
+            {model && `Add a new model year for ${getBrandName(model)} ${model.name}`}
           </DialogDescription>
         </DialogHeader>
 
