@@ -1567,6 +1567,45 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string
+          severity: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type: string
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       skills: {
         Row: {
           category: string | null
@@ -1995,6 +2034,16 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      log_security_event: {
+        Args: {
+          p_action: string
+          p_resource_type: string
+          p_resource_id?: string
+          p_severity?: string
+          p_details?: Json
+        }
+        Returns: undefined
+      }
       mark_term_as_learned: {
         Args: { term_slug_param: string }
         Returns: boolean
@@ -2014,6 +2063,10 @@ export type Database = {
       populate_model_component_defaults: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      validate_password_strength: {
+        Args: { password: string }
+        Returns: Json
       }
     }
     Enums: {
