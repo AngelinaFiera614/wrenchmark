@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ContentBlockType, MediaLibraryItem } from "@/types/course";
+import { ContentBlockType } from "@/types/course";
 
 export async function getContentBlockTypes(): Promise<ContentBlockType[]> {
   const { data, error } = await supabase
@@ -59,59 +59,93 @@ export async function deleteContentBlockType(id: string): Promise<void> {
   }
 }
 
-export async function getMediaLibraryItems(): Promise<MediaLibraryItem[]> {
-  const { data, error } = await supabase
-    .from("media_library")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching media library items:", error);
-    throw error;
-  }
-
-  return data || [];
-}
-
-export async function uploadToMediaLibrary(mediaItem: Partial<MediaLibraryItem>): Promise<MediaLibraryItem> {
-  const { data, error } = await supabase
-    .from("media_library")
-    .insert(mediaItem)
-    .select()
+// Enhanced functions for the new content blocks
+export async function validateContentBlockData(type: string, data: any): Promise<boolean> {
+  const { data: blockType } = await supabase
+    .from("content_block_types")
+    .select("schema")
+    .eq("name", type)
     .single();
 
-  if (error) {
-    console.error("Error uploading to media library:", error);
-    throw error;
+  if (!blockType?.schema) {
+    console.warn(`No schema found for content block type: ${type}`);
+    return true; // Allow if no schema is defined
   }
 
-  return data;
+  // Basic validation - in a real app, you'd use a JSON schema validator
+  try {
+    const schema = blockType.schema as any;
+    const required = schema.required || [];
+    
+    for (const field of required) {
+      if (!(field in data) || data[field] === null || data[field] === undefined) {
+        console.error(`Required field missing: ${field}`);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error validating content block data:", error);
+    return false;
+  }
 }
 
-export async function updateMediaLibraryItem(id: string, updates: Partial<MediaLibraryItem>): Promise<MediaLibraryItem> {
-  const { data, error } = await supabase
-    .from("media_library")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
+export function getContentBlockTemplate(type: string): any {
+  const templates: Record<string, any> = {
+    rich_text: {
+      content: "<p>Enter your rich text content here...</p>",
+      title: "",
+      format: "html"
+    },
+    interactive_quiz: {
+      questions: [
+        {
+          id: "1",
+          type: "multiple_choice",
+          question: "What is the correct answer?",
+          options: ["Option A", "Option B", "Option C", "Option D"],
+          correct_answer: "Option A",
+          explanation: "This is why Option A is correct.",
+          points: 1
+        }
+      ],
+      passing_score: 70,
+      allow_retries: true,
+      show_results: true
+    },
+    code_highlight: {
+      code: "console.log('Hello, World!');",
+      language: "javascript",
+      title: "",
+      line_numbers: true,
+      highlight_lines: []
+    },
+    audio_player: {
+      audio_url: "",
+      title: "",
+      description: "",
+      auto_play: false,
+      show_controls: true,
+      transcript: ""
+    },
+    interactive_image: {
+      image_url: "",
+      alt_text: "",
+      hotspots: []
+    },
+    conditional_content: {
+      content: "<p>This content will show when conditions are met.</p>",
+      conditions: [
+        {
+          type: "skill_level",
+          operator: ">=",
+          value: "5"
+        }
+      ],
+      fallback_content: "<p>Complete more lessons to unlock this content.</p>"
+    }
+  };
 
-  if (error) {
-    console.error("Error updating media library item:", error);
-    throw error;
-  }
-
-  return data;
-}
-
-export async function deleteMediaLibraryItem(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("media_library")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error("Error deleting media library item:", error);
-    throw error;
-  }
+  return templates[type] || {};
 }

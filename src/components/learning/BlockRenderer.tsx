@@ -8,7 +8,13 @@ import {
   TableBlock,
   DownloadBlock,
   GlossaryBlock,
-  ModelBlock
+  ModelBlock,
+  RichTextBlock,
+  InteractiveQuizBlock,
+  CodeHighlightBlock,
+  AudioPlayerBlock,
+  InteractiveImageBlock,
+  ConditionalContentBlock
 } from './content-blocks';
 
 interface BlockRendererProps {
@@ -17,6 +23,7 @@ interface BlockRendererProps {
 
 const getBlockRenderer = (type: string) => {
   const renderers: Record<string, React.ComponentType<any>> = {
+    // Legacy blocks
     text: TextBlock,
     video: VideoBlock,
     image_gallery: ImageGalleryBlock,
@@ -24,6 +31,14 @@ const getBlockRenderer = (type: string) => {
     download: DownloadBlock,
     glossary_links: GlossaryBlock,
     related_models: ModelBlock,
+    
+    // Enhanced blocks
+    rich_text: RichTextBlock,
+    interactive_quiz: InteractiveQuizBlock,
+    code_highlight: CodeHighlightBlock,
+    audio_player: AudioPlayerBlock,
+    interactive_image: InteractiveImageBlock,
+    conditional_content: ConditionalContentBlock,
   };
 
   return renderers[type] || TextBlock; // Fallback to TextBlock
