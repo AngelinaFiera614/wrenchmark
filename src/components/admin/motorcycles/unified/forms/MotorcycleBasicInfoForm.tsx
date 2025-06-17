@@ -93,17 +93,17 @@ const MotorcycleBasicInfoForm = ({ motorcycle, isEditing, onUpdate }: Motorcycle
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="base_description">Description</Label>
             {isEditing ? (
               <Textarea
-                id="description"
-                value={motorcycle.description || ''}
-                onChange={(e) => handleFieldChange('description', e.target.value)}
+                id="base_description"
+                value={motorcycle.base_description || ''}
+                onChange={(e) => handleFieldChange('base_description', e.target.value)}
                 className="bg-explorer-card border-explorer-chrome/30"
                 rows={3}
               />
             ) : (
-              <div className="p-2 text-explorer-text">{motorcycle.description || 'No description provided'}</div>
+              <div className="p-2 text-explorer-text">{motorcycle.base_description || 'No description provided'}</div>
             )}
           </div>
 

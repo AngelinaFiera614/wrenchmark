@@ -245,7 +245,7 @@ const ComponentAssignmentWorkflow: React.FC<ComponentAssignmentWorkflowProps> = 
         open={!!activeComponentDialog}
         onClose={() => setActiveComponentDialog(null)}
         componentType={activeComponentDialog}
-        configurationId={configurationData?.id}
+        modelId={selectedModelData?.id}
         currentComponentId={activeComponentDialog ? configurationData[`${activeComponentDialog}_id`] : undefined}
         onComponentAssigned={handleComponentAssigned}
       />
