@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth";
 import { Loader } from "lucide-react";
@@ -11,21 +11,31 @@ import { AdminHeader } from "../admin/AdminHeader";
 const AdminLayout = () => {
   const { user, isAdmin, isAdminVerified, isLoading, session } = useAuth();
   const navigate = useNavigate();
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   
   // Security check: Do we have a valid session?
   const hasValidSession = Boolean(session && user);
   
   // If user is not admin after loading completes, redirect
   useEffect(() => {
-    if (!isLoading && user && !isAdmin) {
-      console.log("[AdminLayout] User is not admin, redirecting");
-      toast.error("You don't have permission to access the admin area");
-      navigate("/", { replace: true });
+    if (!isLoading && hasValidSession && !hasCheckedAuth) {
+      setHasCheckedAuth(true);
+      
+      // Give a small delay to ensure admin verification has completed
+      const timer = setTimeout(() => {
+        if (!isAdmin && !isAdminVerified) {
+          console.log("[AdminLayout] User is not admin, redirecting");
+          toast.error("You don't have permission to access the admin area");
+          navigate("/", { replace: true });
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [isAdmin, isLoading, user, navigate]);
+  }, [isAdmin, isAdminVerified, isLoading, hasValidSession, hasCheckedAuth, navigate]);
   
   // Show loading while auth verification is in progress
-  if (isLoading) {
+  if (isLoading || !hasCheckedAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-explorer-dark">
         <div className="flex flex-col items-center space-y-4">
@@ -43,8 +53,8 @@ const AdminLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Then check admin status
-  if (isAdminVerified || isAdmin) {
+  // Then check admin status - be more permissive during verification
+  if (isAdmin || isAdminVerified) {
     return (
       <div className="min-h-screen bg-explorer-dark">
         <SidebarProvider defaultOpen={true}>
@@ -62,8 +72,15 @@ const AdminLayout = () => {
     );
   }
 
-  // Default fallback - redirect to home
-  return <Navigate to="/" replace />;
+  // Still loading admin verification - show loading state instead of redirect
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-explorer-dark">
+      <div className="flex flex-col items-center space-y-4">
+        <Loader className="h-10 w-10 animate-spin text-accent-teal" />
+        <p className="text-explorer-text-muted">Verifying admin permissions...</p>
+      </div>
+    </div>
+  );
 };
 
 export default AdminLayout;

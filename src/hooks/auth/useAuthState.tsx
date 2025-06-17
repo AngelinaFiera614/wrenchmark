@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ export const useAuthState = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [adminVerified, setAdminVerified] = useState<AdminVerificationState>("idle");
+  const adminCheckInProgress = useRef<boolean>(false);
 
   // Use the profile hook to manage user profile data
   const {
@@ -25,9 +26,16 @@ export const useAuthState = () => {
     refreshProfile,
   } = useProfile(user);
 
-  // Check admin status securely
+  // Check admin status securely with deduplication
   const checkAdminStatus = useCallback(async (userId: string) => {
+    // Prevent multiple simultaneous admin checks
+    if (adminCheckInProgress.current) {
+      console.log("[useAuthState] Admin check already in progress, skipping");
+      return;
+    }
+
     try {
+      adminCheckInProgress.current = true;
       setAdminVerified("pending");
       
       // Use the dedicated admin check service
@@ -36,11 +44,13 @@ export const useAuthState = () => {
       setIsAdmin(isAdminUser);
       setAdminVerified("verified");
       
-      console.info(`[useAuthState] Admin status: ${isAdminUser}`);
+      console.info(`[useAuthState] Admin status verified: ${isAdminUser}`);
     } catch (error) {
       console.error("[useAuthState] Admin check exception:", error);
       setIsAdmin(false);
       setAdminVerified("failed");
+    } finally {
+      adminCheckInProgress.current = false;
     }
   }, []);
 
@@ -60,11 +70,12 @@ export const useAuthState = () => {
               setSession(currentSession);
               setUser(currentSession.user);
               
-              // Never call other Supabase functions directly in the callback
-              // Use timeout to prevent potential deadlock or recursion
+              // Use timeout to prevent potential deadlock and debounce multiple calls
               setTimeout(() => {
-                checkAdminStatus(currentSession.user.id);
-              }, 0);
+                if (!adminCheckInProgress.current) {
+                  checkAdminStatus(currentSession.user.id);
+                }
+              }, 100);
             }
           } else if (event === 'SIGNED_OUT') {
             console.info("[useAuthState] User signed out");
@@ -73,6 +84,7 @@ export const useAuthState = () => {
             setIsAdmin(false);
             setAdminVerified("idle");
             setProfile(null);
+            adminCheckInProgress.current = false;
           }
         }
       );
