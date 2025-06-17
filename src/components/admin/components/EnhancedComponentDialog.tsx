@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, Plus, Edit, Trash2, Info, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { canDeleteComponent, ComponentUsageStats } from "@/services/modelComponentService";
+import { canDeleteComponent, ComponentUsage } from "@/services/modelComponentService";
 
 interface EnhancedComponentDialogProps {
   open: boolean;
@@ -32,11 +31,7 @@ const EnhancedComponentDialog = ({
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [canDelete, setCanDelete] = useState(false);
-  const [usageInfo, setUsageInfo] = useState<{
-    usageCount: number;
-    models: string[];
-    trims: string[];
-  }>({ usageCount: 0, models: [], trims: [] });
+  const [usageInfo, setUsageInfo] = useState<ComponentUsage | null>(null);
   const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
@@ -55,14 +50,10 @@ const EnhancedComponentDialog = ({
       };
       
       const dbComponentType = componentTypeMap[componentType as keyof typeof componentTypeMap] || componentType;
-      const result = await canDeleteComponent(dbComponentType, component.id);
+      const result = await canDeleteComponent(component.id, dbComponentType as any);
       
       setCanDelete(result.canDelete);
-      setUsageInfo({
-        usageCount: result.usageCount,
-        models: result.models,
-        trims: result.trims
-      });
+      setUsageInfo(result.usage || null);
     } catch (error) {
       console.error("Error checking component deletability:", error);
     }
@@ -128,7 +119,7 @@ const EnhancedComponentDialog = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-sm font-medium text-explorer-text">Total Usage</div>
-              <div className="text-2xl font-bold text-accent-teal">{usageInfo.usageCount}</div>
+              <div className="text-2xl font-bold text-accent-teal">{usageInfo?.usageCount || 0}</div>
             </div>
             <div>
               <div className="text-sm font-medium text-explorer-text">Status</div>
@@ -138,11 +129,11 @@ const EnhancedComponentDialog = ({
             </div>
           </div>
           
-          {usageInfo.models.length > 0 && (
+          {usageInfo?.usedInModels && usageInfo.usedInModels.length > 0 && (
             <div>
               <div className="text-sm font-medium text-explorer-text mb-2">Used by Models:</div>
               <div className="flex flex-wrap gap-1">
-                {usageInfo.models.map((model, index) => (
+                {usageInfo.usedInModels.map((model, index) => (
                   <Badge key={index} variant="outline" className="text-xs">
                     {model}
                   </Badge>
@@ -151,13 +142,13 @@ const EnhancedComponentDialog = ({
             </div>
           )}
           
-          {usageInfo.trims.length > 0 && (
+          {usageInfo?.usedInConfigurations && usageInfo.usedInConfigurations.length > 0 && (
             <div>
-              <div className="text-sm font-medium text-explorer-text mb-2">Used by Trim Levels:</div>
+              <div className="text-sm font-medium text-explorer-text mb-2">Used by Configurations:</div>
               <div className="flex flex-wrap gap-1">
-                {usageInfo.trims.map((trim, index) => (
+                {usageInfo.usedInConfigurations.map((config, index) => (
                   <Badge key={index} variant="outline" className="text-xs">
-                    {trim}
+                    {config}
                   </Badge>
                 ))}
               </div>

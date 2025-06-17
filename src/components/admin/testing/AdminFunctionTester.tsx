@@ -16,7 +16,8 @@ import {
   Palette,
   Building2,
   Copy,
-  Download
+  Download,
+  TestTube
 } from "lucide-react";
 
 interface TestResult {
