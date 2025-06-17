@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import {
   Route,
@@ -34,7 +33,10 @@ import AdminLessons from './pages/admin/AdminLessons';
 import AdminRidingSkills from './pages/admin/AdminRidingSkills';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminMotorcycles from './pages/admin/AdminMotorcycles';
-import AdminParts from './pages/admin/AdminParts';
+import AdminComponents from './pages/admin/AdminComponents';
+import AdminAssignments from './pages/admin/AdminAssignments';
+import AdminConfigurations from './pages/admin/AdminConfigurations';
+import AdminBulkOperations from './pages/admin/AdminBulkOperations';
 import AdminTestingSuite from './pages/admin/AdminTestingSuite';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './components/theme/theme-provider';
@@ -76,7 +78,10 @@ const App: React.FC = () => {
         }>
           <Route index element={<AdminDashboard />} />
           <Route path="motorcycles" element={<AdminMotorcycles />} />
-          <Route path="parts/*" element={<AdminParts />} />
+          <Route path="components" element={<AdminComponents />} />
+          <Route path="assignments" element={<AdminAssignments />} />
+          <Route path="configurations" element={<AdminConfigurations />} />
+          <Route path="bulk-operations" element={<AdminBulkOperations />} />
           <Route path="models" element={<AdminModels />} />
           <Route path="repair-skills" element={<AdminRepairSkills />} />
           <Route path="manuals" element={<AdminManuals />} />

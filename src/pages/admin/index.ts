@@ -8,4 +8,7 @@ export { default as AdminManuals } from './AdminManuals';
 export { default as AdminGlossary } from './AdminGlossary';
 export { default as AdminStateRules } from './AdminStateRules';
 export { default as AdminMotorcycleModels } from './AdminMotorcycleModels';
-export { default as AdminParts } from './AdminParts';
+export { default as AdminComponents } from './AdminComponents';
+export { default as AdminAssignments } from './AdminAssignments';
+export { default as AdminConfigurations } from './AdminConfigurations';
+export { default as AdminBulkOperations } from './AdminBulkOperations';

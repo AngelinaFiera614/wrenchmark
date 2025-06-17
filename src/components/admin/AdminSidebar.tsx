@@ -11,6 +11,8 @@ import {
   Component,
   Image,
   ListChecks,
+  Database,
+  GitBranch,
   LucideIcon
 } from "lucide-react";
 
@@ -62,11 +64,29 @@ const AdminSidebar = () => {
           href="/admin/categories" 
           isActive={location.pathname === '/admin/categories'}
         />
-        <SidebarItem 
-          icon={Wrench} 
-          label="Components" 
-          href="/admin/components" 
-          isActive={location.pathname.startsWith('/admin/components')}
+        <SidebarItem
+          icon={Component}
+          label="Components"
+          href="/admin/components"
+          isActive={location.pathname === '/admin/components'}
+        />
+        <SidebarItem
+          icon={GitBranch}
+          label="Assignments"
+          href="/admin/assignments"
+          isActive={location.pathname === '/admin/assignments'}
+        />
+        <SidebarItem
+          icon={Wrench}
+          label="Configurations"
+          href="/admin/configurations"
+          isActive={location.pathname === '/admin/configurations'}
+        />
+        <SidebarItem
+          icon={Database}
+          label="Bulk Operations"
+          href="/admin/bulk-operations"
+          isActive={location.pathname === '/admin/bulk-operations'}
         />
         <SidebarItem
           icon={Tag}
