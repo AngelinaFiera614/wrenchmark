@@ -48,7 +48,7 @@ const ModernAdminSidebar = () => {
       title: "Content Management",
       items: [
         { icon: Bike, label: "Motorcycles", href: "/admin/motorcycles" },
-        { icon: Wrench, label: "Parts & Configurations", href: "/admin/parts", badge: "Consolidated" },
+        { icon: Wrench, label: "Parts & Components", href: "/admin/parts" },
         { icon: Building2, label: "Brands", href: "/admin/brands" },
         { icon: Calendar, label: "Models", href: "/admin/models" },
         { icon: Palette, label: "Colors", href: "/admin/colors" },
@@ -112,11 +112,6 @@ const ModernAdminSidebar = () => {
                           >
                             <item.icon className="h-4 w-4 flex-shrink-0" />
                             <span className="truncate">{item.label}</span>
-                            {item.badge && (
-                              <Badge variant="secondary" className="ml-auto">
-                                {item.badge}
-                              </Badge>
-                            )}
                           </NavLink>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

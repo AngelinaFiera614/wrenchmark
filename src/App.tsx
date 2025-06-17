@@ -76,7 +76,7 @@ const App: React.FC = () => {
         }>
           <Route index element={<AdminDashboard />} />
           <Route path="motorcycles" element={<AdminMotorcycles />} />
-          <Route path="parts" element={<AdminParts />} />
+          <Route path="parts/*" element={<AdminParts />} />
           <Route path="models" element={<AdminModels />} />
           <Route path="repair-skills" element={<AdminRepairSkills />} />
           <Route path="manuals" element={<AdminManuals />} />

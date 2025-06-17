@@ -57,30 +57,30 @@ const PartsManagementSidebar = () => {
     {
       icon: Component,
       label: "Components Library",
-      href: "components",
+      href: "/admin/parts/components",
       description: "Manage engines, brakes, frames, suspension, and wheels",
-      isActive: location.pathname.includes('/components') || location.pathname.endsWith('/admin/parts')
+      isActive: location.pathname === '/admin/parts/components' || location.pathname === '/admin/parts'
     },
     {
       icon: Settings,
       label: "Model Assignments",
-      href: "assignments",
+      href: "/admin/parts/assignments",
       description: "Set default components for motorcycle models",
-      isActive: location.pathname.includes('/assignments')
+      isActive: location.pathname === '/admin/parts/assignments'
     },
     {
       icon: Wrench,
       label: "Configuration Manager",
-      href: "configurations",
+      href: "/admin/parts/configurations",
       description: "Manage trim configurations and component overrides",
-      isActive: location.pathname.includes('/configurations')
+      isActive: location.pathname === '/admin/parts/configurations'
     },
     {
       icon: Database,
       label: "Bulk Operations",
-      href: "bulk",
+      href: "/admin/parts/bulk",
       description: "Mass assignment and data management tools",
-      isActive: location.pathname.includes('/bulk')
+      isActive: location.pathname === '/admin/parts/bulk'
     }
   ];
 

@@ -21,7 +21,7 @@ const mobileNavLinks = [
 ];
 
 const adminNavLinks = [
-  { label: "Dashboard", href: "/admin", icon: Settings },
+  { label: "Dashboard", href: "/admin" },
   { label: "Motorcycles", href: "/admin/motorcycles" },
   { label: "Parts & Components", href: "/admin/parts" },
   { label: "Brands", href: "/admin/brands" },
