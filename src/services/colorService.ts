@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ColorFormState } from '@/types/colors';
+import { ColorFormState, ColorOption } from '@/types/colors';
 
 export interface ColorVariant {
   id: string;
@@ -17,14 +17,6 @@ export interface ColorVariant {
   image_url?: string;
   created_at: string;
   updated_at: string;
-}
-
-export interface ColorOption {
-  id: string;
-  name: string;
-  hex_code: string;
-  image_url?: string;
-  is_limited: boolean;
 }
 
 export async function fetchAllColorVariants(): Promise<ColorVariant[]> {
@@ -88,7 +80,7 @@ export async function getColorsForConfiguration(configurationId: string): Promis
   const { data, error } = await supabase
     .from('color_options')
     .select('*')
-    .eq('configuration_id', configurationId)
+    .eq('model_year_id', configurationId)
     .order('name', { ascending: true });
 
   if (error) {
@@ -104,7 +96,7 @@ export async function createColor(configurationId: string, colorData: ColorFormS
     .from('color_options')
     .insert({
       ...colorData,
-      configuration_id: configurationId
+      model_year_id: configurationId
     })
     .select()
     .single();
@@ -145,6 +137,21 @@ export async function deleteColor(colorId: string): Promise<boolean> {
   }
 
   return true;
+}
+
+export async function searchColors(query: string): Promise<ColorOption[]> {
+  const { data, error } = await supabase
+    .from('color_options')
+    .select('*')
+    .or(`name.ilike.%${query}%,hex_code.ilike.%${query}%`)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error searching colors:', error);
+    throw error;
+  }
+
+  return data || [];
 }
 
 export function validateHexCode(hexCode: string): boolean {

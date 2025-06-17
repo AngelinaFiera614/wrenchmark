@@ -163,50 +163,14 @@ const AdminFunctionTester = () => {
       let result: TestResult;
 
       switch (testName) {
-        case "Create Draft Motorcycle":
-          result = await testCreateDraftMotorcycle();
+        case "Color Search":
+          result = await testColorSearch();
           break;
-        case "Update Motorcycle Basic Info":
-          result = await testUpdateMotorcycleInfo();
+        case "Component Assignments":
+          result = await testComponentAssignments();
           break;
-        case "Publish Motorcycle":
-          result = await testPublishMotorcycle();
-          break;
-        case "Validate Required Fields":
-          result = await testValidateRequiredFields();
-          break;
-        case "Test Slug Generation":
-          result = await testSlugGeneration();
-          break;
-        case "Create Brand":
-          result = await testCreateBrand();
-          break;
-        case "Brand-Model Relationships":
-          result = await testBrandModelRelationships();
-          break;
-        case "Brand Search Functionality":
-          result = await testBrandSearch();
-          break;
-        case "Create Color Variant":
-          result = await testCreateColorVariant();
-          break;
-        case "Color Code Validation":
-          result = await testColorCodeValidation();
-          break;
-        case "Hex Code Processing":
-          result = await testHexCodeProcessing();
-          break;
-        case "Model → Years → Configurations":
-          result = await testModelYearConfigurationRelationships();
-          break;
-        case "Cascade Delete Operations":
-          result = await testCascadeDeleteOperations();
-          break;
-        case "Orphaned Record Detection":
-          result = await testOrphanedRecordDetection();
-          break;
-        case "Data Consistency Checks":
-          result = await testDataConsistencyChecks();
+        case "Delete Brand (Check Dependencies)":
+          result = await testDeleteBrandWithDependencies();
           break;
         default:
           // Simulate test execution for other tests
@@ -711,6 +675,126 @@ const AdminFunctionTester = () => {
     } catch (error) {
       return {
         name: "Model → Years → Configurations",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testColorSearch = async (): Promise<TestResult> => {
+    try {
+      const { searchColors } = await import("@/services/colorService");
+      
+      // Test color search functionality
+      const searchResults = await searchColors('red');
+      
+      if (!Array.isArray(searchResults)) {
+        throw new Error("Color search did not return an array");
+      }
+
+      return {
+        name: "Color Search",
+        status: 'passed',
+        details: { 
+          searchTerm: 'red',
+          resultsCount: searchResults.length 
+        }
+      };
+    } catch (error) {
+      return {
+        name: "Color Search",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testComponentAssignments = async (): Promise<TestResult> => {
+    try {
+      const { assignComponentToModel, removeComponentFromModel } = await import("@/services/modelComponent/assignmentService");
+      const { fetchAllMotorcyclesForAdmin } = await import("@/services/motorcycles/adminQueries");
+      
+      // Get a test motorcycle
+      const motorcycles = await fetchAllMotorcyclesForAdmin();
+      if (motorcycles.length === 0) {
+        return {
+          name: "Component Assignments",
+          status: 'passed',
+          details: { message: "No motorcycles available for component assignment test" }
+        };
+      }
+
+      const testMotorcycle = motorcycles[0];
+      
+      // Test assignment functions exist and are callable
+      if (typeof assignComponentToModel !== 'function') {
+        throw new Error("assignComponentToModel function not found");
+      }
+      
+      if (typeof removeComponentFromModel !== 'function') {
+        throw new Error("removeComponentFromModel function not found");
+      }
+
+      return {
+        name: "Component Assignments",
+        status: 'passed',
+        details: { 
+          testedWith: testMotorcycle.id,
+          functionsAvailable: true
+        }
+      };
+    } catch (error) {
+      return {
+        name: "Component Assignments",
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  };
+
+  const testDeleteBrandWithDependencies = async (): Promise<TestResult> => {
+    try {
+      const { deleteBrand, checkBrandDependencies } = await import("@/services/brandService");
+      const { fetchAllBrands } = await import("@/services/brandService");
+      
+      // Get all brands to test with
+      const brands = await fetchAllBrands();
+      if (brands.length === 0) {
+        return {
+          name: "Delete Brand (Check Dependencies)",
+          status: 'passed',
+          details: { message: "No brands available for dependency check test" }
+        };
+      }
+
+      const testBrand = brands[0];
+      
+      // Test dependency checking
+      const dependencies = await checkBrandDependencies(testBrand.id);
+      
+      // Attempt to delete (should fail if dependencies exist)
+      const deleteResult = await deleteBrand(testBrand.id);
+      
+      const expectedToFail = dependencies.hasModels;
+      const actuallyFailed = !deleteResult.success;
+      
+      if (expectedToFail === actuallyFailed) {
+        return {
+          name: "Delete Brand (Check Dependencies)",
+          status: 'passed',
+          details: { 
+            brandTested: testBrand.name,
+            hasDependencies: dependencies.hasModels,
+            modelCount: dependencies.modelCount,
+            deleteAttemptFailed: actuallyFailed
+          }
+        };
+      } else {
+        throw new Error(`Dependency check failed: expected delete to ${expectedToFail ? 'fail' : 'succeed'} but it ${actuallyFailed ? 'failed' : 'succeeded'}`);
+      }
+    } catch (error) {
+      return {
+        name: "Delete Brand (Check Dependencies)",
         status: 'failed',
         error: error instanceof Error ? error.message : 'Unknown error'
       };

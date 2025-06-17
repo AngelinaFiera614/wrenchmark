@@ -7,7 +7,7 @@ export interface Brand {
   slug: string;
   description?: string;
   founded?: number;
-  country?: string;
+  country: string;
   logo_url?: string;
   website_url?: string;
   known_for?: string[];
@@ -28,7 +28,11 @@ export async function fetchAllBrands(): Promise<Brand[]> {
     throw error;
   }
 
-  return data || [];
+  // Ensure country field is always present
+  return (data || []).map(brand => ({
+    ...brand,
+    country: brand.country || 'Unknown'
+  }));
 }
 
 // Alias for backward compatibility
@@ -49,7 +53,10 @@ export async function getBrandBySlug(slug: string): Promise<Brand | null> {
     throw error;
   }
 
-  return data;
+  return data ? {
+    ...data,
+    country: data.country || 'Unknown'
+  } : null;
 }
 
 export async function createBrand(brand: Partial<Brand>): Promise<Brand> {
@@ -64,7 +71,10 @@ export async function createBrand(brand: Partial<Brand>): Promise<Brand> {
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    country: data.country || 'Unknown'
+  };
 }
 
 export async function updateBrand(id: string, updates: Partial<Brand>): Promise<Brand> {
@@ -80,10 +90,23 @@ export async function updateBrand(id: string, updates: Partial<Brand>): Promise<
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    country: data.country || 'Unknown'
+  };
 }
 
-export async function deleteBrand(id: string): Promise<void> {
+export async function deleteBrand(id: string): Promise<{ success: boolean; error?: string }> {
+  // First check for dependencies
+  const dependencies = await checkBrandDependencies(id);
+  
+  if (dependencies.hasModels) {
+    return {
+      success: false,
+      error: `Cannot delete brand: ${dependencies.modelCount} motorcycle models depend on this brand`
+    };
+  }
+
   const { error } = await supabase
     .from('brands')
     .delete()
@@ -91,8 +114,35 @@ export async function deleteBrand(id: string): Promise<void> {
 
   if (error) {
     console.error('Error deleting brand:', error);
-    throw error;
+    return {
+      success: false,
+      error: error.message
+    };
   }
+
+  return { success: true };
+}
+
+export async function checkBrandDependencies(brandId: string): Promise<{
+  hasModels: boolean;
+  modelCount: number;
+  models: string[];
+}> {
+  const { data: models, error } = await supabase
+    .from('motorcycle_models')
+    .select('id, name')
+    .eq('brand_id', brandId);
+
+  if (error) {
+    console.error('Error checking brand dependencies:', error);
+    return { hasModels: false, modelCount: 0, models: [] };
+  }
+
+  return {
+    hasModels: (models?.length || 0) > 0,
+    modelCount: models?.length || 0,
+    models: models?.map(m => m.name) || []
+  };
 }
 
 export async function searchBrands(query: string): Promise<Brand[]> {
@@ -107,7 +157,10 @@ export async function searchBrands(query: string): Promise<Brand[]> {
     throw error;
   }
 
-  return data || [];
+  return (data || []).map(brand => ({
+    ...brand,
+    country: brand.country || 'Unknown'
+  }));
 }
 
 export function createMilestonesField(): Array<{ year: number; description: string }> {

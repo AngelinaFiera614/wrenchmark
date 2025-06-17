@@ -1,6 +1,6 @@
 
-// Re-export all types and functions from the modular files
+// Export all component-related services
 export * from './types';
 export * from './modelAssignmentService';
-export * from './effectiveComponentsService';
-export * from './componentUsageService';
+export * from './assignmentService';
+export * from './configurationService';
