@@ -22,6 +22,12 @@ export interface ComponentLinkingStats {
   componentsInUse: number;
 }
 
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
 // Link a component to a motorcycle model
 export async function linkComponentToModel(
   modelId: string, 
@@ -31,7 +37,7 @@ export async function linkComponentToModel(
   effectiveFromYear?: number,
   effectiveToYear?: number,
   notes?: string
-): Promise<ComponentAssignment | null> {
+): Promise<ServiceResponse<ComponentAssignment>> {
   try {
     const { data, error } = await supabase
       .from('model_component_assignments')
@@ -48,11 +54,13 @@ export async function linkComponentToModel(
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
   } catch (error) {
     console.error('Error linking component to model:', error);
-    return null;
+    return { success: false, error: 'Failed to link component to model' };
   }
 }
 
@@ -61,7 +69,7 @@ export async function unlinkComponentFromModel(
   modelId: string,
   componentId: string,
   componentType: string
-): Promise<boolean> {
+): Promise<ServiceResponse<boolean>> {
   try {
     const { error } = await supabase
       .from('model_component_assignments')
@@ -70,11 +78,13 @@ export async function unlinkComponentFromModel(
       .eq('component_id', componentId)
       .eq('component_type', componentType);
 
-    if (error) throw error;
-    return true;
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data: true };
   } catch (error) {
     console.error('Error unlinking component from model:', error);
-    return false;
+    return { success: false, error: 'Failed to unlink component from model' };
   }
 }
 
@@ -120,9 +130,9 @@ export async function isComponentAssignedToModel(
 // Link component to configuration
 export async function linkComponentToConfiguration(
   configurationId: string,
-  componentId: string,
-  componentType: string
-): Promise<boolean> {
+  componentType: string,
+  componentId: string
+): Promise<ServiceResponse<boolean>> {
   try {
     const updateField = `${componentType}_id`;
     const { error } = await supabase
@@ -130,11 +140,13 @@ export async function linkComponentToConfiguration(
       .update({ [updateField]: componentId })
       .eq('id', configurationId);
 
-    if (error) throw error;
-    return true;
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data: true };
   } catch (error) {
     console.error('Error linking component to configuration:', error);
-    return false;
+    return { success: false, error: 'Failed to link component to configuration' };
   }
 }
 
@@ -142,7 +154,7 @@ export async function linkComponentToConfiguration(
 export async function unlinkComponentFromConfiguration(
   configurationId: string,
   componentType: string
-): Promise<boolean> {
+): Promise<ServiceResponse<boolean>> {
   try {
     const updateField = `${componentType}_id`;
     const { error } = await supabase
@@ -150,11 +162,13 @@ export async function unlinkComponentFromConfiguration(
       .update({ [updateField]: null })
       .eq('id', configurationId);
 
-    if (error) throw error;
-    return true;
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data: true };
   } catch (error) {
     console.error('Error unlinking component from configuration:', error);
-    return false;
+    return { success: false, error: 'Failed to unlink component from configuration' };
   }
 }
 
@@ -249,7 +263,7 @@ export async function bulkLinkComponents(
     effectiveToYear?: number;
     notes?: string;
   }>
-): Promise<boolean> {
+): Promise<ServiceResponse<boolean>> {
   try {
     const insertData = assignments.map(assignment => ({
       model_id: assignment.modelId,
@@ -266,10 +280,12 @@ export async function bulkLinkComponents(
       .from('model_component_assignments')
       .insert(insertData);
 
-    if (error) throw error;
-    return true;
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data: true };
   } catch (error) {
     console.error('Error bulk linking components:', error);
-    return false;
+    return { success: false, error: 'Failed to bulk link components' };
   }
 }

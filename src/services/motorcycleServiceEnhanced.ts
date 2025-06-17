@@ -1,257 +1,248 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Motorcycle } from "@/types";
+import { Motorcycle, MotorcycleFilters } from "@/types";
 
-export const getMotorcycleBySlugEnhanced = async (slug: string): Promise<Motorcycle | null> => {
-  try {
-    console.log("Fetching enhanced motorcycle data for slug:", slug);
-    
-    // First get the motorcycle model
-    const { data: model, error: modelError } = await supabase
-      .from('motorcycle_models')
-      .select(`
-        *,
-        brand:brand_id (
-          id,
-          name,
-          logo_url
-        )
-      `)
-      .eq('slug', slug)
-      .single();
-
-    if (modelError || !model) {
-      console.error("Model not found:", modelError);
-      return null;
-    }
-
-    // Get model years with configurations and components
-    const { data: modelYears, error: yearsError } = await supabase
-      .from('model_years')
-      .select(`
-        *,
-        configurations:model_configurations (
-          *,
-          engines:engine_id (
-            id,
-            name,
-            displacement_cc,
-            power_hp,
-            torque_nm,
-            engine_type,
-            power_rpm,
-            torque_rpm,
-            cylinder_count,
-            cooling,
-            fuel_system
-          ),
-          brake_systems:brake_system_id (
-            id,
-            type,
-            brake_type_front,
-            brake_type_rear,
-            has_traction_control
-          ),
-          frames:frame_id (
-            id,
-            type,
-            material,
-            construction_method
-          ),
-          suspensions:suspension_id (
-            id,
-            front_type,
-            rear_type,
-            brand,
-            adjustability
-          ),
-          wheels:wheel_id (
-            id,
-            type,
-            front_size,
-            rear_size,
-            rim_material
-          ),
-          color_variants:color_id (
-            id,
-            name,
-            color_code,
-            hex_code
-          )
-        )
-      `)
-      .eq('motorcycle_id', model.id)
-      .order('year', { ascending: false });
-
-    if (yearsError) {
-      console.error("Error fetching model years:", yearsError);
-    }
-
-    // Transform to legacy motorcycle format for compatibility
-    const transformedMotorcycle = transformModelToMotorcycle(model, modelYears || []);
-    
-    console.log("Enhanced motorcycle data transformed:", {
-      id: transformedMotorcycle.id,
-      hasConfigurations: transformedMotorcycle._componentData?.configurations?.length || 0,
-      hasEngine: !!transformedMotorcycle._componentData?.engine,
-      engineSize: transformedMotorcycle.engine_size
-    });
-
-    return transformedMotorcycle;
-  } catch (error) {
-    console.error("Error in getMotorcycleBySlugEnhanced:", error);
-    return null;
-  }
-};
-
-const transformModelToMotorcycle = (model: any, modelYears: any[]): Motorcycle => {
-  // Get the most recent year or first available year
-  const primaryYear = modelYears.find(y => y.year === new Date().getFullYear()) || 
-                      modelYears.find(y => y.is_available) || 
-                      modelYears[0];
-
-  // Get the default configuration or first configuration
-  const defaultConfig = primaryYear?.configurations?.find((c: any) => c.is_default) || 
-                        primaryYear?.configurations?.[0];
-
-  // Extract component data
-  const engine = defaultConfig?.engines;
-  const brakes = defaultConfig?.brake_systems;
-  const frame = defaultConfig?.frames;
-  const suspension = defaultConfig?.suspensions;
-  const wheels = defaultConfig?.wheels;
-
-  // Calculate performance metrics
-  const engineSize = engine?.displacement_cc || model.engine_size || 0;
-  const horsepower = engine?.power_hp || model.horsepower || 0;
-  const torque = engine?.torque_nm || model.torque_nm || 0;
-  const weight = defaultConfig?.weight_kg || model.weight_kg || 0;
-
-  const transformedMotorcycle: Motorcycle = {
-    id: model.id,
-    make: model.brand?.name || "Unknown",
-    brand_id: model.brand_id,
-    model: model.name,
-    year: primaryYear?.year || model.production_start_year || new Date().getFullYear(),
-    category: model.type || "Standard",
-    style_tags: [],
-    difficulty_level: model.difficulty_level || 3,
-    image_url: defaultConfig?.image_url || model.default_image_url || "",
-    engine_size: engineSize,
-    displacement_cc: engineSize,
-    engine_cc: engineSize,
-    horsepower: horsepower,
-    horsepower_hp: horsepower,
-    weight_kg: weight,
-    wet_weight_kg: model.wet_weight_kg,
-    seat_height_mm: defaultConfig?.seat_height_mm || model.seat_height_mm || 0,
-    abs: brakes?.has_traction_control || model.has_abs || false,
-    has_abs: brakes?.has_traction_control || model.has_abs || false,
-    top_speed_kph: model.top_speed_kph || 0,
-    torque_nm: torque,
-    wheelbase_mm: defaultConfig?.wheelbase_mm || model.wheelbase_mm || 0,
-    ground_clearance_mm: defaultConfig?.ground_clearance_mm || model.ground_clearance_mm || 0,
-    fuel_capacity_l: defaultConfig?.fuel_capacity_l || model.fuel_capacity_l || 0,
-    smart_features: [],
-    summary: model.base_description || model.summary || "",
-    slug: model.slug,
-    status: model.production_status,
-    
-    // Enhanced engine information
-    engine_type: engine?.engine_type,
-    power_rpm: engine?.power_rpm,
-    torque_rpm: engine?.torque_rpm,
-    cylinder_count: engine?.cylinder_count,
-    
-    // Enhanced brake information
-    brake_type: brakes?.type,
-    
-    // Enhanced fields
-    transmission: model.transmission,
-    drive_type: model.drive_type,
-    cooling_system: engine?.cooling || model.cooling_system,
-    power_to_weight_ratio: weight > 0 ? Math.round((horsepower / weight) * 1000) / 1000 : undefined,
-    is_entry_level: model.is_entry_level,
-    recommended_license_level: model.recommended_license_level,
-    use_cases: model.use_cases || [],
-    
-    // Component data for detailed views
-    _componentData: {
-      engine,
-      brakes,
-      frame,
-      suspension,
-      wheels,
-      configurations: modelYears?.flatMap(y => y.configurations || []) || [],
-      selectedConfiguration: defaultConfig,
-      colorOptions: modelYears?.flatMap(y => y.configurations?.map((c: any) => c.color_variants).filter(Boolean) || []) || []
-    }
+// Helper function to normalize motorcycle data
+const normalizeMagMotorcycleData = (magData: any): Motorcycle => {
+  return {
+    id: magData.id || `mag-${Date.now()}`,
+    name: magData.title || magData.name || "Unnamed Motorcycle",
+    slug: magData.slug || magData.title?.toLowerCase().replace(/\s+/g, '-') || 'unnamed',
+    brand_id: magData.brand_id || 'unknown',
+    type: magData.category || magData.type || "Standard",
+    is_draft: false,
+    make: magData.make || magData.brand || "Unknown",
+    model: magData.model || magData.title || "Unknown Model",
+    year: magData.year || new Date().getFullYear(),
+    category: magData.category || "Standard",
+    style_tags: magData.style_tags || [],
+    difficulty_level: magData.difficulty_level || 1,
+    image_url: magData.image_url || magData.featured_image || '',
+    engine_size: magData.engine_size || magData.displacement_cc || 0,
+    horsepower: magData.horsepower || magData.power_hp || 0,
+    weight_kg: magData.weight_kg || magData.dry_weight_kg || 0,
+    seat_height_mm: magData.seat_height_mm || 0,
+    abs: magData.abs || magData.has_abs || false,
+    top_speed_kph: magData.top_speed_kph || 0,
+    torque_nm: magData.torque_nm || 0,
+    wheelbase_mm: magData.wheelbase_mm || 0,
+    ground_clearance_mm: magData.ground_clearance_mm || 0,
+    fuel_capacity_l: magData.fuel_capacity_l || magData.fuel_tank_capacity_l || 0,
+    smart_features: magData.smart_features || [],
+    summary: magData.summary || magData.description || '',
+    created_at: magData.created_at || new Date().toISOString(),
+    updated_at: magData.updated_at || new Date().toISOString()
   };
-
-  return transformedMotorcycle;
 };
 
-// Batch generate missing data for all models
-export const generateMissingModelData = async (): Promise<{ success: number; failed: string[] }> => {
-  try {
-    console.log("Starting batch data generation for all models");
-    
-    const { data: models, error } = await supabase
-      .from('motorcycle_models')
-      .select('id, name')
-      .eq('production_status', 'active')
-      .limit(50); // Process in batches to avoid timeouts
-
-    if (error || !models) {
-      console.error("Error fetching models for batch generation:", error);
-      return { success: 0, failed: [] };
-    }
-
-    let successCount = 0;
-    const failedModels: string[] = [];
-
-    for (const model of models) {
-      try {
-        // Check if model already has years and configurations
-        const { data: existingYears } = await supabase
-          .from('model_years')
-          .select('id, configurations:model_configurations(id)')
-          .eq('motorcycle_id', model.id);
-
-        const hasCompleteData = existingYears && 
-          existingYears.length > 0 && 
-          existingYears.some(year => year.configurations && year.configurations.length > 0);
-
-        if (!hasCompleteData) {
-          // Import the generation function
-          const { generateModelYearsEnhanced } = await import("@/services/models/modelYearGeneration");
-          
-          const success = await generateModelYearsEnhanced(model.id, {
-            includeHistorical: false, // Only recent years for faster processing
-            createDefaultTrims: true,
-            batchSize: 5
-          });
-
-          if (success) {
-            successCount++;
-            console.log(`Generated data for ${model.name}`);
-          } else {
-            failedModels.push(model.name);
-          }
-        } else {
-          successCount++;
-          console.log(`${model.name} already has complete data`);
+// Enhanced motorcycle filtering with better type safety
+export const filterMotorcyclesEnhanced = (
+  motorcycles: Motorcycle[],
+  filters: MotorcycleFilters
+): Motorcycle[] => {
+  return motorcycles.filter(motorcycle => {
+    // Search filter
+    if (filters.search || filters.searchTerm) {
+      const searchTerm = (filters.search || filters.searchTerm || '').toLowerCase();
+      if (searchTerm) {
+        const searchableText = [
+          motorcycle.make,
+          motorcycle.model,
+          motorcycle.name,
+          motorcycle.summary,
+          ...(motorcycle.style_tags || [])
+        ].join(' ').toLowerCase();
+        
+        if (!searchableText.includes(searchTerm)) {
+          return false;
         }
-      } catch (error) {
-        console.error(`Failed to generate data for ${model.name}:`, error);
-        failedModels.push(model.name);
       }
     }
 
-    console.log(`Batch generation complete: ${successCount} successful, ${failedModels.length} failed`);
-    return { success: successCount, failed: failedModels };
-  } catch (error) {
-    console.error("Error in batch data generation:", error);
-    return { success: 0, failed: [] };
-  }
+    // Category filter
+    if (filters.categories?.length > 0) {
+      const motorcycleCategory = motorcycle.category || motorcycle.type;
+      if (!filters.categories.includes(motorcycleCategory as any)) {
+        return false;
+      }
+    }
+
+    // Make filter
+    if (filters.make && filters.make !== '') {
+      if (motorcycle.make?.toLowerCase() !== filters.make.toLowerCase()) {
+        return false;
+      }
+    }
+
+    // Year range filter
+    if (filters.yearRange) {
+      const year = motorcycle.year || new Date().getFullYear();
+      if (year < filters.yearRange[0] || year > filters.yearRange[1]) {
+        return false;
+      }
+    }
+
+    // Engine size filter
+    if (filters.engineSizeRange) {
+      const engineSize = motorcycle.engine_size || 0;
+      if (engineSize < filters.engineSizeRange[0] || engineSize > filters.engineSizeRange[1]) {
+        return false;
+      }
+    }
+
+    // Weight filter
+    if (filters.weightRange) {
+      const weight = motorcycle.weight_kg || 0;
+      if (weight < filters.weightRange[0] || weight > filters.weightRange[1]) {
+        return false;
+      }
+    }
+
+    // Seat height filter
+    if (filters.seatHeightRange) {
+      const seatHeight = motorcycle.seat_height_mm || 0;
+      if (seatHeight < filters.seatHeightRange[0] || seatHeight > filters.seatHeightRange[1]) {
+        return false;
+      }
+    }
+
+    // ABS filter
+    if (filters.abs === true) {
+      if (!motorcycle.abs && !motorcycle.has_abs) {
+        return false;
+      }
+    }
+
+    // Difficulty level filter
+    if (typeof filters.difficultyLevel === 'number') {
+      const difficulty = motorcycle.difficulty_level || 1;
+      if (difficulty > filters.difficultyLevel) {
+        return false;
+      }
+    }
+
+    // Style tags filter
+    if (filters.styleTags?.length > 0) {
+      const motorcycleStyleTags = motorcycle.style_tags || [];
+      const hasMatchingTag = filters.styleTags.some(tag => 
+        motorcycleStyleTags.includes(tag)
+      );
+      if (!hasMatchingTag) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+};
+
+// Get available filter options from motorcycles data
+export const getFilterOptions = (motorcycles: Motorcycle[]) => {
+  const makes = new Set<string>();
+  const categories = new Set<string>();
+  const styleTags = new Set<string>();
+  
+  let minYear = Infinity;
+  let maxYear = -Infinity;
+  let minEngineSize = Infinity;
+  let maxEngineSize = -Infinity;
+  let minWeight = Infinity;
+  let maxWeight = -Infinity;
+  let minSeatHeight = Infinity;
+  let maxSeatHeight = -Infinity;
+  
+  motorcycles.forEach(motorcycle => {
+    // Makes
+    if (motorcycle.make) makes.add(motorcycle.make);
+    
+    // Categories
+    if (motorcycle.category) categories.add(motorcycle.category);
+    if (motorcycle.type) categories.add(motorcycle.type);
+    
+    // Style tags
+    if (motorcycle.style_tags) {
+      motorcycle.style_tags.forEach(tag => styleTags.add(tag));
+    }
+    
+    // Numeric ranges
+    const year = motorcycle.year || new Date().getFullYear();
+    minYear = Math.min(minYear, year);
+    maxYear = Math.max(maxYear, year);
+    
+    const engineSize = motorcycle.engine_size || 0;
+    if (engineSize > 0) {
+      minEngineSize = Math.min(minEngineSize, engineSize);
+      maxEngineSize = Math.max(maxEngineSize, engineSize);
+    }
+    
+    const weight = motorcycle.weight_kg || 0;
+    if (weight > 0) {
+      minWeight = Math.min(minWeight, weight);
+      maxWeight = Math.max(maxWeight, weight);
+    }
+    
+    const seatHeight = motorcycle.seat_height_mm || 0;
+    if (seatHeight > 0) {
+      minSeatHeight = Math.min(minSeatHeight, seatHeight);
+      maxSeatHeight = Math.max(maxSeatHeight, seatHeight);
+    }
+  });
+  
+  return {
+    makes: Array.from(makes).sort(),
+    categories: Array.from(categories).sort(),
+    styleTags: Array.from(styleTags).sort(),
+    yearRange: [minYear === Infinity ? 1980 : minYear, maxYear === -Infinity ? new Date().getFullYear() : maxYear],
+    engineSizeRange: [minEngineSize === Infinity ? 0 : minEngineSize, maxEngineSize === -Infinity ? 2000 : maxEngineSize],
+    weightRange: [minWeight === Infinity ? 100 : minWeight, maxWeight === -Infinity ? 400 : maxWeight],
+    seatHeightRange: [minSeatHeight === Infinity ? 650 : minSeatHeight, maxSeatHeight === -Infinity ? 950 : maxSeatHeight]
+  };
+};
+
+// Enhanced search with better relevance scoring
+export const searchMotorcyclesEnhanced = (
+  motorcycles: Motorcycle[],
+  searchTerm: string
+): Motorcycle[] => {
+  if (!searchTerm.trim()) return motorcycles;
+  
+  const term = searchTerm.toLowerCase();
+  
+  return motorcycles
+    .map(motorcycle => {
+      let relevanceScore = 0;
+      
+      // Exact name match gets highest score
+      if (motorcycle.name?.toLowerCase() === term) {
+        relevanceScore += 100;
+      } else if (motorcycle.name?.toLowerCase().includes(term)) {
+        relevanceScore += 50;
+      }
+      
+      // Make and model matches
+      if (motorcycle.make?.toLowerCase().includes(term)) {
+        relevanceScore += 30;
+      }
+      if (motorcycle.model?.toLowerCase().includes(term)) {
+        relevanceScore += 30;
+      }
+      
+      // Category and style tags
+      if (motorcycle.category?.toLowerCase().includes(term)) {
+        relevanceScore += 20;
+      }
+      if (motorcycle.style_tags?.some(tag => tag.toLowerCase().includes(term))) {
+        relevanceScore += 15;
+      }
+      
+      // Summary/description
+      if (motorcycle.summary?.toLowerCase().includes(term)) {
+        relevanceScore += 10;
+      }
+      
+      return { motorcycle, relevanceScore };
+    })
+    .filter(item => item.relevanceScore > 0)
+    .sort((a, b) => b.relevanceScore - a.relevanceScore)
+    .map(item => item.motorcycle);
 };

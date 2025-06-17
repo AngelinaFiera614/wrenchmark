@@ -32,8 +32,12 @@ export const fetchAllMotorcyclesForAdmin = async (): Promise<Motorcycle[]> => {
     // Transform to motorcycle format with proper brand data
     const motorcycles: Motorcycle[] = models.map(model => ({
       id: model.id,
-      make: model.brands?.name || "Unknown Brand",
+      name: model.name,
+      slug: model.slug,
       brand_id: model.brand_id,
+      type: model.type,
+      is_draft: model.is_draft,
+      make: model.brands?.name || "Unknown Brand",
       model: model.name,
       year: new Date().getFullYear(), // Default year for admin display
       category: model.type || "Standard",
@@ -52,9 +56,7 @@ export const fetchAllMotorcyclesForAdmin = async (): Promise<Motorcycle[]> => {
       fuel_capacity_l: model.fuel_capacity_l || 0,
       smart_features: [],
       summary: model.summary || model.base_description || '',
-      slug: model.slug,
       created_at: model.created_at,
-      is_draft: model.is_draft,
       status: model.status || 'active'
     }));
 

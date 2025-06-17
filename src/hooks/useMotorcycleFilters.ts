@@ -6,6 +6,7 @@ import { useFilteringState } from "./filters/useFilteringState";
 
 // More inclusive initial filters to handle real data
 export const initialFilters: MotorcycleFilters = {
+  search: "",
   categories: [],
   make: "",
   yearRange: [1900, 2030], // More inclusive year range
