@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Clock,
   Eye,
-  Edit3
+  Edit3,
+  RefreshCw
 } from "lucide-react";
 import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
 import { calculateDataCompleteness } from "@/utils/dataCompleteness";
@@ -32,15 +33,17 @@ const AdminMotorcycleManagement = () => {
   const [activeTab, setActiveTab] = useState("browse");
   const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "published" | "incomplete">("all");
 
-  const { data: motorcycles, isLoading, refetch } = useQuery({
+  const { data: motorcycles, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["admin-motorcycle-management"],
-    queryFn: fetchAllMotorcyclesForAdmin
+    queryFn: fetchAllMotorcyclesForAdmin,
+    refetchOnWindowFocus: false
   });
 
   const filteredMotorcycles = motorcycles?.filter(motorcycle => {
     const matchesSearch = searchQuery === "" || 
       motorcycle.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       motorcycle.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      motorcycle.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       motorcycle.category?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = filterStatus === "all" || 
@@ -58,6 +61,23 @@ const AdminMotorcycleManagement = () => {
     incomplete: motorcycles?.filter(m => calculateDataCompleteness(m).completionPercentage < 100).length || 0
   };
 
+  const handleRefresh = () => {
+    refetch();
+    // Clear selection to force refresh of details panel
+    setSelectedMotorcycle(null);
+  };
+
+  const handleMotorcycleUpdate = () => {
+    refetch();
+    // Refresh the selected motorcycle data
+    if (selectedMotorcycle && motorcycles) {
+      const updatedMotorcycle = motorcycles.find(m => m.id === selectedMotorcycle.id);
+      if (updatedMotorcycle) {
+        setSelectedMotorcycle(updatedMotorcycle);
+      }
+    }
+  };
+
   return (
     <div className="h-full flex flex-col space-y-6">
       {/* Header */}
@@ -69,6 +89,15 @@ const AdminMotorcycleManagement = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={isRefetching}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -185,6 +214,7 @@ const AdminMotorcycleManagement = () => {
                 selectedMotorcycle={selectedMotorcycle}
                 onSelectMotorcycle={setSelectedMotorcycle}
                 isLoading={isLoading}
+                onRefresh={handleRefresh}
               />
             </div>
 
@@ -193,7 +223,7 @@ const AdminMotorcycleManagement = () => {
               {selectedMotorcycle ? (
                 <MotorcycleDetailsPanel
                   motorcycle={selectedMotorcycle}
-                  onUpdate={refetch}
+                  onUpdate={handleMotorcycleUpdate}
                 />
               ) : (
                 <Card className="bg-explorer-card border-explorer-chrome/30 h-full">
@@ -218,7 +248,7 @@ const AdminMotorcycleManagement = () => {
         <TabsContent value="bulk" className="flex-1 mt-4">
           <MotorcycleQuickActions
             selectedMotorcycles={selectedMotorcycle ? [selectedMotorcycle] : []}
-            onRefresh={refetch}
+            onRefresh={handleRefresh}
           />
         </TabsContent>
       </Tabs>

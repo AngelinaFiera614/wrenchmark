@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import { Plus, CheckCircle, AlertTriangle, Clock, Loader } from "lucide-react";
 import { Motorcycle } from "@/types";
+import { useAdminNotes } from "@/hooks/useAdminNotes";
 
 interface MotorcycleAdminNotesProps {
   motorcycle: Motorcycle;
@@ -15,33 +17,7 @@ interface MotorcycleAdminNotesProps {
 const MotorcycleAdminNotes = ({ motorcycle, onUpdate }: MotorcycleAdminNotesProps) => {
   const [newNote, setNewNote] = useState("");
   const [newTaskTitle, setNewTaskTitle] = useState("");
-
-  // Mock data - in real implementation, this would come from a notes table
-  const notes = [
-    {
-      id: "1",
-      content: "Need to verify engine specifications with manufacturer data",
-      createdAt: new Date().toISOString(),
-      author: "Admin"
-    }
-  ];
-
-  const tasks = [
-    {
-      id: "1",
-      title: "Add component assignments",
-      status: "pending" as const,
-      priority: "high" as const,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: "2", 
-      title: "Update pricing information",
-      status: "pending" as const,
-      priority: "medium" as const,
-      createdAt: new Date().toISOString()
-    }
-  ];
+  const { notes, tasks, loading, addNote, addTask, updateTaskStatus } = useAdminNotes(motorcycle.id);
 
   const getTaskIcon = (status: string) => {
     switch (status) {
@@ -58,6 +34,28 @@ const MotorcycleAdminNotes = ({ motorcycle, onUpdate }: MotorcycleAdminNotesProp
       default: return 'border-green-400 text-green-400';
     }
   };
+
+  const handleAddNote = async () => {
+    if (newNote.trim()) {
+      await addNote(newNote.trim());
+      setNewNote("");
+    }
+  };
+
+  const handleAddTask = async () => {
+    if (newTaskTitle.trim()) {
+      await addTask(newTaskTitle.trim());
+      setNewTaskTitle("");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader className="h-8 w-8 animate-spin text-accent-teal" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -87,22 +85,28 @@ const MotorcycleAdminNotes = ({ motorcycle, onUpdate }: MotorcycleAdminNotesProp
                 <Badge variant="outline" className={getPriorityColor(task.priority)}>
                   {task.priority}
                 </Badge>
-                <Button size="sm" variant="outline">
-                  Mark Complete
-                </Button>
+                {task.status !== 'completed' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => updateTaskStatus(task.id, 'completed')}
+                  >
+                    Mark Complete
+                  </Button>
+                )}
               </div>
             </div>
           ))}
 
           <div className="flex gap-2 pt-3 border-t border-explorer-chrome/20">
-            <input
-              type="text"
+            <Input
               placeholder="Add new task..."
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
-              className="flex-1 px-3 py-2 bg-explorer-card border border-explorer-chrome/30 rounded-md text-explorer-text placeholder-explorer-text-muted"
+              className="bg-explorer-card border-explorer-chrome/30"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddTask()}
             />
-            <Button size="sm">
+            <Button size="sm" onClick={handleAddTask} disabled={!newTaskTitle.trim()}>
               <Plus className="h-4 w-4" />
             </Button>
           </div>
@@ -132,7 +136,7 @@ const MotorcycleAdminNotes = ({ motorcycle, onUpdate }: MotorcycleAdminNotesProp
               className="bg-explorer-card border-explorer-chrome/30"
               rows={3}
             />
-            <Button size="sm">
+            <Button size="sm" onClick={handleAddNote} disabled={!newNote.trim()}>
               <Plus className="h-4 w-4 mr-2" />
               Add Note
             </Button>

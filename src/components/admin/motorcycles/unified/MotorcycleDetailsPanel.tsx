@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Save, Edit, Eye, AlertTriangle } from "lucide-react";
+import { Save, Edit, Eye, AlertTriangle, X } from "lucide-react";
 import { Motorcycle } from "@/types";
 import { calculateDataCompleteness } from "@/utils/dataCompleteness";
+import { useMotorcycleForm } from "@/hooks/useMotorcycleForm";
 import MotorcycleBasicInfoForm from "./forms/MotorcycleBasicInfoForm";
 import MotorcycleSpecsForm from "./forms/MotorcycleSpecsForm";
 import MotorcycleComponentsForm from "./forms/MotorcycleComponentsForm";
@@ -21,9 +22,20 @@ interface MotorcycleDetailsPanelProps {
 const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanelProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
+  
+  const {
+    formData,
+    saving,
+    hasUnsavedChanges,
+    updateField,
+    saveChanges,
+    discardChanges
+  } = useMotorcycleForm(motorcycle, () => {
+    setIsEditing(false);
+    onUpdate();
+  });
 
-  const completeness = calculateDataCompleteness(motorcycle);
+  const completeness = calculateDataCompleteness(formData as Motorcycle);
 
   const getCompletionColor = (percentage: number) => {
     if (percentage >= 90) return "text-green-400 bg-green-400/20";
@@ -32,15 +44,16 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
   };
 
   const handleSave = async () => {
-    // Save logic here
-    setIsEditing(false);
-    setUnsavedChanges(false);
-    onUpdate();
+    await saveChanges();
   };
 
   const handleCancel = () => {
+    discardChanges();
     setIsEditing(false);
-    setUnsavedChanges(false);
+  };
+
+  const handlePreview = () => {
+    window.open(`/motorcycles/${motorcycle.slug}`, '_blank');
   };
 
   return (
@@ -49,8 +62,8 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-explorer-text flex items-center gap-2">
-              {motorcycle.make} {motorcycle.model}
-              {motorcycle.is_draft && (
+              {formData.make || formData.name?.split(' ')[0]} {formData.model || formData.name}
+              {formData.is_draft && (
                 <Badge variant="secondary" className="bg-orange-100 text-orange-800">Draft</Badge>
               )}
             </CardTitle>
@@ -68,7 +81,7 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
           </div>
           
           <div className="flex items-center gap-2">
-            {unsavedChanges && (
+            {hasUnsavedChanges && (
               <Badge variant="outline" className="text-yellow-400 border-yellow-400">
                 Unsaved Changes
               </Badge>
@@ -76,17 +89,23 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
             
             {isEditing ? (
               <>
-                <Button variant="outline" size="sm" onClick={handleCancel}>
+                <Button variant="outline" size="sm" onClick={handleCancel} disabled={saving}>
+                  <X className="h-4 w-4 mr-2" />
                   Cancel
                 </Button>
-                <Button size="sm" onClick={handleSave} className="bg-accent-teal text-black hover:bg-accent-teal/80">
+                <Button 
+                  size="sm" 
+                  onClick={handleSave} 
+                  disabled={saving || !hasUnsavedChanges}
+                  className="bg-accent-teal text-black hover:bg-accent-teal/80"
+                >
                   <Save className="h-4 w-4 mr-2" />
-                  Save
+                  {saving ? "Saving..." : "Save"}
                 </Button>
               </>
             ) : (
               <>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handlePreview}>
                   <Eye className="h-4 w-4 mr-2" />
                   Preview
                 </Button>
@@ -113,51 +132,39 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
           <div className="mt-4 h-[500px] overflow-y-auto">
             <TabsContent value="basic" className="mt-0">
               <MotorcycleBasicInfoForm
-                motorcycle={motorcycle}
+                motorcycle={formData as Motorcycle}
                 isEditing={isEditing}
-                onUpdate={(data) => {
-                  setUnsavedChanges(true);
-                  // Update logic here
-                }}
+                onUpdate={updateField}
               />
             </TabsContent>
 
             <TabsContent value="specs" className="mt-0">
               <MotorcycleSpecsForm
-                motorcycle={motorcycle}
+                motorcycle={formData as Motorcycle}
                 isEditing={isEditing}
-                onUpdate={(data) => {
-                  setUnsavedChanges(true);
-                  // Update logic here
-                }}
+                onUpdate={updateField}
               />
             </TabsContent>
 
             <TabsContent value="components" className="mt-0">
               <MotorcycleComponentsForm
-                motorcycle={motorcycle}
+                motorcycle={formData as Motorcycle}
                 isEditing={isEditing}
-                onUpdate={(data) => {
-                  setUnsavedChanges(true);
-                  // Update logic here
-                }}
+                onUpdate={updateField}
               />
             </TabsContent>
 
             <TabsContent value="years" className="mt-0">
               <MotorcycleYearsForm
-                motorcycle={motorcycle}
+                motorcycle={formData as Motorcycle}
                 isEditing={isEditing}
-                onUpdate={(data) => {
-                  setUnsavedChanges(true);
-                  // Update logic here
-                }}
+                onUpdate={updateField}
               />
             </TabsContent>
 
             <TabsContent value="notes" className="mt-0">
               <MotorcycleAdminNotes
-                motorcycle={motorcycle}
+                motorcycle={formData as Motorcycle}
                 onUpdate={onUpdate}
               />
             </TabsContent>
