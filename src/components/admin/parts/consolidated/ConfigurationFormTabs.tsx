@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -8,16 +7,20 @@ import {
   Info, 
   Ruler,
   DollarSign,
-  Settings
+  Settings,
+  Wrench
 } from "lucide-react";
+import ComponentAssignmentTab from "./ComponentAssignmentTab";
 
 interface ConfigurationFormTabsProps {
   formData: any;
   errors: Record<string, string>;
   onInputChange: (field: string, value: any) => void;
   onArrayChange: (field: string, value: string) => void;
+  onComponentChange: (componentType: string, componentId: string | null, isOverride: boolean) => void;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  selectedModelData?: any;
 }
 
 const ConfigurationFormTabs: React.FC<ConfigurationFormTabsProps> = ({
@@ -25,15 +28,21 @@ const ConfigurationFormTabs: React.FC<ConfigurationFormTabsProps> = ({
   errors,
   onInputChange,
   onArrayChange,
+  onComponentChange,
   activeTab,
-  onTabChange
+  onTabChange,
+  selectedModelData
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="basic" className="flex items-center gap-2">
           <Info className="h-4 w-4" />
           Basic Info
+        </TabsTrigger>
+        <TabsTrigger value="components" className="flex items-center gap-2">
+          <Wrench className="h-4 w-4" />
+          Components
         </TabsTrigger>
         <TabsTrigger value="dimensions" className="flex items-center gap-2">
           <Ruler className="h-4 w-4" />
@@ -98,6 +107,14 @@ const ConfigurationFormTabs: React.FC<ConfigurationFormTabsProps> = ({
               placeholder="e.g., US, EU, Global"
             />
           </div>
+        </TabsContent>
+
+        <TabsContent value="components" className="space-y-4">
+          <ComponentAssignmentTab
+            configurationData={formData}
+            onComponentChange={onComponentChange}
+            selectedModelData={selectedModelData}
+          />
         </TabsContent>
 
         <TabsContent value="dimensions" className="space-y-4">

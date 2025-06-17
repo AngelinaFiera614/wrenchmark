@@ -34,6 +34,7 @@ const EnhancedConfigurationForm: React.FC<EnhancedConfigurationFormProps> = ({
     saving,
     handleInputChange,
     handleArrayChange,
+    handleComponentChange,
     handleSave
   } = useConfigurationForm(selectedYearData, configurationToEdit, () => {
     onSuccess();
@@ -41,14 +42,23 @@ const EnhancedConfigurationForm: React.FC<EnhancedConfigurationFormProps> = ({
   });
 
   const getCompletionBadge = () => {
-    const fieldsCompleted = [
+    const basicFieldsCompleted = [
       formData.name,
       formData.seat_height_mm,
       formData.weight_kg,
       formData.msrp_usd
     ].filter(Boolean).length;
     
-    const totalFields = 4;
+    const componentFieldsCompleted = [
+      formData.engine_id,
+      formData.brake_system_id,
+      formData.frame_id,
+      formData.suspension_id,
+      formData.wheel_id
+    ].filter(Boolean).length;
+    
+    const totalFields = 9; // 4 basic + 5 components
+    const fieldsCompleted = basicFieldsCompleted + componentFieldsCompleted;
     const percentage = Math.round((fieldsCompleted / totalFields) * 100);
     
     return (
@@ -60,7 +70,7 @@ const EnhancedConfigurationForm: React.FC<EnhancedConfigurationFormProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-explorer-card border-explorer-chrome/30">
+      <DialogContent className="max-w-5xl max-h-[90vh] bg-explorer-card border-explorer-chrome/30">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -110,8 +120,10 @@ const EnhancedConfigurationForm: React.FC<EnhancedConfigurationFormProps> = ({
           errors={errors}
           onInputChange={handleInputChange}
           onArrayChange={handleArrayChange}
+          onComponentChange={handleComponentChange}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          selectedModelData={selectedYearData?.motorcycle}
         />
       </DialogContent>
     </Dialog>

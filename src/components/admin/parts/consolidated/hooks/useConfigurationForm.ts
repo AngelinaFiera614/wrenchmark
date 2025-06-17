@@ -19,6 +19,17 @@ interface FormData {
   optional_equipment: string[];
   notes: string;
   is_default: boolean;
+  // Component assignments
+  engine_id: string | null;
+  engine_override: boolean;
+  brake_system_id: string | null;
+  brake_system_override: boolean;
+  frame_id: string | null;
+  frame_override: boolean;
+  suspension_id: string | null;
+  suspension_override: boolean;
+  wheel_id: string | null;
+  wheel_override: boolean;
 }
 
 export const useConfigurationForm = (
@@ -45,7 +56,18 @@ export const useConfigurationForm = (
     special_features: [],
     optional_equipment: [],
     notes: "",
-    is_default: false
+    is_default: false,
+    // Component assignments
+    engine_id: null,
+    engine_override: false,
+    brake_system_id: null,
+    brake_system_override: false,
+    frame_id: null,
+    frame_override: false,
+    suspension_id: null,
+    suspension_override: false,
+    wheel_id: null,
+    wheel_override: false
   });
 
   // Initialize form data when editing
@@ -66,7 +88,18 @@ export const useConfigurationForm = (
         special_features: configurationToEdit.special_features || [],
         optional_equipment: configurationToEdit.optional_equipment || [],
         notes: configurationToEdit.notes || "",
-        is_default: configurationToEdit.is_default || false
+        is_default: configurationToEdit.is_default || false,
+        // Component assignments
+        engine_id: configurationToEdit.engine_id || null,
+        engine_override: configurationToEdit.engine_override || false,
+        brake_system_id: configurationToEdit.brake_system_id || null,
+        brake_system_override: configurationToEdit.brake_system_override || false,
+        frame_id: configurationToEdit.frame_id || null,
+        frame_override: configurationToEdit.frame_override || false,
+        suspension_id: configurationToEdit.suspension_id || null,
+        suspension_override: configurationToEdit.suspension_override || false,
+        wheel_id: configurationToEdit.wheel_id || null,
+        wheel_override: configurationToEdit.wheel_override || false
       });
     } else {
       setFormData({
@@ -84,7 +117,18 @@ export const useConfigurationForm = (
         special_features: [],
         optional_equipment: [],
         notes: "",
-        is_default: false
+        is_default: false,
+        // Component assignments
+        engine_id: null,
+        engine_override: false,
+        brake_system_id: null,
+        brake_system_override: false,
+        frame_id: null,
+        frame_override: false,
+        suspension_id: null,
+        suspension_override: false,
+        wheel_id: null,
+        wheel_override: false
       });
     }
     setErrors({});
@@ -104,6 +148,14 @@ export const useConfigurationForm = (
   const handleArrayChange = (field: string, value: string) => {
     const arrayValue = value.split(',').map(item => item.trim()).filter(item => item);
     handleInputChange(field, arrayValue);
+  };
+
+  const handleComponentChange = (componentType: string, componentId: string | null, isOverride: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [`${componentType}_id`]: isOverride ? componentId : null,
+      [`${componentType}_override`]: isOverride
+    }));
   };
 
   const validateForm = () => {
@@ -158,7 +210,18 @@ export const useConfigurationForm = (
         special_features: formData.special_features.length > 0 ? formData.special_features : null,
         optional_equipment: formData.optional_equipment.length > 0 ? formData.optional_equipment : null,
         notes: formData.notes.trim() || null,
-        is_default: formData.is_default
+        is_default: formData.is_default,
+        // Component assignments
+        engine_id: formData.engine_override ? formData.engine_id : null,
+        engine_override: formData.engine_override,
+        brake_system_id: formData.brake_system_override ? formData.brake_system_id : null,
+        brake_system_override: formData.brake_system_override,
+        frame_id: formData.frame_override ? formData.frame_id : null,
+        frame_override: formData.frame_override,
+        suspension_id: formData.suspension_override ? formData.suspension_id : null,
+        suspension_override: formData.suspension_override,
+        wheel_id: formData.wheel_override ? formData.wheel_id : null,
+        wheel_override: formData.wheel_override
       };
 
       if (configurationToEdit) {
@@ -210,6 +273,7 @@ export const useConfigurationForm = (
     saving,
     handleInputChange,
     handleArrayChange,
+    handleComponentChange,
     handleSave,
     validateForm
   };
