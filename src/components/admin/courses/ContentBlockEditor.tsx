@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,22 +5,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ContentBlock, ContentBlockType } from '@/types/course';
 import { getContentBlockTypes } from '@/services/contentBlockService';
-import { Plus, GripVertical, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, GripVertical, Trash2, Eye, EyeOff, Palette } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import EnhancedContentBlockPalette from './lesson-form/EnhancedContentBlockPalette';
 
 interface ContentBlockEditorProps {
   contentBlocks: ContentBlock[];
   onChange: (blocks: ContentBlock[]) => void;
+  lessonType?: string;
 }
 
-export default function ContentBlockEditor({ contentBlocks, onChange }: ContentBlockEditorProps) {
+export default function ContentBlockEditor({ contentBlocks, onChange, lessonType }: ContentBlockEditorProps) {
   const [blockTypes, setBlockTypes] = useState<ContentBlockType[]>([]);
   const [previewMode, setPreviewMode] = useState(false);
+  const [showPalette, setShowPalette] = useState(false);
+  const [recentlyUsedBlocks, setRecentlyUsedBlocks] = useState<string[]>([]);
 
   useEffect(() => {
     loadBlockTypes();
+    loadRecentlyUsedBlocks();
   }, []);
 
   const loadBlockTypes = async () => {
@@ -33,35 +38,79 @@ export default function ContentBlockEditor({ contentBlocks, onChange }: ContentB
     }
   };
 
-  const addBlock = (type: string) => {
+  const loadRecentlyUsedBlocks = () => {
+    const stored = localStorage.getItem('wrenchmark_recent_blocks');
+    if (stored) {
+      setRecentlyUsedBlocks(JSON.parse(stored));
+    }
+  };
+
+  const saveRecentlyUsedBlock = (blockType: string) => {
+    const updated = [blockType, ...recentlyUsedBlocks.filter(b => b !== blockType)].slice(0, 10);
+    setRecentlyUsedBlocks(updated);
+    localStorage.setItem('wrenchmark_recent_blocks', JSON.stringify(updated));
+  };
+
+  const addBlock = (type: string, defaultData?: any) => {
     const newBlock: ContentBlock = {
       id: crypto.randomUUID(),
       type,
       order: contentBlocks.length,
-      data: getDefaultDataForType(type),
-      title: `New ${type} block`
+      data: defaultData || getDefaultDataForType(type),
+      title: `New ${type.replace(/_/g, ' ')} block`
     };
     onChange([...contentBlocks, newBlock]);
+    saveRecentlyUsedBlock(type);
+    setShowPalette(false);
   };
 
   const getDefaultDataForType = (type: string): Record<string, any> => {
     switch (type) {
       case 'text':
         return { content: '', format: 'markdown' };
+      case 'rich_text':
+        return { content: '<p>Enter your rich text content here...</p>', title: '', format: 'html' };
       case 'video':
         return { url: '', title: '', description: '' };
+      case 'audio_player':
+        return { audio_url: '', title: '', description: '', auto_play: false, show_controls: true };
       case 'image_gallery':
         return { images: [] };
+      case 'interactive_image':
+        return { image_url: '', alt_text: '', hotspots: [] };
       case 'table':
         return { headers: [], rows: [], caption: '' };
-      case 'downloadable':
+      case 'download':
         return { file_url: '', title: '', description: '', file_type: '' };
-      case 'glossary_highlight':
+      case 'code_highlight':
+        return { code: 'console.log("Hello, World!");', language: 'javascript', title: '', line_numbers: true };
+      case 'interactive_quiz':
+        return { 
+          questions: [
+            {
+              id: '1',
+              type: 'multiple_choice',
+              question: 'What is the correct answer?',
+              options: ['Option A', 'Option B', 'Option C', 'Option D'],
+              correct_answer: 'Option A',
+              explanation: 'This is why Option A is correct.',
+              points: 1
+            }
+          ],
+          passing_score: 70,
+          allow_retries: true,
+          show_results: true
+        };
+      case 'conditional_content':
+        return { 
+          content: '<p>This content will show when conditions are met.</p>',
+          conditions: [{ type: 'skill_level', operator: '>=', value: '5' }],
+          fallback_content: '<p>Complete more lessons to unlock this content.</p>'
+        };
+      case 'glossary_links':
         return { terms: [], auto_detect: true };
-      case 'motorcycle_reference':
+      case 'related_models':
         return { model_ids: [], comparison_type: 'basic' };
-      case 'quiz':
-        return { questions: [], passing_score: 70 };
       default:
         return {};
     }
@@ -109,21 +158,27 @@ export default function ContentBlockEditor({ contentBlocks, onChange }: ContentB
             {previewMode ? 'Edit' : 'Preview'}
           </Button>
           
-          <Select onValueChange={addBlock}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Add content block" />
-            </SelectTrigger>
-            <SelectContent>
-              {blockTypes.map((type) => (
-                <SelectItem key={type.id} value={type.name}>
-                  <div className="flex items-center gap-2">
-                    <span>{type.name}</span>
-                    <Badge variant="outline">{type.description}</Badge>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Dialog open={showPalette} onOpenChange={setShowPalette}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Block
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[800px] max-h-[80vh]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Content Block Palette
+                </DialogTitle>
+              </DialogHeader>
+              <EnhancedContentBlockPalette 
+                onBlockAdd={addBlock}
+                recentlyUsedBlocks={recentlyUsedBlocks}
+                lessonType={lessonType}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

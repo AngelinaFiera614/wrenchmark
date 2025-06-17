@@ -43,6 +43,7 @@ export default function LessonFormTabs({
         <ContentTab 
           contentBlocks={contentBlocks}
           onChange={setContentBlocks}
+          form={form}
         />
       </TabsContent>
 
