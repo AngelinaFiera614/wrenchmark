@@ -23,30 +23,38 @@ export interface Brand {
   categories?: string[];
   notes?: string;
   brand_history?: string;
-  milestones?: Array<{
-    year: number;
-    description: string;
-    importance?: "low" | "medium" | "high";
-  }>;
+  milestones?: BrandMilestone[];
   manufacturing_facilities?: string[];
-  logo_history?: Array<{
-    year: number;
-    url: string;
-    description?: string;
-  }>;
-  media_gallery?: Array<{
-    url: string;
-    type: "image" | "video";
-    caption?: string;
-    year?: number;
-  }>;
-  notable_models?: Array<{
-    name: string;
-    years: string;
-    category: string;
-    image_url?: string;
-    description?: string;
-  }>;
+  logo_history?: LogoHistoryItem[];
+  media_gallery?: MediaItem[];
+  notable_models?: NotableModel[];
+}
+
+export interface BrandMilestone {
+  year: number;
+  description: string;
+  importance?: "low" | "medium" | "high";
+}
+
+export interface LogoHistoryItem {
+  year: number;
+  url: string;
+  description?: string;
+}
+
+export interface MediaItem {
+  url: string;
+  type: "image" | "video";
+  caption?: string;
+  year?: number;
+}
+
+export interface NotableModel {
+  name: string;
+  years: string;
+  category: string;
+  image_url?: string;
+  description?: string;
 }
 
 export interface BrandFormData {

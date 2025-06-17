@@ -91,7 +91,7 @@ const ModelComponentAssignmentDialog = ({
       const existingAssignment = assignments?.find(a => a.component_type === componentType);
       
       if (existingAssignment) {
-        await updateModelComponentAssignment(modelId, componentType, componentId);
+        await updateModelComponentAssignment(existingAssignment.id, { component_id: componentId });
       } else {
         await assignComponentToModel(modelId, componentType, componentId);
       }

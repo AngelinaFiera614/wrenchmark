@@ -20,8 +20,26 @@ export const useComponentDeletion = () => {
   ): Promise<ComponentUsageInfo | null> => {
     setIsChecking(true);
     try {
-      const usageInfo = await canDeleteComponent(componentType, componentId);
-      return usageInfo;
+      // Map component type to the expected database type
+      const componentTypeMap: Record<string, 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'> = {
+        'engine': 'engine',
+        'brakes': 'brake_system',
+        'brake_system': 'brake_system',
+        'frame': 'frame',
+        'suspension': 'suspension',
+        'wheels': 'wheel',
+        'wheel': 'wheel'
+      };
+      
+      const dbComponentType = componentTypeMap[componentType] || componentType as 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel';
+      const result = await canDeleteComponent(componentId, dbComponentType);
+      
+      return {
+        canDelete: result.canDelete,
+        usageCount: result.usage?.usageCount || 0,
+        models: result.usage?.usedInModels || [],
+        trims: result.usage?.usedInConfigurations || []
+      };
     } catch (error) {
       console.error("Error checking component usage:", error);
       toast({

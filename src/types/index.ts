@@ -7,6 +7,6 @@ export * from './category';
 
 // Re-export for backward compatibility
 export type { Motorcycle, MotorcycleModel, Configuration, ModelYear, MotorcycleCategory, MotorcycleFilters } from './motorcycle';
-export type { Brand, BrandMilestone, LogoHistoryItem, MediaItem, NotableModel } from './brand';
+export type { Brand, BrandMilestone, LogoHistoryItem, MediaItem, NotableModel, BrandFormData } from './brand';
 export type { Manual, ManualType, ManualUpload, MotorcyclePlaceholder } from './manual';
 export type { CategoryObject } from './category';
