@@ -13,7 +13,8 @@ import {
   ListChecks,
   Database,
   GitBranch,
-  LucideIcon
+  LucideIcon,
+  Bike
 } from "lucide-react";
 
 interface SidebarItemProps {
@@ -53,26 +54,26 @@ const AdminSidebar = () => {
           isActive={location.pathname === '/admin'}
         />
         <SidebarItem 
+          icon={Bike} 
+          label="Motorcycle Management" 
+          href="/admin/motorcycle-management" 
+          isActive={location.pathname.startsWith('/admin/motorcycle-management')}
+        />
+        <SidebarItem 
           icon={FileText} 
           label="Models" 
           href="/admin/models" 
           isActive={location.pathname.startsWith('/admin/models')}
         />
         <SidebarItem 
-          icon={Settings} 
-          label="Categories" 
-          href="/admin/categories" 
-          isActive={location.pathname === '/admin/categories'}
-        />
-        <SidebarItem
-          icon={Component}
-          label="Components"
-          href="/admin/components"
-          isActive={location.pathname === '/admin/components'}
+          icon={Component} 
+          label="Components Library" 
+          href="/admin/components" 
+          isActive={location.pathname.startsWith('/admin/components')}
         />
         <SidebarItem
           icon={GitBranch}
-          label="Assignments"
+          label="Component Assignments"
           href="/admin/assignments"
           isActive={location.pathname === '/admin/assignments'}
         />
@@ -87,6 +88,12 @@ const AdminSidebar = () => {
           label="Bulk Operations"
           href="/admin/bulk-operations"
           isActive={location.pathname === '/admin/bulk-operations'}
+        />
+        <SidebarItem 
+          icon={Settings} 
+          label="Categories" 
+          href="/admin/categories" 
+          isActive={location.pathname === '/admin/categories'}
         />
         <SidebarItem
           icon={Tag}

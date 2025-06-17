@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import {
   Route,
@@ -38,6 +39,7 @@ import AdminAssignments from './pages/admin/AdminAssignments';
 import AdminConfigurations from './pages/admin/AdminConfigurations';
 import AdminBulkOperations from './pages/admin/AdminBulkOperations';
 import AdminTestingSuite from './pages/admin/AdminTestingSuite';
+import AdminMotorcycleManagement from './pages/admin/AdminMotorcycleManagement';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './components/theme/theme-provider';
 
