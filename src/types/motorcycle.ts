@@ -1,4 +1,3 @@
-
 export interface Configuration {
   id: string;
   name?: string;
@@ -165,7 +164,7 @@ export type MotorcycleCategory =
   | "Off-road"
   | "Dual-sport";
 
-// Add MotorcycleFilters interface
+// Add MotorcycleFilters interface with all required properties
 export interface MotorcycleFilters {
   search: string;
   make: string;
@@ -179,6 +178,27 @@ export interface MotorcycleFilters {
   useCases?: string[];
   isEntryLevel?: boolean;
   powerToWeightRange?: [number, number];
+  // Advanced filter properties
+  transmission?: string[];
+  driveType?: string[];
+  coolingSystem?: string[];
+  licenseLevelFilter?: string[];
+  priceRange?: [number, number];
+  hasSmartFeatures?: boolean | null;
+  fuelCapacityRange?: [number, number];
+  topSpeedRange?: [number, number];
+  torqueRange?: [number, number];
+  advancedSearch?: {
+    engineType?: string[];
+    cylinderCount?: string[];
+    brakeType?: string[];
+    frameType?: string[];
+    suspensionType?: string[];
+  };
+  // Search terms
+  searchTerm?: string;
+  styleTags?: string[];
+  skillLevel?: string[];
 }
 
 // Brand related types

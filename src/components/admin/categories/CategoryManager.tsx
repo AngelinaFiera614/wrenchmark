@@ -6,10 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { MotorcycleCategory } from "@/types/motorcycle";
+import { CategoryObject } from "@/types/category";
 
-const CategoryManager = () => {
-  const [categories, setCategories] = useState<MotorcycleCategory[]>([
+interface CategoryManagerProps {
+  categories?: CategoryObject[];
+  onCategoriesChange?: (categories: CategoryObject[]) => void;
+}
+
+const CategoryManager = ({ categories: externalCategories, onCategoriesChange }: CategoryManagerProps) => {
+  const [categories, setCategories] = useState<CategoryObject[]>(externalCategories || [
     {
       id: "1",
       name: "Sport",
@@ -25,7 +30,7 @@ const CategoryManager = () => {
   ]);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<MotorcycleCategory | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryObject | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -33,7 +38,7 @@ const CategoryManager = () => {
   });
 
   const handleAddCategory = () => {
-    const newCategory: MotorcycleCategory = {
+    const newCategory: CategoryObject = {
       id: Date.now().toString(),
       name: formData.name,
       description: formData.description,
@@ -41,12 +46,14 @@ const CategoryManager = () => {
       created_at: new Date().toISOString()
     };
 
-    setCategories([...categories, newCategory]);
+    const updatedCategories = [...categories, newCategory];
+    setCategories(updatedCategories);
+    onCategoriesChange?.(updatedCategories);
     setFormData({ name: "", description: "", slug: "" });
     setIsEditing(false);
   };
 
-  const handleEditCategory = (category: MotorcycleCategory) => {
+  const handleEditCategory = (category: CategoryObject) => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
@@ -66,13 +73,16 @@ const CategoryManager = () => {
     );
 
     setCategories(updatedCategories);
+    onCategoriesChange?.(updatedCategories);
     setFormData({ name: "", description: "", slug: "" });
     setIsEditing(false);
     setEditingCategory(null);
   };
 
   const handleDeleteCategory = (categoryId: string) => {
-    setCategories(categories.filter(cat => cat.id !== categoryId));
+    const updatedCategories = categories.filter(cat => cat.id !== categoryId);
+    setCategories(updatedCategories);
+    onCategoriesChange?.(updatedCategories);
   };
 
   const handleCancel = () => {

@@ -138,6 +138,26 @@ export async function linkComponentToConfiguration(
   }
 }
 
+// Unlink component from configuration
+export async function unlinkComponentFromConfiguration(
+  configurationId: string,
+  componentType: string
+): Promise<boolean> {
+  try {
+    const updateField = `${componentType}_id`;
+    const { error } = await supabase
+      .from('model_configurations')
+      .update({ [updateField]: null })
+      .eq('id', configurationId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error unlinking component from configuration:', error);
+    return false;
+  }
+}
+
 // Check if component is assigned to configuration
 export async function isComponentAssignedToConfiguration(
   configurationId: string,
@@ -157,6 +177,26 @@ export async function isComponentAssignedToConfiguration(
   } catch (error) {
     console.error('Error checking configuration assignment:', error);
     return false;
+  }
+}
+
+// Get component usage in configurations
+export async function getComponentUsageInConfigurations(
+  componentId: string,
+  componentType: string
+): Promise<any[]> {
+  try {
+    const selectField = `${componentType}_id`;
+    const { data, error } = await supabase
+      .from('model_configurations')
+      .select('*')
+      .eq(selectField, componentId);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching component usage in configurations:', error);
+    return [];
   }
 }
 

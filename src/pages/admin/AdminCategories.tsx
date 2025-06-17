@@ -1,11 +1,8 @@
 
 import React from "react";
 import CategoryManager from "@/components/admin/categories/CategoryManager";
-import { useMotorcycleCategories } from "@/hooks/useMotorcycleCategories";
 
 const AdminCategories = () => {
-  const { categories, updateCategories } = useMotorcycleCategories();
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -17,10 +14,7 @@ const AdminCategories = () => {
         </div>
       </div>
 
-      <CategoryManager 
-        categories={categories}
-        onCategoriesChange={updateCategories}
-      />
+      <CategoryManager />
     </div>
   );
 };
