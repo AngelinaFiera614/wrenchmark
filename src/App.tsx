@@ -24,7 +24,6 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminLayout from './components/layout/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminModels from './pages/admin/AdminModels';
 import AdminRepairSkills from './pages/admin/AdminRepairSkills';
 import AdminManuals from './pages/admin/AdminManuals';
 import AdminColors from './pages/admin/AdminColors';
@@ -33,13 +32,9 @@ import AdminCourses from './pages/admin/AdminCourses';
 import AdminLessons from './pages/admin/AdminLessons';
 import AdminRidingSkills from './pages/admin/AdminRidingSkills';
 import AdminUsers from './pages/admin/AdminUsers';
-import AdminMotorcycles from './pages/admin/AdminMotorcycles';
-import AdminComponents from './pages/admin/AdminComponents';
-import AdminAssignments from './pages/admin/AdminAssignments';
-import AdminConfigurations from './pages/admin/AdminConfigurations';
-import AdminBulkOperations from './pages/admin/AdminBulkOperations';
 import AdminTestingSuite from './pages/admin/AdminTestingSuite';
 import AdminMotorcycleManagement from './pages/admin/AdminMotorcycleManagement';
+import AdminPartsHub from './pages/admin/AdminPartsHub';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './components/theme/theme-provider';
 
@@ -72,30 +67,39 @@ const App: React.FC = () => {
           </ProtectedRoute>
         } />
 
-        {/* Admin Routes - Protected */}
+        {/* Admin Routes - Protected and Consolidated */}
         <Route path="/admin" element={
           <ProtectedRoute requiredRole="admin">
             <AdminLayout />
           </ProtectedRoute>
         }>
           <Route index element={<AdminDashboard />} />
+          
+          {/* Motorcycle Data Management */}
           <Route path="motorcycle-management" element={<AdminMotorcycleManagement />} />
-          <Route path="motorcycles" element={<AdminMotorcycles />} />
-          <Route path="components" element={<AdminComponents />} />
-          <Route path="assignments" element={<AdminAssignments />} />
-          <Route path="configurations" element={<AdminConfigurations />} />
-          <Route path="bulk-operations" element={<AdminBulkOperations />} />
-          <Route path="models" element={<AdminModels />} />
-          <Route path="repair-skills" element={<AdminRepairSkills />} />
-          <Route path="manuals" element={<AdminManuals />} />
-          <Route path="colors" element={<AdminColors />} />
+          <Route path="parts" element={<AdminPartsHub />} />
           <Route path="brands" element={<AdminBrands />} />
+          <Route path="colors" element={<AdminColors />} />
+          
+          {/* Learning Content */}
           <Route path="courses" element={<AdminCourses />} />
           <Route path="lessons" element={<AdminLessons />} />
           <Route path="riding-skills" element={<AdminRidingSkills />} />
+          <Route path="repair-skills" element={<AdminRepairSkills />} />
+          <Route path="manuals" element={<AdminManuals />} />
+          
+          {/* System */}
           <Route path="users" element={<AdminUsers />} />
           <Route path="testing" element={<AdminTestingSuite />} />
           <Route path="system" element={<AdminSystemSettings />} />
+
+          {/* Legacy redirects for old routes */}
+          <Route path="motorcycles" element={<Navigate to="/admin/motorcycle-management" replace />} />
+          <Route path="components" element={<Navigate to="/admin/parts" replace />} />
+          <Route path="assignments" element={<Navigate to="/admin/parts" replace />} />
+          <Route path="configurations" element={<Navigate to="/admin/parts" replace />} />
+          <Route path="bulk-operations" element={<Navigate to="/admin/parts" replace />} />
+          <Route path="models" element={<Navigate to="/admin/motorcycle-management" replace />} />
         </Route>
 
         {/* Catch-all route for 404 Not Found */}

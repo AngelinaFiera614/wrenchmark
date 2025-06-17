@@ -4,14 +4,19 @@ import { Motorcycle } from '@/types';
 
 export async function fetchAllMotorcyclesForAdmin(): Promise<Motorcycle[]> {
   const { data, error } = await supabase
-    .from('motorcycles')
-    .select('*')
-    .order('make', { ascending: true })
-    .order('model', { ascending: true })
-    .order('year', { ascending: false });
+    .from('motorcycle_models')
+    .select(`
+      *,
+      brands!motorcycle_models_brand_id_fkey(
+        id,
+        name,
+        slug
+      )
+    `)
+    .order('name', { ascending: true });
 
   if (error) {
-    console.error('Error fetching motorcycles for admin:', error);
+    console.error('Error fetching motorcycle models for admin:', error);
     throw error;
   }
 
@@ -20,7 +25,7 @@ export async function fetchAllMotorcyclesForAdmin(): Promise<Motorcycle[]> {
 
 export async function publishMotorcycle(id: string): Promise<boolean> {
   const { error } = await supabase
-    .from('motorcycles')
+    .from('motorcycle_models')
     .update({ is_draft: false })
     .eq('id', id);
 
@@ -34,7 +39,7 @@ export async function publishMotorcycle(id: string): Promise<boolean> {
 
 export async function unpublishMotorcycle(id: string): Promise<boolean> {
   const { error } = await supabase
-    .from('motorcycles')
+    .from('motorcycle_models')
     .update({ is_draft: true })
     .eq('id', id);
 
@@ -48,7 +53,7 @@ export async function unpublishMotorcycle(id: string): Promise<boolean> {
 
 export async function updateMotorcycleAdmin(id: string, updates: Partial<Motorcycle>) {
   const { data, error } = await supabase
-    .from('motorcycles')
+    .from('motorcycle_models')
     .update(updates)
     .eq('id', id)
     .select()
@@ -64,7 +69,7 @@ export async function updateMotorcycleAdmin(id: string, updates: Partial<Motorcy
 
 export async function deleteMotorcycleAdmin(id: string) {
   const { error } = await supabase
-    .from('motorcycles')
+    .from('motorcycle_models')
     .delete()
     .eq('id', id);
 
@@ -76,7 +81,7 @@ export async function deleteMotorcycleAdmin(id: string) {
 
 export async function bulkUpdateMotorcycles(ids: string[], updates: Partial<Motorcycle>) {
   const { data, error } = await supabase
-    .from('motorcycles')
+    .from('motorcycle_models')
     .update(updates)
     .in('id', ids)
     .select();
