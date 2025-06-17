@@ -155,7 +155,8 @@ const ModelAssignmentsPage = () => {
 
   const filteredModels = models.filter(model =>
     model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    model.brands?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (Array.isArray(model.brands) && model.brands.length > 0 && 
+     model.brands[0].name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleManageModel = (modelId: string) => {
