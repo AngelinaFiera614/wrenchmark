@@ -1,5 +1,10 @@
-
 import { z } from "zod";
+
+export const manualTypes = [
+  { value: 'owner', label: 'Owner Manual' },
+  { value: 'service', label: 'Service Manual' },
+  { value: 'wiring', label: 'Wiring Diagram' },
+];
 
 export const ManualFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -14,5 +19,8 @@ export const ManualFormSchema = z.object({
   file: z.instanceof(File).optional(),
   tags: z.array(z.string()).optional(),
 });
+
+// Keep backward compatibility
+export const formSchema = ManualFormSchema;
 
 export type ManualFormValues = z.infer<typeof ManualFormSchema>;
