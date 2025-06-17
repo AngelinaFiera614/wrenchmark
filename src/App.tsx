@@ -79,6 +79,7 @@ const App: React.FC = () => {
           </ProtectedRoute>
         }>
           <Route index element={<AdminDashboard />} />
+          <Route path="motorcycle-management" element={<AdminMotorcycleManagement />} />
           <Route path="motorcycles" element={<AdminMotorcycles />} />
           <Route path="components" element={<AdminComponents />} />
           <Route path="assignments" element={<AdminAssignments />} />

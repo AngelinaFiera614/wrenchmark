@@ -15,6 +15,7 @@ import {
   Users,
   Settings,
   TestTube,
+  Database,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,10 +46,11 @@ const ModernAdminSidebar = () => {
       ]
     },
     {
-      title: "Content Management",
+      title: "Motorcycle Management",
       items: [
-        { icon: Bike, label: "Motorcycles", href: "/admin/motorcycles" },
-        { icon: Wrench, label: "Parts & Components", href: "/admin/parts" },
+        { icon: Bike, label: "Unified Management", href: "/admin/motorcycle-management" },
+        { icon: Database, label: "Models Database", href: "/admin/motorcycles" },
+        { icon: Wrench, label: "Parts & Components", href: "/admin/components" },
         { icon: Building2, label: "Brands", href: "/admin/brands" },
         { icon: Calendar, label: "Models", href: "/admin/models" },
         { icon: Palette, label: "Colors", href: "/admin/colors" },
