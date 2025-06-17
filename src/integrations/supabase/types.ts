@@ -2092,6 +2092,10 @@ export type Database = {
         Args: { input_text: string }
         Returns: string
       }
+      get_content_block_template: {
+        Args: { block_type_param: string }
+        Returns: Json
+      }
       get_course_progress: {
         Args: { course_id_param: string; user_id_param?: string }
         Returns: {
@@ -2156,6 +2160,10 @@ export type Database = {
       }
       increment_manual_downloads: {
         Args: { manual_id: string }
+        Returns: undefined
+      }
+      increment_template_usage: {
+        Args: { template_id_param: string }
         Returns: undefined
       }
       is_admin: {

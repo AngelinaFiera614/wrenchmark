@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,12 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ContentBlock, ContentBlockType } from '@/types/course';
 import { getContentBlockTypes } from '@/services/contentBlockService';
 import { Plus, GripVertical, Trash2, Eye, EyeOff, Palette } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import EnhancedContentBlockPalette from './lesson-form/EnhancedContentBlockPalette';
+import BulkOperationsToolbar from './lesson-form/BulkOperationsToolbar';
+import AdvancedPreviewModes from './lesson-form/AdvancedPreviewModes';
+import { useBulkOperations } from './lesson-form/useBulkOperations';
 
 interface ContentBlockEditorProps {
   contentBlocks: ContentBlock[];
@@ -22,7 +27,21 @@ export default function ContentBlockEditor({ contentBlocks, onChange, lessonType
   const [blockTypes, setBlockTypes] = useState<ContentBlockType[]>([]);
   const [previewMode, setPreviewMode] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const [showAdvancedPreview, setShowAdvancedPreview] = useState(false);
   const [recentlyUsedBlocks, setRecentlyUsedBlocks] = useState<string[]>([]);
+
+  const {
+    selectedBlocks,
+    hasClipboard,
+    selectBlock,
+    selectAll,
+    clearSelection,
+    copyBlocks,
+    pasteBlocks,
+    deleteBlocks,
+    duplicateBlocks,
+    moveBlocks
+  } = useBulkOperations(contentBlocks, onChange);
 
   useEffect(() => {
     loadBlockTypes();
@@ -157,6 +176,15 @@ export default function ContentBlockEditor({ contentBlocks, onChange, lessonType
             {previewMode ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
             {previewMode ? 'Edit' : 'Preview'}
           </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAdvancedPreview(true)}
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            Advanced Preview
+          </Button>
           
           <Dialog open={showPalette} onOpenChange={setShowPalette}>
             <DialogTrigger asChild>
@@ -181,6 +209,19 @@ export default function ContentBlockEditor({ contentBlocks, onChange, lessonType
           </Dialog>
         </div>
       </div>
+
+      <BulkOperationsToolbar
+        selectedBlocks={selectedBlocks}
+        contentBlocks={contentBlocks}
+        onCopyBlocks={copyBlocks}
+        onDeleteBlocks={deleteBlocks}
+        onDuplicateBlocks={duplicateBlocks}
+        onMoveBlocks={moveBlocks}
+        onSelectAll={selectAll}
+        onClearSelection={clearSelection}
+        hasClipboard={hasClipboard}
+        onPasteBlocks={pasteBlocks}
+      />
 
       {previewMode ? (
         <div className="space-y-4">
@@ -211,6 +252,8 @@ export default function ContentBlockEditor({ contentBlocks, onChange, lessonType
                             onUpdate={(updates) => updateBlock(block.id, updates)}
                             onDelete={() => deleteBlock(block.id)}
                             dragHandleProps={provided.dragHandleProps}
+                            isSelected={selectedBlocks.includes(block.id)}
+                            onSelect={() => selectBlock(block.id)}
                           />
                         </div>
                       )}
@@ -222,6 +265,13 @@ export default function ContentBlockEditor({ contentBlocks, onChange, lessonType
           </Droppable>
         </DragDropContext>
       )}
+
+      <AdvancedPreviewModes
+        contentBlocks={contentBlocks}
+        title="Lesson Preview"
+        open={showAdvancedPreview}
+        onOpenChange={setShowAdvancedPreview}
+      />
     </div>
   );
 }
@@ -232,15 +282,29 @@ interface ContentBlockEditFormProps {
   onUpdate: (updates: Partial<ContentBlock>) => void;
   onDelete: () => void;
   dragHandleProps?: any;
+  isSelected: boolean;
+  onSelect: () => void;
 }
 
-function ContentBlockEditForm({ block, blockTypes, onUpdate, onDelete, dragHandleProps }: ContentBlockEditFormProps) {
+function ContentBlockEditForm({ 
+  block, 
+  blockTypes, 
+  onUpdate, 
+  onDelete, 
+  dragHandleProps, 
+  isSelected, 
+  onSelect 
+}: ContentBlockEditFormProps) {
   const blockType = blockTypes.find(t => t.name === block.type);
 
   return (
-    <Card>
+    <Card className={isSelected ? 'ring-2 ring-accent-teal' : ''}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={onSelect}
+          />
           <div {...dragHandleProps}>
             <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
           </div>
@@ -342,4 +406,56 @@ function ContentBlockPreview({ block }: { block: ContentBlock }) {
       </CardContent>
     </Card>
   );
+}
+
+function getDefaultDataForType(type: string): Record<string, any> {
+  switch (type) {
+    case 'text':
+      return { content: '', format: 'markdown' };
+    case 'rich_text':
+      return { content: '<p>Enter your rich text content here...</p>', title: '', format: 'html' };
+    case 'video':
+      return { url: '', title: '', description: '' };
+    case 'audio_player':
+      return { audio_url: '', title: '', description: '', auto_play: false, show_controls: true };
+    case 'image_gallery':
+      return { images: [] };
+    case 'interactive_image':
+      return { image_url: '', alt_text: '', hotspots: [] };
+    case 'table':
+      return { headers: [], rows: [], caption: '' };
+    case 'download':
+      return { file_url: '', title: '', description: '', file_type: '' };
+    case 'code_highlight':
+      return { code: 'console.log("Hello, World!");', language: 'javascript', title: '', line_numbers: true };
+    case 'interactive_quiz':
+      return { 
+        questions: [
+          {
+            id: '1',
+            type: 'multiple_choice',
+            question: 'What is the correct answer?',
+            options: ['Option A', 'Option B', 'Option C', 'Option D'],
+            correct_answer: 'Option A',
+            explanation: 'This is why Option A is correct.',
+            points: 1
+          }
+        ],
+        passing_score: 70,
+        allow_retries: true,
+        show_results: true
+      };
+    case 'conditional_content':
+      return { 
+        content: '<p>This content will show when conditions are met.</p>',
+        conditions: [{ type: 'skill_level', operator: '>=', value: '5' }],
+        fallback_content: '<p>Complete more lessons to unlock this content.</p>'
+      };
+    case 'glossary_links':
+      return { terms: [], auto_detect: true };
+    case 'related_models':
+      return { model_ids: [], comparison_type: 'basic' };
+    default:
+      return {};
+  }
 }
