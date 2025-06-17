@@ -11,10 +11,12 @@ import {
   Circle,
   Plus,
   Zap,
-  Clock
+  Clock,
+  Link,
+  ArrowDown
 } from "lucide-react";
 import ComponentOverrideIndicator from "./ComponentOverrideIndicator";
-import ComponentSelectionDialog from "./ComponentSelectionDialog";
+import EnhancedComponentSelectionDialog from "./EnhancedComponentSelectionDialog";
 
 interface ComponentAssignmentWorkflowProps {
   configurationData: any;
@@ -67,9 +69,39 @@ const ComponentAssignmentWorkflow: React.FC<ComponentAssignmentWorkflowProps> = 
     }
   ];
 
-  const getComponentName = (componentType: string, componentId: string) => {
-    // This would be enhanced with actual component data lookup
-    return componentId ? `Component ${componentId.slice(0, 8)}...` : 'Unknown Component';
+  const getComponentData = (componentType: string) => {
+    const componentField = `${componentType}s`; // engines, brake_systems, etc.
+    return configurationData[componentField];
+  };
+
+  const getComponentName = (componentType: string) => {
+    const component = getComponentData(componentType);
+    if (!component) return null;
+
+    switch (componentType) {
+      case 'engine':
+        return `${component.name || 'Unknown'} - ${component.displacement_cc || '?'}cc`;
+      case 'brake_system':
+        return `${component.type || 'Unknown'} ${component.brake_brand ? `(${component.brake_brand})` : ''}`;
+      case 'frame':
+        return `${component.type || 'Unknown'} ${component.material ? `- ${component.material}` : ''}`;
+      case 'suspension':
+        return `${component.front_type || 'Unknown'} / ${component.rear_type || 'Unknown'}`;
+      case 'wheel':
+        return `${component.type || 'Unknown'} ${component.front_size ? `(${component.front_size})` : ''}`;
+      default:
+        return 'Component';
+    }
+  };
+
+  const isComponentInherited = (componentType: string) => {
+    const component = getComponentData(componentType);
+    return component?._inherited === true;
+  };
+
+  const hasComponentOverride = (componentType: string) => {
+    const overrideField = `${componentType}_override`;
+    return configurationData[overrideField] === true;
   };
 
   const handleToggleOverride = (componentType: string, isOverride: boolean) => {
@@ -94,10 +126,10 @@ const ComponentAssignmentWorkflow: React.FC<ComponentAssignmentWorkflowProps> = 
   };
 
   const renderComponentCard = (componentType: any) => {
-    const overrideField = `${componentType.key}_override`;
-    const componentField = `${componentType.key}_id`;
-    const isOverride = configurationData[overrideField] || false;
-    const selectedComponentId = configurationData[componentField];
+    const component = getComponentData(componentType.key);
+    const componentName = getComponentName(componentType.key);
+    const isInherited = isComponentInherited(componentType.key);
+    const hasOverride = hasComponentOverride(componentType.key);
     const IconComponent = componentType.icon;
 
     return (
@@ -115,15 +147,46 @@ const ComponentAssignmentWorkflow: React.FC<ComponentAssignmentWorkflowProps> = 
         
         <CardContent className="space-y-4">
           <ComponentOverrideIndicator
-            isOverride={isOverride}
-            hasComponent={!!selectedComponentId}
-            componentName={selectedComponentId ? getComponentName(componentType.key, selectedComponentId) : undefined}
+            isOverride={hasOverride}
+            hasComponent={!!component}
+            componentName={componentName}
             onToggleOverride={(override) => handleToggleOverride(componentType.key, override)}
             onSelectComponent={() => handleSelectComponent(componentType.key)}
           />
 
+          {/* Component Details */}
+          {component && (
+            <div className={`p-3 rounded border ${isInherited ? 'bg-blue-50/10 border-blue-400/30' : 'bg-accent-teal/10 border-accent-teal/30'}`}>
+              <div className="flex items-center justify-between">
+                <div className="text-sm">
+                  <div className={`font-medium ${isInherited ? 'text-blue-400' : 'text-accent-teal'}`}>
+                    {componentName}
+                  </div>
+                  <div className="text-xs text-explorer-text-muted mt-1 flex items-center gap-1">
+                    {isInherited ? (
+                      <>
+                        <ArrowDown className="h-3 w-3" />
+                        Inherited from model
+                      </>
+                    ) : (
+                      <>
+                        <Link className="h-3 w-3" />
+                        Configuration override
+                      </>
+                    )}
+                  </div>
+                </div>
+                {isInherited && (
+                  <Badge variant="outline" className="text-xs border-blue-400/30 text-blue-400">
+                    Inherited
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Quick Actions */}
-          {!selectedComponentId && (
+          {!component && (
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -136,29 +199,16 @@ const ComponentAssignmentWorkflow: React.FC<ComponentAssignmentWorkflowProps> = 
               </Button>
             </div>
           )}
-
-          {/* Component Details */}
-          {selectedComponentId && (
-            <div className="p-3 bg-accent-teal/10 rounded border border-accent-teal/30">
-              <div className="text-sm">
-                <div className="font-medium text-accent-teal">
-                  {getComponentName(componentType.key, selectedComponentId)}
-                </div>
-                <div className="text-xs text-explorer-text-muted mt-1">
-                  {isOverride ? 'Configuration-specific' : 'Inherited from model'}
-                </div>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     );
   };
 
   // Calculate completion status
-  const assignedComponents = componentTypes.filter(type => 
-    configurationData[`${type.key}_id`]
-  ).length;
+  const assignedComponents = componentTypes.filter(type => {
+    const component = getComponentData(type.key);
+    return !!component;
+  }).length;
   const completionPercentage = Math.round((assignedComponents / componentTypes.length) * 100);
 
   return (
@@ -171,12 +221,12 @@ const ComponentAssignmentWorkflow: React.FC<ComponentAssignmentWorkflowProps> = 
               Component Assignment Workflow
             </h4>
             <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-              Assign components to this configuration. Use overrides to customize beyond model defaults.
+              Components are inherited from model defaults. Use overrides to customize this configuration.
             </p>
           </div>
           <div className="text-right">
             <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
-              {assignedComponents}/{componentTypes.length} Assigned
+              {assignedComponents}/{componentTypes.length} Components
             </div>
             <div className="text-xs text-blue-600 dark:text-blue-400">
               {completionPercentage}% Complete
@@ -190,12 +240,12 @@ const ComponentAssignmentWorkflow: React.FC<ComponentAssignmentWorkflowProps> = 
         {componentTypes.map(renderComponentCard)}
       </div>
 
-      {/* Component Selection Dialog */}
-      <ComponentSelectionDialog
+      {/* Enhanced Component Selection Dialog */}
+      <EnhancedComponentSelectionDialog
         open={!!activeComponentDialog}
         onClose={() => setActiveComponentDialog(null)}
         componentType={activeComponentDialog}
-        configurationId={configurationData.id}
+        configurationId={configurationData?.id}
         currentComponentId={activeComponentDialog ? configurationData[`${activeComponentDialog}_id`] : undefined}
         onComponentAssigned={handleComponentAssigned}
       />

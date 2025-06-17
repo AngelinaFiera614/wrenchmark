@@ -18,7 +18,7 @@ export const useAdminPartsAssignmentRefactored = () => {
   const [activeTab, setActiveTab] = useState("navigator");
   const [showPreview, setShowPreview] = useState(false);
 
-  // Data queries
+  // Use optimized data queries
   const {
     models,
     modelYears,
@@ -61,7 +61,7 @@ export const useAdminPartsAssignmentRefactored = () => {
 
   const handleComponentLinked = () => {
     // Refresh configurations when components are linked
-    refreshConfigurations();
+    refetchConfigurations();
     toast({
       title: "Component Updated",
       description: "Component assignment has been updated successfully.",
@@ -84,7 +84,7 @@ export const useAdminPartsAssignmentRefactored = () => {
     }
   }, [safeConfigurations, selectedConfig]);
 
-  // Debug logging with error information
+  // Debug logging with improved error information
   useEffect(() => {
     console.log("=== HOOK STATE UPDATE ===");
     console.log("Selected model:", selectedModel);
@@ -92,11 +92,14 @@ export const useAdminPartsAssignmentRefactored = () => {
     console.log("Selected config:", selectedConfig);
     console.log("Configurations count:", safeConfigurations.length);
     console.log("Model years count:", modelYears.length);
-    console.log("Errors:", {
-      modelsError: modelsError?.message,
-      yearsError: yearsError?.message,
-      configsError: configsError?.message
-    });
+    console.log("Sample configuration:", safeConfigurations[0]);
+    if (modelsError || yearsError || configsError) {
+      console.error("Errors:", {
+        modelsError: modelsError?.message,
+        yearsError: yearsError?.message,
+        configsError: configsError?.message
+      });
+    }
   }, [selectedModel, selectedYear, selectedConfig, safeConfigurations.length, modelYears.length, modelsError, yearsError, configsError]);
 
   return {
@@ -133,7 +136,7 @@ export const useAdminPartsAssignmentRefactored = () => {
     handleConfigSelect,
     handlePreviewConfig,
     handleComponentLinked,
-    refreshConfigurations,
+    refreshConfigurations: refetchConfigurations,
     fetchConfigurationsForYears,
     setActiveTab,
     setShowPreview,

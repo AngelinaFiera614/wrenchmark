@@ -1,91 +1,74 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllMotorcycleModels } from "@/services/models/modelQueries";
-import { fetchModelYears } from "@/services/models/modelYearService";
-import { fetchConfigurations } from "@/services/models/configurationService";
-import { MotorcycleModel, ModelYear, Configuration } from "@/types/motorcycle";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAdminConfigurationsQuery } from "./useAdminConfigurationsQuery";
 
-export const useAdminDataQueries = (selectedModel: string | null, selectedYear: string | null) => {
-  const { toast } = useToast();
-
-  // Data queries with proper typing and enhanced error handling
-  const { 
-    data: models = [], 
+export const useAdminDataQueries = (selectedModel?: string, selectedYear?: string) => {
+  // Fetch motorcycle models
+  const {
+    data: models = [],
     isLoading: modelsLoading,
     error: modelsError
-  } = useQuery<MotorcycleModel[], Error>({
-    queryKey: ["motorcycle-models"],
-    queryFn: fetchAllMotorcycleModels,
-    meta: {
-      onError: (error: Error) => {
-        console.error("Error fetching motorcycle models:", error);
-        toast({
-          variant: "destructive",
-          title: "Error Loading Models",
-          description: "Failed to load motorcycle models. Please try refreshing."
-        });
-      }
-    }
+  } = useQuery({
+    queryKey: ["admin-motorcycle-models-parts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("motorcycle_models")
+        .select(`
+          id,
+          name,
+          slug,
+          brand_id,
+          production_start_year,
+          production_end_year,
+          brands(name)
+        `)
+        .eq("is_draft", false)
+        .order("name");
+
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { 
-    data: modelYears = [], 
+  // Fetch model years for selected model
+  const {
+    data: modelYears = [],
     isLoading: yearsLoading,
     error: yearsError
-  } = useQuery<ModelYear[], Error>({
+  } = useQuery({
     queryKey: ["model-years", selectedModel],
-    queryFn: () => selectedModel ? fetchModelYears(selectedModel) : Promise.resolve([]),
+    queryFn: async () => {
+      if (!selectedModel) return [];
+      
+      const { data, error } = await supabase
+        .from("model_years")
+        .select(`
+          *,
+          motorcycle_models!inner(
+            id,
+            name,
+            slug
+          )
+        `)
+        .eq("motorcycle_id", selectedModel)
+        .order("year", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!selectedModel,
-    meta: {
-      onError: (error: Error) => {
-        console.error("Error fetching model years:", error);
-        toast({
-          variant: "destructive",
-          title: "Error Loading Model Years",
-          description: "Failed to load model years. Please try again."
-        });
-      }
-    }
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Enhanced configurations query with better error handling
-  const { 
-    data: configurations = [], 
+  // Use the improved configurations query
+  const {
+    data: configurations = [],
     isLoading: configsLoading,
     error: configsError,
     refetch: refetchConfigurations
-  } = useQuery<Configuration[], Error>({
-    queryKey: ["configurations", selectedYear],
-    queryFn: () => {
-      if (!selectedYear) {
-        console.log("No selected year, returning empty configurations");
-        return Promise.resolve([]);
-      }
-      console.log("Fetching configurations for year:", selectedYear);
-      return fetchConfigurations(selectedYear);
-    },
-    enabled: !!selectedYear,
-    meta: {
-      onError: (error: Error) => {
-        console.error("Error fetching configurations:", error);
-        toast({
-          variant: "destructive",
-          title: "Error Loading Configurations",
-          description: "Failed to load trim configurations. Please try again."
-        });
-      }
-    }
-  });
-
-  // Log successful configuration fetch
-  if (configurations && configurations.length > 0) {
-    console.log("Configurations query successful:", {
-      yearId: selectedYear,
-      count: configurations.length,
-      configurations: configurations.map(c => ({ id: c.id, name: c.name }))
-    });
-  }
+  } = useAdminConfigurationsQuery(selectedYear, selectedModel);
 
   return {
     models,
