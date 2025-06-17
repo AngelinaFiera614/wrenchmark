@@ -57,35 +57,35 @@ const PartsManagementSidebar = () => {
     {
       icon: Component,
       label: "Components Library",
-      href: "/admin/parts/components",
+      href: "components",
       description: "Manage engines, brakes, frames, suspension, and wheels",
-      isActive: location.pathname === '/admin/parts/components'
+      isActive: location.pathname.includes('/components') || location.pathname.endsWith('/admin/parts')
     },
     {
       icon: Settings,
       label: "Model Assignments",
-      href: "/admin/parts/assignments",
+      href: "assignments",
       description: "Set default components for motorcycle models",
-      isActive: location.pathname === '/admin/parts/assignments'
+      isActive: location.pathname.includes('/assignments')
     },
     {
       icon: Wrench,
       label: "Configuration Manager",
-      href: "/admin/parts/configurations",
+      href: "configurations",
       description: "Manage trim configurations and component overrides",
-      isActive: location.pathname === '/admin/parts/configurations'
+      isActive: location.pathname.includes('/configurations')
     },
     {
       icon: Database,
       label: "Bulk Operations",
-      href: "/admin/parts/bulk",
+      href: "bulk",
       description: "Mass assignment and data management tools",
-      isActive: location.pathname === '/admin/parts/bulk'
+      isActive: location.pathname.includes('/bulk')
     }
   ];
 
   return (
-    <div className="w-80 bg-explorer-dark p-6 space-y-4">
+    <div className="w-80 bg-explorer-dark p-6 space-y-4 border-r border-explorer-chrome/20">
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-explorer-text mb-2">
           Parts Management
