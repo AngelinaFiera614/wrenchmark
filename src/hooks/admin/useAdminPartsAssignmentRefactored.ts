@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminDataQueries } from "./useAdminDataQueries";
@@ -14,33 +15,6 @@ interface QueryMotorcycleModel {
   production_start_year: number | null;
   production_end_year: number | null;
   brands: { name: string }[];
-}
-
-interface ModelYear {
-  id: string;
-  year: number;
-  motorcycle_id: string;
-  motorcycle_models?: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-}
-
-interface Configuration {
-  id: string;
-  name: string | null;
-  model_year_id: string;
-  engine_id: string | null;
-  brake_system_id: string | null;
-  frame_id: string | null;
-  suspension_id: string | null;
-  wheel_id: string | null;
-  engine_override: boolean;
-  brake_system_override: boolean;
-  frame_override: boolean;
-  suspension_override: boolean;
-  wheel_override: boolean;
 }
 
 export const useAdminPartsAssignmentRefactored = () => {
