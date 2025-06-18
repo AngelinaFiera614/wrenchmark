@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronDown, X, RotateCcw, Bookmark, Settings, Info } from "lucide-react";
-import { Motorcycle, MotorcycleFilters } from "@/types";
+import { Motorcycle, MotorcycleFilters, MotorcycleCategory } from "@/types";
 
 interface FilterPreset {
   name: string;
@@ -71,7 +71,7 @@ const ImprovedMotorcycleFilters = ({
     }
   ];
 
-  const availableCategories = ["Sport", "Cruiser", "Touring", "Adventure", "Standard", "Naked"];
+  const availableCategories: MotorcycleCategory[] = ["Sport", "Cruiser", "Touring", "Adventure", "Standard", "Naked"];
 
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
