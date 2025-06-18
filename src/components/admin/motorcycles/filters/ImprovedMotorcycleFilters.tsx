@@ -73,6 +73,13 @@ const ImprovedMotorcycleFilters = ({
 
   const availableCategories: MotorcycleCategory[] = ["Sport", "Cruiser", "Touring", "Adventure", "Standard", "Naked"];
 
+  // Get unique, valid manufacturers
+  const availableMakes = Array.from(new Set(
+    motorcycles
+      .map(m => m.make)
+      .filter(make => make && typeof make === 'string' && make.trim().length > 0)
+  )).sort();
+
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
     if (newExpanded.has(section)) {
@@ -205,8 +212,8 @@ const ImprovedMotorcycleFilters = ({
                 </SelectTrigger>
                 <SelectContent className="bg-explorer-card border-explorer-chrome/30">
                   <SelectItem value="">All manufacturers</SelectItem>
-                  {Array.from(new Set(motorcycles.map(m => m.make).filter(Boolean))).sort().map(make => (
-                    <SelectItem key={make} value={make!}>{make}</SelectItem>
+                  {availableMakes.map(make => (
+                    <SelectItem key={make} value={make}>{make}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

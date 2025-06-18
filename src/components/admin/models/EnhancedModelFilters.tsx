@@ -50,6 +50,22 @@ const EnhancedModelFilters: React.FC<EnhancedModelFiltersProps> = ({
     { value: 'created_at', label: 'Date Added' }
   ];
 
+  // Filter out invalid brands to prevent empty string values
+  const validBrands = brands?.filter(brand => 
+    brand && 
+    typeof brand.id === 'string' && 
+    brand.id.trim().length > 0 &&
+    typeof brand.name === 'string' && 
+    brand.name.trim().length > 0
+  ) || [];
+
+  // Filter out invalid categories
+  const validCategories = categories?.filter(category => 
+    category && 
+    typeof category === 'string' && 
+    category.trim().length > 0
+  ) || [];
+
   const removeFilter = (filterKey: keyof ModelFilters) => {
     switch (filterKey) {
       case 'search':
@@ -164,7 +180,7 @@ const EnhancedModelFilters: React.FC<EnhancedModelFiltersProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map(category => (
+                      {validCategories.map(category => (
                         <SelectItem key={category} value={category}>{category}</SelectItem>
                       ))}
                     </SelectContent>
@@ -180,7 +196,7 @@ const EnhancedModelFilters: React.FC<EnhancedModelFiltersProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Brands</SelectItem>
-                      {brands?.map(brand => (
+                      {validBrands.map(brand => (
                         <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -254,7 +270,7 @@ const EnhancedModelFilters: React.FC<EnhancedModelFiltersProps> = ({
           )}
           {filters.brand !== 'all' && (
             <Badge variant="secondary" className="bg-accent-teal/20 text-accent-teal border-accent-teal/30">
-              Brand: {brands?.find(b => b.id === filters.brand)?.name}
+              Brand: {validBrands.find(b => b.id === filters.brand)?.name}
               <X className="h-3 w-3 ml-1 cursor-pointer" onClick={() => removeFilter('brand')} />
             </Badge>
           )}

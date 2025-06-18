@@ -1,3 +1,4 @@
+
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -47,13 +48,12 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
   // Strict validator for component IDs
   const hasValidId = (item: any) => {
     if (
+      !item ||
       typeof item?.id !== "string" ||
       !item.id.trim() ||
       item.id === "undefined" ||
       item.id === "null"
     ) {
-      // For debugging: log bad values
-      console.log("Invalid component ID detected in admin/parts form:", item);
       return false;
     }
     return true;
@@ -62,6 +62,13 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
   // Helper to clean defaultValue for Selects (undefined if blank/empty)
   const cleanSelectValue = (val: any) =>
     typeof val === "string" && val.trim() ? val : undefined;
+
+  // Filter and validate components
+  const validEngines = Array.isArray(engines) ? engines.filter(hasValidId) : [];
+  const validBrakes = Array.isArray(brakes) ? brakes.filter(hasValidId) : [];
+  const validFrames = Array.isArray(frames) ? frames.filter(hasValidId) : [];
+  const validSuspensions = Array.isArray(suspensions) ? suspensions.filter(hasValidId) : [];
+  const validWheels = Array.isArray(wheels) ? wheels.filter(hasValidId) : [];
 
   return (
     <div className="space-y-4">
@@ -84,18 +91,14 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     <SelectContent>
                       {enginesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                      ) : validEngines.length > 0 ? (
+                        validEngines.map((engine) => (
+                          <SelectItem key={engine.id} value={engine.id}>
+                            {engine.name} - {engine.displacement_cc}cc
+                          </SelectItem>
+                        ))
                       ) : (
-                        Array.isArray(engines) && engines.filter(hasValidId).length > 0
-                          ? engines
-                              .filter(hasValidId)
-                              .map((engine) =>
-                                hasValidId(engine) ? (
-                                  <SelectItem key={engine.id} value={engine.id}>
-                                    {engine.name} - {engine.displacement_cc}cc
-                                  </SelectItem>
-                                ) : null
-                              )
-                          : <div className="px-4 py-2 text-muted-foreground">No valid engines found</div>
+                        <div className="px-4 py-2 text-muted-foreground">No valid engines found</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -130,18 +133,14 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     <SelectContent>
                       {brakesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                      ) : validBrakes.length > 0 ? (
+                        validBrakes.map((brake) => (
+                          <SelectItem key={brake.id} value={brake.id}>
+                            {brake.name}
+                          </SelectItem>
+                        ))
                       ) : (
-                        Array.isArray(brakes) && brakes.filter(hasValidId).length > 0
-                          ? brakes
-                              .filter(hasValidId)
-                              .map((brake) =>
-                                hasValidId(brake) ? (
-                                  <SelectItem key={brake.id} value={brake.id}>
-                                    {brake.name}
-                                  </SelectItem>
-                                ) : null
-                              )
-                          : <div className="px-4 py-2 text-muted-foreground">No valid brake systems found</div>
+                        <div className="px-4 py-2 text-muted-foreground">No valid brake systems found</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -176,18 +175,14 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     <SelectContent>
                       {framesLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                      ) : validFrames.length > 0 ? (
+                        validFrames.map((frame) => (
+                          <SelectItem key={frame.id} value={frame.id}>
+                            {frame.name}
+                          </SelectItem>
+                        ))
                       ) : (
-                        Array.isArray(frames) && frames.filter(hasValidId).length > 0
-                          ? frames
-                              .filter(hasValidId)
-                              .map((frame) =>
-                                hasValidId(frame) ? (
-                                  <SelectItem key={frame.id} value={frame.id}>
-                                    {frame.name}
-                                  </SelectItem>
-                                ) : null
-                              )
-                          : <div className="px-4 py-2 text-muted-foreground">No valid frames found</div>
+                        <div className="px-4 py-2 text-muted-foreground">No valid frames found</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -222,18 +217,14 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     <SelectContent>
                       {suspensionsLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                      ) : validSuspensions.length > 0 ? (
+                        validSuspensions.map((suspension) => (
+                          <SelectItem key={suspension.id} value={suspension.id}>
+                            {suspension.name}
+                          </SelectItem>
+                        ))
                       ) : (
-                        Array.isArray(suspensions) && suspensions.filter(hasValidId).length > 0
-                          ? suspensions
-                              .filter(hasValidId)
-                              .map((suspension) =>
-                                hasValidId(suspension) ? (
-                                  <SelectItem key={suspension.id} value={suspension.id}>
-                                    {suspension.name}
-                                  </SelectItem>
-                                ) : null
-                              )
-                          : <div className="px-4 py-2 text-muted-foreground">No valid suspensions found</div>
+                        <div className="px-4 py-2 text-muted-foreground">No valid suspensions found</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -268,18 +259,14 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                     <SelectContent>
                       {wheelsLoading ? (
                         <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                      ) : validWheels.length > 0 ? (
+                        validWheels.map((wheel) => (
+                          <SelectItem key={wheel.id} value={wheel.id}>
+                            {wheel.name}
+                          </SelectItem>
+                        ))
                       ) : (
-                        Array.isArray(wheels) && wheels.filter(hasValidId).length > 0
-                          ? wheels
-                              .filter(hasValidId)
-                              .map((wheel) =>
-                                hasValidId(wheel) ? (
-                                  <SelectItem key={wheel.id} value={wheel.id}>
-                                    {wheel.name}
-                                  </SelectItem>
-                                ) : null
-                              )
-                          : <div className="px-4 py-2 text-muted-foreground">No valid wheels found</div>
+                        <div className="px-4 py-2 text-muted-foreground">No valid wheels found</div>
                       )}
                     </SelectContent>
                   </Select>
