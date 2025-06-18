@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Settings, Wrench, Disc, Frame, Shock, Wheel } from "lucide-react";
+import { Plus, Settings, Wrench, Disc, Frame, Zap, Circle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchEngines } from "@/services/engineService";
 import { fetchBrakes } from "@/services/brakeService";
@@ -145,11 +144,11 @@ const ComponentManagementTabs = () => {
         </TabsContent>
         
         <TabsContent value="suspension" className="space-y-6">
-          {renderComponentTable(suspensions, 'Suspension', <Shock className="h-5 w-5" />)}
+          {renderComponentTable(suspensions, 'Suspension', <Zap className="h-5 w-5" />)}
         </TabsContent>
         
         <TabsContent value="wheels" className="space-y-6">
-          {renderComponentTable(wheels, 'Wheel', <Wheel className="h-5 w-5" />)}
+          {renderComponentTable(wheels, 'Wheel', <Circle className="h-5 w-5" />)}
         </TabsContent>
       </Tabs>
 

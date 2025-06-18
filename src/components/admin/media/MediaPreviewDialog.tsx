@@ -9,9 +9,11 @@ interface MediaPreviewDialogProps {
   open: boolean;
   item: any;
   onClose: () => void;
+  onOpenChange?: (open: boolean) => void;
+  onUpdate?: () => void;
 }
 
-const MediaPreviewDialog = ({ open, item, onClose }: MediaPreviewDialogProps) => {
+const MediaPreviewDialog = ({ open, item, onClose, onOpenChange, onUpdate }: MediaPreviewDialogProps) => {
   if (!item) return null;
 
   const formatFileSize = (bytes: number) => {
@@ -32,8 +34,16 @@ const MediaPreviewDialog = ({ open, item, onClose }: MediaPreviewDialogProps) =>
     });
   };
 
+  const handleClose = () => {
+    if (onOpenChange) {
+      onOpenChange(false);
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">

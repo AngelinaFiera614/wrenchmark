@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, X } from "lucide-react";
@@ -12,9 +11,11 @@ import { Upload, X } from "lucide-react";
 interface MediaUploadDialogProps {
   open: boolean;
   onClose: (refresh?: boolean) => void;
+  onOpenChange?: (open: boolean) => void;
+  onUploadSuccess?: (item: any) => void;
 }
 
-const MediaUploadDialog = ({ open, onClose }: MediaUploadDialogProps) => {
+const MediaUploadDialog = ({ open, onClose, onOpenChange, onUploadSuccess }: MediaUploadDialogProps) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -51,7 +52,7 @@ const MediaUploadDialog = ({ open, onClose }: MediaUploadDialogProps) => {
 
       const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('media_library')
         .insert([{
           file_name: selectedFile.name,
@@ -62,7 +63,9 @@ const MediaUploadDialog = ({ open, onClose }: MediaUploadDialogProps) => {
           caption: formData.caption,
           alt_text: formData.alt_text,
           tags: tagsArray
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -70,6 +73,10 @@ const MediaUploadDialog = ({ open, onClose }: MediaUploadDialogProps) => {
         title: "File uploaded",
         description: `${selectedFile.name} has been uploaded successfully.`,
       });
+
+      if (onUploadSuccess && data) {
+        onUploadSuccess(data);
+      }
 
       onClose(true);
       
@@ -89,8 +96,16 @@ const MediaUploadDialog = ({ open, onClose }: MediaUploadDialogProps) => {
     }
   };
 
+  const handleClose = () => {
+    if (onOpenChange) {
+      onOpenChange(false);
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={() => onClose()}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Upload Media</DialogTitle>
@@ -176,7 +191,7 @@ const MediaUploadDialog = ({ open, onClose }: MediaUploadDialogProps) => {
           <div className="flex justify-end gap-2">
             <Button 
               variant="outline" 
-              onClick={() => onClose()}
+              onClick={handleClose}
               className="border-explorer-chrome/30"
             >
               Cancel
