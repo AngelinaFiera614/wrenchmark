@@ -1,110 +1,105 @@
 
 import React from "react";
-import { useLocation, Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Component,
-  Settings,
-  Database,
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { 
+  Component, 
+  Settings, 
+  Layers, 
+  Zap, 
+  Image, 
+  Palette,
   Wrench,
-  LucideIcon
+  ChevronRight
 } from "lucide-react";
-
-interface SidebarItemProps {
-  icon: LucideIcon;
-  label: string;
-  href: string;
-  isActive: boolean;
-  description: string;
-}
-
-const SidebarItem: React.FC<SidebarItemProps> = ({ 
-  icon: Icon, 
-  label, 
-  href, 
-  isActive, 
-  description 
-}) => {
-  return (
-    <Link to={href} className="w-full">
-      <Card
-        className={`group transition-colors hover:bg-accent hover:text-accent-foreground ${
-          isActive
-            ? "bg-accent-teal/20 border-accent-teal text-accent-teal"
-            : "bg-explorer-card border-explorer-chrome/30 text-explorer-text hover:border-accent-teal/50"
-        }`}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
-            <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">{label}</p>
-              <p className="text-xs text-explorer-text-muted mt-1 line-clamp-2">
-                {description}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-};
 
 const PartsManagementSidebar = () => {
   const location = useLocation();
-
+  
   const menuItems = [
     {
-      icon: Component,
-      label: "Components Library",
+      title: "Component Library",
       href: "/admin/parts/components",
-      description: "Manage engines, brakes, frames, suspension, and wheels",
-      isActive: location.pathname === '/admin/parts/components' || location.pathname === '/admin/parts'
+      icon: Component,
+      description: "Browse all components"
     },
     {
-      icon: Settings,
-      label: "Model Assignments",
-      href: "/admin/parts/assignments",
-      description: "Set default components for motorcycle models",
-      isActive: location.pathname === '/admin/parts/assignments'
-    },
-    {
+      title: "Component Management", 
+      href: "/admin/parts/component-management",
       icon: Wrench,
-      label: "Configuration Manager",
-      href: "/admin/parts/configurations",
-      description: "Manage trim configurations and component overrides",
-      isActive: location.pathname === '/admin/parts/configurations'
+      description: "Full CRUD for components"
     },
     {
-      icon: Database,
-      label: "Bulk Operations",
+      title: "Model Assignments",
+      href: "/admin/parts/assignments", 
+      icon: Settings,
+      description: "Assign components to models"
+    },
+    {
+      title: "Configurations",
+      href: "/admin/parts/configurations",
+      icon: Layers,
+      description: "Manage model configurations"
+    },
+    {
+      title: "Bulk Operations",
       href: "/admin/parts/bulk",
-      description: "Mass assignment and data management tools",
-      isActive: location.pathname === '/admin/parts/bulk'
+      icon: Zap,
+      description: "Mass import/export tools"
+    },
+    {
+      title: "Media Library",
+      href: "/admin/parts/media",
+      icon: Image,
+      description: "Manage uploaded content"
+    },
+    {
+      title: "Color Options",
+      href: "/admin/parts/colors",
+      icon: Palette,
+      description: "Manage motorcycle colors"
     }
   ];
 
   return (
-    <div className="w-80 bg-explorer-dark p-6 space-y-4 border-r border-explorer-chrome/20">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-explorer-text mb-2">
+    <div className="w-64 bg-explorer-card border-r border-explorer-chrome/30 flex-shrink-0">
+      <div className="p-6">
+        <h2 className="text-lg font-semibold text-explorer-text mb-6">
           Parts Management
         </h2>
-        <p className="text-sm text-explorer-text-muted">
-          Manage motorcycle components and configurations
-        </p>
+        <nav className="space-y-2">
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group",
+                  isActive 
+                    ? "bg-accent-teal text-black" 
+                    : "text-explorer-text hover:bg-explorer-chrome/20"
+                )}
+              >
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{item.title}</div>
+                  <div className={cn(
+                    "text-xs truncate",
+                    isActive ? "text-black/70" : "text-explorer-text-muted"
+                  )}>
+                    {item.description}
+                  </div>
+                </div>
+                <ChevronRight className={cn(
+                  "h-4 w-4 flex-shrink-0 transition-transform",
+                  isActive && "rotate-90"
+                )} />
+              </Link>
+            );
+          })}
+        </nav>
       </div>
-      
-      {menuItems.map((item) => (
-        <SidebarItem
-          key={item.href}
-          icon={item.icon}
-          label={item.label}
-          href={item.href}
-          isActive={item.isActive}
-          description={item.description}
-        />
-      ))}
     </div>
   );
 };
