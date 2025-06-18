@@ -4,10 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search, X, Clock, Star, Filter, ChevronDown } from "lucide-react";
 import { Motorcycle } from "@/types";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
 
 interface SearchSuggestion {
   type: 'make' | 'model' | 'category' | 'recent' | 'saved';
@@ -23,8 +22,6 @@ interface EnhancedMotorcycleSearchProps {
   onAdvancedToggle: () => void;
   isAdvancedOpen: boolean;
   activeFiltersCount: number;
-  recentSearches?: string[];
-  savedSearches?: Array<{ name: string; query: string }>;
 }
 
 const EnhancedMotorcycleSearch = ({
@@ -33,25 +30,24 @@ const EnhancedMotorcycleSearch = ({
   onSearchChange,
   onAdvancedToggle,
   isAdvancedOpen,
-  activeFiltersCount,
-  recentSearches = [],
-  savedSearches = []
+  activeFiltersCount
 }: EnhancedMotorcycleSearchProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { recentSearches, savedSearches, addRecentSearch } = useSearchHistory();
 
   // Generate search suggestions
   useEffect(() => {
     if (!searchTerm) {
-      const recentSuggestions: SearchSuggestion[] = recentSearches.map(search => ({
+      const recentSuggestions: SearchSuggestion[] = recentSearches.slice(0, 3).map(search => ({
         type: 'recent',
         value: search,
         icon: <Clock className="h-4 w-4" />
       }));
 
-      const savedSuggestions: SearchSuggestion[] = savedSearches.map(search => ({
+      const savedSuggestions: SearchSuggestion[] = savedSearches.slice(0, 2).map(search => ({
         type: 'saved',
         value: search.name,
         icon: <Star className="h-4 w-4" />
@@ -113,7 +109,9 @@ const EnhancedMotorcycleSearch = ({
       case 'Enter':
         e.preventDefault();
         if (selectedIndex >= 0 && suggestions[selectedIndex]) {
-          onSearchChange(suggestions[selectedIndex].value);
+          const term = suggestions[selectedIndex].value;
+          onSearchChange(term);
+          addRecentSearch(term);
           setIsOpen(false);
         }
         break;
@@ -126,6 +124,7 @@ const EnhancedMotorcycleSearch = ({
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
     onSearchChange(suggestion.value);
+    addRecentSearch(suggestion.value);
     setIsOpen(false);
   };
 
@@ -134,8 +133,15 @@ const EnhancedMotorcycleSearch = ({
     inputRef.current?.focus();
   };
 
+  const handleSearchSubmit = () => {
+    if (searchTerm.trim()) {
+      addRecentSearch(searchTerm);
+    }
+    setIsOpen(false);
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="relative">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-explorer-text-muted h-4 w-4" />
@@ -146,7 +152,8 @@ const EnhancedMotorcycleSearch = ({
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsOpen(true)}
-            className="pl-10 pr-20 bg-explorer-dark border-explorer-chrome/30 text-explorer-text h-11"
+            onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+            className="pl-10 pr-20 bg-explorer-dark border-explorer-chrome/30 text-explorer-text h-10"
           />
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
             {searchTerm && (
@@ -154,7 +161,7 @@ const EnhancedMotorcycleSearch = ({
                 variant="ghost"
                 size="sm"
                 onClick={clearSearch}
-                className="h-7 w-7 p-0 hover:bg-explorer-chrome/20"
+                className="h-6 w-6 p-0 hover:bg-explorer-chrome/20"
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -163,15 +170,14 @@ const EnhancedMotorcycleSearch = ({
               variant="ghost"
               size="sm"
               onClick={onAdvancedToggle}
-              className={`h-7 px-2 ${isAdvancedOpen ? 'bg-accent-teal/20 text-accent-teal' : 'hover:bg-explorer-chrome/20'}`}
+              className={`h-6 px-2 ${isAdvancedOpen ? 'bg-accent-teal/20 text-accent-teal' : 'hover:bg-explorer-chrome/20'}`}
             >
               <Filter className="h-3 w-3 mr-1" />
               {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="h-4 px-1 text-xs bg-accent-teal text-black">
+                <Badge variant="secondary" className="h-3 px-1 text-xs bg-accent-teal text-black ml-1">
                   {activeFiltersCount}
                 </Badge>
               )}
-              <ChevronDown className="h-3 w-3 ml-1" />
             </Button>
           </div>
         </div>
@@ -184,7 +190,7 @@ const EnhancedMotorcycleSearch = ({
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={`${suggestion.type}-${suggestion.value}`}
-                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer rounded ${
+                    className={`flex items-center gap-2 px-3 py-2 cursor-pointer rounded text-sm ${
                       index === selectedIndex 
                         ? 'bg-accent-teal/20 text-accent-teal' 
                         : 'hover:bg-explorer-chrome/10'
@@ -192,7 +198,7 @@ const EnhancedMotorcycleSearch = ({
                     onClick={() => handleSuggestionClick(suggestion)}
                   >
                     {suggestion.icon}
-                    <span className="flex-1 text-sm">{suggestion.value}</span>
+                    <span className="flex-1">{suggestion.value}</span>
                     {suggestion.count && (
                       <Badge variant="outline" className="text-xs">
                         {suggestion.count}
@@ -208,13 +214,6 @@ const EnhancedMotorcycleSearch = ({
           </Card>
         )}
       </div>
-
-      {/* Search Results Summary */}
-      {searchTerm && (
-        <div className="text-sm text-explorer-text-muted">
-          Searching in: <span className="text-accent-teal">make, model, category</span>
-        </div>
-      )}
     </div>
   );
 };

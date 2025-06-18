@@ -21,7 +21,7 @@ import { Motorcycle } from "@/types";
 import { useMotorcycleFilters } from "@/hooks/useMotorcycleFilters";
 import EnhancedMotorcycleSearch from "@/components/admin/motorcycles/search/EnhancedMotorcycleSearch";
 import ImprovedMotorcycleFilters from "@/components/admin/motorcycles/filters/ImprovedMotorcycleFilters";
-import EnhancedModelBrowser from "@/components/admin/motorcycles/browser/EnhancedModelBrowser";
+import CompactModelBrowser from "@/components/admin/motorcycles/browser/CompactModelBrowser";
 import MotorcycleDetailsPanel from "@/components/admin/motorcycles/unified/MotorcycleDetailsPanel";
 import MotorcycleQuickActions from "@/components/admin/motorcycles/unified/MotorcycleQuickActions";
 import MotorcycleCompletionDashboard from "@/components/admin/motorcycles/unified/MotorcycleCompletionDashboard";
@@ -98,7 +98,7 @@ const AdminMotorcycleManagement = () => {
   };
 
   return (
-    <div className="h-full flex flex-col space-y-6">
+    <div className="h-full flex flex-col space-y-4">
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
@@ -199,7 +199,7 @@ const AdminMotorcycleManagement = () => {
           <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="browse" className="flex-1 flex flex-col mt-4 space-y-4">
+        <TabsContent value="browse" className="flex-1 flex flex-col mt-4 space-y-3">
           {/* Enhanced Search */}
           <EnhancedMotorcycleSearch
             motorcycles={motorcycles || []}
@@ -220,29 +220,25 @@ const AdminMotorcycleManagement = () => {
             isOpen={isFiltersOpen}
           />
 
-          {/* Horizontal Model Browser */}
-          <div className="flex-1 space-y-4">
-            <EnhancedModelBrowser
-              motorcycles={filteredMotorcycles}
-              selectedMotorcycle={selectedMotorcycle}
-              selectedMotorcycles={selectedMotorcycles}
-              onSelectMotorcycle={setSelectedMotorcycle}
-              onToggleMotorcycleSelection={handleToggleMotorcycleSelection}
-              onSelectAll={handleSelectAll}
-              onClearSelection={handleClearSelection}
-              isLoading={isLoading}
-              onRefresh={handleRefresh}
-              isExpanded={true}
-            />
+          {/* Compact Model Browser */}
+          <CompactModelBrowser
+            motorcycles={filteredMotorcycles}
+            selectedMotorcycle={selectedMotorcycle}
+            selectedMotorcycles={selectedMotorcycles}
+            onSelectMotorcycle={setSelectedMotorcycle}
+            onToggleMotorcycleSelection={handleToggleMotorcycleSelection}
+            onSelectAll={handleSelectAll}
+            onClearSelection={handleClearSelection}
+            isLoading={isLoading}
+          />
 
-            {/* Details Panel - Only show when a motorcycle is selected */}
-            {selectedMotorcycle && (
-              <MotorcycleDetailsPanel
-                motorcycle={selectedMotorcycle}
-                onUpdate={handleMotorcycleUpdate}
-              />
-            )}
-          </div>
+          {/* Details Panel - Only show when a motorcycle is selected */}
+          {selectedMotorcycle && (
+            <MotorcycleDetailsPanel
+              motorcycle={selectedMotorcycle}
+              onUpdate={handleMotorcycleUpdate}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="completion" className="flex-1 mt-4">

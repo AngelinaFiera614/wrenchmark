@@ -93,9 +93,15 @@ export function useMotorcycleFilters(
 
   console.log("Filtered motorcycles count:", filteredMotorcycles.length);
 
+  // Create a custom handleSearchChange that updates the searchTerm property
+  const handleSearchChange = (term: string) => {
+    handlers.handleFilterChange({ ...filters, searchTerm: term, search: term });
+  };
+
   return {
     filters,
     ...handlers,
+    handleSearchChange, // Override with our custom implementation
     filteredMotorcycles,
     isFiltering,
     isSearching
