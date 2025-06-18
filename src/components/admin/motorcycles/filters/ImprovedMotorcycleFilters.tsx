@@ -17,13 +17,6 @@ interface FilterPreset {
   icon: React.ReactNode;
 }
 
-interface FilterImpact {
-  name: string;
-  currentCount: number;
-  totalCount: number;
-  reduction: number;
-}
-
 interface ImprovedMotorcycleFiltersProps {
   filters: MotorcycleFilters;
   motorcycles: Motorcycle[];
@@ -61,7 +54,7 @@ const ImprovedMotorcycleFilters = ({
       description: "High performance sport motorcycles",
       icon: <Settings className="h-4 w-4" />,
       filters: {
-        categories: ["Sport", "Supersport"],
+        categories: ["Sport"],
         engineSizeRange: [600, 1400],
         weightRange: [160, 220]
       }
@@ -78,6 +71,8 @@ const ImprovedMotorcycleFilters = ({
     }
   ];
 
+  const availableCategories = ["Sport", "Cruiser", "Touring", "Adventure", "Standard", "Naked"];
+
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
     if (newExpanded.has(section)) {
@@ -90,17 +85,6 @@ const ImprovedMotorcycleFilters = ({
 
   const applyPreset = (preset: FilterPreset) => {
     onFilterChange({ ...filters, ...preset.filters });
-  };
-
-  const getFilterImpact = (filterName: string): FilterImpact => {
-    // This would calculate how many results each filter eliminates
-    // For now, return mock data
-    return {
-      name: filterName,
-      currentCount: filteredCount,
-      totalCount: motorcycles.length,
-      reduction: Math.round(((motorcycles.length - filteredCount) / motorcycles.length) * 100)
-    };
   };
 
   const activeFiltersCount = [
@@ -186,7 +170,7 @@ const ImprovedMotorcycleFilters = ({
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-2 mt-2">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {["Sport", "Cruiser", "Touring", "Adventure", "Standard", "Naked"].map((category) => {
+                  {availableCategories.map((category) => {
                     const isSelected = filters.categories.includes(category);
                     return (
                       <Button

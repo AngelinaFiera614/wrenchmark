@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { 
   Grid, List, Loader, RefreshCw, MoreVertical, 
   Edit, Eye, Copy, Trash2, CheckCircle, AlertCircle,
-  Maximize2, Minimize2, ArrowUpDown
+  ArrowUpDown
 } from "lucide-react";
 import { Motorcycle } from "@/types";
 import { calculateDataCompleteness } from "@/utils/dataCompleteness";
@@ -26,10 +26,9 @@ interface EnhancedModelBrowserProps {
   isLoading: boolean;
   onRefresh?: () => void;
   isExpanded?: boolean;
-  onToggleExpanded?: () => void;
 }
 
-type ViewMode = 'grid' | 'list' | 'table';
+type ViewMode = 'grid' | 'list';
 type SortOption = 'name' | 'year' | 'completion' | 'updated' | 'make';
 
 const EnhancedModelBrowser = ({
@@ -42,8 +41,7 @@ const EnhancedModelBrowser = ({
   onClearSelection,
   isLoading,
   onRefresh,
-  isExpanded = false,
-  onToggleExpanded
+  isExpanded = false
 }: EnhancedModelBrowserProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('name');
@@ -135,7 +133,7 @@ const EnhancedModelBrowser = ({
           </DropdownMenu>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 pr-8">
           <div>
             <div className="font-medium text-explorer-text">
               {motorcycle.make || motorcycle.name?.split(' ')[0]} {motorcycle.model || motorcycle.name}
@@ -168,72 +166,6 @@ const EnhancedModelBrowser = ({
     );
   };
 
-  const MotorcycleListItem = ({ motorcycle, isSelected }: { motorcycle: Motorcycle; isSelected: boolean }) => {
-    const completeness = calculateDataCompleteness(motorcycle);
-    const isInSelection = selectedMotorcycles.includes(motorcycle.id);
-    
-    return (
-      <div
-        className={`flex items-center gap-4 p-3 rounded-lg border cursor-pointer transition-colors ${
-          isSelected
-            ? 'border-accent-teal bg-accent-teal/10'
-            : 'border-explorer-chrome/30 bg-explorer-card hover:border-explorer-chrome/50'
-        }`}
-        onClick={() => onSelectMotorcycle(motorcycle)}
-      >
-        <Checkbox
-          checked={isInSelection}
-          onCheckedChange={() => onToggleMotorcycleSelection(motorcycle.id)}
-          onClick={(e) => e.stopPropagation()}
-        />
-        
-        <div className="flex-1">
-          <div className="font-medium text-explorer-text">
-            {motorcycle.make || motorcycle.name?.split(' ')[0]} {motorcycle.model || motorcycle.name}
-          </div>
-          <div className="text-sm text-explorer-text-muted">
-            {motorcycle.category} • {motorcycle.year || 'Unknown Year'}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {motorcycle.is_draft && (
-            <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
-              Draft
-            </Badge>
-          )}
-          <DataCompletenessIndicator status={completeness} variant="admin" />
-        </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-explorer-card border-explorer-chrome/30">
-            <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Eye className="h-4 w-4 mr-2" />
-              View Details
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Copy className="h-4 w-4 mr-2" />
-              Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-400">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
-  };
-
   if (isLoading) {
     return (
       <Card className="bg-explorer-card border-explorer-chrome/30 h-full">
@@ -248,7 +180,7 @@ const EnhancedModelBrowser = ({
   }
 
   return (
-    <Card className="bg-explorer-card border-explorer-chrome/30 h-full">
+    <Card className="bg-explorer-card border-explorer-chrome/30">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-explorer-text flex items-center gap-2">
@@ -276,7 +208,7 @@ const EnhancedModelBrowser = ({
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className={`rounded-none ${viewMode === 'list' ? 'bg-accent-teal text-black' : ''}`}
+                className={`rounded-l-none ${viewMode === 'list' ? 'bg-accent-teal text-black' : ''}`}
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -310,12 +242,6 @@ const EnhancedModelBrowser = ({
                 <RefreshCw className="h-4 w-4" />
               </Button>
             )}
-
-            {onToggleExpanded && (
-              <Button variant="outline" size="sm" onClick={onToggleExpanded}>
-                {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-              </Button>
-            )}
           </div>
         </div>
 
@@ -335,28 +261,22 @@ const EnhancedModelBrowser = ({
         )}
       </CardHeader>
       
-      <CardContent className="p-2 h-[600px] overflow-y-auto">
+      <CardContent className="p-4">
         {motorcycles.length === 0 ? (
           <div className="text-center py-8 text-explorer-text-muted">
             No motorcycles available
           </div>
         ) : (
-          <div className={`space-y-2 ${
+          <div className={
             viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' 
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4' 
               : 'space-y-2'
-          }`}>
+          }>
             {sortedMotorcycles.map((motorcycle) => {
               const isSelected = selectedMotorcycle?.id === motorcycle.id;
               
-              return viewMode === 'grid' ? (
+              return (
                 <MotorcycleCard 
-                  key={motorcycle.id} 
-                  motorcycle={motorcycle} 
-                  isSelected={isSelected} 
-                />
-              ) : (
-                <MotorcycleListItem 
                   key={motorcycle.id} 
                   motorcycle={motorcycle} 
                   isSelected={isSelected} 

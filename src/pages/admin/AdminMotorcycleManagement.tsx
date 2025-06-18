@@ -31,7 +31,6 @@ const AdminMotorcycleManagement = () => {
   const [selectedMotorcycles, setSelectedMotorcycles] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("browse");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [isBrowserExpanded, setIsBrowserExpanded] = useState(false);
 
   const { data: motorcycles, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["admin-motorcycle-management"],
@@ -221,56 +220,27 @@ const AdminMotorcycleManagement = () => {
             isOpen={isFiltersOpen}
           />
 
-          <div className={`flex-1 grid gap-6 ${
-            isBrowserExpanded 
-              ? 'grid-cols-1' 
-              : 'grid-cols-1 lg:grid-cols-3'
-          }`}>
-            {/* Enhanced Model Browser */}
-            <div className={isBrowserExpanded ? 'col-span-1' : 'lg:col-span-1'}>
-              <EnhancedModelBrowser
-                motorcycles={filteredMotorcycles}
-                selectedMotorcycle={selectedMotorcycle}
-                selectedMotorcycles={selectedMotorcycles}
-                onSelectMotorcycle={setSelectedMotorcycle}
-                onToggleMotorcycleSelection={handleToggleMotorcycleSelection}
-                onSelectAll={handleSelectAll}
-                onClearSelection={handleClearSelection}
-                isLoading={isLoading}
-                onRefresh={handleRefresh}
-                isExpanded={isBrowserExpanded}
-                onToggleExpanded={() => setIsBrowserExpanded(!isBrowserExpanded)}
-              />
-            </div>
+          {/* Horizontal Model Browser */}
+          <div className="flex-1 space-y-4">
+            <EnhancedModelBrowser
+              motorcycles={filteredMotorcycles}
+              selectedMotorcycle={selectedMotorcycle}
+              selectedMotorcycles={selectedMotorcycles}
+              onSelectMotorcycle={setSelectedMotorcycle}
+              onToggleMotorcycleSelection={handleToggleMotorcycleSelection}
+              onSelectAll={handleSelectAll}
+              onClearSelection={handleClearSelection}
+              isLoading={isLoading}
+              onRefresh={handleRefresh}
+              isExpanded={true}
+            />
 
-            {/* Details Panel */}
-            {!isBrowserExpanded && (
-              <div className="lg:col-span-2">
-                {selectedMotorcycle ? (
-                  <MotorcycleDetailsPanel
-                    motorcycle={selectedMotorcycle}
-                    onUpdate={handleMotorcycleUpdate}
-                  />
-                ) : (
-                  <Card className="bg-explorer-card border-explorer-chrome/30 h-full">
-                    <CardContent className="p-8 flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <Eye className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
-                        <p className="text-explorer-text-muted">
-                          Select a motorcycle from the list to view and edit details
-                        </p>
-                        {selectedMotorcycles.length > 0 && (
-                          <div className="mt-4">
-                            <Badge variant="secondary" className="bg-accent-teal/20 text-accent-teal">
-                              {selectedMotorcycles.length} motorcycles selected for bulk operations
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+            {/* Details Panel - Only show when a motorcycle is selected */}
+            {selectedMotorcycle && (
+              <MotorcycleDetailsPanel
+                motorcycle={selectedMotorcycle}
+                onUpdate={handleMotorcycleUpdate}
+              />
             )}
           </div>
         </TabsContent>
