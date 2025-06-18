@@ -76,13 +76,13 @@ const ModelComponentAssignmentDialog = ({
     queryFn: () => fetchWheels()
   });
 
-  // Properly typed component types array
-  const componentTypes: Array<{ key: ComponentType; label: string; data: any[] | undefined }> = [
-    { key: 'engine', label: 'Engine', data: engines },
-    { key: 'brake_system', label: 'Brake System', data: brakes },
-    { key: 'frame', label: 'Frame', data: frames },
-    { key: 'suspension', label: 'Suspension', data: suspensions },
-    { key: 'wheel', label: 'Wheels', data: wheels }
+  // Properly typed component types array with const assertion
+  const componentTypes = [
+    { key: 'engine' as const, label: 'Engine', data: engines },
+    { key: 'brake_system' as const, label: 'Brake System', data: brakes },
+    { key: 'frame' as const, label: 'Frame', data: frames },
+    { key: 'suspension' as const, label: 'Suspension', data: suspensions },
+    { key: 'wheel' as const, label: 'Wheels', data: wheels }
   ];
 
   const handleAssignComponent = async (
