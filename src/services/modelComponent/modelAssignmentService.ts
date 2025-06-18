@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ModelComponentAssignment } from "./types";
+import { ModelComponentAssignment, ComponentType } from "./types";
 
 // Get model-level component assignments
 export const getModelComponentAssignments = async (modelId: string): Promise<ModelComponentAssignment[]> => {
@@ -20,7 +20,7 @@ export const getModelComponentAssignments = async (modelId: string): Promise<Mod
 // Assign component to model
 export const assignComponentToModel = async (
   modelId: string,
-  componentType: ModelComponentAssignment['component_type'],
+  componentType: ComponentType,
   componentId: string
 ): Promise<ModelComponentAssignment | null> => {
   const { data, error } = await supabase
@@ -45,7 +45,7 @@ export const assignComponentToModel = async (
 // Update model component assignment
 export const updateModelComponentAssignment = async (
   modelId: string,
-  componentType: ModelComponentAssignment['component_type'],
+  componentType: ComponentType,
   componentId: string
 ): Promise<ModelComponentAssignment | null> => {
   const { data, error } = await supabase
@@ -67,7 +67,7 @@ export const updateModelComponentAssignment = async (
 // Remove component from model
 export const removeComponentFromModel = async (
   modelId: string,
-  componentType: ModelComponentAssignment['component_type']
+  componentType: ComponentType
 ): Promise<boolean> => {
   const { error } = await supabase
     .from('model_component_assignments')

@@ -14,7 +14,8 @@ import {
   assignComponentToModel,
   updateModelComponentAssignment,
   removeComponentFromModel,
-  ModelComponentAssignment
+  ModelComponentAssignment,
+  ComponentType
 } from "@/services/modelComponentService";
 import { fetchEngines } from "@/services/engineService";
 import { fetchBrakes } from "@/services/brakeService";
@@ -29,8 +30,6 @@ interface ModelComponentAssignmentDialogProps {
   modelName: string;
   onSuccess: () => void;
 }
-
-type ComponentType = ModelComponentAssignment['component_type'];
 
 const ModelComponentAssignmentDialog = ({
   open,
@@ -76,14 +75,14 @@ const ModelComponentAssignmentDialog = ({
     queryFn: () => fetchWheels()
   });
 
-  // Properly typed component types array with const assertion
+  // Properly typed component types array
   const componentTypes = [
-    { key: 'engine' as const, label: 'Engine', data: engines },
-    { key: 'brake_system' as const, label: 'Brake System', data: brakes },
-    { key: 'frame' as const, label: 'Frame', data: frames },
-    { key: 'suspension' as const, label: 'Suspension', data: suspensions },
-    { key: 'wheel' as const, label: 'Wheels', data: wheels }
-  ] as const;
+    { key: 'engine' as ComponentType, label: 'Engine', data: engines },
+    { key: 'brake_system' as ComponentType, label: 'Brake System', data: brakes },
+    { key: 'frame' as ComponentType, label: 'Frame', data: frames },
+    { key: 'suspension' as ComponentType, label: 'Suspension', data: suspensions },
+    { key: 'wheel' as ComponentType, label: 'Wheels', data: wheels }
+  ];
 
   const handleAssignComponent = async (
     componentType: ComponentType,

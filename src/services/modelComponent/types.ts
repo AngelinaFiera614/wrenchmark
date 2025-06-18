@@ -1,9 +1,11 @@
 
+export type ComponentType = 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel';
+
 export interface ModelComponentAssignment {
   id: string;
   model_id: string;
   component_id: string;
-  component_type: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel';
+  component_type: ComponentType;
   assignment_type: string;
   is_default: boolean;
   effective_from_year?: number;

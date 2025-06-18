@@ -1,10 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ModelComponentAssignment } from "./types";
+import { ModelComponentAssignment, ComponentType } from "./types";
 
 export const assignComponentToModel = async (
   modelId: string,
-  componentType: ModelComponentAssignment['component_type'],
+  componentType: ComponentType,
   componentId: string
 ): Promise<ModelComponentAssignment | null> => {
   // First check if assignment already exists
@@ -58,7 +58,7 @@ export const assignComponentToModel = async (
 
 export const removeComponentFromModel = async (
   modelId: string,
-  componentType: ModelComponentAssignment['component_type']
+  componentType: ComponentType
 ): Promise<boolean> => {
   const { error } = await supabase
     .from('model_component_assignments')
@@ -77,7 +77,7 @@ export const removeComponentFromModel = async (
 export const bulkAssignComponents = async (
   assignments: Array<{
     modelId: string;
-    componentType: ModelComponentAssignment['component_type'];
+    componentType: ComponentType;
     componentId: string;
   }>
 ): Promise<boolean> => {

@@ -1,11 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+export type ComponentType = 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel';
+
 export interface ModelComponentAssignment {
   id: string;
   model_id: string;
   component_id: string;
-  component_type: string;
+  component_type: ComponentType;
   assignment_type: string;
   is_default: boolean;
   effective_from_year?: number;
@@ -69,7 +71,7 @@ export async function createComponentAssignment(assignment: Omit<ModelComponentA
 // Assign component to model
 export async function assignComponentToModel(
   modelId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
+  componentType: ComponentType,
   componentId: string
 ): Promise<boolean> {
   const assignment = {
@@ -86,7 +88,7 @@ export async function assignComponentToModel(
 // Remove component from model
 export async function removeComponentFromModel(
   modelId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
+  componentType: ComponentType
 ): Promise<boolean> {
   const { error } = await supabase
     .from('model_component_assignments')
@@ -123,7 +125,7 @@ export async function updateModelComponentAssignment(
 // Check if component can be deleted
 export async function canDeleteComponent(
   componentId: string,
-  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
+  componentType: ComponentType
 ): Promise<{ canDelete: boolean; usage?: ComponentUsage }> {
   try {
     // Check model assignments
