@@ -3,35 +3,35 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Search, 
   Plus, 
-  Filter, 
   Download, 
   Upload,
   CheckCircle,
   AlertCircle,
   Clock,
   Eye,
-  Edit3,
   RefreshCw
 } from "lucide-react";
 import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
 import { calculateDataCompleteness } from "@/utils/dataCompleteness";
 import { Motorcycle } from "@/types";
-import MotorcycleModelBrowser from "@/components/admin/motorcycles/unified/MotorcycleModelBrowser";
+import { useMotorcycleFilters } from "@/hooks/useMotorcycleFilters";
+import EnhancedMotorcycleSearch from "@/components/admin/motorcycles/search/EnhancedMotorcycleSearch";
+import ImprovedMotorcycleFilters from "@/components/admin/motorcycles/filters/ImprovedMotorcycleFilters";
+import EnhancedModelBrowser from "@/components/admin/motorcycles/browser/EnhancedModelBrowser";
 import MotorcycleDetailsPanel from "@/components/admin/motorcycles/unified/MotorcycleDetailsPanel";
 import MotorcycleQuickActions from "@/components/admin/motorcycles/unified/MotorcycleQuickActions";
 import MotorcycleCompletionDashboard from "@/components/admin/motorcycles/unified/MotorcycleCompletionDashboard";
 
 const AdminMotorcycleManagement = () => {
   const [selectedMotorcycle, setSelectedMotorcycle] = useState<Motorcycle | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedMotorcycles, setSelectedMotorcycles] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("browse");
-  const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "published" | "incomplete">("all");
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isBrowserExpanded, setIsBrowserExpanded] = useState(false);
 
   const { data: motorcycles, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["admin-motorcycle-management"],
@@ -39,20 +39,13 @@ const AdminMotorcycleManagement = () => {
     refetchOnWindowFocus: false
   });
 
-  const filteredMotorcycles = motorcycles?.filter(motorcycle => {
-    const matchesSearch = searchQuery === "" || 
-      motorcycle.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      motorcycle.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      motorcycle.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      motorcycle.category?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus = filterStatus === "all" || 
-      (filterStatus === "draft" && motorcycle.is_draft) ||
-      (filterStatus === "published" && !motorcycle.is_draft) ||
-      (filterStatus === "incomplete" && calculateDataCompleteness(motorcycle).completionPercentage < 100);
-
-    return matchesSearch && matchesStatus;
-  }) || [];
+  const {
+    filters,
+    filteredMotorcycles,
+    handleSearchChange,
+    handleFilterChange,
+    resetFilters
+  } = useMotorcycleFilters(motorcycles || []);
 
   const stats = {
     total: motorcycles?.length || 0,
@@ -63,19 +56,46 @@ const AdminMotorcycleManagement = () => {
 
   const handleRefresh = () => {
     refetch();
-    // Clear selection to force refresh of details panel
     setSelectedMotorcycle(null);
+    setSelectedMotorcycles([]);
   };
 
   const handleMotorcycleUpdate = () => {
     refetch();
-    // Refresh the selected motorcycle data
     if (selectedMotorcycle && motorcycles) {
       const updatedMotorcycle = motorcycles.find(m => m.id === selectedMotorcycle.id);
       if (updatedMotorcycle) {
         setSelectedMotorcycle(updatedMotorcycle);
       }
     }
+  };
+
+  const handleToggleMotorcycleSelection = (motorcycleId: string) => {
+    setSelectedMotorcycles(prev => 
+      prev.includes(motorcycleId) 
+        ? prev.filter(id => id !== motorcycleId)
+        : [...prev, motorcycleId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedMotorcycles(filteredMotorcycles.map(m => m.id));
+  };
+
+  const handleClearSelection = () => {
+    setSelectedMotorcycles([]);
+  };
+
+  const getActiveFiltersCount = () => {
+    return [
+      filters.categories.length > 0,
+      filters.make !== "",
+      filters.yearRange[0] !== 1900 || filters.yearRange[1] !== 2030,
+      filters.engineSizeRange[0] !== 0 || filters.engineSizeRange[1] !== 3000,
+      filters.weightRange[0] !== 0 || filters.weightRange[1] !== 600,
+      filters.seatHeightRange[0] !== 400 || filters.seatHeightRange[1] !== 1300,
+      filters.abs !== null
+    ].filter(Boolean).length;
   };
 
   return (
@@ -85,7 +105,7 @@ const AdminMotorcycleManagement = () => {
         <div>
           <h1 className="text-3xl font-bold text-explorer-text">Motorcycle Management</h1>
           <p className="text-explorer-text-muted mt-1">
-            Unified interface for managing all motorcycle data, specifications, and components
+            Enhanced interface for managing all motorcycle data with improved search and filtering
           </p>
         </div>
         <div className="flex gap-2">
@@ -180,64 +200,78 @@ const AdminMotorcycleManagement = () => {
           <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="browse" className="flex-1 flex flex-col mt-4">
-          <div className="flex gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-explorer-text-muted h-4 w-4" />
-              <Input
-                placeholder="Search motorcycles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-explorer-dark border-explorer-chrome/30"
-              />
-            </div>
-            <div className="flex gap-2">
-              {["all", "published", "draft", "incomplete"].map((status) => (
-                <Button
-                  key={status}
-                  variant={filterStatus === status ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterStatus(status as any)}
-                  className={filterStatus === status ? "bg-accent-teal text-black" : ""}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Button>
-              ))}
-            </div>
-          </div>
+        <TabsContent value="browse" className="flex-1 flex flex-col mt-4 space-y-4">
+          {/* Enhanced Search */}
+          <EnhancedMotorcycleSearch
+            motorcycles={motorcycles || []}
+            searchTerm={filters.searchTerm}
+            onSearchChange={handleSearchChange}
+            onAdvancedToggle={() => setIsFiltersOpen(!isFiltersOpen)}
+            isAdvancedOpen={isFiltersOpen}
+            activeFiltersCount={getActiveFiltersCount()}
+          />
 
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Model Browser */}
-            <div className="lg:col-span-1">
-              <MotorcycleModelBrowser
+          {/* Improved Filters */}
+          <ImprovedMotorcycleFilters
+            filters={filters}
+            motorcycles={motorcycles || []}
+            filteredCount={filteredMotorcycles.length}
+            onFilterChange={handleFilterChange}
+            onClearFilters={resetFilters}
+            isOpen={isFiltersOpen}
+          />
+
+          <div className={`flex-1 grid gap-6 ${
+            isBrowserExpanded 
+              ? 'grid-cols-1' 
+              : 'grid-cols-1 lg:grid-cols-3'
+          }`}>
+            {/* Enhanced Model Browser */}
+            <div className={isBrowserExpanded ? 'col-span-1' : 'lg:col-span-1'}>
+              <EnhancedModelBrowser
                 motorcycles={filteredMotorcycles}
                 selectedMotorcycle={selectedMotorcycle}
+                selectedMotorcycles={selectedMotorcycles}
                 onSelectMotorcycle={setSelectedMotorcycle}
+                onToggleMotorcycleSelection={handleToggleMotorcycleSelection}
+                onSelectAll={handleSelectAll}
+                onClearSelection={handleClearSelection}
                 isLoading={isLoading}
                 onRefresh={handleRefresh}
+                isExpanded={isBrowserExpanded}
+                onToggleExpanded={() => setIsBrowserExpanded(!isBrowserExpanded)}
               />
             </div>
 
             {/* Details Panel */}
-            <div className="lg:col-span-2">
-              {selectedMotorcycle ? (
-                <MotorcycleDetailsPanel
-                  motorcycle={selectedMotorcycle}
-                  onUpdate={handleMotorcycleUpdate}
-                />
-              ) : (
-                <Card className="bg-explorer-card border-explorer-chrome/30 h-full">
-                  <CardContent className="p-8 flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <Edit3 className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
-                      <p className="text-explorer-text-muted">
-                        Select a motorcycle from the list to view and edit details
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            {!isBrowserExpanded && (
+              <div className="lg:col-span-2">
+                {selectedMotorcycle ? (
+                  <MotorcycleDetailsPanel
+                    motorcycle={selectedMotorcycle}
+                    onUpdate={handleMotorcycleUpdate}
+                  />
+                ) : (
+                  <Card className="bg-explorer-card border-explorer-chrome/30 h-full">
+                    <CardContent className="p-8 flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <Eye className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
+                        <p className="text-explorer-text-muted">
+                          Select a motorcycle from the list to view and edit details
+                        </p>
+                        {selectedMotorcycles.length > 0 && (
+                          <div className="mt-4">
+                            <Badge variant="secondary" className="bg-accent-teal/20 text-accent-teal">
+                              {selectedMotorcycles.length} motorcycles selected for bulk operations
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -247,7 +281,9 @@ const AdminMotorcycleManagement = () => {
 
         <TabsContent value="bulk" className="flex-1 mt-4">
           <MotorcycleQuickActions
-            selectedMotorcycles={selectedMotorcycle ? [selectedMotorcycle] : []}
+            selectedMotorcycles={selectedMotorcycles.map(id => 
+              motorcycles?.find(m => m.id === id)
+            ).filter(Boolean) as Motorcycle[]}
             onRefresh={handleRefresh}
           />
         </TabsContent>
