@@ -83,7 +83,7 @@ const ModelComponentAssignmentDialog = ({
     { key: 'frame' as const, label: 'Frame', data: frames },
     { key: 'suspension' as const, label: 'Suspension', data: suspensions },
     { key: 'wheel' as const, label: 'Wheels', data: wheels }
-  ];
+  ] as const;
 
   const handleAssignComponent = async (
     componentType: ComponentType,
