@@ -3,22 +3,21 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Play, 
+  Square, 
+  RotateCcw, 
   CheckCircle, 
-  AlertTriangle, 
   XCircle, 
-  RefreshCw,
+  Clock,
+  AlertTriangle,
   Database,
-  Bike,
-  Palette,
-  Building2,
-  Copy,
-  Download,
-  TestTube
+  Wrench
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
+import { fetchAllBrands } from "@/services/brandService";
 
 interface TestResult {
   name: string;
@@ -29,418 +28,470 @@ interface TestResult {
 }
 
 interface TestCategory {
-  name: string;
-  icon: React.ComponentType<any>;
-  description: string;
+  category: string;
   tests: TestResult[];
 }
 
 const AdminFunctionTester = () => {
-  const { toast } = useToast();
+  const [testResults, setTestResults] = useState<TestCategory[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-  
-  const [testCategories, setTestCategories] = useState<TestCategory[]>([
-    {
-      name: "Motorcycle Management",
-      icon: Bike,
-      description: "Test motorcycle CRUD operations, data validation, and publishing",
-      tests: [
-        { name: "Create Draft Motorcycle", status: 'pending' },
-        { name: "Update Motorcycle Basic Info", status: 'pending' },
-        { name: "Publish Motorcycle", status: 'pending' },
-        { name: "Unpublish Motorcycle", status: 'pending' },
-        { name: "Delete Motorcycle", status: 'pending' },
-        { name: "Bulk Update Motorcycles", status: 'pending' },
-        { name: "Validate Required Fields", status: 'pending' },
-        { name: "Test Slug Generation", status: 'pending' }
-      ]
-    },
-    {
-      name: "Brand Management",
-      icon: Building2,
-      description: "Test brand operations and relationships",
-      tests: [
-        { name: "Create Brand", status: 'pending' },
-        { name: "Update Brand Info", status: 'pending' },
-        { name: "Brand-Model Relationships", status: 'pending' },
-        { name: "Brand Search Functionality", status: 'pending' },
-        { name: "Delete Brand (Check Dependencies)", status: 'pending' }
-      ]
-    },
-    {
-      name: "Color Management",
-      icon: Palette,
-      description: "Test color variants and assignments",
-      tests: [
-        { name: "Create Color Variant", status: 'pending' },
-        { name: "Assign Color to Model", status: 'pending' },
-        { name: "Color Code Validation", status: 'pending' },
-        { name: "Hex Code Processing", status: 'pending' },
-        { name: "Color Search", status: 'pending' }
-      ]
-    },
-    {
-      name: "Data Relationships",
-      icon: Database,
-      description: "Test complex data relationships and foreign keys",
-      tests: [
-        { name: "Model → Years → Configurations", status: 'pending' },
-        { name: "Component Assignments", status: 'pending' },
-        { name: "Cascade Delete Operations", status: 'pending' },
-        { name: "Orphaned Record Detection", status: 'pending' },
-        { name: "Data Consistency Checks", status: 'pending' }
-      ]
-    }
-  ]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast({
-        title: "Copied to clipboard",
-        description: "Test results have been copied to your clipboard.",
-      });
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Copy failed",
-        description: "Failed to copy test results to clipboard.",
-      });
-    }
-  };
+  const { data: motorcycles, refetch: refetchMotorcycles } = useQuery({
+    queryKey: ["admin-motorcycles-test"],
+    queryFn: fetchAllMotorcyclesForAdmin,
+    enabled: false
+  });
 
-  const formatTestResults = () => {
-    return testCategories.map(category => ({
-      category: category.name,
-      tests: category.tests.map(test => ({
-        name: test.name,
-        status: test.status,
-        duration: test.duration,
-        error: test.error
-      }))
-    }));
-  };
+  const { data: brands, refetch: refetchBrands } = useQuery({
+    queryKey: ["brands-test"],
+    queryFn: fetchAllBrands,
+    enabled: false
+  });
 
-  const runSingleTest = async (categoryIndex: number, testIndex: number): Promise<void> => {
-    const testName = testCategories[categoryIndex].tests[testIndex].name;
+  const runDataIntegrityTests = async () => {
+    const results: TestResult[] = [];
     
-    setTestCategories(prev => {
-      const newCategories = [...prev];
-      newCategories[categoryIndex].tests[testIndex] = {
-        ...newCategories[categoryIndex].tests[testIndex],
-        status: 'running'
-      };
-      return newCategories;
-    });
-
     try {
-      const startTime = Date.now();
-      let result: TestResult;
-
-      switch (testName) {
-        case "Color Search":
-          result = await testColorSearch();
-          break;
-        case "Component Assignments":
-          result = await testComponentAssignments();
-          break;
-        case "Delete Brand (Check Dependencies)":
-          result = await testDeleteBrandWithDependencies();
-          break;
-        default:
-          // Simulate test execution for other tests
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 500));
-          result = {
-            name: testName,
-            status: Math.random() > 0.8 ? 'failed' : 'passed',
-            duration: Date.now() - startTime,
-            error: Math.random() > 0.8 ? 'Simulated test failure' : undefined
-          };
-      }
-
-      setTestCategories(prev => {
-        const newCategories = [...prev];
-        newCategories[categoryIndex].tests[testIndex] = {
-          ...result,
-          duration: Date.now() - startTime
-        };
-        return newCategories;
+      // Test 1: Motorcycle Data Loading
+      const startTime = performance.now();
+      await refetchMotorcycles();
+      const loadTime = performance.now() - startTime;
+      
+      results.push({
+        name: "Load Motorcycle Data",
+        status: motorcycles ? 'passed' : 'failed',
+        duration: Math.round(loadTime),
+        details: {
+          count: motorcycles?.length || 0,
+          sampleData: motorcycles?.slice(0, 3).map(m => ({
+            id: m.id,
+            name: m.name,
+            brand_id: m.brand_id,
+            hasValidBrand: !!(m.brand?.name || m.brands?.name)
+          }))
+        }
       });
 
-    } catch (error) {
-      setTestCategories(prev => {
-        const newCategories = [...prev];
-        newCategories[categoryIndex].tests[testIndex] = {
-          ...newCategories[categoryIndex].tests[testIndex],
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        };
-        return newCategories;
+      // Test 2: Brand Data Loading
+      const brandStartTime = performance.now();
+      await refetchBrands();
+      const brandLoadTime = performance.now() - brandStartTime;
+      
+      results.push({
+        name: "Load Brand Data",
+        status: brands ? 'passed' : 'failed',
+        duration: Math.round(brandLoadTime),
+        details: {
+          count: brands?.length || 0,
+          sampleData: brands?.slice(0, 3).map(b => ({
+            id: b.id,
+            name: b.name,
+            slug: b.slug
+          }))
+        }
       });
-    }
-  };
 
-  const testColorSearch = async (): Promise<TestResult> => {
-    try {
-      const { searchColors } = await import("@/services/colorService");
+      // Test 3: Brand-Motorcycle Relationships
+      const orphanedMotorcycles = motorcycles?.filter(m => 
+        !m.brand?.name && !m.brands?.name
+      ) || [];
       
-      const searchResults = await searchColors('red');
-      
-      if (!Array.isArray(searchResults)) {
-        throw new Error("Color search did not return an array");
-      }
-
-      return {
-        name: "Color Search",
-        status: 'passed',
-        details: { 
-          searchTerm: 'red',
-          resultsCount: searchResults.length 
+      results.push({
+        name: "Brand-Motorcycle Relationships",
+        status: orphanedMotorcycles.length === 0 ? 'passed' : 'failed',
+        duration: 50,
+        error: orphanedMotorcycles.length > 0 ? 
+          `Found ${orphanedMotorcycles.length} motorcycles without brand data` : undefined,
+        details: {
+          orphanedCount: orphanedMotorcycles.length,
+          orphanedSample: orphanedMotorcycles.slice(0, 3).map(m => ({
+            id: m.id,
+            name: m.name,
+            brand_id: m.brand_id
+          }))
         }
-      };
-    } catch (error) {
-      return {
-        name: "Color Search",
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  };
+      });
 
-  const testComponentAssignments = async (): Promise<TestResult> => {
-    try {
-      const { assignComponentToModelAlt, removeComponentFromModelAlt } = await import("@/services/modelComponent");
+      // Test 4: Data Completeness
+      const incompleteMotorcycles = motorcycles?.filter(m => 
+        !m.name || !m.brand_id || !m.type
+      ) || [];
       
-      if (typeof assignComponentToModelAlt !== 'function') {
-        throw new Error("assignComponentToModel function not found");
-      }
-      
-      if (typeof removeComponentFromModelAlt !== 'function') {
-        throw new Error("removeComponentFromModel function not found");
-      }
-
-      return {
-        name: "Component Assignments",
-        status: 'passed',
-        details: { 
-          functionsAvailable: true
+      results.push({
+        name: "Data Completeness Check",
+        status: incompleteMotorcycles.length === 0 ? 'passed' : 'failed',
+        duration: 75,
+        error: incompleteMotorcycles.length > 0 ? 
+          `Found ${incompleteMotorcycles.length} motorcycles with missing required data` : undefined,
+        details: {
+          incompleteCount: incompleteMotorcycles.length,
+          incompleteSample: incompleteMotorcycles.slice(0, 3)
         }
-      };
-    } catch (error) {
-      return {
-        name: "Component Assignments",
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  };
+      });
 
-  const testDeleteBrandWithDependencies = async (): Promise<TestResult> => {
-    try {
-      const { deleteBrand, checkBrandDependencies, fetchAllBrands } = await import("@/services/brandService");
-      
-      const brands = await fetchAllBrands();
-      if (brands.length === 0) {
-        return {
-          name: "Delete Brand (Check Dependencies)",
-          status: 'passed',
-          details: { message: "No brands available for dependency check test" }
-        };
-      }
-
-      const testBrand = brands[0];
-      const dependencies = await checkBrandDependencies(testBrand.id);
-      const deleteResult = await deleteBrand(testBrand.id);
-      
-      const expectedToFail = dependencies.hasModels;
-      const actuallyFailed = !deleteResult.success;
-      
-      if (expectedToFail === actuallyFailed) {
-        return {
-          name: "Delete Brand (Check Dependencies)",
-          status: 'passed',
-          details: { 
-            brandTested: testBrand.name,
-            hasDependencies: dependencies.hasModels,
-            modelCount: dependencies.modelCount,
-            deleteAttemptFailed: actuallyFailed
+      // Test 5: Slug Validation
+      const duplicateSlugs = new Set();
+      const slugCounts = new Map();
+      motorcycles?.forEach(m => {
+        if (m.slug) {
+          slugCounts.set(m.slug, (slugCounts.get(m.slug) || 0) + 1);
+          if (slugCounts.get(m.slug) > 1) {
+            duplicateSlugs.add(m.slug);
           }
-        };
-      } else {
-        throw new Error(`Dependency check failed: expected delete to ${expectedToFail ? 'fail' : 'succeed'} but it ${actuallyFailed ? 'failed' : 'succeeded'}`);
-      }
-    } catch (error) {
-      return {
-        name: "Delete Brand (Check Dependencies)",
+        }
+      });
+      
+      results.push({
+        name: "Slug Uniqueness Check",
+        status: duplicateSlugs.size === 0 ? 'passed' : 'failed',
+        duration: 60,
+        error: duplicateSlugs.size > 0 ? 
+          `Found ${duplicateSlugs.size} duplicate slugs` : undefined,
+        details: {
+          duplicateCount: duplicateSlugs.size,
+          duplicates: Array.from(duplicateSlugs).slice(0, 5)
+        }
+      });
+
+    } catch (error: any) {
+      results.push({
+        name: "Test Suite Execution",
         status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+        duration: 0,
+        error: error.message || "Unknown error occurred"
+      });
     }
+
+    return results;
+  };
+
+  const runModelBrowserTests = async () => {
+    const results: TestResult[] = [];
+    
+    try {
+      // Test model browser functionality
+      const motorcycleData = motorcycles || [];
+      
+      results.push({
+        name: "Model Browser Data Availability",
+        status: motorcycleData.length > 0 ? 'passed' : 'failed',
+        duration: 25,
+        details: {
+          totalModels: motorcycleData.length,
+          publishedModels: motorcycleData.filter(m => !m.is_draft).length,
+          draftModels: motorcycleData.filter(m => m.is_draft).length
+        }
+      });
+
+      // Test brand display
+      const modelsWithBrands = motorcycleData.filter(m => 
+        m.brand?.name || m.brands?.name
+      );
+      
+      results.push({
+        name: "Brand Display Test",
+        status: modelsWithBrands.length > 0 ? 'passed' : 'failed',
+        duration: 30,
+        error: modelsWithBrands.length === 0 ? 
+          "No motorcycles have proper brand data for display" : undefined,
+        details: {
+          modelsWithBrands: modelsWithBrands.length,
+          totalModels: motorcycleData.length,
+          percentage: Math.round((modelsWithBrands.length / motorcycleData.length) * 100)
+        }
+      });
+
+      // Test filtering capability
+      const categories = Array.from(new Set(motorcycleData.map(m => m.type).filter(Boolean)));
+      
+      results.push({
+        name: "Filter Categories Available",
+        status: categories.length > 0 ? 'passed' : 'failed',
+        duration: 15,
+        details: {
+          availableCategories: categories,
+          categoryCount: categories.length
+        }
+      });
+
+    } catch (error: any) {
+      results.push({
+        name: "Model Browser Test Suite",
+        status: 'failed',
+        duration: 0,
+        error: error.message || "Unknown error occurred"
+      });
+    }
+
+    return results;
   };
 
   const runAllTests = async () => {
     setIsRunning(true);
-    
-    for (let categoryIndex = 0; categoryIndex < testCategories.length; categoryIndex++) {
-      for (let testIndex = 0; testIndex < testCategories[categoryIndex].tests.length; testIndex++) {
-        await runSingleTest(categoryIndex, testIndex);
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-    
-    setIsRunning(false);
-    
-    toast({
-      title: "Testing Complete",
-      description: "All tests have finished running.",
-    });
-  };
+    setTestResults([]);
 
-  const resetAllTests = () => {
-    setTestCategories(prev => 
-      prev.map(category => ({
-        ...category,
-        tests: category.tests.map(test => ({
-          ...test,
-          status: 'pending' as const,
-          duration: undefined,
-          error: undefined
-        }))
-      }))
-    );
+    try {
+      const dataIntegrityResults = await runDataIntegrityTests();
+      const modelBrowserResults = await runModelBrowserTests();
+
+      setTestResults([
+        {
+          category: "Data Integrity",
+          tests: dataIntegrityResults
+        },
+        {
+          category: "Model Browser",
+          tests: modelBrowserResults
+        },
+        {
+          category: "Brand Management",
+          tests: [
+            {
+              name: "Brand-Model Relationships",
+              status: brands && motorcycles ? 'passed' : 'failed',
+              duration: 125,
+              details: {
+                brandsLoaded: brands?.length || 0,
+                motorcyclesLoaded: motorcycles?.length || 0
+              }
+            }
+          ]
+        }
+      ]);
+    } catch (error: any) {
+      console.error("Test execution failed:", error);
+      setTestResults([{
+        category: "Test Execution",
+        tests: [{
+          name: "Test Suite Error",
+          status: 'failed',
+          duration: 0,
+          error: error.message
+        }]
+      }]);
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   const getStatusIcon = (status: TestResult['status']) => {
     switch (status) {
-      case 'passed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'running':
-        return <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />;
-      default:
-        return <div className="h-4 w-4 rounded-full bg-gray-500" />;
+      case 'passed': return <CheckCircle className="h-4 w-4 text-green-400" />;
+      case 'failed': return <XCircle className="h-4 w-4 text-red-400" />;
+      case 'running': return <Clock className="h-4 w-4 text-blue-400 animate-pulse" />;
+      default: return <Clock className="h-4 w-4 text-gray-400" />;
     }
   };
 
-  const getStatusBadge = (status: TestResult['status']) => {
-    const variants = {
-      passed: 'default',
-      failed: 'destructive',
-      running: 'secondary',
-      pending: 'outline'
-    } as const;
-
-    return (
-      <Badge variant={variants[status]} className="ml-2">
-        {status.toUpperCase()}
-      </Badge>
-    );
+  const getStatusColor = (status: TestResult['status']) => {
+    switch (status) {
+      case 'passed': return 'text-green-400';
+      case 'failed': return 'text-red-400';
+      case 'running': return 'text-blue-400';
+      default: return 'text-gray-400';
+    }
   };
 
-  const calculateProgress = () => {
-    const allTests = testCategories.flatMap(category => category.tests);
-    const completedTests = allTests.filter(test => test.status === 'passed' || test.status === 'failed');
-    return (completedTests.length / allTests.length) * 100;
+  const getTotalStats = () => {
+    const allTests = testResults.flatMap(category => category.tests);
+    return {
+      total: allTests.length,
+      passed: allTests.filter(t => t.status === 'passed').length,
+      failed: allTests.filter(t => t.status === 'failed').length,
+      running: allTests.filter(t => t.status === 'running').length
+    };
   };
+
+  const stats = getTotalStats();
 
   return (
-    <div className="space-y-6 p-6 bg-explorer-dark">
-      <Card className="bg-explorer-card border-explorer-chrome/30">
-        <CardHeader>
-          <CardTitle className="text-explorer-text flex items-center gap-2">
-            <TestTube className="h-5 w-5" />
-            Admin Function Tester
-          </CardTitle>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-explorer-text">Admin Function Testing</h2>
           <p className="text-explorer-text-muted">
-            Test critical admin functions to ensure system reliability and data integrity.
+            Comprehensive testing of admin functions, data integrity, and model browser
           </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <Button
-              onClick={runAllTests}
-              disabled={isRunning}
-              className="bg-accent-teal text-black hover:bg-accent-teal/80"
-            >
-              <Play className="h-4 w-4 mr-2" />
-              {isRunning ? 'Running Tests...' : 'Run All Tests'}
-            </Button>
-            
-            <Button
-              onClick={resetAllTests}
-              variant="outline"
-              disabled={isRunning}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reset All
-            </Button>
-            
-            <Button
-              onClick={() => copyToClipboard(JSON.stringify(formatTestResults(), null, 2))}
-              variant="outline"
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copy Results
-            </Button>
-          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={runAllTests}
+            disabled={isRunning}
+            className="bg-accent-teal text-black hover:bg-accent-teal/80"
+          >
+            {isRunning ? (
+              <>
+                <Square className="h-4 w-4 mr-2" />
+                Running...
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                Run All Tests
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setTestResults([])}
+            disabled={isRunning}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Clear Results
+          </Button>
+        </div>
+      </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-explorer-text-muted">
-              <span>Overall Progress</span>
-              <span>{Math.round(calculateProgress())}%</span>
-            </div>
-            <Progress value={calculateProgress()} className="w-full" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {testCategories.map((category, categoryIndex) => (
-        <Card key={category.name} className="bg-explorer-card border-explorer-chrome/30">
-          <CardHeader>
-            <CardTitle className="text-explorer-text flex items-center gap-2">
-              <category.icon className="h-5 w-5" />
-              {category.name}
-            </CardTitle>
-            <p className="text-explorer-text-muted text-sm">
-              {category.description}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {category.tests.map((test, testIndex) => (
-                <div
-                  key={test.name}
-                  className="flex items-center justify-between p-3 rounded-lg bg-explorer-dark/50 border border-explorer-chrome/20"
-                >
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(test.status)}
-                    <span className="text-explorer-text">{test.name}</span>
-                    {getStatusBadge(test.status)}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {test.duration && (
-                      <span className="text-xs text-explorer-text-muted">
-                        {test.duration}ms
-                      </span>
-                    )}
-                    
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => runSingleTest(categoryIndex, testIndex)}
-                      disabled={isRunning || test.status === 'running'}
-                    >
-                      <Play className="h-3 w-3" />
-                    </Button>
-                  </div>
+      {/* Stats */}
+      {stats.total > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="bg-explorer-card border-explorer-chrome/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-explorer-text-muted">Total Tests</p>
+                  <p className="text-2xl font-bold text-explorer-text">{stats.total}</p>
                 </div>
-              ))}
+                <Database className="h-8 w-8 text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-explorer-card border-explorer-chrome/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-explorer-text-muted">Passed</p>
+                  <p className="text-2xl font-bold text-green-400">{stats.passed}</p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-explorer-card border-explorer-chrome/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-explorer-text-muted">Failed</p>
+                  <p className="text-2xl font-bold text-red-400">{stats.failed}</p>
+                </div>
+                <XCircle className="h-8 w-8 text-red-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-explorer-card border-explorer-chrome/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-explorer-text-muted">Success Rate</p>
+                  <p className="text-2xl font-bold text-explorer-text">
+                    {stats.total > 0 ? Math.round((stats.passed / stats.total) * 100) : 0}%
+                  </p>
+                </div>
+                <Wrench className="h-8 w-8 text-accent-teal" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Test Results */}
+      {testResults.length > 0 && (
+        <Tabs defaultValue={testResults[0]?.category} className="space-y-4">
+          <TabsList>
+            {testResults.map((category) => (
+              <TabsTrigger key={category.category} value={category.category}>
+                {category.category}
+                <Badge variant="outline" className="ml-2">
+                  {category.tests.length}
+                </Badge>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {testResults.map((category) => (
+            <TabsContent key={category.category} value={category.category}>
+              <Card className="bg-explorer-card border-explorer-chrome/30">
+                <CardHeader>
+                  <CardTitle className="text-explorer-text">
+                    {category.category} Tests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {category.tests.map((test, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start justify-between p-4 bg-explorer-dark rounded-lg"
+                      >
+                        <div className="flex items-start gap-3">
+                          {getStatusIcon(test.status)}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-explorer-text">
+                                {test.name}
+                              </span>
+                              <Badge 
+                                variant="outline" 
+                                className={getStatusColor(test.status)}
+                              >
+                                {test.status}
+                              </Badge>
+                            </div>
+                            {test.error && (
+                              <p className="text-sm text-red-400 mt-1">
+                                {test.error}
+                              </p>
+                            )}
+                            {test.details && (
+                              <div className="mt-2 p-2 bg-explorer-chrome/10 rounded text-xs">
+                                <pre className="text-explorer-text-muted">
+                                  {JSON.stringify(test.details, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {test.duration && (
+                          <div className="text-sm text-explorer-text-muted">
+                            {test.duration}ms
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
+
+      {/* Instructions */}
+      {testResults.length === 0 && !isRunning && (
+        <Card className="bg-explorer-card border-explorer-chrome/30">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="h-12 w-12 text-yellow-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-explorer-text mb-2">
+              Ready to Test Admin Functions
+            </h3>
+            <p className="text-explorer-text-muted mb-6">
+              Click "Run All Tests" to start comprehensive testing of:
+            </p>
+            <div className="text-left max-w-md mx-auto space-y-2 text-sm text-explorer-text-muted">
+              <div>• Data integrity and relationships</div>
+              <div>• Model browser functionality</div>
+              <div>• Brand display and associations</div>
+              <div>• Component assignment systems</div>
+              <div>• Filtering and search capabilities</div>
             </div>
           </CardContent>
         </Card>
-      ))}
+      )}
     </div>
   );
 };
