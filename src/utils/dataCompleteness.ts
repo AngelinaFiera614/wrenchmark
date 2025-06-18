@@ -6,9 +6,25 @@ export interface DataCompletion {
   missingFields: string[];
   completedFields: string[];
   criticalMissing: string[];
+  missingCriticalFields: string[];
+  hasEngine: boolean;
+  hasBrakes: boolean;
+  hasFrame: boolean;
+  hasSuspension: boolean;
+  hasWheels: boolean;
 }
 
-export function calculateDataCompleteness(motorcycle: Motorcycle): DataCompletion {
+export interface DataCompletenessStatus {
+  completionPercentage: number;
+  missingCriticalFields: string[];
+  hasEngine: boolean;
+  hasBrakes: boolean;
+  hasFrame: boolean;
+  hasSuspension: boolean;
+  hasWheels: boolean;
+}
+
+export function calculateDataCompleteness(motorcycle: Motorcycle, selectedConfiguration?: any): DataCompletion {
   const requiredFields = [
     { key: 'name', label: 'Name', critical: true },
     { key: 'brand_id', label: 'Brand', critical: true },
@@ -52,6 +68,13 @@ export function calculateDataCompleteness(motorcycle: Motorcycle): DataCompletio
     missingFields.push('Brand Display Name');
   }
 
+  // Check component availability
+  const hasEngine = !!(selectedConfiguration?.engine || selectedConfiguration?.engines);
+  const hasBrakes = !!(selectedConfiguration?.brake_system || selectedConfiguration?.brake_systems);
+  const hasFrame = !!(selectedConfiguration?.frame || selectedConfiguration?.frames);
+  const hasSuspension = !!(selectedConfiguration?.suspension || selectedConfiguration?.suspensions);
+  const hasWheels = !!(selectedConfiguration?.wheel || selectedConfiguration?.wheels);
+
   const completionPercentage = Math.round(
     (completedFields.length / requiredFields.length) * 100
   );
@@ -60,7 +83,13 @@ export function calculateDataCompleteness(motorcycle: Motorcycle): DataCompletio
     completionPercentage,
     missingFields,
     completedFields,
-    criticalMissing
+    criticalMissing,
+    missingCriticalFields: criticalMissing,
+    hasEngine,
+    hasBrakes,
+    hasFrame,
+    hasSuspension,
+    hasWheels
   };
 }
 

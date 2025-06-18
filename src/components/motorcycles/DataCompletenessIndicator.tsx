@@ -3,10 +3,10 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
-import { DataCompletenessStatus } from '@/utils/dataCompleteness';
+import { DataCompletion } from '@/utils/dataCompleteness';
 
 interface DataCompletenessIndicatorProps {
-  status: DataCompletenessStatus;
+  status: DataCompletion;
   variant?: 'card' | 'detail' | 'admin';
   showDetails?: boolean;
 }

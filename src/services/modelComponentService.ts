@@ -13,6 +13,12 @@ export interface ModelComponentAssignment {
   notes?: string;
 }
 
+export interface ComponentUsage {
+  usageCount: number;
+  usedInModels: string[];
+  usedInConfigurations: string[];
+}
+
 export interface ConfigurationWithComponents {
   id: string;
   name: string;
@@ -58,6 +64,111 @@ export async function createComponentAssignment(assignment: Omit<ModelComponentA
   }
 
   return true;
+}
+
+// Assign component to model
+export async function assignComponentToModel(
+  modelId: string,
+  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel',
+  componentId: string
+): Promise<boolean> {
+  const assignment = {
+    model_id: modelId,
+    component_id: componentId,
+    component_type: componentType,
+    assignment_type: 'standard',
+    is_default: true
+  };
+
+  return await createComponentAssignment(assignment);
+}
+
+// Remove component from model
+export async function removeComponentFromModel(
+  modelId: string,
+  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('model_component_assignments')
+    .delete()
+    .eq('model_id', modelId)
+    .eq('component_type', componentType);
+
+  if (error) {
+    console.error('Error removing component assignment:', error);
+    return false;
+  }
+
+  return true;
+}
+
+// Update model component assignment
+export async function updateModelComponentAssignment(
+  assignmentId: string,
+  updates: Partial<ModelComponentAssignment>
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('model_component_assignments')
+    .update(updates)
+    .eq('id', assignmentId);
+
+  if (error) {
+    console.error('Error updating component assignment:', error);
+    return false;
+  }
+
+  return true;
+}
+
+// Check if component can be deleted
+export async function canDeleteComponent(
+  componentId: string,
+  componentType: 'engine' | 'brake_system' | 'frame' | 'suspension' | 'wheel'
+): Promise<{ canDelete: boolean; usage?: ComponentUsage }> {
+  try {
+    // Check model assignments
+    const { data: modelAssignments } = await supabase
+      .from('model_component_assignments')
+      .select(`
+        model_id,
+        motorcycle_models!inner(name)
+      `)
+      .eq('component_type', componentType)
+      .eq('component_id', componentId);
+
+    // Check configuration assignments
+    const componentField = `${componentType}_id`;
+    const { data: configAssignments } = await supabase
+      .from('model_configurations')
+      .select(`
+        id, 
+        name,
+        model_years!inner(
+          motorcycle_models!inner(name)
+        )
+      `)
+      .eq(componentField, componentId);
+
+    const modelNames = modelAssignments?.map(a => (a as any).motorcycle_models?.name).filter(Boolean) || [];
+    const configNames = configAssignments?.map(c => {
+      const configData = c as any;
+      return `${configData.model_years?.motorcycle_models?.name} - ${configData.name}`;
+    }).filter(Boolean) || [];
+
+    const totalUsage = (modelAssignments?.length || 0) + (configAssignments?.length || 0);
+
+    return {
+      canDelete: totalUsage === 0,
+      usage: {
+        usageCount: totalUsage,
+        usedInModels: modelNames,
+        usedInConfigurations: configNames
+      }
+    };
+  } catch (error) {
+    console.error('Error checking component deletion:', error);
+    return { canDelete: false };
+  }
 }
 
 // Update configuration with components
