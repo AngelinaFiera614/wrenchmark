@@ -16,7 +16,7 @@ interface ColorOptionDialogProps {
   onClose: (refresh?: boolean) => void;
 }
 
-interface ModelYear {
+interface ModelYearWithModel {
   id: string;
   year: number;
   motorcycle_models: {
@@ -59,7 +59,7 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
         .order('year', { ascending: false });
       
       if (error) throw error;
-      return data as ModelYear[];
+      return data as ModelYearWithModel[];
     }
   });
 
