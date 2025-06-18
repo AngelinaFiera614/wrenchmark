@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Motorcycle } from '@/types';
 
@@ -7,10 +6,11 @@ export async function fetchAllMotorcyclesForAdmin(): Promise<Motorcycle[]> {
     .from('motorcycle_models')
     .select(`
       *,
-      brands!motorcycle_models_brand_id_fkey(
+      brands:brand_id(
         id,
         name,
-        slug
+        slug,
+        country
       )
     `)
     .order('name', { ascending: true });
@@ -20,7 +20,17 @@ export async function fetchAllMotorcyclesForAdmin(): Promise<Motorcycle[]> {
     throw error;
   }
 
-  return data || [];
+  // Transform the data to ensure consistent brand access
+  const transformedData = (data || []).map(item => ({
+    ...item,
+    brand: item.brands || undefined,
+    // Keep legacy property for backward compatibility
+    brands: item.brands || undefined,
+    // Ensure make property is populated from brand
+    make: item.brands?.name || item.make || ''
+  }));
+
+  return transformedData;
 }
 
 export async function publishMotorcycle(id: string): Promise<boolean> {

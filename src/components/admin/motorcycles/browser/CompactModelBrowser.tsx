@@ -1,16 +1,20 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  MoreVertical, Edit, Eye, Copy, Trash2, ChevronRight, ChevronLeft, MoreHorizontal
+  Eye, 
+  Edit, 
+  MoreVertical, 
+  CheckCircle, 
+  Clock, 
+  AlertTriangle 
 } from "lucide-react";
 import { Motorcycle } from "@/types";
 import { calculateDataCompleteness } from "@/utils/dataCompleteness";
-import { DataCompletenessIndicator } from "@/components/motorcycles/DataCompletenessIndicator";
 
 interface CompactModelBrowserProps {
   motorcycles: Motorcycle[];
@@ -20,7 +24,7 @@ interface CompactModelBrowserProps {
   onToggleMotorcycleSelection: (motorcycleId: string) => void;
   onSelectAll: () => void;
   onClearSelection: () => void;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 const CompactModelBrowser = ({
@@ -33,91 +37,56 @@ const CompactModelBrowser = ({
   onClearSelection,
   isLoading
 }: CompactModelBrowserProps) => {
-  const [showAll, setShowAll] = useState(false);
-  const [startIndex, setStartIndex] = useState(0);
   
-  const displayCount = 4;
-  const totalCount = motorcycles.length;
-  const canShowMore = totalCount > displayCount;
-  
-  // Get the motorcycles to display
-  const displayedMotorcycles = showAll 
-    ? motorcycles 
-    : motorcycles.slice(startIndex, startIndex + displayCount);
-
-  const canNavigateNext = startIndex + displayCount < totalCount;
-  const canNavigatePrev = startIndex > 0;
-
-  const handleNext = () => {
-    if (canNavigateNext) {
-      setStartIndex(prev => Math.min(prev + displayCount, totalCount - displayCount));
+  const getStatusIcon = (motorcycle: Motorcycle) => {
+    if (motorcycle.is_draft) {
+      return <Clock className="h-4 w-4 text-orange-400" />;
     }
-  };
-
-  const handlePrev = () => {
-    if (canNavigatePrev) {
-      setStartIndex(prev => Math.max(prev - displayCount, 0));
-    }
-  };
-
-  const MotorcycleCard = ({ motorcycle, isSelected }: { motorcycle: Motorcycle; isSelected: boolean }) => {
-    const completeness = calculateDataCompleteness(motorcycle);
-    const isInSelection = selectedMotorcycles.includes(motorcycle.id);
     
-    return (
-      <div
-        className={`relative group p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm min-w-0 ${
-          isSelected
-            ? 'border-accent-teal bg-accent-teal/10'
-            : 'border-explorer-chrome/30 bg-explorer-card hover:border-explorer-chrome/50'
-        }`}
-        onClick={() => onSelectMotorcycle(motorcycle)}
-      >
-        {/* Selection Checkbox */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Checkbox
-            checked={isInSelection}
-            onCheckedChange={() => onToggleMotorcycleSelection(motorcycle.id)}
-            onClick={(e) => e.stopPropagation()}
-            className="h-3 w-3"
-          />
-        </div>
+    const completion = calculateDataCompleteness(motorcycle);
+    if (completion.completionPercentage === 100) {
+      return <CheckCircle className="h-4 w-4 text-green-400" />;
+    }
+    
+    return <AlertTriangle className="h-4 w-4 text-yellow-400" />;
+  };
 
-        <div className="space-y-2 pr-6">
-          <div>
-            <div className="font-medium text-explorer-text text-sm truncate">
-              {motorcycle.make || motorcycle.name?.split(' ')[0]} {motorcycle.model || motorcycle.name}
-            </div>
-            <div className="text-xs text-explorer-text-muted">
-              {motorcycle.category} • {motorcycle.year || 'Unknown'}
-            </div>
-          </div>
+  const getStatusColor = (motorcycle: Motorcycle) => {
+    if (motorcycle.is_draft) return "bg-orange-500/20 text-orange-400";
+    
+    const completion = calculateDataCompleteness(motorcycle);
+    if (completion.completionPercentage === 100) return "bg-green-500/20 text-green-400";
+    
+    return "bg-yellow-500/20 text-yellow-400";
+  };
 
-          <div className="flex items-center gap-1">
-            {motorcycle.is_draft && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs px-1 py-0">
-                Draft
-              </Badge>
-            )}
-            <DataCompletenessIndicator status={completeness} variant="admin" />
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 gap-1 text-xs text-explorer-text-muted">
-            {motorcycle.engine_size && (
-              <div className="truncate">{motorcycle.engine_size}cc</div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+  const getBrandName = (motorcycle: Motorcycle): string => {
+    // Handle multiple possible brand data structures
+    return motorcycle.brand?.name || 
+           motorcycle.brands?.name || 
+           motorcycle.make || 
+           'Unknown Brand';
   };
 
   if (isLoading) {
     return (
       <Card className="bg-explorer-card border-explorer-chrome/30">
-        <CardContent className="p-4 text-center">
-          <div className="text-explorer-text-muted">Loading motorcycles...</div>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="text-explorer-text-muted">Loading motorcycles...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (motorcycles.length === 0) {
+    return (
+      <Card className="bg-explorer-card border-explorer-chrome/30">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="text-explorer-text-muted">No motorcycles found</div>
+          </div>
         </CardContent>
       </Card>
     );
@@ -125,105 +94,161 @@ const CompactModelBrowser = ({
 
   return (
     <Card className="bg-explorer-card border-explorer-chrome/30">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-explorer-text flex items-center gap-2 text-base">
-            Recent Models
-            <Badge variant="secondary" className="text-xs">{totalCount}</Badge>
-            {selectedMotorcycles.length > 0 && (
-              <Badge variant="default" className="bg-accent-teal text-black text-xs">
-                {selectedMotorcycles.length} selected
-              </Badge>
-            )}
-          </CardTitle>
-          
-          <div className="flex items-center gap-1">
-            {!showAll && canShowMore && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handlePrev}
-                  disabled={!canNavigatePrev}
-                  className="h-6 w-6 p-0"
-                >
-                  <ChevronLeft className="h-3 w-3" />
-                </Button>
-                <span className="text-xs text-explorer-text-muted px-1">
-                  {Math.floor(startIndex / displayCount) + 1}/{Math.ceil(totalCount / displayCount)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleNext}
-                  disabled={!canNavigateNext}
-                  className="h-6 w-6 p-0"
-                >
-                  <ChevronRight className="h-3 w-3" />
-                </Button>
-              </div>
-            )}
-            
-            {canShowMore && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAll(!showAll)}
-                className="text-xs h-6 px-2"
-              >
-                {showAll ? (
-                  <>
-                    <ChevronLeft className="h-3 w-3 mr-1" />
-                    Show Less
-                  </>
-                ) : (
-                  <>
-                    <MoreHorizontal className="h-3 w-3 mr-1" />
-                    Show All
-                  </>
-                )}
-              </Button>
-            )}
+      <CardContent className="p-4">
+        {/* Header with selection controls */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={selectedMotorcycles.length === motorcycles.length && motorcycles.length > 0}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  onSelectAll();
+                } else {
+                  onClearSelection();
+                }
+              }}
+            />
+            <span className="text-sm text-explorer-text-muted">
+              {selectedMotorcycles.length > 0 
+                ? `${selectedMotorcycles.length} selected`
+                : `${motorcycles.length} motorcycles`
+              }
+            </span>
           </div>
+          {selectedMotorcycles.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClearSelection}
+              className="bg-explorer-dark border-explorer-chrome/30"
+            >
+              Clear Selection
+            </Button>
+          )}
         </div>
 
-        {/* Selection Controls */}
-        {selectedMotorcycles.length > 0 && (
-          <div className="flex items-center gap-2 pt-2 border-t border-explorer-chrome/30">
-            <Button variant="outline" size="sm" onClick={onSelectAll} className="text-xs h-6 px-2">
-              Select All
-            </Button>
-            <Button variant="outline" size="sm" onClick={onClearSelection} className="text-xs h-6 px-2">
-              Clear
-            </Button>
-          </div>
-        )}
-      </CardHeader>
-      
-      <CardContent className="p-3 pt-0">
-        {motorcycles.length === 0 ? (
-          <div className="text-center py-4 text-explorer-text-muted text-sm">
-            No motorcycles available
-          </div>
-        ) : (
-          <div className={showAll 
-            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3' 
-            : 'flex gap-3 overflow-x-auto pb-2'
-          }>
-            {displayedMotorcycles.map((motorcycle) => {
+        {/* Motorcycle list */}
+        <ScrollArea className="h-[400px]">
+          <div className="space-y-2">
+            {motorcycles.map((motorcycle) => {
               const isSelected = selectedMotorcycle?.id === motorcycle.id;
+              const isChecked = selectedMotorcycles.includes(motorcycle.id);
+              const completion = calculateDataCompleteness(motorcycle);
+              const brandName = getBrandName(motorcycle);
               
               return (
-                <div key={motorcycle.id} className={showAll ? '' : 'flex-shrink-0 w-48'}>
-                  <MotorcycleCard 
-                    motorcycle={motorcycle} 
-                    isSelected={isSelected} 
+                <div
+                  key={motorcycle.id}
+                  className={`
+                    flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors
+                    ${isSelected 
+                      ? 'bg-accent-teal/20 border-accent-teal/50' 
+                      : 'bg-explorer-dark border-explorer-chrome/30 hover:bg-explorer-chrome/10'
+                    }
+                  `}
+                  onClick={() => onSelectMotorcycle(motorcycle)}
+                >
+                  {/* Selection checkbox */}
+                  <Checkbox
+                    checked={isChecked}
+                    onCheckedChange={(checked) => {
+                      onToggleMotorcycleSelection(motorcycle.id);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                   />
+
+                  {/* Motorcycle image */}
+                  <div className="w-12 h-12 bg-explorer-chrome/20 rounded-md flex items-center justify-center overflow-hidden">
+                    {motorcycle.default_image_url ? (
+                      <img 
+                        src={motorcycle.default_image_url} 
+                        alt={motorcycle.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-explorer-text-muted text-xs">No Image</div>
+                    )}
+                  </div>
+
+                  {/* Motorcycle info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium text-explorer-text truncate">
+                        {motorcycle.name}
+                      </h4>
+                      {getStatusIcon(motorcycle)}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-explorer-text-muted">
+                      <span>{brandName}</span>
+                      {motorcycle.type && (
+                        <>
+                          <span>•</span>
+                          <span>{motorcycle.type}</span>
+                        </>
+                      )}
+                      {motorcycle.production_start_year && (
+                        <>
+                          <span>•</span>
+                          <span>{motorcycle.production_start_year}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status and completion */}
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge 
+                      variant="outline" 
+                      className={getStatusColor(motorcycle)}
+                    >
+                      {motorcycle.is_draft ? 'Draft' : 'Published'}
+                    </Badge>
+                    <div className="text-xs text-explorer-text-muted">
+                      {completion.completionPercentage}% complete
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectMotorcycle(motorcycle);
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // TODO: Add edit functionality
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // TODO: Add more actions menu
+                      }}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               );
             })}
           </div>
-        )}
+        </ScrollArea>
       </CardContent>
     </Card>
   );

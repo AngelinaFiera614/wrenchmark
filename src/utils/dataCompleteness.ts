@@ -1,68 +1,110 @@
 
-export interface DataCompletenessStatus {
-  hasEngine: boolean;
-  hasBrakes: boolean;
-  hasFrame: boolean;
-  hasSuspension: boolean;
-  hasWheels: boolean;
-  hasDimensions: boolean;
+import { Motorcycle } from "@/types";
+
+export interface DataCompletion {
   completionPercentage: number;
-  missingCriticalFields: string[];
+  missingFields: string[];
+  completedFields: string[];
+  criticalMissing: string[];
 }
 
-export function calculateDataCompleteness(motorcycle: any, selectedConfiguration?: any): DataCompletenessStatus {
-  const config = selectedConfiguration || motorcycle._componentData?.selectedConfiguration;
-  
-  // Check for component data
-  const hasEngine = !!(config?.engines?.id || config?.engine?.id || motorcycle.engine_size > 0);
-  const hasBrakes = !!(config?.brake_systems?.id || config?.brakes?.id || motorcycle.brake_type);
-  const hasFrame = !!(config?.frames?.id || config?.frame?.id);
-  const hasSuspension = !!(config?.suspensions?.id || config?.suspension?.id);
-  const hasWheels = !!(config?.wheels?.id || config?.wheel?.id);
-  
-  // Check for basic dimensions
-  const hasDimensions = !!(
-    motorcycle.seat_height_mm > 0 || 
-    motorcycle.weight_kg > 0 || 
-    motorcycle.wheelbase_mm > 0 ||
-    config?.seat_height_mm > 0 ||
-    config?.weight_kg > 0 ||
-    config?.wheelbase_mm > 0
+export function calculateDataCompleteness(motorcycle: Motorcycle): DataCompletion {
+  const requiredFields = [
+    { key: 'name', label: 'Name', critical: true },
+    { key: 'brand_id', label: 'Brand', critical: true },
+    { key: 'type', label: 'Type', critical: true },
+    { key: 'production_start_year', label: 'Production Start Year', critical: false },
+    { key: 'base_description', label: 'Description', critical: false },
+    { key: 'default_image_url', label: 'Default Image', critical: false },
+    { key: 'engine_size', label: 'Engine Size', critical: false },
+    { key: 'horsepower', label: 'Horsepower', critical: false },
+    { key: 'weight_kg', label: 'Weight', critical: false },
+    { key: 'seat_height_mm', label: 'Seat Height', critical: false },
+  ];
+
+  const completedFields: string[] = [];
+  const missingFields: string[] = [];
+  const criticalMissing: string[] = [];
+
+  requiredFields.forEach(field => {
+    const value = motorcycle[field.key as keyof Motorcycle];
+    const hasValue = value !== null && value !== undefined && value !== '';
+    
+    if (hasValue) {
+      completedFields.push(field.label);
+    } else {
+      missingFields.push(field.label);
+      if (field.critical) {
+        criticalMissing.push(field.label);
+      }
+    }
+  });
+
+  // Check for brand name availability (handles different data structures)
+  const hasBrandName = !!(
+    motorcycle.brand?.name || 
+    motorcycle.brands?.name || 
+    motorcycle.make
   );
 
-  const components = [hasEngine, hasBrakes, hasFrame, hasSuspension, hasWheels, hasDimensions];
-  const completeComponents = components.filter(Boolean).length;
-  const completionPercentage = Math.round((completeComponents / components.length) * 100);
+  if (!hasBrandName && !criticalMissing.includes('Brand')) {
+    criticalMissing.push('Brand Display Name');
+    missingFields.push('Brand Display Name');
+  }
 
-  const missingCriticalFields = [];
-  if (!hasEngine) missingCriticalFields.push('Engine');
-  if (!hasBrakes) missingCriticalFields.push('Brakes');
-  if (!hasFrame) missingCriticalFields.push('Frame');
-  if (!hasSuspension) missingCriticalFields.push('Suspension');
-  if (!hasWheels) missingCriticalFields.push('Wheels');
-  if (!hasDimensions) missingCriticalFields.push('Dimensions');
+  const completionPercentage = Math.round(
+    (completedFields.length / requiredFields.length) * 100
+  );
 
   return {
-    hasEngine,
-    hasBrakes,
-    hasFrame,
-    hasSuspension,
-    hasWheels,
-    hasDimensions,
     completionPercentage,
-    missingCriticalFields
+    missingFields,
+    completedFields,
+    criticalMissing
   };
 }
 
-export function getDataCompletenessColor(percentage: number): string {
-  if (percentage >= 80) return 'text-green-600';
-  if (percentage >= 60) return 'text-yellow-600';
-  if (percentage >= 40) return 'text-orange-600';
-  return 'text-red-600';
+export function getCompletionColor(percentage: number): string {
+  if (percentage >= 90) return 'text-green-400';
+  if (percentage >= 70) return 'text-yellow-400';
+  if (percentage >= 50) return 'text-orange-400';
+  return 'text-red-400';
 }
 
-export function getDataCompletenessIcon(percentage: number): string {
-  if (percentage >= 80) return 'check-circle';
-  if (percentage >= 60) return 'alert-circle';
-  return 'x-circle';
+export function getCompletionStatus(motorcycle: Motorcycle): {
+  status: 'complete' | 'good' | 'needs-work' | 'incomplete';
+  color: string;
+  message: string;
+} {
+  const completion = calculateDataCompleteness(motorcycle);
+  
+  if (completion.criticalMissing.length > 0) {
+    return {
+      status: 'incomplete',
+      color: 'text-red-400',
+      message: `Missing critical fields: ${completion.criticalMissing.join(', ')}`
+    };
+  }
+  
+  if (completion.completionPercentage >= 90) {
+    return {
+      status: 'complete',
+      color: 'text-green-400',
+      message: 'Model data is complete'
+    };
+  }
+  
+  if (completion.completionPercentage >= 70) {
+    return {
+      status: 'good',
+      color: 'text-yellow-400',
+      message: `${completion.missingFields.length} optional fields missing`
+    };
+  }
+  
+  return {
+    status: 'needs-work',
+    color: 'text-orange-400',
+    message: `${completion.missingFields.length} fields need attention`
+  };
 }

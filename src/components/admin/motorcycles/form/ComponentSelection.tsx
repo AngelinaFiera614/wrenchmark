@@ -45,25 +45,27 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
     queryFn: fetchWheels,
   });
 
-  // Strict validator for component IDs
-  const hasValidId = (item: any) => {
-    if (
-      !item ||
-      typeof item?.id !== "string" ||
-      !item.id.trim() ||
-      item.id === "undefined" ||
-      item.id === "null"
-    ) {
-      return false;
-    }
-    return true;
+  // Enhanced validator for component IDs
+  const hasValidId = (item: any): item is { id: string; name: string } => {
+    return item && 
+           typeof item === 'object' && 
+           typeof item.id === 'string' && 
+           item.id.trim().length > 0 &&
+           item.id !== 'undefined' && 
+           item.id !== 'null' &&
+           typeof item.name === 'string' &&
+           item.name.trim().length > 0;
   };
 
-  // Helper to clean defaultValue for Selects (undefined if blank/empty)
-  const cleanSelectValue = (val: any) =>
-    typeof val === "string" && val.trim() ? val : undefined;
+  // Helper to clean defaultValue for Selects
+  const cleanSelectValue = (val: any): string | undefined => {
+    if (typeof val === 'string' && val.trim() && val !== 'undefined' && val !== 'null') {
+      return val;
+    }
+    return undefined;
+  };
 
-  // Filter and validate components
+  // Filter and validate components with enhanced safety
   const validEngines = Array.isArray(engines) ? engines.filter(hasValidId) : [];
   const validBrakes = Array.isArray(brakes) ? brakes.filter(hasValidId) : [];
   const validFrames = Array.isArray(frames) ? frames.filter(hasValidId) : [];
@@ -72,7 +74,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Technical Components</h3>
+      <h3 className="text-lg font-medium text-explorer-text">Technical Components</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Engine Selection */}
@@ -81,24 +83,29 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
           name="engine_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Engine</FormLabel>
+              <FormLabel className="text-explorer-text">Engine</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
-                    <SelectTrigger>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={cleanSelectValue(field.value) || ""}
+                  >
+                    <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
                       <SelectValue placeholder="Select engine" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-explorer-card border-explorer-chrome/30">
+                      <SelectItem value="">No engine selected</SelectItem>
                       {enginesLoading ? (
-                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">Loading engines...</div>
                       ) : validEngines.length > 0 ? (
                         validEngines.map((engine) => (
                           <SelectItem key={engine.id} value={engine.id}>
-                            {engine.name} - {engine.displacement_cc}cc
+                            {engine.name}
+                            {engine.displacement_cc && ` - ${engine.displacement_cc}cc`}
                           </SelectItem>
                         ))
                       ) : (
-                        <div className="px-4 py-2 text-muted-foreground">No valid engines found</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">No engines available</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -108,6 +115,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                   variant="outline" 
                   size="icon"
                   onClick={() => onAddNew("engine")}
+                  className="bg-explorer-dark border-explorer-chrome/30"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -123,16 +131,20 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
           name="brake_system_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Brake System</FormLabel>
+              <FormLabel className="text-explorer-text">Brake System</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
-                    <SelectTrigger>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={cleanSelectValue(field.value) || ""}
+                  >
+                    <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
                       <SelectValue placeholder="Select brake system" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-explorer-card border-explorer-chrome/30">
+                      <SelectItem value="">No brake system selected</SelectItem>
                       {brakesLoading ? (
-                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">Loading brake systems...</div>
                       ) : validBrakes.length > 0 ? (
                         validBrakes.map((brake) => (
                           <SelectItem key={brake.id} value={brake.id}>
@@ -140,7 +152,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                           </SelectItem>
                         ))
                       ) : (
-                        <div className="px-4 py-2 text-muted-foreground">No valid brake systems found</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">No brake systems available</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -150,6 +162,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                   variant="outline" 
                   size="icon"
                   onClick={() => onAddNew("brake")}
+                  className="bg-explorer-dark border-explorer-chrome/30"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -165,16 +178,20 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
           name="frame_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Frame</FormLabel>
+              <FormLabel className="text-explorer-text">Frame</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
-                    <SelectTrigger>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={cleanSelectValue(field.value) || ""}
+                  >
+                    <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
                       <SelectValue placeholder="Select frame" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-explorer-card border-explorer-chrome/30">
+                      <SelectItem value="">No frame selected</SelectItem>
                       {framesLoading ? (
-                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">Loading frames...</div>
                       ) : validFrames.length > 0 ? (
                         validFrames.map((frame) => (
                           <SelectItem key={frame.id} value={frame.id}>
@@ -182,7 +199,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                           </SelectItem>
                         ))
                       ) : (
-                        <div className="px-4 py-2 text-muted-foreground">No valid frames found</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">No frames available</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -192,6 +209,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                   variant="outline" 
                   size="icon"
                   onClick={() => onAddNew("frame")}
+                  className="bg-explorer-dark border-explorer-chrome/30"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -207,16 +225,20 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
           name="suspension_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Suspension</FormLabel>
+              <FormLabel className="text-explorer-text">Suspension</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
-                    <SelectTrigger>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={cleanSelectValue(field.value) || ""}
+                  >
+                    <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
                       <SelectValue placeholder="Select suspension" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-explorer-card border-explorer-chrome/30">
+                      <SelectItem value="">No suspension selected</SelectItem>
                       {suspensionsLoading ? (
-                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">Loading suspensions...</div>
                       ) : validSuspensions.length > 0 ? (
                         validSuspensions.map((suspension) => (
                           <SelectItem key={suspension.id} value={suspension.id}>
@@ -224,7 +246,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                           </SelectItem>
                         ))
                       ) : (
-                        <div className="px-4 py-2 text-muted-foreground">No valid suspensions found</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">No suspensions available</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -234,6 +256,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                   variant="outline" 
                   size="icon"
                   onClick={() => onAddNew("suspension")}
+                  className="bg-explorer-dark border-explorer-chrome/30"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -249,16 +272,20 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
           name="wheel_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Wheels</FormLabel>
+              <FormLabel className="text-explorer-text">Wheels</FormLabel>
               <div className="flex gap-2">
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={cleanSelectValue(field.value)}>
-                    <SelectTrigger>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={cleanSelectValue(field.value) || ""}
+                  >
+                    <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
                       <SelectValue placeholder="Select wheels" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-explorer-card border-explorer-chrome/30">
+                      <SelectItem value="">No wheels selected</SelectItem>
                       {wheelsLoading ? (
-                        <div className="px-4 py-2 text-muted-foreground">Loading...</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">Loading wheels...</div>
                       ) : validWheels.length > 0 ? (
                         validWheels.map((wheel) => (
                           <SelectItem key={wheel.id} value={wheel.id}>
@@ -266,7 +293,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                           </SelectItem>
                         ))
                       ) : (
-                        <div className="px-4 py-2 text-muted-foreground">No valid wheels found</div>
+                        <div className="px-4 py-2 text-explorer-text-muted">No wheels available</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -276,6 +303,7 @@ export function ComponentSelection({ control, onAddNew }: ComponentSelectionProp
                   variant="outline" 
                   size="icon"
                   onClick={() => onAddNew("wheels")}
+                  className="bg-explorer-dark border-explorer-chrome/30"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
