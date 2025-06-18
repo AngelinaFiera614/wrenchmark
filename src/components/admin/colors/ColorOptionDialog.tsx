@@ -16,6 +16,17 @@ interface ColorOptionDialogProps {
   onClose: (refresh?: boolean) => void;
 }
 
+interface ModelYear {
+  id: string;
+  year: number;
+  motorcycle_models: {
+    name: string;
+    brands: {
+      name: string;
+    } | null;
+  } | null;
+}
+
 const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -48,7 +59,7 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
         .order('year', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as ModelYear[];
     }
   });
 
@@ -170,12 +181,15 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
                 <SelectValue placeholder="Select model year" />
               </SelectTrigger>
               <SelectContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text">
-                {modelYears?.map((modelYear) => (
-                  <SelectItem key={modelYear.id} value={modelYear.id}>
-                    {modelYear.motorcycle_models?.brands?.name} {' '}
-                    {modelYear.motorcycle_models?.name} ({modelYear.year})
-                  </SelectItem>
-                ))}
+                {modelYears?.map((modelYear) => {
+                  const brandName = modelYear.motorcycle_models?.brands?.name || 'Unknown Brand';
+                  const modelName = modelYear.motorcycle_models?.name || 'Unknown Model';
+                  return (
+                    <SelectItem key={modelYear.id} value={modelYear.id}>
+                      {brandName} {modelName} ({modelYear.year})
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

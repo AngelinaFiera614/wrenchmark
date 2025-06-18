@@ -11,11 +11,10 @@ import { Upload, X } from "lucide-react";
 interface MediaUploadDialogProps {
   open: boolean;
   onClose: (refresh?: boolean) => void;
-  onOpenChange?: (open: boolean) => void;
   onUploadSuccess?: (item: any) => void;
 }
 
-const MediaUploadDialog = ({ open, onClose, onOpenChange, onUploadSuccess }: MediaUploadDialogProps) => {
+const MediaUploadDialog = ({ open, onClose, onUploadSuccess }: MediaUploadDialogProps) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -96,16 +95,8 @@ const MediaUploadDialog = ({ open, onClose, onOpenChange, onUploadSuccess }: Med
     }
   };
 
-  const handleClose = () => {
-    if (onOpenChange) {
-      onOpenChange(false);
-    } else {
-      onClose();
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Upload Media</DialogTitle>
@@ -191,7 +182,7 @@ const MediaUploadDialog = ({ open, onClose, onOpenChange, onUploadSuccess }: Med
           <div className="flex justify-end gap-2">
             <Button 
               variant="outline" 
-              onClick={handleClose}
+              onClick={() => onClose()}
               className="border-explorer-chrome/30"
             >
               Cancel
