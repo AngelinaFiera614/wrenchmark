@@ -30,6 +30,8 @@ interface ModelComponentAssignmentDialogProps {
   onSuccess: () => void;
 }
 
+type ComponentType = ModelComponentAssignment['component_type'];
+
 const ModelComponentAssignmentDialog = ({
   open,
   onClose,
@@ -74,16 +76,17 @@ const ModelComponentAssignmentDialog = ({
     queryFn: () => fetchWheels()
   });
 
-  const componentTypes = [
+  // Properly typed component types array
+  const componentTypes: Array<{ key: ComponentType; label: string; data: any[] | undefined }> = [
     { key: 'engine', label: 'Engine', data: engines },
     { key: 'brake_system', label: 'Brake System', data: brakes },
     { key: 'frame', label: 'Frame', data: frames },
     { key: 'suspension', label: 'Suspension', data: suspensions },
     { key: 'wheel', label: 'Wheels', data: wheels }
-  ] as const;
+  ];
 
   const handleAssignComponent = async (
-    componentType: ModelComponentAssignment['component_type'],
+    componentType: ComponentType,
     componentId: string
   ) => {
     setLoading(true);
@@ -114,7 +117,7 @@ const ModelComponentAssignmentDialog = ({
     }
   };
 
-  const handleRemoveComponent = async (componentType: ModelComponentAssignment['component_type']) => {
+  const handleRemoveComponent = async (componentType: ComponentType) => {
     setLoading(true);
     try {
       await removeComponentFromModel(modelId, componentType);
