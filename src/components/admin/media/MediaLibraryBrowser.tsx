@@ -154,7 +154,10 @@ export default function MediaLibraryBrowser({
           {showUpload && (
             <MediaUploadDialog
               open={showUploadDialog}
-              onOpenChange={setShowUploadDialog}
+              onClose={(refresh) => {
+                setShowUploadDialog(false);
+                if (refresh) loadMediaItems();
+              }}
               onUploadSuccess={handleUploadSuccess}
             />
           )}
@@ -282,7 +285,7 @@ export default function MediaLibraryBrowser({
       {/* Preview Dialog */}
       <MediaPreviewDialog
         open={showPreviewDialog}
-        onOpenChange={setShowPreviewDialog}
+        onClose={() => setShowPreviewDialog(false)}
         item={previewItem}
         onUpdate={loadMediaItems}
       />
