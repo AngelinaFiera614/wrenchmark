@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import {
   Route,
@@ -21,7 +22,7 @@ import CoursesPage from './pages/CoursesPage';
 import GlossaryPage from './pages/GlossaryPage';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import AdminLayout from './components/layout/AdminLayout';
+import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminRepairSkills from './pages/admin/AdminRepairSkills';
 import AdminManuals from './pages/admin/AdminManuals';
