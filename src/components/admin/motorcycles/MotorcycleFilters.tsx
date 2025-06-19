@@ -63,14 +63,14 @@ const MotorcycleFilters = ({
         </div>
 
         <Select
-          value={filters.brandId || ""}
-          onValueChange={(value) => onFilterChange({ brandId: value || undefined })}
+          value={filters.brandId || "all"}
+          onValueChange={(value) => onFilterChange({ brandId: value === "all" ? undefined : value })}
         >
           <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
             <SelectValue placeholder="All brands" />
           </SelectTrigger>
           <SelectContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text">
-            <SelectItem value="">All brands</SelectItem>
+            <SelectItem value="all">All brands</SelectItem>
             {brands.map((brand) => (
               <SelectItem key={brand.id} value={brand.id}>
                 {brand.name}
@@ -80,14 +80,14 @@ const MotorcycleFilters = ({
         </Select>
 
         <Select
-          value={filters.category || ""}
-          onValueChange={(value) => onFilterChange({ category: value || undefined })}
+          value={filters.category || "all"}
+          onValueChange={(value) => onFilterChange({ category: value === "all" ? undefined : value })}
         >
           <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text">
-            <SelectItem value="">All categories</SelectItem>
+            <SelectItem value="all">All categories</SelectItem>
             <SelectItem value="Sport">Sport</SelectItem>
             <SelectItem value="Cruiser">Cruiser</SelectItem>
             <SelectItem value="Touring">Touring</SelectItem>
@@ -98,10 +98,10 @@ const MotorcycleFilters = ({
         </Select>
 
         <Select
-          value={filters.isDraft !== undefined ? filters.isDraft.toString() : ""}
+          value={filters.isDraft !== undefined ? filters.isDraft.toString() : "all"}
           onValueChange={(value) => 
             onFilterChange({ 
-              isDraft: value === "" ? undefined : value === "true" 
+              isDraft: value === "all" ? undefined : value === "true" 
             })
           }
         >
@@ -109,7 +109,7 @@ const MotorcycleFilters = ({
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text">
-            <SelectItem value="">All statuses</SelectItem>
+            <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="false">Published</SelectItem>
             <SelectItem value="true">Drafts</SelectItem>
           </SelectContent>
