@@ -1,155 +1,24 @@
-import React, { useState, useEffect } from "react";
+
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-
-interface ColorOptionDialogProps {
-  open: boolean;
-  color?: any;
-  onClose: (refresh?: boolean) => void;
-}
-
-interface ModelYearWithModel {
-  id: string;
-  year: number;
-  motorcycle_models: {
-    name: string;
-    brands: {
-      name: string;
-    };
-  }[];
-}
+import { useColorDialog } from "./hooks/useColorDialog";
+import { ColorOptionDialogProps } from "./types";
+import ModelYearSelector from "./ModelYearSelector";
+import ColorPreview from "./ColorPreview";
 
 const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    hex_code: "",
-    image_url: "",
-    is_limited: false,
-    model_year_id: ""
-  });
-
-  const isEditing = !!color;
-
-  // Fetch model years for selection
-  const { data: modelYears } = useQuery({
-    queryKey: ['model-years'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('model_years')
-        .select(`
-          id,
-          year,
-          motorcycle_models!inner (
-            name,
-            brands!inner (
-              name
-            )
-          )
-        `)
-        .order('year', { ascending: false });
-      
-      if (error) throw error;
-      return data as ModelYearWithModel[];
-    }
-  });
-
-  useEffect(() => {
-    if (color) {
-      setFormData({
-        name: color.name || "",
-        hex_code: color.hex_code || "",
-        image_url: color.image_url || "",
-        is_limited: color.is_limited || false,
-        model_year_id: color.model_year_id || ""
-      });
-    } else if (open) {
-      setFormData({
-        name: "",
-        hex_code: "",
-        image_url: "",
-        is_limited: false,
-        model_year_id: ""
-      });
-    }
-  }, [color, open]);
-
-  const handleSave = async () => {
-    if (!formData.name.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Color name is required.",
-      });
-      return;
-    }
-
-    if (!formData.model_year_id) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error", 
-        description: "Please select a model year.",
-      });
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      const colorData = {
-        name: formData.name.trim(),
-        hex_code: formData.hex_code || null,
-        image_url: formData.image_url || null,
-        is_limited: formData.is_limited,
-        model_year_id: formData.model_year_id
-      };
-
-      if (isEditing) {
-        const { error } = await supabase
-          .from('color_options')
-          .update(colorData)
-          .eq('id', color.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Color updated",
-          description: `${formData.name} has been updated successfully.`,
-        });
-      } else {
-        const { error } = await supabase
-          .from('color_options')
-          .insert([colorData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Color created",
-          description: `${formData.name} has been created successfully.`,
-        });
-      }
-
-      onClose(true);
-
-    } catch (error) {
-      console.error('Error saving color:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to ${isEditing ? 'update' : 'create'} color option.`,
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+  const {
+    formData,
+    setFormData,
+    saving,
+    isEditing,
+    modelYears,
+    handleSave
+  } = useColorDialog(color, open);
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
@@ -170,48 +39,22 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="model_year">Model Year *</Label>
-            <Select
-              value={formData.model_year_id}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, model_year_id: value }))}
-            >
-              <SelectTrigger className="bg-explorer-dark border-explorer-chrome/30">
-                <SelectValue placeholder="Select model year" />
-              </SelectTrigger>
-              <SelectContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text">
-                {modelYears?.map((modelYear) => {
-                  const model = modelYear.motorcycle_models[0];
-                  const brandName = model?.brands?.name || 'Unknown Brand';
-                  const modelName = model?.name || 'Unknown Model';
-                  return (
-                    <SelectItem key={modelYear.id} value={modelYear.id}>
-                      {brandName} {modelName} ({modelYear.year})
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+          <ModelYearSelector
+            value={formData.model_year_id}
+            onChange={(value) => setFormData(prev => ({ ...prev, model_year_id: value }))}
+            modelYears={modelYears}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="hex_code">Hex Color Code</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="hex_code"
-                  placeholder="#000000"
-                  value={formData.hex_code}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hex_code: e.target.value }))}
-                  className="bg-explorer-dark border-explorer-chrome/30"
-                />
-                {formData.hex_code && (
-                  <div 
-                    className="w-10 h-10 rounded border-2 border-explorer-chrome/30 flex-shrink-0"
-                    style={{ backgroundColor: formData.hex_code }}
-                  />
-                )}
-              </div>
+              <Input
+                id="hex_code"
+                placeholder="#000000"
+                value={formData.hex_code}
+                onChange={(e) => setFormData(prev => ({ ...prev, hex_code: e.target.value }))}
+                className="bg-explorer-dark border-explorer-chrome/30"
+              />
             </div>
 
             <div className="flex items-center space-x-2 mt-6">
@@ -235,19 +78,10 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
             />
           </div>
 
-          {formData.image_url && (
-            <div className="space-y-2">
-              <Label>Preview</Label>
-              <img
-                src={formData.image_url}
-                alt="Color preview"
-                className="w-full h-32 object-cover rounded border border-explorer-chrome/30"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          )}
+          <ColorPreview 
+            hexCode={formData.hex_code}
+            imageUrl={formData.image_url}
+          />
 
           <div className="flex justify-end gap-2">
             <Button 
@@ -258,7 +92,7 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
               Cancel
             </Button>
             <Button 
-              onClick={handleSave}
+              onClick={() => handleSave(onClose)}
               disabled={saving}
               className="bg-accent-teal text-black hover:bg-accent-teal/80"
             >
