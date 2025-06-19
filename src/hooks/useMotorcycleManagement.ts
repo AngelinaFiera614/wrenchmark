@@ -10,9 +10,12 @@ export function useMotorcycleManagement() {
   const [selectedMotorcycles, setSelectedMotorcycles] = useState<string[]>([]);
   const [selectedMotorcycle, setSelectedMotorcycle] = useState<Motorcycle | null>(null);
 
+  // Create a serializable query key from filters
+  const filtersKey = JSON.stringify(filters);
+
   // Queries
   const motorcyclesQuery = useServiceQuery({
-    queryKey: ['motorcycles', filters],
+    queryKey: ['motorcycles', filtersKey],
     queryFn: () => MotorcycleService.getAll(filters)
   });
 
