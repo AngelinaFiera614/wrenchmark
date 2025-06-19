@@ -1,11 +1,12 @@
-
 import { useState } from "react";
 import { useServiceQuery, useServiceMutation } from "./useServiceQuery";
 import { MotorcycleService, MotorcycleFilters } from "@/services/domain/MotorcycleService";
 import { BrandService } from "@/services/domain/BrandService";
 import { Motorcycle } from "@/types";
+import { useAuth } from "@/context/auth";
 
 export function useMotorcycleManagement() {
+  const { user, isAdmin } = useAuth();
   const [filters, setFilters] = useState<MotorcycleFilters>({});
   const [selectedMotorcycles, setSelectedMotorcycles] = useState<string[]>([]);
   const [selectedMotorcycle, setSelectedMotorcycle] = useState<Motorcycle | null>(null);
@@ -13,20 +14,35 @@ export function useMotorcycleManagement() {
   // Create a serializable query key from filters
   const filtersKey = JSON.stringify(filters);
 
+  // Only fetch data if user is authenticated and is admin
+  const isEnabled = !!user && isAdmin;
+
   // Queries
   const motorcyclesQuery = useServiceQuery({
     queryKey: ['motorcycles', filtersKey],
-    queryFn: () => MotorcycleService.getAll(filters)
+    queryFn: () => MotorcycleService.getAll(filters),
+    enabled: isEnabled,
+    onError: (error) => {
+      console.error("Failed to fetch motorcycles:", error);
+    }
   });
 
   const brandsQuery = useServiceQuery({
     queryKey: ['brands'],
-    queryFn: () => BrandService.getAll()
+    queryFn: () => BrandService.getAll(),
+    enabled: isEnabled,
+    onError: (error) => {
+      console.error("Failed to fetch brands:", error);
+    }
   });
 
   const statsQuery = useServiceQuery({
     queryKey: ['motorcycle-stats'],
-    queryFn: () => MotorcycleService.getCompletionStats()
+    queryFn: () => MotorcycleService.getCompletionStats(),
+    enabled: isEnabled,
+    onError: (error) => {
+      console.error("Failed to fetch stats:", error);
+    }
   });
 
   // Mutations

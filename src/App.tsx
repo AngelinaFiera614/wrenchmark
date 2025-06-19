@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import {
   Route,
@@ -35,6 +34,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminTestingSuite from './pages/admin/AdminTestingSuite';
 import AdminMotorcycleManagement from './pages/admin/AdminMotorcycleManagement';
 import AdminPartsHub from './pages/admin/AdminPartsHub';
+import AdminAuth from './pages/AdminAuth';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './components/theme/theme-provider';
 
@@ -66,6 +66,9 @@ const App: React.FC = () => {
             <ProfilePage />
           </ProtectedRoute>
         } />
+
+        {/* Admin Authentication Route */}
+        <Route path="/admin/auth" element={<AdminAuth />} />
 
         {/* Admin Routes - Protected and Consolidated */}
         <Route path="/admin" element={
