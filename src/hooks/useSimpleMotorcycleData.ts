@@ -5,6 +5,7 @@ import {
   fetchMotorcyclesSimple, 
   fetchBrandsSimple, 
   fetchMotorcycleStatsSimple,
+  fetchComponentStatsSimple,
   SimpleMotorcycleFilters 
 } from "@/services/motorcycles/simplifiedQueries";
 import { Motorcycle } from "@/types";
@@ -14,6 +15,7 @@ export function useSimpleMotorcycleData() {
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
+  const [componentStats, setComponentStats] = useState<any>(null);
   const [filters, setFilters] = useState<SimpleMotorcycleFilters>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,22 +47,25 @@ export function useSimpleMotorcycleData() {
       
       console.log('useSimpleMotorcycleData - Starting data fetch');
       
-      // Fetch all data in parallel
-      const [motorcyclesData, brandsData, statsData] = await Promise.all([
+      // Fetch all data in parallel with optimized queries
+      const [motorcyclesData, brandsData, statsData, compStatsData] = await Promise.all([
         fetchMotorcyclesSimple(filters),
         fetchBrandsSimple(),
-        fetchMotorcycleStatsSimple()
+        fetchMotorcycleStatsSimple(),
+        fetchComponentStatsSimple()
       ]);
 
       console.log('useSimpleMotorcycleData - Data fetched successfully:', {
         motorcycles: motorcyclesData.length,
         brands: brandsData.length,
-        stats: statsData
+        stats: statsData,
+        componentStats: compStatsData
       });
 
       setMotorcycles(motorcyclesData);
       setBrands(brandsData);
       setStats(statsData);
+      setComponentStats(compStatsData);
     } catch (err: any) {
       console.error('useSimpleMotorcycleData - Fetch error:', err);
       setError(err.message || 'Failed to fetch data');
@@ -89,16 +94,25 @@ export function useSimpleMotorcycleData() {
     fetchData();
   };
 
+  // Toggle draft mode
+  const toggleDraftMode = () => {
+    const currentDraftMode = filters.isDraft;
+    handleFilterChange({ isDraft: !currentDraftMode });
+  };
+
   return {
     motorcycles,
     brands,
     stats,
+    componentStats,
     filters,
     isLoading,
     error,
     isEnabled,
     handleFilterChange,
     clearFilters,
-    refetch
+    refetch,
+    toggleDraftMode,
+    isDraftMode: filters.isDraft || false
   };
 }

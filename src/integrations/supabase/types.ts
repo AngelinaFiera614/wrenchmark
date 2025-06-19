@@ -19,6 +19,7 @@ export type Database = {
           has_abs: boolean | null
           has_traction_control: boolean | null
           id: string
+          is_draft: boolean
           notes: string | null
           rear_disc_size_mm: string | null
           rear_type: string | null
@@ -34,6 +35,7 @@ export type Database = {
           has_abs?: boolean | null
           has_traction_control?: boolean | null
           id?: string
+          is_draft?: boolean
           notes?: string | null
           rear_disc_size_mm?: string | null
           rear_type?: string | null
@@ -49,6 +51,7 @@ export type Database = {
           has_abs?: boolean | null
           has_traction_control?: boolean | null
           id?: string
+          is_draft?: boolean
           notes?: string | null
           rear_disc_size_mm?: string | null
           rear_type?: string | null
@@ -330,6 +333,7 @@ export type Database = {
           fuel_system: string | null
           id: string
           ignition: string | null
+          is_draft: boolean
           name: string
           notes: string | null
           power_hp: number | null
@@ -352,6 +356,7 @@ export type Database = {
           fuel_system?: string | null
           id?: string
           ignition?: string | null
+          is_draft?: boolean
           name: string
           notes?: string | null
           power_hp?: number | null
@@ -374,6 +379,7 @@ export type Database = {
           fuel_system?: string | null
           id?: string
           ignition?: string | null
+          is_draft?: boolean
           name?: string
           notes?: string | null
           power_hp?: number | null
@@ -391,6 +397,7 @@ export type Database = {
           construction_method: string | null
           created_at: string | null
           id: string
+          is_draft: boolean
           material: string | null
           mounting_type: string | null
           notes: string | null
@@ -404,6 +411,7 @@ export type Database = {
           construction_method?: string | null
           created_at?: string | null
           id?: string
+          is_draft?: boolean
           material?: string | null
           mounting_type?: string | null
           notes?: string | null
@@ -417,6 +425,7 @@ export type Database = {
           construction_method?: string | null
           created_at?: string | null
           id?: string
+          is_draft?: boolean
           material?: string | null
           mounting_type?: string | null
           notes?: string | null
@@ -911,6 +920,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_default: boolean | null
+          is_draft: boolean
           market_region: string | null
           model_year_id: string
           msrp_usd: number | null
@@ -944,6 +954,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_default?: boolean | null
+          is_draft?: boolean
           market_region?: string | null
           model_year_id: string
           msrp_usd?: number | null
@@ -977,6 +988,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_default?: boolean | null
+          is_draft?: boolean
           market_region?: string | null
           model_year_id?: string
           msrp_usd?: number | null
@@ -1019,6 +1031,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_available: boolean | null
+          is_draft: boolean
           marketing_tagline: string | null
           motorcycle_id: string
           msrp_usd: number | null
@@ -1031,6 +1044,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          is_draft?: boolean
           marketing_tagline?: string | null
           motorcycle_id: string
           msrp_usd?: number | null
@@ -1043,6 +1057,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          is_draft?: boolean
           marketing_tagline?: string | null
           motorcycle_id?: string
           msrp_usd?: number | null
@@ -1465,6 +1480,101 @@ export type Database = {
           },
         ]
       }
+      motorcycle_stats: {
+        Row: {
+          compression_ratio: string | null
+          created_at: string
+          cylinder_count: number | null
+          displacement_cc: number | null
+          dry_weight_kg: number | null
+          engine_size_cc: number | null
+          has_abs: boolean | null
+          has_traction_control: boolean | null
+          horsepower_hp: number | null
+          id: string
+          is_verified: boolean | null
+          model_configuration_id: string
+          notes: string | null
+          override_engine_size: boolean | null
+          override_horsepower: boolean | null
+          override_torque: boolean | null
+          override_weight: boolean | null
+          power_to_weight_ratio: number | null
+          source: string | null
+          top_speed_kph: number | null
+          top_speed_mph: number | null
+          torque_nm: number | null
+          torque_rpm: number | null
+          updated_at: string
+          weight_kg: number | null
+          wet_weight_kg: number | null
+        }
+        Insert: {
+          compression_ratio?: string | null
+          created_at?: string
+          cylinder_count?: number | null
+          displacement_cc?: number | null
+          dry_weight_kg?: number | null
+          engine_size_cc?: number | null
+          has_abs?: boolean | null
+          has_traction_control?: boolean | null
+          horsepower_hp?: number | null
+          id?: string
+          is_verified?: boolean | null
+          model_configuration_id: string
+          notes?: string | null
+          override_engine_size?: boolean | null
+          override_horsepower?: boolean | null
+          override_torque?: boolean | null
+          override_weight?: boolean | null
+          power_to_weight_ratio?: number | null
+          source?: string | null
+          top_speed_kph?: number | null
+          top_speed_mph?: number | null
+          torque_nm?: number | null
+          torque_rpm?: number | null
+          updated_at?: string
+          weight_kg?: number | null
+          wet_weight_kg?: number | null
+        }
+        Update: {
+          compression_ratio?: string | null
+          created_at?: string
+          cylinder_count?: number | null
+          displacement_cc?: number | null
+          dry_weight_kg?: number | null
+          engine_size_cc?: number | null
+          has_abs?: boolean | null
+          has_traction_control?: boolean | null
+          horsepower_hp?: number | null
+          id?: string
+          is_verified?: boolean | null
+          model_configuration_id?: string
+          notes?: string | null
+          override_engine_size?: boolean | null
+          override_horsepower?: boolean | null
+          override_torque?: boolean | null
+          override_weight?: boolean | null
+          power_to_weight_ratio?: number | null
+          source?: string | null
+          top_speed_kph?: number | null
+          top_speed_mph?: number | null
+          torque_nm?: number | null
+          torque_rpm?: number | null
+          updated_at?: string
+          weight_kg?: number | null
+          wet_weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "motorcycle_stats_model_configuration_id_fkey"
+            columns: ["model_configuration_id"]
+            isOneToOne: true
+            referencedRelation: "model_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       motorcycle_tags: {
         Row: {
           category: string
@@ -1809,6 +1919,7 @@ export type Database = {
           front_travel_mm: number | null
           front_type: string | null
           id: string
+          is_draft: boolean
           notes: string | null
           rear_travel_mm: number | null
           rear_type: string | null
@@ -1822,6 +1933,7 @@ export type Database = {
           front_travel_mm?: number | null
           front_type?: string | null
           id?: string
+          is_draft?: boolean
           notes?: string | null
           rear_travel_mm?: number | null
           rear_type?: string | null
@@ -1835,6 +1947,7 @@ export type Database = {
           front_travel_mm?: number | null
           front_type?: string | null
           id?: string
+          is_draft?: boolean
           notes?: string | null
           rear_travel_mm?: number | null
           rear_type?: string | null
@@ -2019,6 +2132,7 @@ export type Database = {
           front_size: string | null
           front_tire_size: string | null
           id: string
+          is_draft: boolean
           notes: string | null
           rear_size: string | null
           rear_tire_size: string | null
@@ -2032,6 +2146,7 @@ export type Database = {
           front_size?: string | null
           front_tire_size?: string | null
           id?: string
+          is_draft?: boolean
           notes?: string | null
           rear_size?: string | null
           rear_tire_size?: string | null
@@ -2045,6 +2160,7 @@ export type Database = {
           front_size?: string | null
           front_tire_size?: string | null
           id?: string
+          is_draft?: boolean
           notes?: string | null
           rear_size?: string | null
           rear_tire_size?: string | null

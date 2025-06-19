@@ -13,12 +13,12 @@ export async function fetchMotorcyclesSimple(filters: SimpleMotorcycleFilters = 
   try {
     console.log('fetchMotorcyclesSimple - Starting with filters:', filters);
     
-    // Start with a basic query - fix the foreign key syntax
+    // Start with a basic query with optimized foreign key syntax
     let query = supabase
       .from('motorcycle_models')
       .select(`
         *,
-        brands(
+        brands!motorcycle_models_brand_id_fkey(
           id,
           name,
           slug,
@@ -40,8 +40,11 @@ export async function fetchMotorcyclesSimple(filters: SimpleMotorcycleFilters = 
       query = query.eq('type', filters.category);
     }
     
+    // Default to published content only unless explicitly requesting drafts
     if (filters.isDraft !== undefined) {
       query = query.eq('is_draft', filters.isDraft);
+    } else {
+      query = query.eq('is_draft', false);
     }
 
     const { data, error } = await query;
@@ -58,7 +61,7 @@ export async function fetchMotorcyclesSimple(filters: SimpleMotorcycleFilters = 
 
     console.log('fetchMotorcyclesSimple - Success:', data.length, 'motorcycles');
     
-    // Transform data to ensure consistency - fix the brand reference
+    // Transform data to ensure consistency
     const transformedData = data.map(item => ({
       ...item,
       make: item.brands?.name || item.make || 'Unknown',
@@ -126,6 +129,38 @@ export async function fetchMotorcycleStatsSimple() {
     return stats;
   } catch (error) {
     console.error('fetchMotorcycleStatsSimple - Critical error:', error);
+    throw error;
+  }
+}
+
+// New function to fetch component stats with draft filtering
+export async function fetchComponentStatsSimple() {
+  try {
+    console.log('fetchComponentStatsSimple - Starting');
+    
+    const [engines, brakes, frames, suspensions, wheels] = await Promise.all([
+      supabase.from('engines').select('id, is_draft, name').eq('is_draft', false),
+      supabase.from('brake_systems').select('id, is_draft, type').eq('is_draft', false),
+      supabase.from('frames').select('id, is_draft, type').eq('is_draft', false),
+      supabase.from('suspensions').select('id, is_draft, brand').eq('is_draft', false),
+      supabase.from('wheels').select('id, is_draft, type').eq('is_draft', false)
+    ]);
+
+    const componentStats = {
+      engines: engines.data?.length || 0,
+      brakes: brakes.data?.length || 0,
+      frames: frames.data?.length || 0,
+      suspensions: suspensions.data?.length || 0,
+      wheels: wheels.data?.length || 0,
+      total: (engines.data?.length || 0) + (brakes.data?.length || 0) + 
+             (frames.data?.length || 0) + (suspensions.data?.length || 0) + 
+             (wheels.data?.length || 0)
+    };
+
+    console.log('fetchComponentStatsSimple - Success:', componentStats);
+    return componentStats;
+  } catch (error) {
+    console.error('fetchComponentStatsSimple - Critical error:', error);
     throw error;
   }
 }
