@@ -13,12 +13,12 @@ export async function fetchMotorcyclesSimple(filters: SimpleMotorcycleFilters = 
   try {
     console.log('fetchMotorcyclesSimple - Starting with filters:', filters);
     
-    // Start with a basic query
+    // Start with a basic query - fix the foreign key syntax
     let query = supabase
       .from('motorcycle_models')
       .select(`
         *,
-        brand:brands(
+        brands(
           id,
           name,
           slug,
@@ -58,14 +58,14 @@ export async function fetchMotorcyclesSimple(filters: SimpleMotorcycleFilters = 
 
     console.log('fetchMotorcyclesSimple - Success:', data.length, 'motorcycles');
     
-    // Transform data to ensure consistency
+    // Transform data to ensure consistency - fix the brand reference
     const transformedData = data.map(item => ({
       ...item,
-      make: item.brand?.name || item.make || 'Unknown',
+      make: item.brands?.name || item.make || 'Unknown',
       model: item.name,
       year: item.production_start_year || new Date().getFullYear(),
       // Ensure backward compatibility
-      brands: item.brand,
+      brand: item.brands,
     }));
 
     return transformedData;
