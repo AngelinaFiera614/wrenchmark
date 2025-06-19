@@ -48,9 +48,9 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
         .select(`
           id,
           year,
-          motorcycle_models (
+          motorcycle_models!inner (
             name,
-            brands (
+            brands!inner (
               name
             )
           )
