@@ -5,7 +5,7 @@ import { useAuth } from "@/context/auth";
 import { ErrorBoundary } from "@/components/admin/shared/ErrorBoundary";
 import LoadingSpinner from "@/components/admin/shared/LoadingSpinner";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import AdminHeader from "@/components/admin/AdminHeader";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 
 const AdminLayout = () => {
   const { user, isAdmin, isLoading } = useAuth();
