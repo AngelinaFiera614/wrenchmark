@@ -14,11 +14,13 @@ export interface MotorcycleFilters {
 export class MotorcycleService extends BaseDataService {
   static async getAll(filters: MotorcycleFilters = {}): Promise<ServiceResponse<Motorcycle[]>> {
     return this.executeQuery(async () => {
+      console.log('MotorcycleService.getAll called with filters:', filters);
+      
       let query = supabase
         .from('motorcycle_models')
         .select(`
           *,
-          brands:brand_id(
+          brand:brands(
             id,
             name,
             slug,
@@ -44,7 +46,25 @@ export class MotorcycleService extends BaseDataService {
         query = query.eq('is_draft', filters.isDraft);
       }
 
-      return await query;
+      const result = await query;
+      console.log('MotorcycleService.getAll query result:', result.data?.length || 0, 'items');
+      
+      if (result.data) {
+        // Transform the data to ensure consistent brand access
+        const transformedData = result.data.map(item => ({
+          ...item,
+          brand: item.brand || undefined,
+          brands: item.brand || undefined,
+          make: item.brand?.name || item.make || ''
+        }));
+        
+        return {
+          ...result,
+          data: transformedData
+        };
+      }
+      
+      return result;
     });
   }
 
@@ -54,7 +74,7 @@ export class MotorcycleService extends BaseDataService {
         .from('motorcycle_models')
         .select(`
           *,
-          brands:brand_id(
+          brand:brands(
             id,
             name,
             slug,
@@ -82,7 +102,7 @@ export class MotorcycleService extends BaseDataService {
         .insert([data])
         .select(`
           *,
-          brands:brand_id(
+          brand:brands(
             id,
             name,
             slug,
@@ -101,7 +121,7 @@ export class MotorcycleService extends BaseDataService {
         .eq('id', id)
         .select(`
           *,
-          brands:brand_id(
+          brand:brands(
             id,
             name,
             slug,
@@ -139,7 +159,7 @@ export class MotorcycleService extends BaseDataService {
         .in('id', ids)
         .select(`
           *,
-          brands:brand_id(
+          brand:brands(
             id,
             name,
             slug,

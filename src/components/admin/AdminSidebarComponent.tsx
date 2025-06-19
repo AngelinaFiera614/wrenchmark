@@ -25,6 +25,10 @@ import {
   Bike,
   TestTube,
   ChevronRight,
+  BookOpen,
+  GraduationCap,
+  Users,
+  Palette,
 } from "lucide-react";
 
 const AdminSidebarComponent = () => {
@@ -43,13 +47,13 @@ const AdminSidebarComponent = () => {
         {
           icon: TestTube,
           label: "Testing Suite",
-          href: "/admin/testing-suite",
-          isActive: location.pathname.startsWith('/admin/testing-suite')
+          href: "/admin/testing",
+          isActive: location.pathname.startsWith('/admin/testing')
         }
       ]
     },
     {
-      title: "Content Management",
+      title: "Motorcycle Data",
       items: [
         {
           icon: Bike,
@@ -58,10 +62,16 @@ const AdminSidebarComponent = () => {
           isActive: location.pathname.startsWith('/admin/motorcycle-management')
         },
         {
-          icon: FileText,
-          label: "Models",
-          href: "/admin/models",
-          isActive: location.pathname.startsWith('/admin/models')
+          icon: Tag,
+          label: "Brands",
+          href: "/admin/brands",
+          isActive: location.pathname.startsWith('/admin/brands')
+        },
+        {
+          icon: Palette,
+          label: "Colors",
+          href: "/admin/colors",
+          isActive: location.pathname.startsWith('/admin/colors')
         }
       ]
     },
@@ -70,50 +80,67 @@ const AdminSidebarComponent = () => {
       items: [
         {
           icon: Component,
-          label: "Components Library",
-          href: "/admin/components",
-          isActive: location.pathname.startsWith('/admin/components')
-        },
-        {
-          icon: GitBranch,
-          label: "Component Assignments",
-          href: "/admin/assignments",
-          isActive: location.pathname === '/admin/assignments'
-        },
-        {
-          icon: Wrench,
-          label: "Configurations",
-          href: "/admin/configurations",
-          isActive: location.pathname === '/admin/configurations'
+          label: "Parts Hub",
+          href: "/admin/parts",
+          isActive: location.pathname.startsWith('/admin/parts')
         }
       ]
     },
     {
-      title: "System Management",
+      title: "Learning Content",
       items: [
         {
-          icon: Database,
-          label: "Bulk Operations",
-          href: "/admin/bulk-operations",
-          isActive: location.pathname === '/admin/bulk-operations'
+          icon: GraduationCap,
+          label: "Courses",
+          href: "/admin/courses",
+          isActive: location.pathname.startsWith('/admin/courses')
+        },
+        {
+          icon: BookOpen,
+          label: "Lessons",
+          href: "/admin/lessons",
+          isActive: location.pathname.startsWith('/admin/lessons')
+        },
+        {
+          icon: Bike,
+          label: "Riding Skills",
+          href: "/admin/riding-skills",
+          isActive: location.pathname.startsWith('/admin/riding-skills')
+        },
+        {
+          icon: Wrench,
+          label: "Repair Skills",
+          href: "/admin/repair-skills",
+          isActive: location.pathname.startsWith('/admin/repair-skills')
+        },
+        {
+          icon: FileText,
+          label: "Manuals",
+          href: "/admin/manuals",
+          isActive: location.pathname.startsWith('/admin/manuals')
+        },
+        {
+          icon: BookOpen,
+          label: "Glossary",
+          href: "/admin/glossary",
+          isActive: location.pathname.startsWith('/admin/glossary')
+        }
+      ]
+    },
+    {
+      title: "System",
+      items: [
+        {
+          icon: Users,
+          label: "Users",
+          href: "/admin/users",
+          isActive: location.pathname.startsWith('/admin/users')
         },
         {
           icon: Settings,
-          label: "Categories",
-          href: "/admin/categories",
-          isActive: location.pathname === '/admin/categories'
-        },
-        {
-          icon: Tag,
-          label: "Tags",
-          href: "/admin/tags",
-          isActive: location.pathname === '/admin/tags'
-        },
-        {
-          icon: ListChecks,
-          label: "Audit Log",
-          href: "/admin/audit-log",
-          isActive: location.pathname === '/admin/audit-log'
+          label: "System Settings",
+          href: "/admin/system",
+          isActive: location.pathname.startsWith('/admin/system')
         }
       ]
     }

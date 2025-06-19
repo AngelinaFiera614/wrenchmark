@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useServiceQuery, useServiceMutation } from "./useServiceQuery";
 import { MotorcycleService, MotorcycleFilters } from "@/services/domain/MotorcycleService";
@@ -17,10 +18,17 @@ export function useMotorcycleManagement() {
   // Only fetch data if user is authenticated and is admin
   const isEnabled = !!user && isAdmin;
 
+  console.log('useMotorcycleManagement - isEnabled:', isEnabled, 'user:', !!user, 'isAdmin:', isAdmin);
+
   // Queries
   const motorcyclesQuery = useServiceQuery({
     queryKey: ['motorcycles', filtersKey],
-    queryFn: () => MotorcycleService.getAll(filters),
+    queryFn: async () => {
+      console.log('Executing motorcycles query...');
+      const result = await MotorcycleService.getAll(filters);
+      console.log('Motorcycles query result:', result);
+      return result;
+    },
     enabled: isEnabled,
     onError: (error) => {
       console.error("Failed to fetch motorcycles:", error);
@@ -29,7 +37,12 @@ export function useMotorcycleManagement() {
 
   const brandsQuery = useServiceQuery({
     queryKey: ['brands'],
-    queryFn: () => BrandService.getAll(),
+    queryFn: async () => {
+      console.log('Executing brands query...');
+      const result = await BrandService.getAll();
+      console.log('Brands query result:', result);
+      return result;
+    },
     enabled: isEnabled,
     onError: (error) => {
       console.error("Failed to fetch brands:", error);
@@ -38,7 +51,12 @@ export function useMotorcycleManagement() {
 
   const statsQuery = useServiceQuery({
     queryKey: ['motorcycle-stats'],
-    queryFn: () => MotorcycleService.getCompletionStats(),
+    queryFn: async () => {
+      console.log('Executing stats query...');
+      const result = await MotorcycleService.getCompletionStats();
+      console.log('Stats query result:', result);
+      return result;
+    },
     enabled: isEnabled,
     onError: (error) => {
       console.error("Failed to fetch stats:", error);
@@ -69,6 +87,7 @@ export function useMotorcycleManagement() {
 
   // Actions
   const handleFilterChange = (newFilters: Partial<MotorcycleFilters>) => {
+    console.log('Filter change:', newFilters);
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
@@ -111,6 +130,17 @@ export function useMotorcycleManagement() {
     }
   };
 
+  // Log current state for debugging
+  console.log('useMotorcycleManagement state:', {
+    motorcyclesLoading: motorcyclesQuery.isLoading,
+    motorcyclesError: motorcyclesQuery.error,
+    motorcyclesCount: motorcyclesQuery.data?.length || 0,
+    brandsLoading: brandsQuery.isLoading,
+    brandsError: brandsQuery.error,
+    brandsCount: brandsQuery.data?.length || 0,
+    isEnabled
+  });
+
   return {
     // Data
     motorcycles: motorcyclesQuery.data || [],
@@ -124,6 +154,11 @@ export function useMotorcycleManagement() {
     isLoading: motorcyclesQuery.isLoading || brandsQuery.isLoading,
     isUpdating: publishMutation.isPending || unpublishMutation.isPending || 
                deleteMutation.isPending || bulkUpdateMutation.isPending,
+
+    // Error states
+    motorcyclesError: motorcyclesQuery.error,
+    brandsError: brandsQuery.error,
+    statsError: statsQuery.error,
 
     // Actions
     handleFilterChange,

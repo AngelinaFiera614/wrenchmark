@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import {
   Route,
@@ -81,9 +80,11 @@ const App: React.FC = () => {
           
           {/* Motorcycle Data Management */}
           <Route path="motorcycle-management" element={<AdminMotorcycleManagement />} />
-          <Route path="parts" element={<AdminPartsHub />} />
           <Route path="brands" element={<AdminBrands />} />
           <Route path="colors" element={<AdminColors />} />
+          
+          {/* Components & Parts */}
+          <Route path="parts" element={<AdminPartsHub />} />
           
           {/* Learning Content */}
           <Route path="courses" element={<AdminCourses />} />
@@ -91,6 +92,7 @@ const App: React.FC = () => {
           <Route path="riding-skills" element={<AdminRidingSkills />} />
           <Route path="repair-skills" element={<AdminRepairSkills />} />
           <Route path="manuals" element={<AdminManuals />} />
+          <Route path="glossary" element={<AdminGlossaryPage />} />
           
           {/* System */}
           <Route path="users" element={<AdminUsers />} />
@@ -123,6 +125,16 @@ const ScrollToTop: React.FC = () => {
   }, [pathname]);
 
   return null;
+};
+
+// Create placeholder components for missing admin pages
+const AdminGlossaryPage = () => {
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold text-explorer-text mb-4">Glossary Management</h1>
+      <p className="text-explorer-text-muted">Glossary management interface will be available here.</p>
+    </div>
+  );
 };
 
 // Create a simple system settings component for now
