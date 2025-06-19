@@ -22,8 +22,8 @@ interface ModelYearWithModel {
     name: string;
     brands: {
       name: string;
-    } | null;
-  } | null;
+    };
+  }[];
 }
 
 const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => {
@@ -181,8 +181,9 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
               </SelectTrigger>
               <SelectContent className="bg-explorer-card border-explorer-chrome/30 text-explorer-text">
                 {modelYears?.map((modelYear) => {
-                  const brandName = modelYear.motorcycle_models?.brands?.name || 'Unknown Brand';
-                  const modelName = modelYear.motorcycle_models?.name || 'Unknown Model';
+                  const model = modelYear.motorcycle_models[0];
+                  const brandName = model?.brands?.name || 'Unknown Brand';
+                  const modelName = model?.name || 'Unknown Model';
                   return (
                     <SelectItem key={modelYear.id} value={modelYear.id}>
                       {brandName} {modelName} ({modelYear.year})
