@@ -3,341 +3,384 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { 
-  PlayCircle, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle,
-  Database,
-  RefreshCw
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/auth";
+import { 
+  CheckCircle, 
+  AlertTriangle, 
+  XCircle, 
+  RefreshCw, 
+  Database,
+  Shield,
+  Link2,
+  Users
+} from "lucide-react";
 
 interface TestResult {
-  id: string;
   name: string;
-  status: 'pending' | 'running' | 'passed' | 'failed';
+  status: 'pass' | 'fail' | 'warning';
   message: string;
-  details?: any;
+  details?: string;
+  count?: number;
 }
 
 const RealDataIntegrityTester = () => {
-  const [tests, setTests] = useState<TestResult[]>([
-    {
-      id: 'db_connection',
-      name: 'Database Connection',
-      status: 'pending',
-      message: 'Not started'
-    },
-    {
-      id: 'motorcycle_count',
-      name: 'Motorcycle Models Count',
-      status: 'pending',
-      message: 'Not started'
-    },
-    {
-      id: 'brand_count',
-      name: 'Brands Count',
-      status: 'pending',
-      message: 'Not started'
-    },
-    {
-      id: 'brand_relationships',
-      name: 'Brand Relationships',
-      status: 'pending',
-      message: 'Not started'
-    },
-    {
-      id: 'data_completeness',
-      name: 'Data Completeness',
-      status: 'pending',
-      message: 'Not started'
-    }
-  ]);
-  
+  const { user, isAdmin } = useAuth();
   const [isRunning, setIsRunning] = useState(false);
-  const [progress, setProgress] = useState(0);
 
-  const updateTest = (id: string, updates: Partial<TestResult>) => {
-    setTests(prev => prev.map(test => 
-      test.id === id ? { ...test, ...updates } : test
-    ));
-  };
+  const { data: testResults, isLoading, refetch } = useQuery({
+    queryKey: ['data-integrity-tests'],
+    queryFn: async () => {
+      console.log('🧪 Starting comprehensive data integrity tests...');
+      const tests: TestResult[] = [];
 
-  const runTest = async (testId: string) => {
-    updateTest(testId, { status: 'running', message: 'Running...' });
+      try {
+        // Test 1: Check foreign key relationships
+        const { data: fkTest, error: fkError } = await supabase.rpc('sql', {
+          query: `
+            SELECT 
+              tc.constraint_name,
+              tc.table_name,
+              ccu.table_name AS foreign_table_name
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.constraint_column_usage ccu 
+              ON tc.constraint_name = ccu.constraint_name
+            WHERE tc.constraint_type = 'FOREIGN KEY'
+              AND tc.table_name = 'motorcycle_models'
+              AND ccu.table_name = 'brands';
+          `
+        });
 
-    try {
-      switch (testId) {
-        case 'db_connection':
-          await testDatabaseConnection();
-          break;
-        case 'motorcycle_count':
-          await testMotorcycleCount();
-          break;
-        case 'brand_count':
-          await testBrandCount();
-          break;
-        case 'brand_relationships':
-          await testBrandRelationships();
-          break;
-        case 'data_completeness':
-          await testDataCompleteness();
-          break;
+        if (fkError) {
+          tests.push({
+            name: 'Foreign Key Structure',
+            status: 'fail',
+            message: 'Could not check foreign key constraints',
+            details: fkError.message
+          });
+        } else {
+          const fkCount = fkTest?.length || 0;
+          tests.push({
+            name: 'Foreign Key Relationships',
+            status: fkCount === 1 ? 'pass' : 'warning',
+            message: fkCount === 1 
+              ? 'Single FK constraint found (fixed!)' 
+              : `Found ${fkCount} FK constraints - should be exactly 1`,
+            count: fkCount
+          });
+        }
+
+        // Test 2: Check RLS policies
+        const { data: rlsTest, error: rlsError } = await supabase
+          .from('motorcycle_models')
+          .select('id, name, is_draft, brand_id, brands(name)')
+          .limit(5);
+
+        if (rlsError) {
+          tests.push({
+            name: 'RLS Policy Access',
+            status: 'fail',
+            message: 'RLS blocking data access',
+            details: rlsError.message
+          });
+        } else {
+          tests.push({
+            name: 'Motorcycle Models Access',
+            status: 'pass',
+            message: `Successfully queried ${rlsTest.length} motorcycle models`,
+            count: rlsTest.length
+          });
+        }
+
+        // Test 3: Check component tables RLS
+        const componentTables = ['engines', 'brake_systems', 'frames', 'suspensions', 'wheels'];
+        let componentTestsPassed = 0;
+
+        for (const table of componentTables) {
+          try {
+            const { data, error } = await supabase
+              .from(table)
+              .select('id, is_draft')
+              .limit(3);
+
+            if (!error && data) {
+              componentTestsPassed++;
+            }
+          } catch (err) {
+            console.warn(`Component table ${table} access failed:`, err);
+          }
+        }
+
+        tests.push({
+          name: 'Component Tables RLS',
+          status: componentTestsPassed === componentTables.length ? 'pass' : 'warning',
+          message: `${componentTestsPassed}/${componentTables.length} component tables accessible`,
+          count: componentTestsPassed
+        });
+
+        // Test 4: Check motorcycle_stats table
+        const { data: statsTest, error: statsError } = await supabase
+          .from('motorcycle_stats')
+          .select('id, model_configuration_id')
+          .limit(3);
+
+        if (statsError) {
+          tests.push({
+            name: 'Motorcycle Stats Access',
+            status: 'warning',
+            message: 'Cannot access motorcycle_stats (expected if no data)',
+            details: statsError.message
+          });
+        } else {
+          tests.push({
+            name: 'Motorcycle Stats Table',
+            status: 'pass',
+            message: `Successfully accessed stats table (${statsTest.length} records)`,
+            count: statsTest.length
+          });
+        }
+
+        // Test 5: Test admin functions
+        if (isAdmin) {
+          const { data: adminTest, error: adminError } = await supabase
+            .from('motorcycle_models')
+            .select('id, name, is_draft')
+            .eq('is_draft', true)
+            .limit(3);
+
+          if (adminError) {
+            tests.push({
+              name: 'Admin Draft Access',
+              status: 'fail',
+              message: 'Admin cannot access draft motorcycles',
+              details: adminError.message
+            });
+          } else {
+            tests.push({
+              name: 'Admin Draft Access',
+              status: 'pass',
+              message: `Admin can access ${adminTest.length} draft motorcycles`,
+              count: adminTest.length
+            });
+          }
+        }
+
+        // Test 6: Check brand data embedded in queries
+        const { data: brandEmbedTest, error: brandEmbedError } = await supabase
+          .from('motorcycle_models')
+          .select(`
+            id,
+            name,
+            brand_id,
+            brands!motorcycle_models_brand_id_fkey(
+              id,
+              name,
+              slug
+            )
+          `)
+          .limit(3);
+
+        if (brandEmbedError) {
+          tests.push({
+            name: 'Brand Data Embedding',
+            status: 'fail',
+            message: 'Cannot embed brand data in motorcycle queries',
+            details: brandEmbedError.message
+          });
+        } else {
+          const hasValidBrands = brandEmbedTest?.every(m => m.brands?.name);
+          tests.push({
+            name: 'Brand Data Embedding',
+            status: hasValidBrands ? 'pass' : 'warning',
+            message: hasValidBrands 
+              ? 'Brand data successfully embedded in queries'
+              : 'Some motorcycles missing brand data',
+            count: brandEmbedTest?.length || 0
+          });
+        }
+
+        // Test 7: Performance check
+        const startTime = Date.now();
+        const { data: perfTest } = await supabase
+          .from('motorcycle_models')
+          .select('id, name, brand_id, brands(name)')
+          .limit(10);
+        const queryTime = Date.now() - startTime;
+
+        tests.push({
+          name: 'Query Performance',
+          status: queryTime < 1000 ? 'pass' : queryTime < 3000 ? 'warning' : 'fail',
+          message: `Query completed in ${queryTime}ms`,
+          details: queryTime < 1000 ? 'Excellent performance' : 'Consider query optimization'
+        });
+
+        console.log('🧪 Data integrity tests completed:', tests);
+        return tests;
+
+      } catch (error) {
+        console.error('🚨 Critical test error:', error);
+        return [{
+          name: 'Critical Test Failure',
+          status: 'fail' as const,
+          message: 'Test suite encountered a critical error',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }];
       }
-    } catch (error: any) {
-      updateTest(testId, {
-        status: 'failed',
-        message: error.message || 'Test failed',
-        details: error
-      });
-    }
-  };
+    },
+    enabled: !!user,
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+  });
 
-  const testDatabaseConnection = async () => {
-    const { data, error } = await supabase
-      .from('motorcycle_models')
-      .select('id')
-      .limit(1);
-
-    if (error) {
-      throw new Error(`Database connection failed: ${error.message}`);
-    }
-
-    updateTest('db_connection', {
-      status: 'passed',
-      message: 'Database connection successful',
-      details: { connected: true }
-    });
-  };
-
-  const testMotorcycleCount = async () => {
-    const { count, error } = await supabase
-      .from('motorcycle_models')
-      .select('*', { count: 'exact', head: true });
-
-    if (error) {
-      throw new Error(`Failed to count motorcycles: ${error.message}`);
-    }
-
-    const motorcycleCount = count || 0;
-    
-    updateTest('motorcycle_count', {
-      status: motorcycleCount > 0 ? 'passed' : 'failed',
-      message: `Found ${motorcycleCount} motorcycle models`,
-      details: { count: motorcycleCount }
-    });
-  };
-
-  const testBrandCount = async () => {
-    const { count, error } = await supabase
-      .from('brands')
-      .select('*', { count: 'exact', head: true });
-
-    if (error) {
-      throw new Error(`Failed to count brands: ${error.message}`);
-    }
-
-    const brandCount = count || 0;
-    
-    updateTest('brand_count', {
-      status: brandCount > 0 ? 'passed' : 'failed',
-      message: `Found ${brandCount} brands`,
-      details: { count: brandCount }
-    });
-  };
-
-  const testBrandRelationships = async () => {
-    // Test for motorcycles without valid brand relationships
-    const { data: orphanedMotorcycles, error } = await supabase
-      .from('motorcycle_models')
-      .select(`
-        id,
-        name,
-        brand_id,
-        brand:brands(id, name)
-      `)
-      .is('brands.id', null);
-
-    if (error) {
-      throw new Error(`Failed to check brand relationships: ${error.message}`);
-    }
-
-    const orphanedCount = orphanedMotorcycles?.length || 0;
-    
-    updateTest('brand_relationships', {
-      status: orphanedCount === 0 ? 'passed' : 'failed',
-      message: orphanedCount === 0 
-        ? 'All motorcycles have valid brand relationships'
-        : `${orphanedCount} motorcycles have invalid brand relationships`,
-      details: { orphanedCount, orphanedMotorcycles }
-    });
-  };
-
-  const testDataCompleteness = async () => {
-    const { data: motorcycles, error } = await supabase
-      .from('motorcycle_models')
-      .select('id, name, type, engine_size, horsepower, weight_kg, is_draft');
-
-    if (error) {
-      throw new Error(`Failed to check data completeness: ${error.message}`);
-    }
-
-    if (!motorcycles) {
-      throw new Error('No motorcycle data found');
-    }
-
-    const total = motorcycles.length;
-    const complete = motorcycles.filter(m => 
-      !m.is_draft && 
-      m.name && 
-      m.type && 
-      m.engine_size && 
-      m.horsepower && 
-      m.weight_kg
-    ).length;
-
-    const completeness = total > 0 ? Math.round((complete / total) * 100) : 0;
-    
-    updateTest('data_completeness', {
-      status: completeness >= 70 ? 'passed' : 'failed',
-      message: `${completeness}% data completeness (${complete}/${total} complete)`,
-      details: { total, complete, completeness }
-    });
-  };
-
-  const runAllTests = async () => {
+  const runTests = async () => {
     setIsRunning(true);
-    setProgress(0);
-
-    // Reset all tests
-    setTests(prev => prev.map(test => ({
-      ...test,
-      status: 'pending' as const,
-      message: 'Waiting...'
-    })));
-
-    const testIds = tests.map(t => t.id);
-    
-    for (let i = 0; i < testIds.length; i++) {
-      await runTest(testIds[i]);
-      setProgress(((i + 1) / testIds.length) * 100);
-      
-      // Small delay between tests for UX
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-
+    await refetch();
     setIsRunning(false);
   };
 
-  const getStatusIcon = (status: TestResult['status']) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'running':
-        return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />;
-      case 'passed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <AlertTriangle className="h-4 w-4 text-gray-400" />;
+      case 'pass': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'fail': return <XCircle className="h-4 w-4 text-red-500" />;
+      default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
   };
 
-  const getStatusBadge = (status: TestResult['status']) => {
-    switch (status) {
-      case 'running':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Running</Badge>;
-      case 'passed':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800">Passed</Badge>;
-      case 'failed':
-        return <Badge variant="secondary" className="bg-red-100 text-red-800">Failed</Badge>;
-      default:
-        return <Badge variant="outline">Pending</Badge>;
-    }
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      pass: 'bg-green-100 text-green-800 border-green-200',
+      warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      fail: 'bg-red-100 text-red-800 border-red-200'
+    };
+    
+    return variants[status as keyof typeof variants] || variants.fail;
   };
 
-  const passedTests = tests.filter(t => t.status === 'passed').length;
-  const failedTests = tests.filter(t => t.status === 'failed').length;
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center">
+          <Users className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">Please sign in to run data integrity tests</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const passedTests = testResults?.filter(t => t.status === 'pass').length || 0;
+  const totalTests = testResults?.length || 0;
+  const successRate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            <CardTitle>Real Data Integrity Tests</CardTitle>
-          </div>
-          <Button 
-            onClick={runAllTests} 
-            disabled={isRunning}
-            className="bg-accent-teal text-black hover:bg-accent-teal/80"
-          >
-            <PlayCircle className="h-4 w-4 mr-2" />
-            {isRunning ? 'Running Tests...' : 'Run All Tests'}
-          </Button>
-        </div>
-        {isRunning && (
-          <div className="space-y-2">
-            <Progress value={progress} className="w-full" />
-            <p className="text-sm text-muted-foreground">
-              Testing database integrity... {Math.round(progress)}%
-            </p>
-          </div>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Summary */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{passedTests}</div>
-            <div className="text-sm text-muted-foreground">Passed</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-600">{failedTests}</div>
-            <div className="text-sm text-muted-foreground">Failed</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">{tests.length}</div>
-            <div className="text-sm text-muted-foreground">Total</div>
-          </div>
-        </div>
-
-        {/* Test Results */}
-        <div className="space-y-3">
-          {tests.map((test) => (
-            <div key={test.id} className="flex items-center justify-between p-3 rounded-lg border">
-              <div className="flex items-center gap-3">
-                {getStatusIcon(test.status)}
-                <div>
-                  <div className="font-medium">{test.name}</div>
-                  <div className="text-sm text-muted-foreground">{test.message}</div>
-                  {test.details && (
-                    <details className="text-xs text-muted-foreground mt-1">
-                      <summary className="cursor-pointer">Details</summary>
-                      <pre className="mt-1 p-1 bg-muted rounded">
-                        {JSON.stringify(test.details, null, 2)}
-                      </pre>
-                    </details>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {getStatusBadge(test.status)}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => runTest(test.id)}
-                  disabled={isRunning}
-                >
-                  Run
-                </Button>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Database className="h-6 w-6 text-accent-teal" />
+              <div>
+                <CardTitle>Real-Time Data Integrity Testing</CardTitle>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Phase 2 validation: Foreign keys, RLS policies, and performance
+                </p>
               </div>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            <Button 
+              variant="outline" 
+              onClick={runTests}
+              disabled={isRunning || isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${(isRunning || isLoading) ? 'animate-spin' : ''}`} />
+              {isRunning || isLoading ? 'Testing...' : 'Run Tests'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Overall Status */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="p-4">
+              <div className="text-sm text-muted-foreground">Success Rate</div>
+              <div className="text-2xl font-bold text-green-600">{successRate}%</div>
+            </Card>
+            <Card className="p-4">
+              <div className="text-sm text-muted-foreground">Tests Passed</div>
+              <div className="text-2xl font-bold">{passedTests}/{totalTests}</div>
+            </Card>
+            <Card className="p-4">
+              <div className="text-sm text-muted-foreground">User Status</div>
+              <div className="text-2xl font-bold text-accent-teal">
+                {isAdmin ? 'Admin' : 'User'}
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="text-sm text-muted-foreground">Auto-Refresh</div>
+              <div className="text-sm font-medium text-green-600">Every 30s</div>
+            </Card>
+          </div>
+
+          {/* Test Results */}
+          <div className="space-y-3">
+            {testResults?.map((test, index) => (
+              <div 
+                key={index}
+                className="flex items-center justify-between p-4 border rounded-lg bg-card"
+              >
+                <div className="flex items-center gap-3">
+                  {getStatusIcon(test.status)}
+                  <div>
+                    <div className="font-medium">{test.name}</div>
+                    <div className="text-sm text-muted-foreground">{test.message}</div>
+                    {test.details && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {test.details}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {test.count !== undefined && (
+                    <span className="text-sm text-muted-foreground">
+                      ({test.count})
+                    </span>
+                  )}
+                  <Badge className={getStatusBadge(test.status)}>
+                    {test.status.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+            )) || (
+              <div className="text-center py-8 text-muted-foreground">
+                {isLoading ? 'Running tests...' : 'No test results available'}
+              </div>
+            )}
+          </div>
+
+          {/* Test Categories Legend */}
+          <div className="mt-6 pt-4 border-t">
+            <div className="text-sm font-medium mb-3">Test Categories:</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="flex items-center gap-1">
+                <Link2 className="h-3 w-3" />
+                Foreign Keys
+              </div>
+              <div className="flex items-center gap-1">
+                <Shield className="h-3 w-3" />
+                RLS Policies
+              </div>
+              <div className="flex items-center gap-1">
+                <Database className="h-3 w-3" />
+                Data Access
+              </div>
+              <div className="flex items-center gap-1">
+                <RefreshCw className="h-3 w-3" />
+                Performance
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

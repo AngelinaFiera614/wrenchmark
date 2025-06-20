@@ -1451,13 +1451,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_motorcycle_models_brand"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "motorcycle_models_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: false
