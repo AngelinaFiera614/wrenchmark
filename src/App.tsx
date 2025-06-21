@@ -8,12 +8,12 @@ import Layout from "./components/layout/Layout";
 import Index from "./pages/Index";
 import Motorcycles from "./pages/Motorcycles";
 import MotorcycleDetail from "./pages/MotorcycleDetail";
-import Brands from "./pages/Brands";
+import BrandsPage from "./pages/BrandsPage";
 import BrandDetail from "./pages/BrandDetail";
-import Compare from "./pages/Compare";
-import Glossary from "./pages/Glossary";
-import Courses from "./pages/Courses";
-import LessonDetail from "./pages/LessonDetail";
+import ComparisonPage from "./pages/ComparisonPage";
+import GlossaryPage from "./pages/GlossaryPage";
+import CoursesPage from "./pages/CoursesPage";
+import LessonDetailsPage from "./pages/LessonDetailsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBrands from "./pages/admin/AdminBrands";
 import AdminSystemSettings from "./pages/admin/AdminSystemSettings";
@@ -39,18 +39,19 @@ const App = () => (
             <Route index element={<Index />} />
             <Route path="motorcycles" element={<Motorcycles />} />
             <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
-            <Route path="brands" element={<Brands />} />
+            <Route path="brands" element={<BrandsPage />} />
             <Route path="brands/:slug" element={<BrandDetail />} />
-            <Route path="compare" element={<Compare />} />
-            <Route path="glossary" element={<Glossary />} />
-            <Route path="courses" element={<Courses />} />
-            <Route path="courses/:courseSlug/lessons/:lessonSlug" element={<LessonDetail />} />
+            <Route path="compare" element={<ComparisonPage />} />
+            <Route path="glossary" element={<GlossaryPage />} />
+            <Route path="courses" element={<CoursesPage />} />
+            <Route path="courses/:courseSlug/lessons/:lessonSlug" element={<LessonDetailsPage />} />
             
             {/* Admin Routes */}
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="admin/brands" element={<AdminBrands />} />
             <Route path="admin/system" element={<AdminSystemSettings />} />
             <Route path="admin/motorcycle-management" element={<AdminMotorcycleManagement />} />
+            <Route path="admin/parts-hub" element={<AdminPartsHub />} />
             <Route path="admin/parts/*" element={<NewPartsManagementLayout />} />
             <Route path="admin/glossary" element={<AdminGlossary />} />
             <Route path="admin/courses" element={<AdminCourses />} />
