@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,13 +18,17 @@ import MotorcycleFilters from "@/components/admin/motorcycles/MotorcycleFilters"
 import BulkSelectionToolbar from "@/components/admin/motorcycles/BulkSelectionToolbar";
 import EnhancedMotorcycleCard from "@/components/admin/motorcycles/EnhancedMotorcycleCard";
 import AddMotorcycleDialog from "@/components/admin/motorcycles/AddMotorcycleDialog";
+import EditMotorcycleDialog from "@/components/admin/motorcycles/EditMotorcycleDialog";
 import { useBulkMotorcycleActions } from "@/hooks/useBulkMotorcycleActions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Motorcycle } from "@/types";
 
 const AdminMotorcycleManagement = () => {
   const [activeTab, setActiveTab] = useState("browse");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedMotorcycleForEdit, setSelectedMotorcycleForEdit] = useState<Motorcycle | null>(null);
   const { toast } = useToast();
   
   const {
@@ -55,12 +58,9 @@ const AdminMotorcycleManagement = () => {
     handleBulkDelete
   } = useBulkMotorcycleActions();
 
-  const handleEditMotorcycle = (motorcycle: any) => {
-    // TODO: Implement edit dialog
-    toast({
-      title: "Edit Feature",
-      description: "Edit functionality will be implemented in the next phase."
-    });
+  const handleEditMotorcycle = (motorcycle: Motorcycle) => {
+    setSelectedMotorcycleForEdit(motorcycle);
+    setEditDialogOpen(true);
   };
 
   const handleDeleteMotorcycle = async (id: string) => {
@@ -479,6 +479,15 @@ const AdminMotorcycleManagement = () => {
       <AddMotorcycleDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
+        brands={brands}
+        onSuccess={refetch}
+      />
+
+      {/* Edit Motorcycle Dialog */}
+      <EditMotorcycleDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        motorcycle={selectedMotorcycleForEdit}
         brands={brands}
         onSuccess={refetch}
       />
