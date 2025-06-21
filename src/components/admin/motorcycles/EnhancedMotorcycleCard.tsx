@@ -16,6 +16,8 @@ import {
   Settings
 } from "lucide-react";
 import { Motorcycle } from "@/types";
+import { calculateMotorcycleCompleteness } from "@/utils/motorcycleCompleteness";
+import MotorcycleCompletenessIndicator from "./MotorcycleCompletenessIndicator";
 
 interface EnhancedMotorcycleCardProps {
   motorcycle: Motorcycle;
@@ -42,6 +44,9 @@ const EnhancedMotorcycleCard = ({
   // Generate a readable display name instead of showing ID
   const displayReference = `${motorcycle.type}-${motorcycle.production_start_year || 'Unknown'}-${motorcycle.name.substring(0, 8)}`;
   
+  // Calculate completion data
+  const completeness = calculateMotorcycleCompleteness(motorcycle);
+  
   return (
     <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-accent-teal' : ''}`}>
       <CardContent className="p-4">
@@ -55,7 +60,7 @@ const EnhancedMotorcycleCard = ({
           <div className="flex-1 space-y-3">
             {/* Header Section */}
             <div className="flex items-start justify-between">
-              <div>
+              <div className="flex-1">
                 <h4 className="font-semibold text-lg">
                   {brandName} {motorcycle.name}
                 </h4>
@@ -82,6 +87,12 @@ const EnhancedMotorcycleCard = ({
                   )}
                 </Badge>
               </div>
+            </div>
+
+            {/* Data Completeness Section */}
+            <div className="bg-muted/30 p-3 rounded-lg">
+              <h5 className="text-sm font-medium mb-2">Data Completeness</h5>
+              <MotorcycleCompletenessIndicator completeness={completeness} />
             </div>
 
             {/* Specifications Grid */}

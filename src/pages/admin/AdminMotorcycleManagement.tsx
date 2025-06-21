@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -119,26 +120,57 @@ const AdminMotorcycleManagement = () => {
   };
 
   const handleSetAllDrafts = async () => {
-    if (!confirm("Are you sure you want to set ALL motorcycles as drafts? This will affect all motorcycles in the database.")) return;
+    // Get current counts for confirmation
+    const currentPublished = motorcycles.filter(m => !m.is_draft).length;
+    const currentDrafts = motorcycles.filter(m => m.is_draft).length;
+    
+    if (currentPublished === 0) {
+      toast({
+        title: "No Action Needed",
+        description: "All motorcycles are already drafts."
+      });
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to set ALL motorcycles as drafts?\n\nThis will affect:\n• ${currentPublished} published motorcycles → drafts\n• ${currentDrafts} already drafts (no change)\n\nTotal: ${motorcycles.length} motorcycles`;
+    
+    if (!confirm(confirmMessage)) return;
+
+    console.log('Starting bulk draft update...');
+    console.log(`Current state: ${currentPublished} published, ${currentDrafts} drafts`);
 
     try {
-      const { error } = await supabase
+      // Use a more specific update to avoid any potential issues
+      const { data, error, count } = await supabase
         .from('motorcycle_models')
-        .update({ is_draft: true });
+        .update({ 
+          is_draft: true,
+          updated_at: new Date().toISOString()
+        })
+        .neq('is_draft', true) // Only update motorcycles that are NOT already drafts
+        .select('id', { count: 'exact' });
 
-      if (error) throw error;
+      console.log('Update result:', { data, error, count });
 
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      const updatedCount = count || 0;
+      
       toast({
-        title: "All Motorcycles Set as Drafts",
-        description: "All motorcycles have been successfully marked as drafts."
+        title: "Bulk Update Complete",
+        description: `Successfully set ${updatedCount} motorcycles as drafts. ${currentDrafts} were already drafts.`
       });
 
+      console.log(`Successfully updated ${updatedCount} motorcycles to draft status`);
       refetch();
     } catch (error) {
       console.error('Error setting all motorcycles as drafts:', error);
       toast({
         title: "Error",
-        description: "Failed to set all motorcycles as drafts.",
+        description: `Failed to set motorcycles as drafts. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
     }
