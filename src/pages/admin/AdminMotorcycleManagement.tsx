@@ -1,30 +1,22 @@
+
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Plus, 
-  Download, 
-  Upload,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle,
-  Database,
-  Cpu
-} from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useSimpleMotorcycleData } from "@/hooks/useSimpleMotorcycleData";
-import MotorcycleFilters from "@/components/admin/motorcycles/MotorcycleFilters";
-import BulkSelectionToolbar from "@/components/admin/motorcycles/BulkSelectionToolbar";
-import EnhancedMotorcycleCard from "@/components/admin/motorcycles/EnhancedMotorcycleCard";
-import AddMotorcycleDialog from "@/components/admin/motorcycles/AddMotorcycleDialog";
-import EditMotorcycleDialog from "@/components/admin/motorcycles/EditMotorcycleDialog";
 import { useBulkMotorcycleActions } from "@/hooks/useBulkMotorcycleActions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
-import ComponentManagementDialog from "@/components/admin/motorcycles/ComponentManagementDialog";
-import ImportMotorcycleDialog from "@/components/admin/motorcycles/ImportMotorcycleDialog";
+
+// Import new components
+import AdminMotorcycleHeader from "@/components/admin/motorcycles/AdminMotorcycleHeader";
+import AdminMotorcycleStats from "@/components/admin/motorcycles/AdminMotorcycleStats";
+import AdminMotorcycleList from "@/components/admin/motorcycles/AdminMotorcycleList";
+import AdminMotorcycleDebug from "@/components/admin/motorcycles/AdminMotorcycleDebug";
+import AdminMotorcycleDialogs from "@/components/admin/motorcycles/AdminMotorcycleDialogs";
+import MotorcycleFilters from "@/components/admin/motorcycles/MotorcycleFilters";
+import BulkSelectionToolbar from "@/components/admin/motorcycles/BulkSelectionToolbar";
 
 const AdminMotorcycleManagement = () => {
   const [activeTab, setActiveTab] = useState("browse");
@@ -48,7 +40,6 @@ const AdminMotorcycleManagement = () => {
     handleFilterChange,
     clearFilters,
     refetch,
-    toggleDraftMode,
     isDraftMode
   } = useSimpleMotorcycleData();
 
@@ -157,32 +148,17 @@ const AdminMotorcycleManagement = () => {
     });
   };
 
-  const handleImport = () => {
-    setImportDialogOpen(true);
-  };
-
-  console.log('AdminMotorcycleManagement - Render state:', {
-    isEnabled,
-    motorcyclesCount: motorcycles.length,
-    brandsCount: brands.length,
-    isLoading,
-    error,
-    stats,
-    componentStats
-  });
-
   // Show authentication warning if not enabled
   if (!isEnabled) {
     return (
       <div className="h-full flex flex-col space-y-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-explorer-text">Motorcycle Management</h1>
-            <p className="text-explorer-text-muted mt-1">
-              Admin access required
-            </p>
-          </div>
-        </div>
+        <AdminMotorcycleHeader
+          onRefresh={refetch}
+          onExportAll={handleExportAll}
+          onImport={() => setImportDialogOpen(true)}
+          onAddMotorcycle={() => setAddDialogOpen(true)}
+          isLoading={isLoading}
+        />
         
         <Card className="border-orange-200 bg-orange-50">
           <CardContent className="p-6">
@@ -203,136 +179,20 @@ const AdminMotorcycleManagement = () => {
 
   return (
     <div className="h-full flex flex-col space-y-4">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-explorer-text">Motorcycle Management</h1>
-          <p className="text-explorer-text-muted mt-1">
-            Enhanced interface with bulk operations and detailed motorcycle information
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={refetch}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportAll}>
-            <Download className="h-4 w-4 mr-2" />
-            Export All
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleImport}>
-            <Upload className="h-4 w-4 mr-2" />
-            Import
-          </Button>
-          <Button 
-            size="sm" 
-            className="bg-accent-teal text-black hover:bg-accent-teal/80"
-            onClick={() => setAddDialogOpen(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Model
-          </Button>
-        </div>
-      </div>
+      <AdminMotorcycleHeader
+        onRefresh={refetch}
+        onExportAll={handleExportAll}
+        onImport={() => setImportDialogOpen(true)}
+        onAddMotorcycle={() => setAddDialogOpen(true)}
+        isLoading={isLoading}
+      />
 
-      {/* Enhanced Stats Cards */}
-      {(stats || componentStats) && (
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-          {stats && (
-            <>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Models</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.total}</div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                    <CheckCircle className="h-3 w-3" />
-                    Database Optimized
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Published</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{stats.complete}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {stats.total > 0 ? Math.round((stats.complete / stats.total) * 100) : 0}% of total
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Drafts</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">{stats.drafts}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {stats.total > 0 ? Math.round((stats.drafts / stats.total) * 100) : 0}% of total
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Brands Available</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{brands.length}</div>
-              <div className="text-xs text-muted-foreground">
-                Active brands
-              </div>
-            </CardContent>
-          </Card>
+      <AdminMotorcycleStats
+        stats={stats}
+        componentStats={componentStats}
+        brandsCount={brands.length}
+      />
 
-          {componentStats && (
-            <>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-1">
-                    <Cpu className="h-4 w-4" />
-                    Components
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{componentStats.total}</div>
-                  <div className="text-xs text-muted-foreground">
-                    Published components
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-1">
-                    <Database className="h-4 w-4" />
-                    Performance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-accent-teal">Fast</div>
-                  <div className="text-xs text-muted-foreground">
-                    Indexed & optimized
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Main Interface */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="browse">Enhanced Browse</TabsTrigger>
@@ -341,7 +201,6 @@ const AdminMotorcycleManagement = () => {
         </TabsList>
 
         <TabsContent value="browse" className="flex-1 flex flex-col mt-4 space-y-3">
-          {/* Filters */}
           <MotorcycleFilters
             filters={filters}
             brands={brands}
@@ -350,7 +209,6 @@ const AdminMotorcycleManagement = () => {
             resultCount={motorcycles.length}
           />
 
-          {/* Bulk Selection Toolbar */}
           <BulkSelectionToolbar
             selectedCount={selectedIds.length}
             totalCount={motorcycles.length}
@@ -363,122 +221,33 @@ const AdminMotorcycleManagement = () => {
             onBulkDelete={() => handleBulkDelete(refetch)}
           />
 
-          {/* Enhanced Motorcycle List */}
-          <div className="space-y-4">
-            {isLoading ? (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>Loading motorcycles...</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : error ? (
-              <Card className="border-red-200 bg-red-50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 text-red-800 mb-4">
-                    <AlertTriangle className="h-5 w-5" />
-                    <span className="font-medium">Error Loading Motorcycles</span>
-                  </div>
-                  <p className="text-red-700 mb-4">{error}</p>
-                  <Button variant="outline" onClick={refetch}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Try Again
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : motorcycles.length === 0 ? (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-muted-foreground mb-4">
-                    No {isDraftMode ? 'draft' : 'published'} motorcycles found
-                  </p>
-                  <Button 
-                    className="bg-accent-teal text-black hover:bg-accent-teal/80"
-                    onClick={() => setAddDialogOpen(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Motorcycle
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4">
-                {motorcycles.map((motorcycle) => (
-                  <EnhancedMotorcycleCard
-                    key={motorcycle.id}
-                    motorcycle={motorcycle}
-                    isSelected={selectedIds.includes(motorcycle.id)}
-                    onSelect={handleSelect}
-                    onEdit={handleEditMotorcycle}
-                    onDelete={handleDeleteMotorcycle}
-                    onToggleStatus={handleToggleStatus}
-                    onManageComponents={handleManageComponents}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <AdminMotorcycleList
+            motorcycles={motorcycles}
+            selectedIds={selectedIds}
+            isLoading={isLoading}
+            error={error}
+            isDraftMode={isDraftMode}
+            onSelect={handleSelect}
+            onEdit={handleEditMotorcycle}
+            onDelete={handleDeleteMotorcycle}
+            onToggleStatus={handleToggleStatus}
+            onManageComponents={handleManageComponents}
+            onRefresh={refetch}
+            onAddMotorcycle={() => setAddDialogOpen(true)}
+          />
         </TabsContent>
 
         <TabsContent value="debug" className="flex-1 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Debug Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Connection Status</h4>
-                <div className="flex items-center gap-2">
-                  <Badge variant={isEnabled ? "default" : "destructive"}>
-                    {isEnabled ? "Connected" : "Disconnected"}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">
-                    Admin authentication: {isEnabled ? "Valid" : "Invalid"}
-                  </span>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-2">Data Counts</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>Motorcycles: {motorcycles.length}</div>
-                  <div>Brands: {brands.length}</div>
-                  <div>Loading: {isLoading ? "Yes" : "No"}</div>
-                  <div>Error: {error || "None"}</div>
-                  <div>Draft Mode: {isDraftMode ? "On" : "Off"}</div>
-                  {componentStats && <div>Components: {componentStats.total}</div>}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2">Performance Improvements</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm text-green-600">
-                  <div>✓ Database indexes added</div>
-                  <div>✓ Draft filtering enabled</div>
-                  <div>✓ Foreign key queries optimized</div>
-                  <div>✓ Stats table created</div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2">Active Filters</h4>
-                <pre className="text-xs bg-muted p-2 rounded">
-                  {JSON.stringify(filters, null, 2)}
-                </pre>
-              </div>
-
-              {componentStats && (
-                <div>
-                  <h4 className="font-medium mb-2">Component Stats</h4>
-                  <pre className="text-xs bg-muted p-2 rounded">
-                    {JSON.stringify(componentStats, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <AdminMotorcycleDebug
+            isEnabled={isEnabled}
+            motorcyclesCount={motorcycles.length}
+            brandsCount={brands.length}
+            isLoading={isLoading}
+            error={error}
+            isDraftMode={isDraftMode}
+            filters={filters}
+            componentStats={componentStats}
+          />
         </TabsContent>
 
         <TabsContent value="advanced" className="flex-1 mt-4">
@@ -490,37 +259,19 @@ const AdminMotorcycleManagement = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Add Motorcycle Dialog */}
-      <AddMotorcycleDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
+      <AdminMotorcycleDialogs
+        addDialogOpen={addDialogOpen}
+        editDialogOpen={editDialogOpen}
+        importDialogOpen={importDialogOpen}
+        componentDialogOpen={componentDialogOpen}
+        selectedMotorcycleForEdit={selectedMotorcycleForEdit}
+        selectedMotorcycleForComponents={selectedMotorcycleForComponents}
         brands={brands}
+        onAddDialogChange={setAddDialogOpen}
+        onEditDialogChange={setEditDialogOpen}
+        onImportDialogChange={setImportDialogOpen}
+        onComponentDialogChange={setComponentDialogOpen}
         onSuccess={refetch}
-      />
-
-      {/* Edit Motorcycle Dialog */}
-      <EditMotorcycleDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        motorcycle={selectedMotorcycleForEdit}
-        brands={brands}
-        onSuccess={refetch}
-      />
-
-      {/* Import Motorcycle Dialog */}
-      <ImportMotorcycleDialog
-        open={importDialogOpen}
-        onOpenChange={setImportDialogOpen}
-        brands={brands}
-        onSuccess={refetch}
-      />
-
-      {/* Component Management Dialog */}
-      <ComponentManagementDialog
-        open={componentDialogOpen}
-        onOpenChange={setComponentDialogOpen}
-        selectedModel={selectedMotorcycleForComponents}
-        onComponentLinked={refetch}
       />
     </div>
   );
