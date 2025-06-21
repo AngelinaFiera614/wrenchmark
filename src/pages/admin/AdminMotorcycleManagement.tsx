@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -119,6 +118,32 @@ const AdminMotorcycleManagement = () => {
     }
   };
 
+  const handleSetAllDrafts = async () => {
+    if (!confirm("Are you sure you want to set ALL motorcycles as drafts? This will affect all motorcycles in the database.")) return;
+
+    try {
+      const { error } = await supabase
+        .from('motorcycle_models')
+        .update({ is_draft: true });
+
+      if (error) throw error;
+
+      toast({
+        title: "All Motorcycles Set as Drafts",
+        description: "All motorcycles have been successfully marked as drafts."
+      });
+
+      refetch();
+    } catch (error) {
+      console.error('Error setting all motorcycles as drafts:', error);
+      toast({
+        title: "Error",
+        description: "Failed to set all motorcycles as drafts.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleExportAll = () => {
     const exportData = motorcycles.map(motorcycle => ({
       id: motorcycle.id,
@@ -157,6 +182,7 @@ const AdminMotorcycleManagement = () => {
           onExportAll={handleExportAll}
           onImport={() => setImportDialogOpen(true)}
           onAddMotorcycle={() => setAddDialogOpen(true)}
+          onSetAllDrafts={handleSetAllDrafts}
           isLoading={isLoading}
         />
         
@@ -184,6 +210,7 @@ const AdminMotorcycleManagement = () => {
         onExportAll={handleExportAll}
         onImport={() => setImportDialogOpen(true)}
         onAddMotorcycle={() => setAddDialogOpen(true)}
+        onSetAllDrafts={handleSetAllDrafts}
         isLoading={isLoading}
       />
 

@@ -39,6 +39,9 @@ const EnhancedMotorcycleCard = ({
   // Get brand name from the relationship
   const brandName = motorcycle.brand?.name || motorcycle.brands?.name || 'Unknown Brand';
   
+  // Generate a readable display name instead of showing ID
+  const displayReference = `${motorcycle.type}-${motorcycle.production_start_year || 'Unknown'}-${motorcycle.name.substring(0, 8)}`;
+  
   return (
     <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-accent-teal' : ''}`}>
       <CardContent className="p-4">
@@ -57,7 +60,7 @@ const EnhancedMotorcycleCard = ({
                   {brandName} {motorcycle.name}
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  {motorcycle.type} • ID: {motorcycle.id.slice(0, 8)}...
+                  {motorcycle.type} • {displayReference}
                 </p>
               </div>
               
