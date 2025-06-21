@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Outlet } from "react-router-dom";
 import Layout from "./components/layout/Layout";
+import AdminLayout from "./components/admin/AdminLayout";
 import Index from "./pages/Index";
 import Motorcycles from "./pages/Motorcycles";
 import MotorcycleDetail from "./pages/MotorcycleDetail";
@@ -34,6 +35,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Layout><Outlet /></Layout>}>
           <Route index element={<Index />} />
           <Route path="motorcycles" element={<Motorcycles />} />
@@ -44,19 +46,21 @@ const App = () => (
           <Route path="glossary" element={<GlossaryPage />} />
           <Route path="courses" element={<CoursesPage />} />
           <Route path="courses/:courseSlug/lessons/:lessonSlug" element={<LessonDetailsPage />} />
-          
-          {/* Admin Routes */}
-          <Route path="admin" element={<AdminDashboard />} />
-          <Route path="admin/brands" element={<AdminBrands />} />
-          <Route path="admin/system" element={<AdminSystemSettings />} />
-          <Route path="admin/motorcycle-management" element={<AdminMotorcycleManagement />} />
-          <Route path="admin/parts-hub" element={<AdminPartsHub />} />
-          <Route path="admin/parts/*" element={<NewPartsManagementLayout />} />
-          <Route path="admin/glossary" element={<AdminGlossary />} />
-          <Route path="admin/courses" element={<AdminCourses />} />
-          <Route path="admin/lessons" element={<AdminLessons />} />
-          <Route path="admin/riding-skills" element={<AdminRidingSkills />} />
-          <Route path="admin/manuals" element={<AdminManuals />} />
+        </Route>
+        
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="brands" element={<AdminBrands />} />
+          <Route path="system" element={<AdminSystemSettings />} />
+          <Route path="motorcycle-management" element={<AdminMotorcycleManagement />} />
+          <Route path="parts-hub" element={<AdminPartsHub />} />
+          <Route path="parts/*" element={<NewPartsManagementLayout />} />
+          <Route path="glossary" element={<AdminGlossary />} />
+          <Route path="courses" element={<AdminCourses />} />
+          <Route path="lessons" element={<AdminLessons />} />
+          <Route path="riding-skills" element={<AdminRidingSkills />} />
+          <Route path="manuals" element={<AdminManuals />} />
         </Route>
       </Routes>
     </TooltipProvider>
