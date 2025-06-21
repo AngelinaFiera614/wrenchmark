@@ -81,7 +81,7 @@ const AdminSidebarComponent = () => {
         {
           icon: Component,
           label: "Parts Hub",
-          href: "/admin/parts",
+          href: "/admin/parts-hub",
           isActive: location.pathname.startsWith('/admin/parts')
         }
       ]

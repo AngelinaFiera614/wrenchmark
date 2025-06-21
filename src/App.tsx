@@ -25,7 +25,11 @@ import AdminCourses from "./pages/admin/AdminCourses";
 import AdminLessons from "./pages/admin/AdminLessons";
 import AdminRidingSkills from "./pages/admin/AdminRidingSkills";
 import AdminManuals from "./pages/admin/AdminManuals";
+import AdminRepairSkills from "./pages/admin/AdminRepairSkills";
+import AdminTestingSuite from "./pages/admin/AdminTestingSuite";
+import AdminUsers from "./pages/admin/AdminUsers";
 import NewPartsManagementLayout from "./components/admin/parts/NewPartsManagementLayout";
+import ColorOptionsManager from "./components/admin/colors/ColorOptionsManager";
 
 const queryClient = new QueryClient();
 
@@ -60,7 +64,11 @@ const App = () => (
           <Route path="courses" element={<AdminCourses />} />
           <Route path="lessons" element={<AdminLessons />} />
           <Route path="riding-skills" element={<AdminRidingSkills />} />
+          <Route path="repair-skills" element={<AdminRepairSkills />} />
           <Route path="manuals" element={<AdminManuals />} />
+          <Route path="testing" element={<AdminTestingSuite />} />
+          <Route path="colors" element={<ColorOptionsManager />} />
+          <Route path="users" element={<AdminUsers />} />
         </Route>
       </Routes>
     </TooltipProvider>
