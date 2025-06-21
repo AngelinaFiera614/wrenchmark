@@ -13,6 +13,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { useOptimizedAdminData } from "@/hooks/admin/useOptimizedAdminData";
+import ComponentsLibraryPage from "@/components/admin/parts/ComponentsLibraryPage";
 
 const AdminPartsHub = () => {
   const [activeTab, setActiveTab] = useState("components");
@@ -35,12 +36,6 @@ const AdminPartsHub = () => {
           <p className="text-explorer-text-muted mt-1">
             Manage motorcycle components, assignments, and configurations
           </p>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" className="bg-accent-teal text-black hover:bg-accent-teal/80">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Component
-          </Button>
         </div>
       </div>
 
@@ -113,26 +108,16 @@ const AdminPartsHub = () => {
         </TabsList>
 
         <TabsContent value="components" className="mt-6">
-          <Card className="bg-explorer-card border-explorer-chrome/30">
-            <CardHeader>
-              <CardTitle className="text-explorer-text">Components Library</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Component className="h-12 w-12 mx-auto mb-4 text-explorer-text-muted" />
-                <p className="text-explorer-text-muted">Components library interface will be integrated here</p>
-                <p className="text-sm text-explorer-text-muted mt-2">
-                  Manage engines, brakes, frames, suspension, and wheels
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <ComponentsLibraryPage />
         </TabsContent>
 
         <TabsContent value="assignments" className="mt-6">
           <Card className="bg-explorer-card border-explorer-chrome/30">
             <CardHeader>
-              <CardTitle className="text-explorer-text">Model Component Assignments</CardTitle>
+              <CardTitle className="text-explorer-text flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Model Component Assignments
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
@@ -141,6 +126,10 @@ const AdminPartsHub = () => {
                 <p className="text-sm text-explorer-text-muted mt-2">
                   Set default components for motorcycle models
                 </p>
+                <Button className="mt-4 bg-accent-teal hover:bg-accent-teal/80">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Assign Components to Model
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -149,7 +138,10 @@ const AdminPartsHub = () => {
         <TabsContent value="configurations" className="mt-6">
           <Card className="bg-explorer-card border-explorer-chrome/30">
             <CardHeader>
-              <CardTitle className="text-explorer-text">Configuration Manager</CardTitle>
+              <CardTitle className="text-explorer-text flex items-center gap-2">
+                <Wrench className="h-5 w-5" />
+                Configuration Manager
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
@@ -158,6 +150,10 @@ const AdminPartsHub = () => {
                 <p className="text-sm text-explorer-text-muted mt-2">
                   Manage trim configurations and component overrides
                 </p>
+                <Button className="mt-4 bg-accent-teal hover:bg-accent-teal/80">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Configuration
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -166,7 +162,10 @@ const AdminPartsHub = () => {
         <TabsContent value="bulk" className="mt-6">
           <Card className="bg-explorer-card border-explorer-chrome/30">
             <CardHeader>
-              <CardTitle className="text-explorer-text">Bulk Operations</CardTitle>
+              <CardTitle className="text-explorer-text flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Bulk Operations
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
@@ -175,6 +174,16 @@ const AdminPartsHub = () => {
                 <p className="text-sm text-explorer-text-muted mt-2">
                   Mass assignment and data management tools
                 </p>
+                <div className="flex gap-2 justify-center mt-4">
+                  <Button variant="outline">
+                    <Database className="h-4 w-4 mr-2" />
+                    Bulk Import
+                  </Button>
+                  <Button variant="outline">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Mass Assign
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

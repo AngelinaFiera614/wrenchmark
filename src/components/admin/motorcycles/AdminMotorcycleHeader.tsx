@@ -1,14 +1,13 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Download, Upload, Plus, FileText } from "lucide-react";
+import { RefreshCw, Download, Upload, Plus } from "lucide-react";
 
 interface AdminMotorcycleHeaderProps {
   onRefresh: () => void;
   onExportAll: () => void;
   onImport: () => void;
   onAddMotorcycle: () => void;
-  onSetAllDrafts: () => void;
   isLoading: boolean;
 }
 
@@ -17,7 +16,6 @@ const AdminMotorcycleHeader = ({
   onExportAll,
   onImport,
   onAddMotorcycle,
-  onSetAllDrafts,
   isLoading
 }: AdminMotorcycleHeaderProps) => {
   return (
@@ -37,15 +35,6 @@ const AdminMotorcycleHeader = ({
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Refresh
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onSetAllDrafts}
-          className="text-orange-600 border-orange-200 hover:bg-orange-50"
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          Set All as Drafts
         </Button>
         <Button variant="outline" size="sm" onClick={onExportAll}>
           <Download className="h-4 w-4 mr-2" />
