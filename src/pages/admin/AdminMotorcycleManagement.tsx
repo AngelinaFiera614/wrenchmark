@@ -23,12 +23,17 @@ import { useBulkMotorcycleActions } from "@/hooks/useBulkMotorcycleActions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
+import ComponentManagementDialog from "@/components/admin/motorcycles/ComponentManagementDialog";
+import ImportMotorcycleDialog from "@/components/admin/motorcycles/ImportMotorcycleDialog";
 
 const AdminMotorcycleManagement = () => {
   const [activeTab, setActiveTab] = useState("browse");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [componentDialogOpen, setComponentDialogOpen] = useState(false);
   const [selectedMotorcycleForEdit, setSelectedMotorcycleForEdit] = useState<Motorcycle | null>(null);
+  const [selectedMotorcycleForComponents, setSelectedMotorcycleForComponents] = useState<any | null>(null);
   const { toast } = useToast();
   
   const {
@@ -61,6 +66,11 @@ const AdminMotorcycleManagement = () => {
   const handleEditMotorcycle = (motorcycle: Motorcycle) => {
     setSelectedMotorcycleForEdit(motorcycle);
     setEditDialogOpen(true);
+  };
+
+  const handleManageComponents = (motorcycle: Motorcycle) => {
+    setSelectedMotorcycleForComponents(motorcycle);
+    setComponentDialogOpen(true);
   };
 
   const handleDeleteMotorcycle = async (id: string) => {
@@ -147,6 +157,10 @@ const AdminMotorcycleManagement = () => {
     });
   };
 
+  const handleImport = () => {
+    setImportDialogOpen(true);
+  };
+
   console.log('AdminMotorcycleManagement - Render state:', {
     isEnabled,
     motorcyclesCount: motorcycles.length,
@@ -211,7 +225,7 @@ const AdminMotorcycleManagement = () => {
             <Download className="h-4 w-4 mr-2" />
             Export All
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleImport}>
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
@@ -400,6 +414,7 @@ const AdminMotorcycleManagement = () => {
                     onEdit={handleEditMotorcycle}
                     onDelete={handleDeleteMotorcycle}
                     onToggleStatus={handleToggleStatus}
+                    onManageComponents={handleManageComponents}
                   />
                 ))}
               </div>
@@ -490,6 +505,22 @@ const AdminMotorcycleManagement = () => {
         motorcycle={selectedMotorcycleForEdit}
         brands={brands}
         onSuccess={refetch}
+      />
+
+      {/* Import Motorcycle Dialog */}
+      <ImportMotorcycleDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        brands={brands}
+        onSuccess={refetch}
+      />
+
+      {/* Component Management Dialog */}
+      <ComponentManagementDialog
+        open={componentDialogOpen}
+        onOpenChange={setComponentDialogOpen}
+        selectedModel={selectedMotorcycleForComponents}
+        onComponentLinked={refetch}
       />
     </div>
   );

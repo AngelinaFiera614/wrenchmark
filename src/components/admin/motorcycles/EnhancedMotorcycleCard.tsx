@@ -12,7 +12,8 @@ import {
   Calendar,
   Zap,
   Gauge,
-  Weight
+  Weight,
+  Settings
 } from "lucide-react";
 import { Motorcycle } from "@/types";
 
@@ -23,6 +24,7 @@ interface EnhancedMotorcycleCardProps {
   onEdit: (motorcycle: Motorcycle) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string) => void;
+  onManageComponents?: (motorcycle: Motorcycle) => void;
 }
 
 const EnhancedMotorcycleCard = ({
@@ -31,7 +33,8 @@ const EnhancedMotorcycleCard = ({
   onSelect,
   onEdit,
   onDelete,
-  onToggleStatus
+  onToggleStatus,
+  onManageComponents
 }: EnhancedMotorcycleCardProps) => {
   // Get brand name from the relationship
   const brandName = motorcycle.brand?.name || motorcycle.brands?.name || 'Unknown Brand';
@@ -127,6 +130,18 @@ const EnhancedMotorcycleCard = ({
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
+                
+                {onManageComponents && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onManageComponents(motorcycle)}
+                    className="text-accent-teal border-accent-teal/30 hover:bg-accent-teal/10"
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Components
+                  </Button>
+                )}
                 
                 <Button
                   variant="outline"
