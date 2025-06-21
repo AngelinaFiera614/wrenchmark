@@ -140,24 +140,37 @@ const AdminMotorcycleManagement = () => {
     console.log(`Current state: ${currentPublished} published, ${currentDrafts} drafts`);
 
     try {
-      // Use a more specific update to avoid any potential issues
-      const { data, error, count } = await supabase
+      // First, get the count of records that will be updated
+      const { count: recordsToUpdate, error: countError } = await supabase
+        .from('motorcycle_models')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_draft', false);
+
+      if (countError) {
+        console.error('Error counting records:', countError);
+        throw countError;
+      }
+
+      console.log(`Records to update: ${recordsToUpdate}`);
+
+      // Then perform the update
+      const { data, error } = await supabase
         .from('motorcycle_models')
         .update({ 
           is_draft: true,
           updated_at: new Date().toISOString()
         })
-        .neq('is_draft', true) // Only update motorcycles that are NOT already drafts
-        .select('id', { count: 'exact' });
+        .eq('is_draft', false)
+        .select('id');
 
-      console.log('Update result:', { data, error, count });
+      console.log('Update result:', { data, error, updatedCount: data?.length });
 
       if (error) {
         console.error('Supabase error:', error);
         throw error;
       }
 
-      const updatedCount = count || 0;
+      const updatedCount = data?.length || 0;
       
       toast({
         title: "Bulk Update Complete",
