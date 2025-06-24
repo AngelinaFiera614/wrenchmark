@@ -8,6 +8,7 @@ import { useComponentData } from "./hooks/useComponentData";
 import { useAssignmentActions } from "./hooks/useAssignmentActions";
 import { componentTypes } from "./utils/componentNameUtils";
 import AssignmentCard from "./components/AssignmentCard";
+import { SmartSuggestionEngine } from "./phase2";
 
 interface ComponentAssignmentDialogProps {
   open: boolean;
@@ -42,11 +43,13 @@ const ComponentAssignmentDialog: React.FC<ComponentAssignmentDialogProps> = ({
     );
   };
 
+  const existingAssignments = assignments.map(a => a.component_type);
+
   if (!model) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -57,24 +60,36 @@ const ComponentAssignmentDialog: React.FC<ComponentAssignmentDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Wrench className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-blue-800 dark:text-blue-200">
-                  Model-Level Assignment
-                </h4>
-                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                  Components assigned here will be inherited by all trim levels. 
-                  Individual trim levels can override these assignments as needed.
-                </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Assignment Section */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Wrench className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-blue-800 dark:text-blue-200">
+                    Model-Level Assignment
+                  </h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                    Components assigned here will be inherited by all trim levels. 
+                    Individual trim levels can override these assignments as needed.
+                  </p>
+                </div>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {componentTypes.map(renderAssignmentCard)}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {componentTypes.map(renderAssignmentCard)}
+          {/* Smart Suggestions Sidebar */}
+          <div className="lg:col-span-1">
+            <SmartSuggestionEngine
+              model={model}
+              onApplySuggestion={handleAssignComponent}
+              existingAssignments={existingAssignments}
+            />
           </div>
         </div>
 
