@@ -202,18 +202,18 @@ const ComponentAssignmentDialog: React.FC<ComponentAssignmentDialogProps> = ({
     const component = typeData.find((c: any) => c.id === componentId);
     if (!component) return 'Unknown Component';
     
-    // Handle different component types with proper type checking
+    // Handle different component types with safe property access
     switch (componentType) {
       case 'engine':
-        return component.name || `${component.displacement_cc || 'Unknown'}cc Engine`;
+        return (component as any).name || `${(component as any).displacement_cc || 'Unknown'}cc Engine`;
       case 'brake_system':
-        return component.type || 'Brake System';
+        return (component as any).type || 'Brake System';
       case 'frame':
-        return component.type || 'Frame';
+        return (component as any).type || 'Frame';
       case 'suspension':
-        return `${component.front_type || 'Unknown'} / ${component.rear_type || 'Unknown'}`;
+        return `${(component as any).front_type || 'Unknown'} / ${(component as any).rear_type || 'Unknown'}`;
       case 'wheel':
-        return component.type || 'Wheels';
+        return (component as any).type || 'Wheels';
       default:
         return 'Unknown Component';
     }
