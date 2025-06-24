@@ -205,7 +205,7 @@ const ComponentAssignmentDialog: React.FC<ComponentAssignmentDialogProps> = ({
     // Handle different component types with proper type checking
     switch (componentType) {
       case 'engine':
-        return component.name || `${component.displacement_cc}cc Engine`;
+        return component.name || `${component.displacement_cc || 'Unknown'}cc Engine`;
       case 'brake_system':
         return component.type || 'Brake System';
       case 'frame':
