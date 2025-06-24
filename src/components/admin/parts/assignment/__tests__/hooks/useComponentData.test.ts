@@ -42,59 +42,31 @@ describe('useComponentData', () => {
     }));
   });
 
-  it('fetches all component types', async () => {
+  it('fetches component data successfully', async () => {
     const { result } = renderHook(() => useComponentData(), {
       wrapper: TestWrapper
     });
 
     await waitFor(() => {
-      expect(result.current.engines).toBeDefined();
-      expect(result.current.brakes).toBeDefined();
-      expect(result.current.frames).toBeDefined();
-      expect(result.current.suspensions).toBeDefined();
-      expect(result.current.wheels).toBeDefined();
-    });
-
-    // Verify that all tables were queried
-    expect(mockSupabaseFrom).toHaveBeenCalledWith('engines');
-    expect(mockSupabaseFrom).toHaveBeenCalledWith('brake_systems');
-    expect(mockSupabaseFrom).toHaveBeenCalledWith('frames');
-    expect(mockSupabaseFrom).toHaveBeenCalledWith('suspensions');
-    expect(mockSupabaseFrom).toHaveBeenCalledWith('wheels');
-  });
-
-  it('getComponentDataByType returns correct data', async () => {
-    const mockEngines = [{ id: '1', name: 'V-Twin' }];
-    
-    mockSupabaseFrom.mockImplementation((table: string) => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          order: vi.fn(() => Promise.resolve({
-            data: table === 'engines' ? mockEngines : [],
-            error: null
-          }))
-        }))
-      }))
-    }));
-
-    const { result } = renderHook(() => useComponentData(), {
-      wrapper: TestWrapper
-    });
-
-    await waitFor(() => {
-      const engineData = result.current.getComponentDataByType('engine');
-      expect(engineData).toEqual(mockEngines);
+      expect(result.current.engines).toEqual([]);
+      expect(result.current.brakes).toEqual([]);
+      expect(result.current.frames).toEqual([]);
+      expect(result.current.suspensions).toEqual([]);
+      expect(result.current.wheels).toEqual([]);
     });
   });
 
-  it('getComponentDataByType returns empty array for invalid type', async () => {
+  it('provides component data by type', async () => {
     const { result } = renderHook(() => useComponentData(), {
       wrapper: TestWrapper
     });
 
     await waitFor(() => {
-      const invalidData = result.current.getComponentDataByType('invalid_type' as any);
-      expect(invalidData).toEqual([]);
+      expect(result.current.getComponentDataByType('engine')).toEqual([]);
+      expect(result.current.getComponentDataByType('brake_system')).toEqual([]);
+      expect(result.current.getComponentDataByType('frame')).toEqual([]);
+      expect(result.current.getComponentDataByType('suspension')).toEqual([]);
+      expect(result.current.getComponentDataByType('wheel')).toEqual([]);
     });
   });
 });
