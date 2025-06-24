@@ -197,8 +197,26 @@ const ComponentAssignmentDialog: React.FC<ComponentAssignmentDialogProps> = ({
 
   const getComponentName = (componentType: string, componentId: string) => {
     const typeData = componentTypes.find(t => t.key === componentType)?.data;
-    const component = typeData?.find((c: any) => c.id === componentId);
-    return component?.name || component?.type || 'Unknown Component';
+    if (!typeData) return 'Unknown Component';
+    
+    const component = typeData.find((c: any) => c.id === componentId);
+    if (!component) return 'Unknown Component';
+    
+    // Handle different component types with proper type checking
+    switch (componentType) {
+      case 'engine':
+        return component.name || `${component.displacement_cc}cc Engine`;
+      case 'brake_system':
+        return component.type || 'Brake System';
+      case 'frame':
+        return component.type || 'Frame';
+      case 'suspension':
+        return `${component.front_type || 'Unknown'} / ${component.rear_type || 'Unknown'}`;
+      case 'wheel':
+        return component.type || 'Wheels';
+      default:
+        return 'Unknown Component';
+    }
   };
 
   const renderAssignmentCard = (componentType: any) => {
@@ -243,7 +261,7 @@ const ComponentAssignmentDialog: React.FC<ComponentAssignmentDialogProps> = ({
               <SelectContent>
                 {componentType.data?.map((component: any) => (
                   <SelectItem key={component.id} value={component.id}>
-                    {component.name || component.type || `${component.displacement_cc}cc`}
+                    {getComponentName(componentType.key, component.id)}
                   </SelectItem>
                 ))}
               </SelectContent>
