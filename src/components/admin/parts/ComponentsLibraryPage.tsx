@@ -223,13 +223,48 @@ const ComponentsLibraryPage = () => {
     }
   };
 
+  const getComponentName = (component: any, type: string): string => {
+    switch (type) {
+      case 'engine':
+        return component.name || 'Unknown Engine';
+      case 'brake':
+        return component.name || component.type || 'Unknown Brake System';
+      case 'frame':
+        return component.name || component.type || 'Unknown Frame';
+      case 'suspension':
+        return component.brand || 'Unknown Suspension';
+      case 'wheel':
+        return component.type || 'Unknown Wheel';
+      default:
+        return 'Unknown Component';
+    }
+  };
+
   const handleDelete = (type: string, id: string) => {
     // Find the component name for confirmation dialog
     let componentName = 'Unknown';
-    const allComponents = [...engines, ...brakes, ...frames, ...suspensions, ...wheels];
-    const component = allComponents.find(c => c.id === id);
-    if (component) {
-      componentName = component.name || component.type || 'Unknown';
+    let componentData = null;
+    
+    switch (type) {
+      case 'engine':
+        componentData = engines.find(c => c.id === id);
+        break;
+      case 'brake':
+        componentData = brakes.find(c => c.id === id);
+        break;
+      case 'frame':
+        componentData = frames.find(c => c.id === id);
+        break;
+      case 'suspension':
+        componentData = suspensions.find(c => c.id === id);
+        break;
+      case 'wheel':
+        componentData = wheels.find(c => c.id === id);
+        break;
+    }
+    
+    if (componentData) {
+      componentName = getComponentName(componentData, type);
     }
     
     setDeleteDialog({
