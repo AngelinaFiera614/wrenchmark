@@ -31,14 +31,14 @@ describe('useComponentData', () => {
     
     // Setup default mock responses
     mockSupabaseFrom.mockImplementation((table: string) => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          order: vi.fn(() => Promise.resolve({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({
             data: [],
             error: null
-          }))
-        }))
-      }))
+          })
+        })
+      })
     }));
   });
 

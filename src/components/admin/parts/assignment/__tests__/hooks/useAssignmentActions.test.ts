@@ -44,16 +44,16 @@ describe('useAssignmentActions', () => {
     
     // Setup default mock responses
     mockSupabaseFrom.mockImplementation((table: string) => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
           data: [],
           error: null
-        }))
-      })),
-      insert: vi.fn(() => Promise.resolve({
+        })
+      }),
+      insert: vi.fn().mockResolvedValue({
         data: null,
         error: null
-      }))
+      })
     }));
   });
 
