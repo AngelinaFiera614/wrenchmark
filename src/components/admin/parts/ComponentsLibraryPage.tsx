@@ -304,26 +304,31 @@ const ComponentsLibraryPage = () => {
       {/* Dialog Components */}
       <AdminEngineDialog
         open={activeDialog === 'engine'}
+        engine={null}
         onClose={handleDialogClose}
       />
       
       <AdminBrakeSystemDialog
         open={activeDialog === 'brake'}
+        brakeSystem={null}
         onClose={handleDialogClose}
       />
       
       <AdminFrameDialog
         open={activeDialog === 'frame'}
+        frame={null}
         onClose={handleDialogClose}
       />
       
       <AdminSuspensionDialog
         open={activeDialog === 'suspension'}
+        suspension={null}
         onClose={handleDialogClose}
       />
       
       <AdminWheelDialog
         open={activeDialog === 'wheel'}
+        wheel={null}
         onClose={handleDialogClose}
       />
     </div>
