@@ -16,16 +16,18 @@ import {
   Circle
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchEngines } from "@/services/engineService";
-import { fetchBrakes } from "@/services/brakeService";
-import { fetchFrames } from "@/services/frameService";
-import { fetchSuspensions } from "@/services/suspensionService";
-import { fetchWheels } from "@/services/wheelService";
+import { useToast } from "@/hooks/use-toast";
+import { fetchEngines, fetchEngineById, deleteEngine } from "@/services/engineService";
+import { fetchBrakes, fetchBrakeById, deleteBrake } from "@/services/brakeService";
+import { fetchFrames, fetchFrameById, deleteFrame } from "@/services/frameService";
+import { fetchSuspensions, fetchSuspensionById, deleteSuspension } from "@/services/suspensionService";
+import { fetchWheels, fetchWheelById, deleteWheel } from "@/services/wheelService";
 import AdminEngineDialog from "@/components/admin/components/AdminEngineDialog";
 import AdminBrakeSystemDialog from "@/components/admin/components/AdminBrakeSystemDialog";
 import AdminFrameDialog from "@/components/admin/components/AdminFrameDialog";
 import AdminSuspensionDialog from "@/components/admin/components/AdminSuspensionDialog";
 import AdminWheelDialog from "@/components/admin/components/AdminWheelDialog";
+import DeleteConfirmationDialog from "./DeleteConfirmationDialog";
 
 interface ComponentTypeCardProps {
   title: string;
@@ -132,8 +134,25 @@ const ComponentTypeCard: React.FC<ComponentTypeCardProps> = ({
 };
 
 const ComponentsLibraryPage = () => {
+  const { toast } = useToast();
+  
   // Dialog state management
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
+  const [editingComponent, setEditingComponent] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Delete confirmation state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    componentId: string | null;
+    componentType: string | null;
+    componentName: string | null;
+  }>({
+    open: false,
+    componentId: null,
+    componentType: null,
+    componentName: null
+  });
 
   // Fetch all component types
   const { data: engines = [], isLoading: enginesLoading, refetch: refetchEngines } = useQuery({
@@ -162,21 +181,117 @@ const ComponentsLibraryPage = () => {
   });
 
   const handleAdd = (type: string) => {
+    setIsEditing(false);
+    setEditingComponent(null);
     setActiveDialog(type);
   };
 
-  const handleEdit = (type: string, id: string) => {
-    console.log(`Edit ${type}:`, id);
-    // TODO: Open edit dialog
+  const handleEdit = async (type: string, id: string) => {
+    try {
+      setIsEditing(true);
+      let componentData = null;
+      
+      switch (type) {
+        case 'engine':
+          componentData = await fetchEngineById(id);
+          break;
+        case 'brake':
+          componentData = await fetchBrakeById(id);
+          break;
+        case 'frame':
+          componentData = await fetchFrameById(id);
+          break;
+        case 'suspension':
+          componentData = await fetchSuspensionById(id);
+          break;
+        case 'wheel':
+          componentData = await fetchWheelById(id);
+          break;
+        default:
+          throw new Error(`Unknown component type: ${type}`);
+      }
+      
+      setEditingComponent(componentData);
+      setActiveDialog(type);
+    } catch (error) {
+      console.error(`Error fetching ${type}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to load ${type} data for editing.`
+      });
+    }
   };
 
   const handleDelete = (type: string, id: string) => {
-    console.log(`Delete ${type}:`, id);
-    // TODO: Confirm and delete
+    // Find the component name for confirmation dialog
+    let componentName = 'Unknown';
+    const allComponents = [...engines, ...brakes, ...frames, ...suspensions, ...wheels];
+    const component = allComponents.find(c => c.id === id);
+    if (component) {
+      componentName = component.name || component.type || 'Unknown';
+    }
+    
+    setDeleteDialog({
+      open: true,
+      componentId: id,
+      componentType: type,
+      componentName
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.componentId || !deleteDialog.componentType) return;
+    
+    try {
+      switch (deleteDialog.componentType) {
+        case 'engine':
+          await deleteEngine(deleteDialog.componentId);
+          refetchEngines();
+          break;
+        case 'brake':
+          await deleteBrake(deleteDialog.componentId);
+          refetchBrakes();
+          break;
+        case 'frame':
+          await deleteFrame(deleteDialog.componentId);
+          refetchFrames();
+          break;
+        case 'suspension':
+          await deleteSuspension(deleteDialog.componentId);
+          refetchSuspensions();
+          break;
+        case 'wheel':
+          await deleteWheel(deleteDialog.componentId);
+          refetchWheels();
+          break;
+      }
+      
+      toast({
+        title: "Success",
+        description: `${deleteDialog.componentType} deleted successfully.`
+      });
+    } catch (error) {
+      console.error(`Error deleting ${deleteDialog.componentType}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to delete ${deleteDialog.componentType}.`
+      });
+    } finally {
+      setDeleteDialog({
+        open: false,
+        componentId: null,
+        componentType: null,
+        componentName: null
+      });
+    }
   };
 
   const handleDialogClose = () => {
     setActiveDialog(null);
+    setEditingComponent(null);
+    setIsEditing(false);
     // Refresh all component data when dialog closes
     refetchEngines();
     refetchBrakes();
@@ -304,32 +419,41 @@ const ComponentsLibraryPage = () => {
       {/* Dialog Components */}
       <AdminEngineDialog
         open={activeDialog === 'engine'}
-        engine={null}
+        engine={isEditing ? editingComponent : null}
         onClose={handleDialogClose}
       />
       
       <AdminBrakeSystemDialog
         open={activeDialog === 'brake'}
-        brakeSystem={null}
+        brakeSystem={isEditing ? editingComponent : null}
         onClose={handleDialogClose}
       />
       
       <AdminFrameDialog
         open={activeDialog === 'frame'}
-        frame={null}
+        frame={isEditing ? editingComponent : null}
         onClose={handleDialogClose}
       />
       
       <AdminSuspensionDialog
         open={activeDialog === 'suspension'}
-        suspension={null}
+        suspension={isEditing ? editingComponent : null}
         onClose={handleDialogClose}
       />
       
       <AdminWheelDialog
         open={activeDialog === 'wheel'}
-        wheel={null}
+        wheel={isEditing ? editingComponent : null}
         onClose={handleDialogClose}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog(prev => ({ ...prev, open: false }))}
+        onConfirm={confirmDelete}
+        componentName={deleteDialog.componentName || 'Unknown'}
+        componentType={deleteDialog.componentType || 'component'}
       />
     </div>
   );
