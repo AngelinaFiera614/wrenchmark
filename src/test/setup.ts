@@ -1,5 +1,5 @@
 
-import { expect, afterEach, vi } from 'vitest';
+import { expect, afterEach, vi, describe, it, beforeEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 
@@ -20,3 +20,13 @@ global.console = {
   warn: vi.fn(),
   error: vi.fn(),
 };
+
+// Declare globals for TypeScript
+declare global {
+  const describe: typeof import('vitest').describe;
+  const it: typeof import('vitest').it;
+  const expect: typeof import('vitest').expect;
+  const beforeEach: typeof import('vitest').beforeEach;
+  const afterEach: typeof import('vitest').afterEach;
+  const vi: typeof import('vitest').vi;
+}

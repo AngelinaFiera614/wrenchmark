@@ -2,7 +2,7 @@
 import { renderHook } from '@testing-library/react';
 import { waitFor } from '@testing-library/dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { useComponentData } from '../../hooks/useComponentData';
 import React from 'react';
 

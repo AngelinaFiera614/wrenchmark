@@ -1,7 +1,7 @@
 
 import { render } from '@testing-library/react';
 import { screen, fireEvent } from '@testing-library/dom';
-import { vi } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import AnalyticsDashboard from '../../phase2/AnalyticsDashboard';
 
 describe('AnalyticsDashboard', () => {

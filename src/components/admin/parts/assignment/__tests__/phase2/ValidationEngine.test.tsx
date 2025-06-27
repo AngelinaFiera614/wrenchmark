@@ -1,7 +1,7 @@
 
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
-import { vi } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import ValidationEngine from '../../phase2/ValidationEngine';
 
 describe('ValidationEngine', () => {

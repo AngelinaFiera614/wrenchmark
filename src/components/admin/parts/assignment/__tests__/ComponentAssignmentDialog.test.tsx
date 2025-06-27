@@ -3,7 +3,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { screen, fireEvent } from '@testing-library/dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import ComponentAssignmentDialog from '../ComponentAssignmentDialog';
 
 // Mock the hooks
