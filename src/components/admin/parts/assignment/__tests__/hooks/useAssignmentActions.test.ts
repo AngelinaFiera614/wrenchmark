@@ -31,7 +31,7 @@ interface TestWrapperProps {
   children: React.ReactNode;
 }
 
-const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => (
+const TestWrapper = ({ children }: TestWrapperProps) => (
   <QueryClientProvider client={createTestQueryClient()}>
     {children}
   </QueryClientProvider>
