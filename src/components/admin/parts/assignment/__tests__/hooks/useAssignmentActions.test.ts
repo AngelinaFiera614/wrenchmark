@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { useAssignmentActions } from '../../hooks/useAssignmentActions';
+import React from 'react';
 
 // Mock Supabase client
 const mockSupabaseFrom = vi.fn();
@@ -26,7 +27,11 @@ const createTestQueryClient = () => new QueryClient({
   }
 });
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+interface TestWrapperProps {
+  children: React.ReactNode;
+}
+
+const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => (
   <QueryClientProvider client={createTestQueryClient()}>
     {children}
   </QueryClientProvider>
