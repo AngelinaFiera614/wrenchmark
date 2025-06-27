@@ -48,18 +48,20 @@ describe('useAssignmentActions', () => {
     vi.clearAllMocks();
     
     // Setup default mock responses
-    mockSupabaseFrom.mockImplementation((table: string) => ({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: [],
+    mockSupabaseFrom.mockImplementation((table: string) => {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({
+            data: [],
+            error: null
+          })
+        }),
+        insert: vi.fn().mockResolvedValue({
+          data: null,
           error: null
         })
-      }),
-      insert: vi.fn().mockResolvedValue({
-        data: null,
-        error: null
-      })
-    }));
+      };
+    });
   });
 
   it('initializes with empty assignments', async () => {

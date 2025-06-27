@@ -35,16 +35,18 @@ describe('useComponentData', () => {
     vi.clearAllMocks();
     
     // Setup default mock responses
-    mockSupabaseFrom.mockImplementation((table: string) => ({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({
-            data: [],
-            error: null
+    mockSupabaseFrom.mockImplementation((table: string) => {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({
+              data: [],
+              error: null
+            })
           })
         })
-      })
-    }));
+      };
+    });
   });
 
   it('fetches component data successfully', async () => {
