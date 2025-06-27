@@ -2,7 +2,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import ModelAssignmentInterface from '../ModelAssignmentInterface';
+import { ModelAssignmentInterface } from '../ModelAssignmentInterface';
 
 // Mock the hooks
 vi.mock('@/hooks/use-toast', () => ({
@@ -34,11 +34,17 @@ const createTestQueryClient = () => new QueryClient({
   }
 });
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={createTestQueryClient()}>
-    {children}
-  </QueryClientProvider>
-);
+interface TestWrapperProps {
+  children: React.ReactNode;
+}
+
+function TestWrapper({ children }: TestWrapperProps) {
+  return React.createElement(
+    QueryClientProvider,
+    { client: createTestQueryClient() },
+    children
+  );
+}
 
 describe('ModelAssignmentInterface', () => {
   it('renders without crashing', () => {

@@ -33,11 +33,17 @@ const createTestQueryClient = () => new QueryClient({
   }
 });
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={createTestQueryClient()}>
-    {children}
-  </QueryClientProvider>
-);
+interface TestWrapperProps {
+  children: React.ReactNode;
+}
+
+function TestWrapper({ children }: TestWrapperProps) {
+  return React.createElement(
+    QueryClientProvider,
+    { client: createTestQueryClient() },
+    children
+  );
+}
 
 const mockModel = {
   id: 'test-model-id',
