@@ -1,159 +1,23 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2,
-  Cog,
-  Disc,
-  Box,
-  Zap,
-  Circle
-} from "lucide-react";
+import React from "react";
+import { Cog, Disc, Box, Zap, Circle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { fetchEngines, fetchEngineById, deleteEngine } from "@/services/engineService";
-import { fetchBrakes, fetchBrakeById, deleteBrake } from "@/services/brakeService";
-import { fetchFrames, fetchFrameById, deleteFrame } from "@/services/frameService";
-import { fetchSuspensions, fetchSuspensionById, deleteSuspension } from "@/services/suspensionService";
-import { fetchWheels, fetchWheelById, deleteWheel } from "@/services/wheelService";
+import { fetchEngines } from "@/services/engineService";
+import { fetchBrakes } from "@/services/brakeService";
+import { fetchFrames } from "@/services/frameService";
+import { fetchSuspensions } from "@/services/suspensionService";
+import { fetchWheels } from "@/services/wheelService";
 import AdminEngineDialog from "@/components/admin/components/AdminEngineDialog";
 import AdminBrakeSystemDialog from "@/components/admin/components/AdminBrakeSystemDialog";
 import AdminFrameDialog from "@/components/admin/components/AdminFrameDialog";
 import AdminSuspensionDialog from "@/components/admin/components/AdminSuspensionDialog";
 import AdminWheelDialog from "@/components/admin/components/AdminWheelDialog";
+import ComponentTypeCard from "./components/ComponentTypeCard";
 import DeleteConfirmationDialog from "./DeleteConfirmationDialog";
-
-interface ComponentTypeCardProps {
-  title: string;
-  icon: React.ReactNode;
-  data: any[];
-  loading: boolean;
-  onAdd: () => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  renderItem: (item: any) => React.ReactNode;
-}
-
-const ComponentTypeCard: React.FC<ComponentTypeCardProps> = ({
-  title,
-  icon,
-  data,
-  loading,
-  onAdd,
-  onEdit,
-  onDelete,
-  renderItem
-}) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  const filteredData = data.filter(item => 
-    item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.type?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <Card className="bg-explorer-card border-explorer-chrome/30">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-explorer-text flex items-center gap-2">
-            {icon}
-            {title}
-            <Badge variant="secondary" className="ml-2">
-              {data.length}
-            </Badge>
-          </CardTitle>
-          <Button
-            onClick={onAdd}
-            size="sm"
-            className="bg-accent-teal hover:bg-accent-teal/80"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add
-          </Button>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-explorer-text-muted" />
-          <Input
-            placeholder={`Search ${title.toLowerCase()}...`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-explorer-dark border-explorer-chrome/30"
-          />
-        </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="text-center py-8 text-explorer-text-muted">
-            Loading {title.toLowerCase()}...
-          </div>
-        ) : filteredData.length === 0 ? (
-          <div className="text-center py-8 text-explorer-text-muted">
-            {searchTerm ? `No ${title.toLowerCase()} found` : `No ${title.toLowerCase()} created yet`}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredData.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between p-3 bg-explorer-dark rounded-lg border border-explorer-chrome/20"
-              >
-                <div className="flex-1">
-                  {renderItem(item)}
-                </div>
-                <div className="flex items-center gap-2 ml-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onEdit(item.id)}
-                    className="border-explorer-chrome/30 text-explorer-text hover:bg-explorer-chrome/20"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDelete(item.id)}
-                    className="border-red-400/30 text-red-400 hover:bg-red-400/10"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
+import { useComponentEdit } from "./hooks/useComponentEdit";
+import { useComponentDelete } from "./hooks/useComponentDelete";
 
 const ComponentsLibraryPage = () => {
-  const { toast } = useToast();
-  
-  // Dialog state management
-  const [activeDialog, setActiveDialog] = useState<string | null>(null);
-  const [editingComponent, setEditingComponent] = useState<any>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  
-  // Delete confirmation state
-  const [deleteDialog, setDeleteDialog] = useState<{
-    open: boolean;
-    componentId: string | null;
-    componentType: string | null;
-    componentName: string | null;
-  }>({
-    open: false,
-    componentId: null,
-    componentType: null,
-    componentName: null
-  });
-
   // Fetch all component types
   const { data: engines = [], isLoading: enginesLoading, refetch: refetchEngines } = useQuery({
     queryKey: ['engines'],
@@ -180,160 +44,30 @@ const ComponentsLibraryPage = () => {
     queryFn: fetchWheels
   });
 
-  const handleAdd = (type: string) => {
-    setIsEditing(false);
-    setEditingComponent(null);
-    setActiveDialog(type);
+  const refetchCallbacks = {
+    refetchEngines,
+    refetchBrakes,
+    refetchFrames,
+    refetchSuspensions,
+    refetchWheels
   };
 
-  const handleEdit = async (type: string, id: string) => {
-    try {
-      setIsEditing(true);
-      let componentData = null;
-      
-      switch (type) {
-        case 'engine':
-          componentData = await fetchEngineById(id);
-          break;
-        case 'brake':
-          componentData = await fetchBrakeById(id);
-          break;
-        case 'frame':
-          componentData = await fetchFrameById(id);
-          break;
-        case 'suspension':
-          componentData = await fetchSuspensionById(id);
-          break;
-        case 'wheel':
-          componentData = await fetchWheelById(id);
-          break;
-        default:
-          throw new Error(`Unknown component type: ${type}`);
-      }
-      
-      setEditingComponent(componentData);
-      setActiveDialog(type);
-    } catch (error) {
-      console.error(`Error fetching ${type}:`, error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to load ${type} data for editing.`
-      });
-    }
-  };
+  // Use custom hooks for edit and delete functionality
+  const {
+    activeDialog,
+    editingComponent,
+    isEditing,
+    handleAdd,
+    handleEdit,
+    handleDialogClose
+  } = useComponentEdit(refetchCallbacks);
 
-  const getComponentName = (component: any, type: string): string => {
-    switch (type) {
-      case 'engine':
-        return component.name || 'Unknown Engine';
-      case 'brake':
-        return component.name || component.type || 'Unknown Brake System';
-      case 'frame':
-        return component.name || component.type || 'Unknown Frame';
-      case 'suspension':
-        return component.brand || 'Unknown Suspension';
-      case 'wheel':
-        return component.type || 'Unknown Wheel';
-      default:
-        return 'Unknown Component';
-    }
-  };
-
-  const handleDelete = (type: string, id: string) => {
-    // Find the component name for confirmation dialog
-    let componentName = 'Unknown';
-    let componentData = null;
-    
-    switch (type) {
-      case 'engine':
-        componentData = engines.find(c => c.id === id);
-        break;
-      case 'brake':
-        componentData = brakes.find(c => c.id === id);
-        break;
-      case 'frame':
-        componentData = frames.find(c => c.id === id);
-        break;
-      case 'suspension':
-        componentData = suspensions.find(c => c.id === id);
-        break;
-      case 'wheel':
-        componentData = wheels.find(c => c.id === id);
-        break;
-    }
-    
-    if (componentData) {
-      componentName = getComponentName(componentData, type);
-    }
-    
-    setDeleteDialog({
-      open: true,
-      componentId: id,
-      componentType: type,
-      componentName
-    });
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteDialog.componentId || !deleteDialog.componentType) return;
-    
-    try {
-      switch (deleteDialog.componentType) {
-        case 'engine':
-          await deleteEngine(deleteDialog.componentId);
-          refetchEngines();
-          break;
-        case 'brake':
-          await deleteBrake(deleteDialog.componentId);
-          refetchBrakes();
-          break;
-        case 'frame':
-          await deleteFrame(deleteDialog.componentId);
-          refetchFrames();
-          break;
-        case 'suspension':
-          await deleteSuspension(deleteDialog.componentId);
-          refetchSuspensions();
-          break;
-        case 'wheel':
-          await deleteWheel(deleteDialog.componentId);
-          refetchWheels();
-          break;
-      }
-      
-      toast({
-        title: "Success",
-        description: `${deleteDialog.componentType} deleted successfully.`
-      });
-    } catch (error) {
-      console.error(`Error deleting ${deleteDialog.componentType}:`, error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to delete ${deleteDialog.componentType}.`
-      });
-    } finally {
-      setDeleteDialog({
-        open: false,
-        componentId: null,
-        componentType: null,
-        componentName: null
-      });
-    }
-  };
-
-  const handleDialogClose = () => {
-    setActiveDialog(null);
-    setEditingComponent(null);
-    setIsEditing(false);
-    // Refresh all component data when dialog closes
-    refetchEngines();
-    refetchBrakes();
-    refetchFrames();
-    refetchSuspensions();
-    refetchWheels();
-  };
+  const {
+    deleteDialog,
+    handleDelete,
+    confirmDelete,
+    closeDeleteDialog
+  } = useComponentDelete(engines, brakes, frames, suspensions, wheels, refetchCallbacks);
 
   return (
     <div className="flex-1 p-6 bg-explorer-dark">
@@ -485,7 +219,7 @@ const ComponentsLibraryPage = () => {
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={deleteDialog.open}
-        onClose={() => setDeleteDialog(prev => ({ ...prev, open: false }))}
+        onClose={closeDeleteDialog}
         onConfirm={confirmDelete}
         componentName={deleteDialog.componentName || 'Unknown'}
         componentType={deleteDialog.componentType || 'component'}
