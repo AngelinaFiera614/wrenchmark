@@ -21,6 +21,11 @@ import { fetchBrakes } from "@/services/brakeService";
 import { fetchFrames } from "@/services/frameService";
 import { fetchSuspensions } from "@/services/suspensionService";
 import { fetchWheels } from "@/services/wheelService";
+import AdminEngineDialog from "@/components/admin/components/AdminEngineDialog";
+import AdminBrakeSystemDialog from "@/components/admin/components/AdminBrakeSystemDialog";
+import AdminFrameDialog from "@/components/admin/components/AdminFrameDialog";
+import AdminSuspensionDialog from "@/components/admin/components/AdminSuspensionDialog";
+import AdminWheelDialog from "@/components/admin/components/AdminWheelDialog";
 
 interface ComponentTypeCardProps {
   title: string;
@@ -127,35 +132,37 @@ const ComponentTypeCard: React.FC<ComponentTypeCardProps> = ({
 };
 
 const ComponentsLibraryPage = () => {
+  // Dialog state management
+  const [activeDialog, setActiveDialog] = useState<string | null>(null);
+
   // Fetch all component types
-  const { data: engines = [], isLoading: enginesLoading } = useQuery({
+  const { data: engines = [], isLoading: enginesLoading, refetch: refetchEngines } = useQuery({
     queryKey: ['engines'],
     queryFn: fetchEngines
   });
 
-  const { data: brakes = [], isLoading: brakesLoading } = useQuery({
+  const { data: brakes = [], isLoading: brakesLoading, refetch: refetchBrakes } = useQuery({
     queryKey: ['brakes'],
     queryFn: fetchBrakes
   });
 
-  const { data: frames = [], isLoading: framesLoading } = useQuery({
+  const { data: frames = [], isLoading: framesLoading, refetch: refetchFrames } = useQuery({
     queryKey: ['frames'],
     queryFn: fetchFrames
   });
 
-  const { data: suspensions = [], isLoading: suspensionsLoading } = useQuery({
+  const { data: suspensions = [], isLoading: suspensionsLoading, refetch: refetchSuspensions } = useQuery({
     queryKey: ['suspensions'],
     queryFn: fetchSuspensions
   });
 
-  const { data: wheels = [], isLoading: wheelsLoading } = useQuery({
+  const { data: wheels = [], isLoading: wheelsLoading, refetch: refetchWheels } = useQuery({
     queryKey: ['wheels'],
     queryFn: fetchWheels
   });
 
   const handleAdd = (type: string) => {
-    console.log(`Add new ${type}`);
-    // TODO: Open create dialog
+    setActiveDialog(type);
   };
 
   const handleEdit = (type: string, id: string) => {
@@ -166,6 +173,16 @@ const ComponentsLibraryPage = () => {
   const handleDelete = (type: string, id: string) => {
     console.log(`Delete ${type}:`, id);
     // TODO: Confirm and delete
+  };
+
+  const handleDialogClose = () => {
+    setActiveDialog(null);
+    // Refresh all component data when dialog closes
+    refetchEngines();
+    refetchBrakes();
+    refetchFrames();
+    refetchSuspensions();
+    refetchWheels();
   };
 
   return (
@@ -283,6 +300,32 @@ const ComponentsLibraryPage = () => {
           />
         </div>
       </div>
+
+      {/* Dialog Components */}
+      <AdminEngineDialog
+        open={activeDialog === 'engine'}
+        onClose={handleDialogClose}
+      />
+      
+      <AdminBrakeSystemDialog
+        open={activeDialog === 'brake'}
+        onClose={handleDialogClose}
+      />
+      
+      <AdminFrameDialog
+        open={activeDialog === 'frame'}
+        onClose={handleDialogClose}
+      />
+      
+      <AdminSuspensionDialog
+        open={activeDialog === 'suspension'}
+        onClose={handleDialogClose}
+      />
+      
+      <AdminWheelDialog
+        open={activeDialog === 'wheel'}
+        onClose={handleDialogClose}
+      />
     </div>
   );
 };
