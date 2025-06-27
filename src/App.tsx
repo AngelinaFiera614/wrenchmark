@@ -4,8 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Outlet } from "react-router-dom";
+import { AuthProvider } from "@/context/auth/AuthProvider";
 import Layout from "./components/layout/Layout";
 import AdminLayout from "./components/admin/AdminLayout";
+import AdminAuthGuard from "./components/admin/shared/AdminAuthGuard";
 import Index from "./pages/Index";
 import Motorcycles from "./pages/Motorcycles";
 import MotorcycleDetail from "./pages/MotorcycleDetail";
@@ -15,6 +17,7 @@ import ComparisonPage from "./pages/ComparisonPage";
 import GlossaryPage from "./pages/GlossaryPage";
 import CoursesPage from "./pages/CoursesPage";
 import LessonDetailsPage from "./pages/LessonDetailsPage";
+import AdminAuth from "./pages/AdminAuth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBrands from "./pages/admin/AdminBrands";
 import AdminSystemSettings from "./pages/admin/AdminSystemSettings";
@@ -35,43 +38,52 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Layout><Outlet /></Layout>}>
-          <Route index element={<Index />} />
-          <Route path="motorcycles" element={<Motorcycles />} />
-          <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
-          <Route path="brands" element={<BrandsPage />} />
-          <Route path="brands/:slug" element={<BrandDetail />} />
-          <Route path="compare" element={<ComparisonPage />} />
-          <Route path="glossary" element={<GlossaryPage />} />
-          <Route path="courses" element={<CoursesPage />} />
-          <Route path="courses/:courseSlug/lessons/:lessonSlug" element={<LessonDetailsPage />} />
-        </Route>
-        
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="brands" element={<AdminBrands />} />
-          <Route path="system" element={<AdminSystemSettings />} />
-          <Route path="motorcycle-management" element={<AdminMotorcycleManagement />} />
-          <Route path="parts-hub" element={<AdminPartsHub />} />
-          <Route path="parts/*" element={<NewPartsManagementLayout />} />
-          <Route path="glossary" element={<AdminGlossary />} />
-          <Route path="courses" element={<AdminCourses />} />
-          <Route path="lessons" element={<AdminLessons />} />
-          <Route path="riding-skills" element={<AdminRidingSkills />} />
-          <Route path="repair-skills" element={<AdminRepairSkills />} />
-          <Route path="manuals" element={<AdminManuals />} />
-          <Route path="testing" element={<AdminTestingSuite />} />
-          <Route path="colors" element={<ColorOptionsManager />} />
-          <Route path="users" element={<AdminUsers />} />
-        </Route>
-      </Routes>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Layout><Outlet /></Layout>}>
+            <Route index element={<Index />} />
+            <Route path="motorcycles" element={<Motorcycles />} />
+            <Route path="motorcycles/:slug" element={<MotorcycleDetail />} />
+            <Route path="brands" element={<BrandsPage />} />
+            <Route path="brands/:slug" element={<BrandDetail />} />
+            <Route path="compare" element={<ComparisonPage />} />
+            <Route path="glossary" element={<GlossaryPage />} />
+            <Route path="courses" element={<CoursesPage />} />
+            <Route path="courses/:courseSlug/lessons/:lessonSlug" element={<LessonDetailsPage />} />
+          </Route>
+          
+          {/* Admin Authentication Route */}
+          <Route path="/admin/auth" element={<AdminAuth />} />
+          
+          {/* Protected Admin Routes */}
+          <Route path="/admin" element={
+            <AdminAuthGuard>
+              <AdminLayout />
+            </AdminAuthGuard>
+          }>
+            <Route index element={<AdminDashboard />} />
+            <Route path="brands" element={<AdminBrands />} />
+            <Route path="system" element={<AdminSystemSettings />} />
+            <Route path="motorcycle-management" element={<AdminMotorcycleManagement />} />
+            <Route path="parts-hub" element={<AdminPartsHub />} />
+            <Route path="parts/*" element={<NewPartsManagementLayout />} />
+            <Route path="glossary" element={<AdminGlossary />} />
+            <Route path="courses" element={<AdminCourses />} />
+            <Route path="lessons" element={<AdminLessons />} />
+            <Route path="riding-skills" element={<AdminRidingSkills />} />
+            <Route path="repair-skills" element={<AdminRepairSkills />} />
+            <Route path="manuals" element={<AdminManuals />} />
+            <Route path="testing" element={<AdminTestingSuite />} />
+            <Route path="colors" element={<ColorOptionsManager />} />
+            <Route path="users" element={<AdminUsers />} />
+          </Route>
+        </Routes>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

@@ -6,9 +6,15 @@ import { Shield } from "lucide-react";
 import { useAuth } from "@/context/auth";
 
 const AdminAccessButton = () => {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
 
-  if (!isAdmin) {
+  // Don't show anything while loading
+  if (isLoading) {
+    return null;
+  }
+
+  // Show admin button only if user is authenticated and is admin
+  if (!user || !isAdmin) {
     return null;
   }
 
