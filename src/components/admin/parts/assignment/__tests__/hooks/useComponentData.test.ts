@@ -24,11 +24,13 @@ interface TestWrapperProps {
   children: React.ReactNode;
 }
 
-const TestWrapper = ({ children }: TestWrapperProps) => (
-  <QueryClientProvider client={createTestQueryClient()}>
-    {children}
-  </QueryClientProvider>
-);
+function TestWrapper({ children }: TestWrapperProps) {
+  return React.createElement(
+    QueryClientProvider,
+    { client: createTestQueryClient() },
+    children
+  );
+}
 
 describe('useComponentData', () => {
   beforeEach(() => {
