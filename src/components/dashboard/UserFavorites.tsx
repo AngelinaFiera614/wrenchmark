@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,17 +63,25 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
       if (error) throw error;
       
       // Transform the data to match our interface since Supabase returns nested arrays
-      const transformedData = (data || []).map(item => ({
-        ...item,
-        motorcycle_models: {
-          ...Array.isArray(item.motorcycle_models) 
-            ? item.motorcycle_models[0] 
-            : item.motorcycle_models,
-          brands: Array.isArray(item.motorcycle_models?.brands) 
-            ? item.motorcycle_models.brands[0] 
-            : item.motorcycle_models?.brands
-        }
-      })).filter(item => item.motorcycle_models) as Favorite[];
+      const transformedData = (data || []).map(item => {
+        // First get the motorcycle model (either single object or first array element)
+        const motorcycleModel = Array.isArray(item.motorcycle_models) 
+          ? item.motorcycle_models[0] 
+          : item.motorcycle_models;
+        
+        // Then get the brands from the motorcycle model
+        const brands = motorcycleModel && Array.isArray(motorcycleModel.brands) 
+          ? motorcycleModel.brands[0] 
+          : motorcycleModel?.brands;
+
+        return {
+          ...item,
+          motorcycle_models: {
+            ...motorcycleModel,
+            brands: brands
+          }
+        };
+      }).filter(item => item.motorcycle_models) as Favorite[];
       
       return transformedData;
     },
