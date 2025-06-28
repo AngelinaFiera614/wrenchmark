@@ -26,7 +26,7 @@ interface Favorite {
     default_image_url: string | null;
     brands: {
       name: string;
-    };
+    }[];
   };
 }
 
@@ -59,7 +59,7 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
         .limit(limit);
 
       if (error) throw error;
-      return data as Favorite[];
+      return data || [];
     },
     enabled: !!user,
   });
@@ -114,7 +114,7 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
         <Card key={favorite.id} className="border-l-4 border-l-accent-teal/50">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-4">
-              {favorite.motorcycle_models.default_image_url && (
+              {favorite.motorcycle_models?.default_image_url && (
                 <img
                   src={favorite.motorcycle_models.default_image_url}
                   alt={favorite.motorcycle_models.name}
@@ -123,10 +123,10 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
               )}
               <div>
                 <h4 className="font-medium">
-                  {favorite.motorcycle_models.brands.name} {favorite.motorcycle_models.name}
+                  {favorite.motorcycle_models?.brands?.[0]?.name} {favorite.motorcycle_models?.name}
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  {favorite.motorcycle_models.type}
+                  {favorite.motorcycle_models?.type}
                 </p>
                 {favorite.notes && (
                   <p className="text-xs text-muted-foreground mt-1">
@@ -136,7 +136,7 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <Link to={`/motorcycles/${favorite.motorcycle_models.slug}`}>
+              <Link to={`/motorcycles/${favorite.motorcycle_models?.slug}`}>
                 <Button variant="ghost" size="sm">
                   <ExternalLink className="h-4 w-4" />
                 </Button>
