@@ -16,7 +16,7 @@ export function AuthNav() {
 
   if (!user) {
     return (
-      <Link to="/auth">
+      <Link to="/login">
         <Button variant="teal" size="sm">
           Sign In
         </Button>
@@ -42,17 +42,24 @@ export function AuthNav() {
           <p className="truncate text-sm">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/profile" className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+          </Link>
+        </DropdownMenuItem>
         {isAdmin && (
           <>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/admin" className="cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Admin Dashboard</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
           </>
         )}
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={(e) => {
             e.preventDefault();

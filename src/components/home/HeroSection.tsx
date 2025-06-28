@@ -1,79 +1,85 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/context/auth';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Wrench, Users, BookOpen } from "lucide-react";
+import { useAuth } from "@/context/auth";
 
-const HeroSection: React.FC = () => {
+const HeroSection = () => {
   const { user } = useAuth();
-  
+
   return (
-    <section className="relative overflow-hidden py-20 md:py-28">
-      <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/80 to-background z-0"></div>
-      <div 
-        className="absolute inset-0 z-[-1] opacity-20"
-        style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1558981285-6f0c94958bb6?q=80&w=1740&auto=format&fit=crop')", 
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      ></div>
-      <div className="container max-w-6xl mx-auto px-4 relative z-10">
-        <div className="flex flex-col md:flex-row items-center">
-          <div className="w-full md:w-1/2 space-y-6 text-center md:text-left mb-10 md:mb-0">
-            <div className="flex justify-center md:justify-start mb-6">
-              <img 
-                src="/wrenchmark-logo-full-dark.png" 
-                alt="Wrenchmark logo" 
-                className="h-16 md:h-20 w-auto"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const fallback = document.createElement('h1');
-                  fallback.textContent = 'WRENCHMARK';
-                  fallback.className = 'text-3xl md:text-4xl font-bold text-accent-teal';
-                  target.parentNode?.appendChild(fallback);
-                }}
-              />
+    <section className="relative py-20 px-4 text-center bg-gradient-to-b from-explorer-dark to-background">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-center mb-6">
+          <Wrench className="h-12 w-12 text-accent-teal mr-4" />
+          <h1 className="text-5xl md:text-6xl font-bold text-explorer-text">
+            WRENCHMARK
+          </h1>
+        </div>
+        
+        <p className="text-xl md:text-2xl text-accent-teal font-medium mb-4">
+          Ride Farther. Build Smarter.
+        </p>
+        
+        <p className="text-lg text-explorer-text-muted mb-8 max-w-2xl mx-auto">
+          Your comprehensive motorcycle reference app. Discover specs, learn skills, 
+          and master maintenance with confidence.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <Link to="/motorcycles">
+            <Button 
+              size="lg" 
+              className="bg-accent-teal hover:bg-accent-teal/80 text-black font-semibold px-8 py-3"
+            >
+              Explore Motorcycles
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+          
+          {!user && (
+            <Link to="/login">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-accent-teal text-accent-teal hover:bg-accent-teal hover:text-black px-8 py-3"
+              >
+                Sign In
+              </Button>
+            </Link>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+          <div className="text-center">
+            <div className="bg-accent-teal/10 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Wrench className="h-8 w-8 text-accent-teal" />
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-              <span className="text-gradient">Ride Farther.</span>
-              <br />
-              <span className="text-accent-teal">Build Smarter.</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-lg">
-              The ultimate motorcycle reference app built for riders, wrenchers, and learners. Access specs, manuals, and skills all in one place.
+            <h3 className="text-lg font-semibold text-explorer-text mb-2">Comprehensive Specs</h3>
+            <p className="text-explorer-text-muted">
+              Detailed technical specifications and performance data for thousands of motorcycles.
             </p>
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              {!user ? (
-                <>
-                  <Button asChild size="lg" variant="teal">
-                    <Link to="/auth">Get Started</Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline">
-                    <Link to="/motorcycles">Browse Motorcycles</Link>
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button asChild size="lg" variant="teal">
-                    <Link to="/motorcycles">Browse Motorcycles</Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline">
-                    <Link to="/courses">Explore Courses</Link>
-                  </Button>
-                </>
-              )}
-            </div>
           </div>
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end animate-fade-in">
-            <div className="w-full max-w-md glass-morphism rounded-lg overflow-hidden shadow-xl">
-              <img 
-                src="https://images.unsplash.com/photo-1622185135505-2d795003994a?q=80&w=1740&auto=format&fit=crop" 
-                alt="Motorcycle"
-                className="w-full h-auto"
-              />
+          
+          <div className="text-center">
+            <div className="bg-accent-teal/10 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <BookOpen className="h-8 w-8 text-accent-teal" />
             </div>
+            <h3 className="text-lg font-semibold text-explorer-text mb-2">Learn & Grow</h3>
+            <p className="text-explorer-text-muted">
+              Master riding skills and maintenance techniques with our structured learning paths.
+            </p>
+          </div>
+          
+          <div className="text-center">
+            <div className="bg-accent-teal/10 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Users className="h-8 w-8 text-accent-teal" />
+            </div>
+            <h3 className="text-lg font-semibold text-explorer-text mb-2">Community Driven</h3>
+            <p className="text-explorer-text-muted">
+              Built by riders, for riders. Join our community of motorcycle enthusiasts.
+            </p>
           </div>
         </div>
       </div>

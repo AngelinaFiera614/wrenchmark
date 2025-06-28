@@ -17,6 +17,17 @@ import { User, LogOut, Settings, Shield } from "lucide-react";
 const UserMenu = () => {
   const { user, profile, isAdmin, signOut } = useAuth();
 
+  // If no user, show login button
+  if (!user) {
+    return (
+      <Link to="/login">
+        <Button variant="outline" size="sm" className="border-accent-teal text-accent-teal hover:bg-accent-teal hover:text-black">
+          Sign In
+        </Button>
+      </Link>
+    );
+  }
+
   const getInitials = () => {
     if (profile?.username) {
       return profile.username.slice(0, 2).toUpperCase();
@@ -65,25 +76,25 @@ const UserMenu = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        {/* Admin Portal Access - Make it prominent */}
-        {isAdmin && (
-          <>
-            <DropdownMenuItem asChild>
-              <Link to="/admin" className="flex items-center gap-2 text-accent-teal">
-                <Settings className="h-4 w-4" />
-                Admin Portal
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>
-        )}
-        
         <DropdownMenuItem asChild>
           <Link to="/profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Profile
           </Link>
         </DropdownMenuItem>
+        
+        {/* Admin Portal Access - Make it prominent */}
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/admin" className="flex items-center gap-2 text-accent-teal">
+                <Settings className="h-4 w-4" />
+                Admin Portal
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
         
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2">

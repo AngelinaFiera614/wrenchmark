@@ -40,13 +40,16 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [passwordValue, setPasswordValue] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isLoading, authError: contextAuthError } = useAuth();
+  
+  // Determine if we're on signup page or login page
+  const isSignupPage = location.pathname === '/signup';
+  const [isLogin, setIsLogin] = useState(!isSignupPage);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [passwordValue, setPasswordValue] = useState("");
   
   const currentSchema = isLogin ? signInSchema : signUpSchema;
   
@@ -57,6 +60,17 @@ const Auth = () => {
       password: "",
     },
   });
+
+  // Update form mode based on URL
+  useEffect(() => {
+    const shouldBeLogin = location.pathname !== '/signup';
+    if (isLogin !== shouldBeLogin) {
+      setIsLogin(shouldBeLogin);
+      form.reset();
+      setPasswordValue("");
+      setAuthError(null);
+    }
+  }, [location.pathname, isLogin, form]);
 
   // If user is already authenticated, redirect to desired location or home
   useEffect(() => {
@@ -113,7 +127,8 @@ const Auth = () => {
   };
 
   const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
+    const newPath = isLogin ? '/signup' : '/login';
+    navigate(newPath);
   };
 
   // Show loading while auth is initializing

@@ -17,6 +17,9 @@ import ComparisonPage from "./pages/ComparisonPage";
 import GlossaryPage from "./pages/GlossaryPage";
 import CoursesPage from "./pages/CoursesPage";
 import LessonDetailsPage from "./pages/LessonDetailsPage";
+import Auth from "./pages/Auth";
+import AuthPage from "./pages/AuthPage";
+import ProfilePage from "./pages/ProfilePage";
 import AdminAuth from "./pages/AdminAuth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBrands from "./pages/admin/AdminBrands";
@@ -55,6 +58,12 @@ const App = () => (
             <Route path="courses" element={<CoursesPage />} />
             <Route path="courses/:courseSlug/lessons/:lessonSlug" element={<LessonDetailsPage />} />
           </Route>
+          
+          {/* Authentication Routes */}
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/signup" element={<AuthPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           
           {/* Admin Authentication Route */}
           <Route path="/admin/auth" element={<AdminAuth />} />
