@@ -59,7 +59,7 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
         .limit(limit);
 
       if (error) throw error;
-      return data as Favorite[] || [];
+      return data || [];
     },
     enabled: !!user,
   });
