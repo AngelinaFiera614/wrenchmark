@@ -1,20 +1,27 @@
 
-import React, { ReactNode } from "react";
+import React from "react";
 import Header from "./Header";
 import Footer from "./Footer";
+import EmailVerificationBanner from "@/components/auth/EmailVerificationBanner";
+import { useAuth } from "@/context/auth";
 
-export type LayoutProps = {
-  children: ReactNode;
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout = ({ children }: LayoutProps) => {
+  const { user } = useAuth();
+
+  return (
+    <div className="min-h-screen bg-explorer-dark text-explorer-text flex flex-col">
+      <Header />
+      {user && <EmailVerificationBanner />}
+      <main className="flex-1">
+        {children}
+      </main>
+      <Footer />
+    </div>
+  );
 };
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => (
-  <div className="flex flex-col min-h-screen bg-background">
-    <Header />
-    <main className="flex-grow">
-      {children}
-    </main>
-    <Footer />
-  </div>
-);
 
 export default Layout;

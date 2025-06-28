@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       brake_systems: {
         Row: {
           brake_brand: string | null
@@ -317,6 +356,45 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      email_verification_log: {
+        Row: {
+          email: string
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          sent_at: string
+          status: string
+          user_agent: string | null
+          user_id: string
+          verification_type: string
+          verified_at: string | null
+        }
+        Insert: {
+          email: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          sent_at?: string
+          status?: string
+          user_agent?: string | null
+          user_id: string
+          verification_type: string
+          verified_at?: string | null
+        }
+        Update: {
+          email?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          sent_at?: string
+          status?: string
+          user_agent?: string | null
+          user_id?: string
+          verification_type?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -1678,6 +1756,8 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          email_verified: boolean | null
+          email_verified_at: string | null
           full_name: string | null
           id: string
           is_admin: boolean
@@ -1689,6 +1769,8 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          email_verified?: boolean | null
+          email_verified_at?: string | null
           full_name?: string | null
           id: string
           is_admin?: boolean
@@ -1700,6 +1782,8 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          email_verified?: boolean | null
+          email_verified_at?: string | null
           full_name?: string | null
           id?: string
           is_admin?: boolean
@@ -1990,6 +2074,42 @@ export type Database = {
           },
         ]
       }
+      user_activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_comparison_lists: {
         Row: {
           created_at: string
@@ -2238,6 +2358,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      cleanup_expired_verification_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       complete_lesson: {
         Args: { lesson_id_param: string; quiz_score_param?: number }
         Returns: boolean
@@ -2350,6 +2474,15 @@ export type Database = {
           p_resource_type: string
           p_resource_id?: string
           p_severity?: string
+          p_details?: Json
+        }
+        Returns: undefined
+      }
+      log_user_activity: {
+        Args: {
+          p_action: string
+          p_resource_type?: string
+          p_resource_id?: string
           p_details?: Json
         }
         Returns: undefined

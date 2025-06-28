@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -37,6 +36,7 @@ import AdminTestingSuite from "./pages/admin/AdminTestingSuite";
 import AdminUsers from "./pages/admin/AdminUsers";
 import NewPartsManagementLayout from "./components/admin/parts/NewPartsManagementLayout";
 import ColorOptionsManager from "./components/admin/colors/ColorOptionsManager";
+import AdminSecurity from "./pages/admin/AdminSecurity";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +91,7 @@ const App = () => (
             <Route path="testing" element={<AdminTestingSuite />} />
             <Route path="colors" element={<ColorOptionsManager />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="security" element={<AdminSecurity />} />
           </Route>
         </Routes>
       </TooltipProvider>
