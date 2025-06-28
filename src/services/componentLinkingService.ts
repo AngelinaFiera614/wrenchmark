@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ComponentAssignment {
@@ -28,7 +27,7 @@ export interface ServiceResponse<T = any> {
   error?: string;
 }
 
-// Link a component to a motorcycle model
+// Link a component to a motorcycle model using upsert to handle existing relationships
 export async function linkComponentToModel(
   modelId: string, 
   componentId: string, 
@@ -39,25 +38,69 @@ export async function linkComponentToModel(
   notes?: string
 ): Promise<ServiceResponse<ComponentAssignment>> {
   try {
-    const { data, error } = await supabase
+    console.log("=== LINKING COMPONENT ===", { modelId, componentId, componentType });
+    
+    // First check if assignment already exists
+    const { data: existing, error: checkError } = await supabase
       .from('model_component_assignments')
-      .insert({
-        model_id: modelId,
-        component_id: componentId,
-        component_type: componentType,
-        assignment_type: assignmentType,
-        effective_from_year: effectiveFromYear,
-        effective_to_year: effectiveToYear,
-        is_default: true,
-        notes: notes
-      })
-      .select()
+      .select('*')
+      .eq('model_id', modelId)
+      .eq('component_type', componentType)
       .single();
 
-    if (error) {
-      return { success: false, error: error.message };
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error("Error checking existing assignment:", checkError);
+      return { success: false, error: checkError.message };
     }
-    return { success: true, data };
+
+    if (existing) {
+      console.log("=== UPDATING EXISTING ASSIGNMENT ===", existing.id);
+      // Update existing assignment
+      const { data, error } = await supabase
+        .from('model_component_assignments')
+        .update({
+          component_id: componentId,
+          assignment_type: assignmentType,
+          effective_from_year: effectiveFromYear,
+          effective_to_year: effectiveToYear,
+          notes: notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating assignment:", error);
+        return { success: false, error: error.message };
+      }
+      console.log("=== ASSIGNMENT UPDATED ===", data);
+      return { success: true, data };
+    } else {
+      console.log("=== CREATING NEW ASSIGNMENT ===");
+      // Create new assignment
+      const { data, error } = await supabase
+        .from('model_component_assignments')
+        .insert({
+          model_id: modelId,
+          component_id: componentId,
+          component_type: componentType,
+          assignment_type: assignmentType,
+          effective_from_year: effectiveFromYear,
+          effective_to_year: effectiveToYear,
+          is_default: true,
+          notes: notes
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating assignment:", error);
+        return { success: false, error: error.message };
+      }
+      console.log("=== ASSIGNMENT CREATED ===", data);
+      return { success: true, data };
+    }
   } catch (error) {
     console.error('Error linking component to model:', error);
     return { success: false, error: 'Failed to link component to model' };
