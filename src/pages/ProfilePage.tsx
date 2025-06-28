@@ -1,78 +1,17 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useQuery } from '@tanstack/react-query';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
 import { useAuth } from '@/context/auth';
-import { User, Mail, Shield, Settings, Crown, UserPlus, UserMinus } from 'lucide-react';
+import { User, Mail, Shield, Settings, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-
-interface UserProfile {
-  id: string;
-  user_id: string;
-  username: string | null;
-  full_name: string | null;
-  is_admin: boolean;
-  created_at: string;
-}
 
 const ProfilePage: React.FC = () => {
   const { user, profile, isAdmin } = useAuth();
-  const [promotingUserId, setPromotingUserId] = useState<string | null>(null);
-
-  // Fetch all users if current user is admin
-  const { data: allUsers, refetch: refetchUsers } = useQuery({
-    queryKey: ['all-users'],
-    queryFn: async () => {
-      if (!isAdmin) return [];
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, user_id, username, full_name, is_admin, created_at')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      return data as UserProfile[];
-    },
-    enabled: isAdmin,
-  });
-
-  const handlePromoteUser = async (targetUserId: string, promote: boolean) => {
-    if (!isAdmin) return;
-    
-    setPromotingUserId(targetUserId);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_admin: promote })
-        .eq('user_id', targetUserId);
-
-      if (error) throw error;
-      
-      toast.success(`User ${promote ? 'promoted to' : 'demoted from'} admin successfully`);
-      refetchUsers();
-    } catch (error: any) {
-      console.error('Error updating user role:', error);
-      toast.error(`Failed to ${promote ? 'promote' : 'demote'} user: ${error.message}`);
-    } finally {
-      setPromotingUserId(null);
-    }
-  };
 
   if (!user) {
     return (
@@ -124,12 +63,20 @@ const ProfilePage: React.FC = () => {
                     You have administrator privileges. Access the admin dashboard to manage motorcycles, 
                     brands, content, and system settings.
                   </p>
-                  <Button asChild className="w-full bg-accent-teal hover:bg-accent-teal/90 text-black">
-                    <Link to="/admin" className="flex items-center gap-2">
-                      <Settings className="h-4 w-4" />
-                      Open Admin Dashboard
-                    </Link>
-                  </Button>
+                  <div className="flex gap-4">
+                    <Button asChild className="bg-accent-teal hover:bg-accent-teal/90 text-black">
+                      <Link to="/admin" className="flex items-center gap-2">
+                        <Settings className="h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="border-accent-teal text-accent-teal hover:bg-accent-teal/10">
+                      <Link to="/admin/users" className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Manage Users
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -165,87 +112,6 @@ const ProfilePage: React.FC = () => {
                 )}
               </CardContent>
             </Card>
-
-            {/* Admin User Management Section */}
-            {isAdmin && allUsers && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    User Management
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>User</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Joined</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {allUsers.map((userProfile) => (
-                          <TableRow key={userProfile.id}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">
-                                  {userProfile.full_name || userProfile.username || 'No name'}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  ID: {userProfile.user_id.substring(0, 8)}...
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {userProfile.is_admin ? (
-                                <Badge className="bg-accent-teal text-black">Admin</Badge>
-                              ) : (
-                                <Badge variant="outline">User</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {new Date(userProfile.created_at).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              {userProfile.user_id !== user.id && (
-                                <div className="flex gap-2">
-                                  {userProfile.is_admin ? (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handlePromoteUser(userProfile.user_id, false)}
-                                      disabled={promotingUserId === userProfile.user_id}
-                                      className="text-red-600 border-red-200 hover:bg-red-50"
-                                    >
-                                      <UserMinus className="h-3 w-3 mr-1" />
-                                      Remove Admin
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handlePromoteUser(userProfile.user_id, true)}
-                                      disabled={promotingUserId === userProfile.user_id}
-                                      className="text-accent-teal border-accent-teal/30 hover:bg-accent-teal/10"
-                                    >
-                                      <UserPlus className="h-3 w-3 mr-1" />
-                                      Make Admin
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             <Card>
               <CardHeader>
