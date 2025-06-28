@@ -1,23 +1,29 @@
-
-import React from "react";
-import { Cog, Disc, Box, Zap, Circle } from "lucide-react";
+import React, { useState } from "react";
+import { Cog, Disc, Box, Zap, Circle, Bug } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchEngines } from "@/services/engineService";
 import { fetchBrakes } from "@/services/brakeService";
 import { fetchFrames } from "@/services/frameService";
 import { fetchSuspensions } from "@/services/suspensionService";
 import { fetchWheels } from "@/services/wheelService";
+import { debugJSeriesEngine, getEngineOperationLogs } from "@/services/engineServiceDebug";
 import AdminEngineDialog from "@/components/admin/components/AdminEngineDialog";
 import AdminBrakeSystemDialog from "@/components/admin/components/AdminBrakeSystemDialog";
 import AdminFrameDialog from "@/components/admin/components/AdminFrameDialog";
 import AdminSuspensionDialog from "@/components/admin/components/AdminSuspensionDialog";
 import AdminWheelDialog from "@/components/admin/components/AdminWheelDialog";
+import EngineDebugInfo from "@/components/admin/components/EngineDebugInfo";
 import ComponentTypeCard from "./components/ComponentTypeCard";
 import DeleteConfirmationDialog from "./DeleteConfirmationDialog";
 import { useComponentEdit } from "./hooks/useComponentEdit";
 import { useComponentDelete } from "./hooks/useComponentDelete";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const ComponentsLibraryPage = () => {
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
+  
   // Fetch all component types
   const { data: engines = [], isLoading: enginesLoading, refetch: refetchEngines } = useQuery({
     queryKey: ['engines'],
@@ -69,16 +75,65 @@ const ComponentsLibraryPage = () => {
     closeDeleteDialog
   } = useComponentDelete(engines, brakes, frames, suspensions, wheels, refetchCallbacks);
 
+  const handleDebugJSeries = async () => {
+    const result = await debugJSeriesEngine();
+    console.log("J-Series Debug Result:", result);
+    setShowDebugInfo(true);
+  };
+
+  const handleShowLogs = () => {
+    const logs = getEngineOperationLogs();
+    console.log("Engine Operation Logs:", logs);
+    alert(`Found ${logs.length} engine operation logs. Check console for details.`);
+  };
+
   return (
     <div className="flex-1 p-6 bg-explorer-dark">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-explorer-text mb-2">
-          Components Library
-        </h1>
-        <p className="text-explorer-text-muted">
-          Manage all motorcycle components in one place
-        </p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-explorer-text mb-2">
+            Components Library
+          </h1>
+          <p className="text-explorer-text-muted">
+            Manage all motorcycle components in one place
+          </p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDebugJSeries}
+            className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+          >
+            <Bug className="h-4 w-4 mr-2" />
+            Debug J-Series
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShowLogs}
+            className="border-blue-500 text-blue-600 hover:bg-blue-50"
+          >
+            <Bug className="h-4 w-4 mr-2" />
+            Show Logs
+          </Button>
+        </div>
       </div>
+
+      {showDebugInfo && (
+        <Collapsible className="mb-6">
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full mb-4">
+              <Bug className="h-4 w-4 mr-2" />
+              Engine Debug Information (Click to toggle)
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <EngineDebugInfo />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <ComponentTypeCard

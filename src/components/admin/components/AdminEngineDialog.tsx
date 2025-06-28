@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 const AdminEngineDialog = ({ open, engine, onClose }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     displacement_cc: '',
@@ -32,23 +33,24 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
 
   useEffect(() => {
     if (engine) {
+      console.log("=== EDITING ENGINE ===", engine);
       setFormData({
         name: engine.name || '',
-        displacement_cc: engine.displacement_cc || '',
-        power_hp: engine.power_hp || '',
-        torque_nm: engine.torque_nm || '',
-        power_rpm: engine.power_rpm || '',
-        torque_rpm: engine.torque_rpm || '',
+        displacement_cc: engine.displacement_cc?.toString() || '',
+        power_hp: engine.power_hp?.toString() || '',
+        torque_nm: engine.torque_nm?.toString() || '',
+        power_rpm: engine.power_rpm?.toString() || '',
+        torque_rpm: engine.torque_rpm?.toString() || '',
         engine_type: engine.engine_type || '',
-        cylinder_count: engine.cylinder_count || '',
-        valve_count: engine.valve_count || '',
+        cylinder_count: engine.cylinder_count?.toString() || '',
+        valve_count: engine.valve_count?.toString() || '',
         cooling: engine.cooling || '',
         fuel_system: engine.fuel_system || '',
         stroke_type: engine.stroke_type || '',
-        bore_mm: engine.bore_mm || '',
-        stroke_mm: engine.stroke_mm || '',
+        bore_mm: engine.bore_mm?.toString() || '',
+        stroke_mm: engine.stroke_mm?.toString() || '',
         compression_ratio: engine.compression_ratio || '',
-        valves_per_cylinder: engine.valves_per_cylinder || ''
+        valves_per_cylinder: engine.valves_per_cylinder?.toString() || ''
       });
     } else {
       setFormData({
@@ -70,16 +72,63 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
         valves_per_cylinder: ''
       });
     }
+    setValidationErrors({});
   }, [engine]);
+
+  const validateForm = () => {
+    const errors = {};
+    
+    // Required field validation
+    if (!formData.name?.trim()) {
+      errors.name = 'Engine name is required';
+    }
+    
+    if (!formData.displacement_cc?.trim()) {
+      errors.displacement_cc = 'Displacement is required';
+    } else if (isNaN(Number(formData.displacement_cc)) || Number(formData.displacement_cc) <= 0) {
+      errors.displacement_cc = 'Displacement must be a positive number';
+    }
+    
+    // Numeric field validation
+    const numericFields = [
+      'power_hp', 'torque_nm', 'power_rpm', 'torque_rpm', 
+      'cylinder_count', 'valve_count', 'bore_mm', 'stroke_mm', 'valves_per_cylinder'
+    ];
+    
+    numericFields.forEach(field => {
+      if (formData[field] && formData[field].trim() !== '') {
+        if (isNaN(Number(formData[field])) || Number(formData[field]) < 0) {
+          errors[field] = `${field.replace('_', ' ')} must be a valid positive number`;
+        }
+      }
+    });
+    
+    console.log("=== VALIDATION ERRORS ===", errors);
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    console.log("=== FORM SUBMIT STARTED ===");
+    console.log("Raw form data:", formData);
+    
+    if (!validateForm()) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fix the form errors before saving.",
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      // Convert empty strings to null for numeric fields
+      // Convert form data with detailed logging
       const engineData = {
-        ...formData,
+        name: formData.name?.trim(),
         displacement_cc: formData.displacement_cc ? parseInt(formData.displacement_cc) : null,
         power_hp: formData.power_hp ? parseFloat(formData.power_hp) : null,
         torque_nm: formData.torque_nm ? parseFloat(formData.torque_nm) : null,
@@ -97,26 +146,52 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
         compression_ratio: formData.compression_ratio || null
       };
 
+      console.log("=== PROCESSED ENGINE DATA ===", engineData);
+
       if (engine) {
+        console.log("=== UPDATING ENGINE ===", engine.id);
         // Update existing engine
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('engines')
           .update(engineData)
-          .eq('id', engine.id);
+          .eq('id', engine.id)
+          .select();
 
-        if (error) throw error;
+        console.log("=== UPDATE RESPONSE ===", { data, error });
+
+        if (error) {
+          console.error("=== UPDATE ERROR DETAILS ===", {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw error;
+        }
 
         toast({
           title: "Engine updated",
           description: `${formData.name} has been updated successfully.`,
         });
       } else {
+        console.log("=== CREATING NEW ENGINE ===");
         // Create new engine
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('engines')
-          .insert([engineData]);
+          .insert([engineData])
+          .select();
 
-        if (error) throw error;
+        console.log("=== INSERT RESPONSE ===", { data, error });
+
+        if (error) {
+          console.error("=== INSERT ERROR DETAILS ===", {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw error;
+        }
 
         toast({
           title: "Engine created",
@@ -126,11 +201,31 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
 
       onClose(true);
     } catch (error) {
-      console.error("Error saving engine:", error);
+      console.error("=== SAVE ENGINE ERROR ===", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        stack: error.stack
+      });
+      
+      let errorMessage = "Failed to save engine. Please try again.";
+      
+      // Provide more specific error messages based on the error
+      if (error.code === '23505') {
+        errorMessage = "An engine with this name already exists.";
+      } else if (error.code === '23502') {
+        errorMessage = "Missing required field. Please check all required inputs.";
+      } else if (error.code === '22P02') {
+        errorMessage = "Invalid data format. Please check numeric fields.";
+      } else if (error.message) {
+        errorMessage = `Database error: ${error.message}`;
+      }
+      
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to save engine. Please try again.",
+        title: "Error Saving Engine",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -138,7 +233,24 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
   };
 
   const handleInputChange = (field, value) => {
+    console.log(`=== FIELD CHANGE === ${field}:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const renderFieldError = (fieldName) => {
+    if (validationErrors[fieldName]) {
+      return <span className="text-red-500 text-xs mt-1">{validationErrors[fieldName]}</span>;
+    }
+    return null;
   };
 
   return (
@@ -146,7 +258,7 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {engine ? "Edit Engine" : "Add New Engine"}
+            {engine ? `Edit Engine: ${engine.name}` : "Add New Engine"}
           </DialogTitle>
         </DialogHeader>
         
@@ -159,8 +271,10 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="e.g., 599cc Parallel Twin"
+                className={validationErrors.name ? 'border-red-500' : ''}
                 required
               />
+              {renderFieldError('name')}
             </div>
 
             <div className="space-y-2">
@@ -171,8 +285,10 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.displacement_cc}
                 onChange={(e) => handleInputChange('displacement_cc', e.target.value)}
                 placeholder="e.g., 599"
+                className={validationErrors.displacement_cc ? 'border-red-500' : ''}
                 required
               />
+              {renderFieldError('displacement_cc')}
             </div>
 
             <div className="space-y-2">
@@ -184,7 +300,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.power_hp}
                 onChange={(e) => handleInputChange('power_hp', e.target.value)}
                 placeholder="e.g., 67.1"
+                className={validationErrors.power_hp ? 'border-red-500' : ''}
               />
+              {renderFieldError('power_hp')}
             </div>
 
             <div className="space-y-2">
@@ -195,7 +313,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.power_rpm}
                 onChange={(e) => handleInputChange('power_rpm', e.target.value)}
                 placeholder="e.g., 8500"
+                className={validationErrors.power_rpm ? 'border-red-500' : ''}
               />
+              {renderFieldError('power_rpm')}
             </div>
 
             <div className="space-y-2">
@@ -207,7 +327,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.torque_nm}
                 onChange={(e) => handleInputChange('torque_nm', e.target.value)}
                 placeholder="e.g., 64.0"
+                className={validationErrors.torque_nm ? 'border-red-500' : ''}
               />
+              {renderFieldError('torque_nm')}
             </div>
 
             <div className="space-y-2">
@@ -218,7 +340,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.torque_rpm}
                 onChange={(e) => handleInputChange('torque_rpm', e.target.value)}
                 placeholder="e.g., 6500"
+                className={validationErrors.torque_rpm ? 'border-red-500' : ''}
               />
+              {renderFieldError('torque_rpm')}
             </div>
 
             <div className="space-y-2">
@@ -248,7 +372,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.cylinder_count}
                 onChange={(e) => handleInputChange('cylinder_count', e.target.value)}
                 placeholder="e.g., 2"
+                className={validationErrors.cylinder_count ? 'border-red-500' : ''}
               />
+              {renderFieldError('cylinder_count')}
             </div>
 
             <div className="space-y-2">
@@ -302,7 +428,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.bore_mm}
                 onChange={(e) => handleInputChange('bore_mm', e.target.value)}
                 placeholder="e.g., 67.0"
+                className={validationErrors.bore_mm ? 'border-red-500' : ''}
               />
+              {renderFieldError('bore_mm')}
             </div>
 
             <div className="space-y-2">
@@ -314,7 +442,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.stroke_mm}
                 onChange={(e) => handleInputChange('stroke_mm', e.target.value)}
                 placeholder="e.g., 42.5"
+                className={validationErrors.stroke_mm ? 'border-red-500' : ''}
               />
+              {renderFieldError('stroke_mm')}
             </div>
 
             <div className="space-y-2">
@@ -335,7 +465,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.valve_count}
                 onChange={(e) => handleInputChange('valve_count', e.target.value)}
                 placeholder="e.g., 8"
+                className={validationErrors.valve_count ? 'border-red-500' : ''}
               />
+              {renderFieldError('valve_count')}
             </div>
 
             <div className="space-y-2">
@@ -346,7 +478,9 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
                 value={formData.valves_per_cylinder}
                 onChange={(e) => handleInputChange('valves_per_cylinder', e.target.value)}
                 placeholder="e.g., 4"
+                className={validationErrors.valves_per_cylinder ? 'border-red-500' : ''}
               />
+              {renderFieldError('valves_per_cylinder')}
             </div>
           </div>
 
@@ -354,7 +488,11 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
             <Button variant="outline" onClick={() => onClose(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="bg-accent-teal text-black hover:bg-accent-teal/80">
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="bg-accent-teal text-black hover:bg-accent-teal/80"
+            >
               {loading ? "Saving..." : engine ? "Update Engine" : "Create Engine"}
             </Button>
           </div>
