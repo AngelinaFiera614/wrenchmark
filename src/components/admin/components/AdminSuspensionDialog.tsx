@@ -26,12 +26,12 @@ import { supabase } from "@/integrations/supabase/client";
 const suspensionSchema = z.object({
   front_type: z.string().optional(),
   rear_type: z.string().optional(),
-  front_brand: z.string().optional(),
-  rear_brand: z.string().optional(),
   brand: z.string().optional(),
   front_travel_mm: z.coerce.number().min(0).optional().or(z.literal("")),
   rear_travel_mm: z.coerce.number().min(0).optional().or(z.literal("")),
   adjustability: z.string().optional(),
+  damping_system: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 type SuspensionFormData = z.infer<typeof suspensionSchema>;
@@ -51,12 +51,12 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
     defaultValues: {
       front_type: suspension?.front_type || "",
       rear_type: suspension?.rear_type || "",
-      front_brand: suspension?.front_brand || "",
-      rear_brand: suspension?.rear_brand || "",
       brand: suspension?.brand || "",
       front_travel_mm: suspension?.front_travel_mm || "",
       rear_travel_mm: suspension?.rear_travel_mm || "",
       adjustability: suspension?.adjustability || "",
+      damping_system: suspension?.damping_system || "",
+      notes: suspension?.notes || "",
     }
   });
 
@@ -65,35 +65,39 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
       form.reset({
         front_type: suspension.front_type || "",
         rear_type: suspension.rear_type || "",
-        front_brand: suspension.front_brand || "",
-        rear_brand: suspension.rear_brand || "",
         brand: suspension.brand || "",
         front_travel_mm: suspension.front_travel_mm || "",
         rear_travel_mm: suspension.rear_travel_mm || "",
         adjustability: suspension.adjustability || "",
+        damping_system: suspension.damping_system || "",
+        notes: suspension.notes || "",
       });
     } else if (open) {
       form.reset({
         front_type: "",
         rear_type: "",
-        front_brand: "",
-        rear_brand: "",
         brand: "",
         front_travel_mm: "",
         rear_travel_mm: "",
         adjustability: "",
+        damping_system: "",
+        notes: "",
       });
     }
   }, [open, suspension, form]);
 
   const onSubmit = async (data: SuspensionFormData) => {
     try {
+      console.log("=== SUBMITTING SUSPENSION DATA ===", data);
+      
       // Process empty strings for numeric fields
       const processedData = {
         ...data,
         front_travel_mm: data.front_travel_mm === "" ? null : data.front_travel_mm,
         rear_travel_mm: data.rear_travel_mm === "" ? null : data.rear_travel_mm,
       };
+
+      console.log("=== PROCESSED SUSPENSION DATA ===", processedData);
 
       if (isEditing) {
         // Update existing suspension
@@ -102,7 +106,10 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
           .update(processedData)
           .eq('id', suspension.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("=== UPDATE ERROR ===", error);
+          throw error;
+        }
 
         toast({
           title: "Suspension updated",
@@ -114,7 +121,10 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
           .from('suspensions')
           .insert([processedData]);
 
-        if (error) throw error;
+        if (error) {
+          console.error("=== INSERT ERROR ===", error);
+          throw error;
+        }
 
         toast({
           title: "Suspension created",
@@ -183,13 +193,14 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
 
                 <FormField
                   control={form.control}
-                  name="front_brand"
+                  name="front_travel_mm"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Brand</FormLabel>
+                      <FormLabel>Travel (mm)</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Öhlins" 
+                          type="number"
+                          placeholder="120" 
                           className="bg-explorer-dark border-explorer-chrome/30"
                           {...field} 
                         />
@@ -199,25 +210,6 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
                   )}
                 />
               </div>
-              
-              <FormField
-                control={form.control}
-                name="front_travel_mm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Travel (mm)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number"
-                        placeholder="120" 
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             {/* Rear suspension */}
@@ -259,13 +251,14 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
 
                 <FormField
                   control={form.control}
-                  name="rear_brand"
+                  name="rear_travel_mm"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Brand</FormLabel>
+                      <FormLabel>Travel (mm)</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Showa" 
+                          type="number"
+                          placeholder="140" 
                           className="bg-explorer-dark border-explorer-chrome/30"
                           {...field} 
                         />
@@ -275,25 +268,6 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
                   )}
                 />
               </div>
-              
-              <FormField
-                control={form.control}
-                name="rear_travel_mm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Travel (mm)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number"
-                        placeholder="140" 
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             {/* General info */}
@@ -303,10 +277,10 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
                 name="brand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Overall Brand (if same)</FormLabel>
+                    <FormLabel>Brand</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Overall brand" 
+                        placeholder="Öhlins, Showa, KYB, etc." 
                         className="bg-explorer-dark border-explorer-chrome/30"
                         {...field} 
                       />
@@ -346,6 +320,42 @@ const AdminSuspensionDialog = ({ open, suspension, onClose }: AdminSuspensionDia
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="damping_system"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Damping System</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Oil damped, Gas charged, etc." 
+                      className="bg-explorer-dark border-explorer-chrome/30"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Additional notes or specifications" 
+                      className="bg-explorer-dark border-explorer-chrome/30"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end gap-2">
               <Button 
