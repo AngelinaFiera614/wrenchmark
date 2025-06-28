@@ -6,7 +6,7 @@ import { sendAuthEmail, logEmailVerification } from '@/services/emailService';
 import { toast } from 'sonner';
 
 export const useEnhancedAuth = () => {
-  const { user, signUp, signIn, signOut } = useAuth();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [emailVerificationStatus, setEmailVerificationStatus] = useState<{
     needsVerification: boolean;
@@ -40,15 +40,23 @@ export const useEnhancedAuth = () => {
   const enhancedSignUp = async (email: string, password: string, fullName?: string) => {
     setIsLoading(true);
     try {
-      const result = await signUp(email, password, fullName);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          }
+        }
+      });
       
-      if (!result.error && result.user) {
+      if (!error && data.user) {
         // Send welcome email with verification link
         await sendAuthEmail({
           email,
           type: 'welcome',
           userName: fullName,
-          confirmationUrl: `${window.location.origin}/auth/confirm?token=${result.user.id}`
+          confirmationUrl: `${window.location.origin}/auth/confirm?token=${data.user.id}`
         });
 
         // Log the email verification attempt
@@ -57,7 +65,7 @@ export const useEnhancedAuth = () => {
         toast.success('Account created! Please check your email to verify your account.');
       }
 
-      return result;
+      return { data, error };
     } catch (error: any) {
       console.error('Enhanced signup error:', error);
       toast.error(error.message || 'Failed to create account');
@@ -70,9 +78,12 @@ export const useEnhancedAuth = () => {
   const enhancedSignIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const result = await signIn(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      if (!result.error && result.user) {
+      if (!error && data.user) {
         // Log successful login
         await supabase.rpc('log_user_activity', {
           p_action: 'login_success',
@@ -83,7 +94,7 @@ export const useEnhancedAuth = () => {
         toast.success('Welcome back!');
       }
 
-      return result;
+      return { data, error };
     } catch (error: any) {
       // Log failed login attempt
       await supabase.rpc('log_user_activity', {
@@ -159,7 +170,7 @@ export const useEnhancedAuth = () => {
         p_resource_type: 'authentication'
       });
 
-      await signOut();
+      await supabase.auth.signOut();
       toast.success('Signed out successfully');
     } catch (error: any) {
       console.error('Enhanced signout error:', error);

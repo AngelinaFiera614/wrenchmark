@@ -26,7 +26,7 @@ interface Favorite {
     default_image_url: string | null;
     brands: {
       name: string;
-    }[];
+    };
   };
 }
 
@@ -59,7 +59,7 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      return data as Favorite[] || [];
     },
     enabled: !!user,
   });
@@ -123,7 +123,7 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
               )}
               <div>
                 <h4 className="font-medium">
-                  {favorite.motorcycle_models?.brands?.[0]?.name} {favorite.motorcycle_models?.name}
+                  {favorite.motorcycle_models?.brands?.name} {favorite.motorcycle_models?.name}
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   {favorite.motorcycle_models?.type}
