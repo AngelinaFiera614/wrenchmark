@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Engine {
@@ -8,8 +7,12 @@ export interface Engine {
   displacement_cc: number;
   power_hp?: number;
   torque_nm?: number;
+  power_rpm?: number;
+  torque_rpm?: number;
   cooling?: string;
   cylinder_count?: number;
+  valve_count?: number;
+  valves_per_cylinder?: number;
   valve_train?: string;
   stroke_type?: string;
   bore_mm?: number;

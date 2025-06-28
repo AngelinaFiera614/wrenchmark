@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Engine } from "@/services/engineService";
 
-const AdminEngineDialog = ({ open, engine, onClose }) => {
+interface AdminEngineDialogProps {
+  open: boolean;
+  engine: Engine | null;
+  onClose: (wasUpdated?: boolean) => void;
+}
+
+const AdminEngineDialog = ({ open, engine, onClose }: AdminEngineDialogProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: '',
     displacement_cc: '',
@@ -76,7 +82,7 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
   }, [engine]);
 
   const validateForm = () => {
-    const errors = {};
+    const errors: Record<string, string> = {};
     
     // Required field validation
     if (!formData.name?.trim()) {
@@ -96,8 +102,8 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
     ];
     
     numericFields.forEach(field => {
-      if (formData[field] && formData[field].trim() !== '') {
-        if (isNaN(Number(formData[field])) || Number(formData[field]) < 0) {
+      if (formData[field as keyof typeof formData] && formData[field as keyof typeof formData].trim() !== '') {
+        if (isNaN(Number(formData[field as keyof typeof formData])) || Number(formData[field as keyof typeof formData]) < 0) {
           errors[field] = `${field.replace('_', ' ')} must be a valid positive number`;
         }
       }
@@ -108,7 +114,7 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     console.log("=== FORM SUBMIT STARTED ===");
@@ -200,7 +206,7 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
       }
 
       onClose(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("=== SAVE ENGINE ERROR ===", {
         message: error.message,
         details: error.details,
@@ -232,7 +238,7 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
     }
   };
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: string, value: string) => {
     console.log(`=== FIELD CHANGE === ${field}:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
     
@@ -246,7 +252,7 @@ const AdminEngineDialog = ({ open, engine, onClose }) => {
     }
   };
 
-  const renderFieldError = (fieldName) => {
+  const renderFieldError = (fieldName: string) => {
     if (validationErrors[fieldName]) {
       return <span className="text-red-500 text-xs mt-1">{validationErrors[fieldName]}</span>;
     }
