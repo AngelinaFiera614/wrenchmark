@@ -415,12 +415,16 @@ export type Database = {
           name: string
           notes: string | null
           power_hp: number | null
+          power_rpm: number | null
           starter: string | null
           stroke_mm: number | null
           stroke_type: string | null
           torque_nm: number | null
+          torque_rpm: number | null
           updated_at: string | null
+          valve_count: number | null
           valve_train: string | null
+          valves_per_cylinder: number | null
         }
         Insert: {
           bore_mm?: number | null
@@ -438,12 +442,16 @@ export type Database = {
           name: string
           notes?: string | null
           power_hp?: number | null
+          power_rpm?: number | null
           starter?: string | null
           stroke_mm?: number | null
           stroke_type?: string | null
           torque_nm?: number | null
+          torque_rpm?: number | null
           updated_at?: string | null
+          valve_count?: number | null
           valve_train?: string | null
+          valves_per_cylinder?: number | null
         }
         Update: {
           bore_mm?: number | null
@@ -461,12 +469,16 @@ export type Database = {
           name?: string
           notes?: string | null
           power_hp?: number | null
+          power_rpm?: number | null
           starter?: string | null
           stroke_mm?: number | null
           stroke_type?: string | null
           torque_nm?: number | null
+          torque_rpm?: number | null
           updated_at?: string | null
+          valve_count?: number | null
           valve_train?: string | null
+          valves_per_cylinder?: number | null
         }
         Relationships: []
       }
