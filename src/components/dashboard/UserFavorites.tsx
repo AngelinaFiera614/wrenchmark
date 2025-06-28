@@ -13,21 +13,23 @@ interface UserFavoritesProps {
   limit?: number;
 }
 
+interface FavoriteMotorcycleModel {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  default_image_url: string | null;
+  brands: {
+    name: string;
+  };
+}
+
 interface Favorite {
   id: string;
   motorcycle_id: string;
   notes: string | null;
   created_at: string;
-  motorcycle_models: {
-    id: string;
-    name: string;
-    slug: string;
-    type: string;
-    default_image_url: string | null;
-    brands: {
-      name: string;
-    };
-  };
+  motorcycle_models: FavoriteMotorcycleModel;
 }
 
 const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
@@ -35,7 +37,7 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
 
   const { data: favorites, isLoading, refetch } = useQuery({
     queryKey: ['user-favorites', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<Favorite[]> => {
       if (!user) return [];
       
       const { data, error } = await supabase
