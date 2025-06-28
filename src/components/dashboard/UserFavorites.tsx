@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,13 +44,15 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
           motorcycle_id,
           notes,
           created_at,
-          motorcycle_models!inner (
+          motorcycle_models (
             id,
             name,
             slug,
             type,
             default_image_url,
-            brands!inner (name)
+            brands (
+              name
+            )
           )
         `)
         .eq('user_id', user.id)
@@ -59,7 +60,16 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
         .limit(limit);
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to match our interface since Supabase returns nested arrays
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        motorcycle_models: Array.isArray(item.motorcycle_models) 
+          ? item.motorcycle_models[0] 
+          : item.motorcycle_models,
+      })).filter(item => item.motorcycle_models) as Favorite[];
+      
+      return transformedData;
     },
     enabled: !!user,
   });
