@@ -64,9 +64,14 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
       // Transform the data to match our interface since Supabase returns nested arrays
       const transformedData = (data || []).map(item => ({
         ...item,
-        motorcycle_models: Array.isArray(item.motorcycle_models) 
-          ? item.motorcycle_models[0] 
-          : item.motorcycle_models,
+        motorcycle_models: {
+          ...Array.isArray(item.motorcycle_models) 
+            ? item.motorcycle_models[0] 
+            : item.motorcycle_models,
+          brands: Array.isArray(item.motorcycle_models?.brands) 
+            ? item.motorcycle_models.brands[0] 
+            : item.motorcycle_models?.brands
+        }
       })).filter(item => item.motorcycle_models) as Favorite[];
       
       return transformedData;
