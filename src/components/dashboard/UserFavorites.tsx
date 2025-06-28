@@ -13,23 +13,21 @@ interface UserFavoritesProps {
   limit?: number;
 }
 
-interface FavoriteMotorcycleModel {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
-  default_image_url: string | null;
-  brands: {
-    name: string;
-  };
-}
-
 interface Favorite {
   id: string;
   motorcycle_id: string;
   notes: string | null;
   created_at: string;
-  motorcycle_models: FavoriteMotorcycleModel;
+  motorcycle_models: {
+    id: string;
+    name: string;
+    slug: string;
+    type: string;
+    default_image_url: string | null;
+    brands: {
+      name: string;
+    };
+  };
 }
 
 const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
@@ -47,13 +45,13 @@ const UserFavorites: React.FC<UserFavoritesProps> = ({ limit = 10 }) => {
           motorcycle_id,
           notes,
           created_at,
-          motorcycle_models (
+          motorcycle_models!inner (
             id,
             name,
             slug,
             type,
             default_image_url,
-            brands (name)
+            brands!inner (name)
           )
         `)
         .eq('user_id', user.id)
