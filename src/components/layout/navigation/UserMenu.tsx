@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/auth";
-import { User, LogOut, Settings, Shield } from "lucide-react";
+import { User, LogOut, Settings, Shield, Home } from "lucide-react";
 
 const UserMenu = () => {
   const { user, profile, isAdmin, signOut } = useAuth();
@@ -75,6 +75,13 @@ const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        
+        <DropdownMenuItem asChild>
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <Home className="h-4 w-4" />
+            Dashboard
+          </Link>
+        </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
           <Link to="/profile" className="flex items-center gap-2">

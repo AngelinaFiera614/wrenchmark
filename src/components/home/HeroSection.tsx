@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Wrench, Users, BookOpen } from "lucide-react";
+import { ArrowRight, Wrench, Users, BookOpen, Home } from "lucide-react";
 import { useAuth } from "@/context/auth";
 
 const HeroSection = () => {
@@ -38,7 +37,18 @@ const HeroSection = () => {
             </Button>
           </Link>
           
-          {!user && (
+          {user ? (
+            <Link to="/dashboard">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-accent-teal text-accent-teal hover:bg-accent-teal hover:text-black px-8 py-3"
+              >
+                <Home className="mr-2 h-4 w-4" />
+                My Dashboard
+              </Button>
+            </Link>
+          ) : (
             <Link to="/login">
               <Button 
                 variant="outline" 

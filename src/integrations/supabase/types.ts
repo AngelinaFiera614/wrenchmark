@@ -1990,6 +1990,39 @@ export type Database = {
           },
         ]
       }
+      user_comparison_lists: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          motorcycle_ids: string[]
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          motorcycle_ids?: string[]
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          motorcycle_ids?: string[]
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_glossary_terms: {
         Row: {
           id: string
@@ -2022,6 +2055,38 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "glossary_terms"
             referencedColumns: ["slug"]
+          },
+        ]
+      }
+      user_motorcycle_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          motorcycle_id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          motorcycle_id: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          motorcycle_id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_motorcycle_favorites_motorcycle_id_fkey"
+            columns: ["motorcycle_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
           },
         ]
       }

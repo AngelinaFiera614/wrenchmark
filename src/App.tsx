@@ -20,6 +20,7 @@ import LessonDetailsPage from "./pages/LessonDetailsPage";
 import Auth from "./pages/Auth";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import DashboardPage from "./pages/DashboardPage";
 import AdminAuth from "./pages/AdminAuth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBrands from "./pages/admin/AdminBrands";
@@ -64,6 +65,7 @@ const App = () => (
           <Route path="/signup" element={<AuthPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           
           {/* Admin Authentication Route */}
           <Route path="/admin/auth" element={<AdminAuth />} />
