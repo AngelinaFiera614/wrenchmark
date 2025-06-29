@@ -28,6 +28,7 @@ interface EnhancedMotorcycleCardProps {
   onDelete: (id: string) => void;
   onToggleStatus: (id: string) => void;
   onManageComponents?: (motorcycle: Motorcycle) => void;
+  isOperationInProgress?: boolean;
 }
 
 const EnhancedMotorcycleCard = ({
@@ -37,7 +38,8 @@ const EnhancedMotorcycleCard = ({
   onEdit,
   onDelete,
   onToggleStatus,
-  onManageComponents
+  onManageComponents,
+  isOperationInProgress = false
 }: EnhancedMotorcycleCardProps) => {
   // Get brand name from the relationship
   const brandName = motorcycle.brand?.name || motorcycle.brands?.name || 'Unknown Brand';
@@ -49,13 +51,23 @@ const EnhancedMotorcycleCard = ({
   const { completeness, loading } = useMotorcycleCompleteness(motorcycle);
   
   return (
-    <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-accent-teal' : ''}`}>
+    <Card className={`hover:shadow-md transition-shadow relative ${isSelected ? 'ring-2 ring-accent-teal' : ''} ${isOperationInProgress ? 'opacity-75' : ''}`}>
+      {isOperationInProgress && (
+        <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10 rounded-lg">
+          <div className="bg-white rounded-lg p-4 shadow-lg flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-accent-teal" />
+            <span className="text-sm font-medium">Updating...</span>
+          </div>
+        </div>
+      )}
+      
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <Checkbox
             checked={isSelected}
             onCheckedChange={() => onSelect(motorcycle.id)}
             className="mt-1"
+            disabled={isOperationInProgress}
           />
           
           <div className="flex-1 space-y-3">
@@ -168,6 +180,7 @@ const EnhancedMotorcycleCard = ({
                   variant="outline"
                   size="sm"
                   onClick={() => onEdit(motorcycle)}
+                  disabled={isOperationInProgress}
                 >
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
@@ -179,6 +192,7 @@ const EnhancedMotorcycleCard = ({
                     size="sm"
                     onClick={() => onManageComponents(motorcycle)}
                     className="text-accent-teal border-accent-teal/30 hover:bg-accent-teal/10"
+                    disabled={isOperationInProgress}
                   >
                     <Settings className="h-4 w-4 mr-1" />
                     Components
@@ -190,6 +204,7 @@ const EnhancedMotorcycleCard = ({
                   size="sm"
                   onClick={() => onToggleStatus(motorcycle.id)}
                   className={motorcycle.is_draft ? "text-green-600 border-green-200" : "text-orange-600 border-orange-200"}
+                  disabled={isOperationInProgress}
                 >
                   {motorcycle.is_draft ? (
                     <>
@@ -210,6 +225,7 @@ const EnhancedMotorcycleCard = ({
                 size="sm"
                 onClick={() => onDelete(motorcycle.id)}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                disabled={isOperationInProgress}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

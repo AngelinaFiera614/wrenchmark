@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
 import { useSimpleMotorcycleData } from "@/hooks/useSimpleMotorcycleData";
 import { useBulkMotorcycleActions } from "@/hooks/useBulkMotorcycleActions";
+import { useDebounceRefresh } from "@/hooks/useDebounceRefresh";
+import { clearCompletenessCache } from "@/hooks/useMotorcycleCompleteness";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
@@ -25,6 +27,7 @@ const AdminMotorcycleManagement = () => {
   const [componentDialogOpen, setComponentDialogOpen] = useState(false);
   const [selectedMotorcycleForEdit, setSelectedMotorcycleForEdit] = useState<Motorcycle | null>(null);
   const [selectedMotorcycleForComponents, setSelectedMotorcycleForComponents] = useState<any | null>(null);
+  const [isComponentOperationInProgress, setIsComponentOperationInProgress] = useState(false);
   const { toast } = useToast();
   
   const {
@@ -53,15 +56,21 @@ const AdminMotorcycleManagement = () => {
     handleBulkDelete
   } = useBulkMotorcycleActions();
 
-  // Refresh data when component dialog closes to show updated completeness
+  // Create debounced refresh function
+  const debouncedRefresh = useDebounceRefresh(() => {
+    console.log('Performing debounced refresh after component operation...');
+    clearCompletenessCache();
+    refetch();
+    setIsComponentOperationInProgress(false);
+  }, 1000);
+
+  // Handle component dialog operations with proper loading states
   useEffect(() => {
-    if (!componentDialogOpen && selectedMotorcycleForComponents) {
-      console.log('Component dialog closed, refreshing data...');
-      setTimeout(() => {
-        refetch();
-      }, 500); // Small delay to ensure database changes are committed
+    if (!componentDialogOpen && selectedMotorcycleForComponents && isComponentOperationInProgress) {
+      console.log('Component dialog closed, starting debounced refresh...');
+      debouncedRefresh();
     }
-  }, [componentDialogOpen, selectedMotorcycleForComponents, refetch]);
+  }, [componentDialogOpen, selectedMotorcycleForComponents, isComponentOperationInProgress, debouncedRefresh]);
 
   const handleEditMotorcycle = (motorcycle: Motorcycle) => {
     setSelectedMotorcycleForEdit(motorcycle);
@@ -71,6 +80,7 @@ const AdminMotorcycleManagement = () => {
   const handleManageComponents = (motorcycle: Motorcycle) => {
     setSelectedMotorcycleForComponents(motorcycle);
     setComponentDialogOpen(true);
+    setIsComponentOperationInProgress(true);
   };
 
   const handleDeleteMotorcycle = async (id: string) => {
@@ -193,7 +203,7 @@ const AdminMotorcycleManagement = () => {
         onExportAll={handleExportAll}
         onImport={() => setImportDialogOpen(true)}
         onAddMotorcycle={() => setAddDialogOpen(true)}
-        isLoading={isLoading}
+        isLoading={isLoading || isComponentOperationInProgress}
       />
 
       <AdminMotorcycleStats
@@ -233,7 +243,7 @@ const AdminMotorcycleManagement = () => {
           <AdminMotorcycleList
             motorcycles={motorcycles}
             selectedIds={selectedIds}
-            isLoading={isLoading}
+            isLoading={isLoading || isComponentOperationInProgress}
             error={error}
             isDraftMode={isDraftMode}
             onSelect={handleSelect}
