@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
@@ -53,6 +52,16 @@ const AdminMotorcycleManagement = () => {
     handleBulkExport,
     handleBulkDelete
   } = useBulkMotorcycleActions();
+
+  // Refresh data when component dialog closes to show updated completeness
+  useEffect(() => {
+    if (!componentDialogOpen && selectedMotorcycleForComponents) {
+      console.log('Component dialog closed, refreshing data...');
+      setTimeout(() => {
+        refetch();
+      }, 500); // Small delay to ensure database changes are committed
+    }
+  }, [componentDialogOpen, selectedMotorcycleForComponents, refetch]);
 
   const handleEditMotorcycle = (motorcycle: Motorcycle) => {
     setSelectedMotorcycleForEdit(motorcycle);

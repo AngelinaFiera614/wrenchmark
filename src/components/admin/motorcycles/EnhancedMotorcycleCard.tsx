@@ -13,11 +13,12 @@ import {
   Zap,
   Gauge,
   Weight,
-  Settings
+  Settings,
+  Loader2
 } from "lucide-react";
 import { Motorcycle } from "@/types";
-import { calculateMotorcycleCompletenessSync } from "@/utils/motorcycleCompleteness";
-import MotorcycleCompletenessIndicator from "./MotorcycleCompletenessIndicator";
+import { useMotorcycleCompleteness } from "@/hooks/useMotorcycleCompleteness";
+import ComponentStatusBadges from "./ComponentStatusBadges";
 
 interface EnhancedMotorcycleCardProps {
   motorcycle: Motorcycle;
@@ -44,8 +45,8 @@ const EnhancedMotorcycleCard = ({
   // Generate a readable display name instead of showing ID
   const displayReference = `${motorcycle.type}-${motorcycle.production_start_year || 'Unknown'}-${motorcycle.name.substring(0, 8)}`;
   
-  // Calculate completion data using sync version
-  const completeness = calculateMotorcycleCompletenessSync(motorcycle);
+  // Use async completeness calculation
+  const { completeness, loading } = useMotorcycleCompleteness(motorcycle);
   
   return (
     <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-accent-teal' : ''}`}>
@@ -90,9 +91,36 @@ const EnhancedMotorcycleCard = ({
             </div>
 
             {/* Data Completeness Section */}
-            <div className="bg-muted/30 p-3 rounded-lg">
-              <h5 className="text-sm font-medium mb-2">Data Completeness</h5>
-              <MotorcycleCompletenessIndicator completeness={completeness} />
+            <div className="bg-muted/30 p-3 rounded-lg space-y-2">
+              <div className="flex items-center justify-between">
+                <h5 className="text-sm font-medium">Data Completeness</h5>
+                {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              </div>
+              
+              {completeness ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all ${
+                          completeness.completionPercentage >= 80 ? 'bg-green-400' :
+                          completeness.completionPercentage >= 60 ? 'bg-yellow-400' : 'bg-red-400'
+                        }`}
+                        style={{ width: `${completeness.completionPercentage}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {completeness.completionPercentage}%
+                    </span>
+                  </div>
+                  
+                  <ComponentStatusBadges completeness={completeness} variant="compact" />
+                </>
+              ) : (
+                <div className="text-xs text-muted-foreground">
+                  {loading ? 'Calculating...' : 'Unable to calculate'}
+                </div>
+              )}
             </div>
 
             {/* Specifications Grid */}
