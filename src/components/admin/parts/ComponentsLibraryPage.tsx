@@ -1,12 +1,13 @@
+
 import React, { useState } from "react";
-import { Cog, Disc, Box, Zap, Circle, Bug } from "lucide-react";
+import { Cog, Disc, Box, Zap, Circle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchEngines } from "@/services/engineService";
 import { fetchBrakes } from "@/services/brakeService";
 import { fetchFrames } from "@/services/frameService";
 import { fetchSuspensions } from "@/services/suspensionService";
 import { fetchWheels } from "@/services/wheelService";
-import { debugJSeriesEngine, getEngineOperationLogs } from "@/services/engineServiceDebug";
+import { getEngineOperationLogs } from "@/services/engineServiceDebug";
 import AdminEngineDialog from "@/components/admin/components/AdminEngineDialog";
 import AdminBrakeSystemDialog from "@/components/admin/components/AdminBrakeSystemDialog";
 import AdminFrameDialog from "@/components/admin/components/AdminFrameDialog";
@@ -75,12 +76,6 @@ const ComponentsLibraryPage = () => {
     closeDeleteDialog
   } = useComponentDelete(engines, brakes, frames, suspensions, wheels, refetchCallbacks);
 
-  const handleDebugJSeries = async () => {
-    const result = await debugJSeriesEngine();
-    console.log("J-Series Debug Result:", result);
-    setShowDebugInfo(true);
-  };
-
   const handleShowLogs = () => {
     const logs = getEngineOperationLogs();
     console.log("Engine Operation Logs:", logs);
@@ -103,19 +98,9 @@ const ComponentsLibraryPage = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleDebugJSeries}
-            className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
-          >
-            <Bug className="h-4 w-4 mr-2" />
-            Debug J-Series
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={handleShowLogs}
             className="border-blue-500 text-blue-600 hover:bg-blue-50"
           >
-            <Bug className="h-4 w-4 mr-2" />
             Show Logs
           </Button>
         </div>
@@ -125,7 +110,6 @@ const ComponentsLibraryPage = () => {
         <Collapsible className="mb-6">
           <CollapsibleTrigger asChild>
             <Button variant="outline" className="w-full mb-4">
-              <Bug className="h-4 w-4 mr-2" />
               Engine Debug Information (Click to toggle)
             </Button>
           </CollapsibleTrigger>
