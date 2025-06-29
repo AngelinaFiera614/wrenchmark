@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycl
 import DeleteConfirmationDialog from "@/components/admin/models/DeleteConfirmationDialog";
 import BulkPublishingControls from "@/components/admin/models/BulkPublishingControls";
 import { DataCompletenessIndicator } from "@/components/motorcycles/DataCompletenessIndicator";
-import { calculateDataCompleteness } from "@/utils/dataCompleteness";
+import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
 import { Motorcycle } from "@/types";
 import { deleteMotorcycleModelCascade } from "@/services/models/modelQueries";
 import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
@@ -166,7 +167,7 @@ const AdminMotorcycleModels = () => {
   const publishedModels = models?.filter(m => !m.is_draft) || [];
   const draftModels = models?.filter(m => m.is_draft) || [];
   const incompleteModels = models?.filter(m => {
-    const completeness = calculateDataCompleteness(m);
+    const completeness = calculateDataCompletenessSync(m);
     return completeness.completionPercentage < 100;
   }) || [];
 
@@ -269,7 +270,7 @@ const AdminMotorcycleModels = () => {
               </h2>
               <div className="grid gap-4">
                 {draftModels.map((motorcycle) => {
-                  const dataCompleteness = calculateDataCompleteness(motorcycle);
+                  const dataCompleteness = calculateDataCompletenessSync(motorcycle);
                   return (
                     <Card key={motorcycle.id} className="border-orange-200">
                       <CardContent className="p-4">
@@ -333,7 +334,7 @@ const AdminMotorcycleModels = () => {
               </h2>
               <div className="grid gap-4">
                 {publishedModels.map((motorcycle) => {
-                  const dataCompleteness = calculateDataCompleteness(motorcycle);
+                  const dataCompleteness = calculateDataCompletenessSync(motorcycle);
                   return (
                     <Card key={motorcycle.id}>
                       <CardContent className="p-4">
