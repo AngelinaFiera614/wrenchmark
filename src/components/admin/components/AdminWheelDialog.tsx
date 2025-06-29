@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,8 +32,7 @@ const wheelSchema = z.object({
   front_tire_size: z.string().optional(),
   rear_tire_size: z.string().optional(),
   rim_material: z.string().optional(),
-  spoke_count_front: z.coerce.number().min(0).optional().or(z.literal("")),
-  spoke_count_rear: z.coerce.number().min(0).optional().or(z.literal("")),
+  tubeless: z.boolean().optional(),
   notes: z.string().optional(),
 });
 
@@ -57,8 +57,7 @@ const AdminWheelDialog = ({ open, wheel, onClose }: AdminWheelDialogProps)  => {
       front_tire_size: wheel?.front_tire_size || "",
       rear_tire_size: wheel?.rear_tire_size || "",
       rim_material: wheel?.rim_material || "",
-      spoke_count_front: wheel?.spoke_count_front || "",
-      spoke_count_rear: wheel?.spoke_count_rear || "",
+      tubeless: wheel?.tubeless || false,
       notes: wheel?.notes || "",
     }
   });
@@ -72,8 +71,7 @@ const AdminWheelDialog = ({ open, wheel, onClose }: AdminWheelDialogProps)  => {
         front_tire_size: wheel.front_tire_size || "",
         rear_tire_size: wheel.rear_tire_size || "",
         rim_material: wheel.rim_material || "",
-        spoke_count_front: wheel.spoke_count_front || "",
-        spoke_count_rear: wheel.spoke_count_rear || "",
+        tubeless: wheel.tubeless || false,
         notes: wheel.notes || "",
       });
     } else if (open) {
@@ -84,8 +82,7 @@ const AdminWheelDialog = ({ open, wheel, onClose }: AdminWheelDialogProps)  => {
         front_tire_size: "",
         rear_tire_size: "",
         rim_material: "",
-        spoke_count_front: "",
-        spoke_count_rear: "",
+        tubeless: false,
         notes: "",
       });
     }
@@ -93,21 +90,19 @@ const AdminWheelDialog = ({ open, wheel, onClose }: AdminWheelDialogProps)  => {
 
   const onSubmit = async (data: WheelFormData) => {
     try {
-      // Process empty strings for numeric fields
-      const processedData = {
-        ...data,
-        spoke_count_front: data.spoke_count_front === "" ? null : data.spoke_count_front,
-        spoke_count_rear: data.spoke_count_rear === "" ? null : data.spoke_count_rear,
-      };
+      console.log("=== SUBMITTING WHEEL DATA ===", data);
 
       if (isEditing) {
         // Update existing wheel
         const { error } = await supabase
           .from('wheels')
-          .update(processedData)
+          .update(data)
           .eq('id', wheel.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("=== UPDATE ERROR ===", error);
+          throw error;
+        }
 
         toast({
           title: "Wheel set updated",
@@ -117,9 +112,12 @@ const AdminWheelDialog = ({ open, wheel, onClose }: AdminWheelDialogProps)  => {
         // Create new wheel
         const { error } = await supabase
           .from('wheels')
-          .insert([processedData]);
+          .insert([data]);
 
-        if (error) throw error;
+        if (error) {
+          console.error("=== INSERT ERROR ===", error);
+          throw error;
+        }
 
         toast({
           title: "Wheel set created",
@@ -248,25 +246,6 @@ const AdminWheelDialog = ({ open, wheel, onClose }: AdminWheelDialogProps)  => {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="spoke_count_front"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Spoke Count (if applicable)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number"
-                          placeholder="36"
-                          className="bg-explorer-dark border-explorer-chrome/30"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
               
               <div className="space-y-4">
@@ -306,27 +285,29 @@ const AdminWheelDialog = ({ open, wheel, onClose }: AdminWheelDialogProps)  => {
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="spoke_count_rear"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Spoke Count (if applicable)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number"
-                          placeholder="36" 
-                          className="bg-explorer-dark border-explorer-chrome/30"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             </div>
+
+            <FormField
+              control={form.control}
+              name="tubeless"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-explorer-chrome/30 p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Tubeless</FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Enable if the wheels support tubeless tires
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
