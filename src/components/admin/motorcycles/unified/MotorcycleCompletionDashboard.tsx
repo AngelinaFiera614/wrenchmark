@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle, AlertTriangle, TrendingUp, Filter } from "lucide-react";
 import { Motorcycle } from "@/types";
-import { calculateDataCompleteness } from "@/utils/dataCompleteness";
+import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
 
 interface MotorcycleCompletionDashboardProps {
   motorcycles: Motorcycle[];
@@ -17,10 +17,10 @@ const MotorcycleCompletionDashboard = ({ motorcycles }: MotorcycleCompletionDash
   const [filterBy, setFilterBy] = useState<"all" | "brand" | "category">("all");
   const [selectedFilter, setSelectedFilter] = useState("");
 
-  // Calculate completion statistics
+  // Calculate completion statistics using sync version
   const completionStats = motorcycles.map(motorcycle => ({
     ...motorcycle,
-    completion: calculateDataCompleteness(motorcycle)
+    completion: calculateDataCompletenessSync(motorcycle)
   }));
 
   const overallStats = {

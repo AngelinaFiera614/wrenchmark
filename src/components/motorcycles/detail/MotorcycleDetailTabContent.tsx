@@ -10,7 +10,7 @@ import { RelatedModelsSystem } from "../related";
 import { ComponentDetailCard } from "../components";
 import { ComponentStatusCard } from "../components/ComponentStatusCard";
 import { DataCompletenessIndicator } from "../DataCompletenessIndicator";
-import { calculateDataCompleteness } from "@/utils/dataCompleteness";
+import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
 import ManualsList from "../ManualsList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -36,7 +36,7 @@ export function MotorcycleDetailTabContent({
     componentKeys: selectedConfiguration ? Object.keys(selectedConfiguration) : []
   });
 
-  const dataCompleteness = calculateDataCompleteness(motorcycle, selectedConfiguration);
+  const dataCompleteness = calculateDataCompletenessSync(motorcycle, selectedConfiguration);
 
   switch (activeTab) {
     case 'specifications':

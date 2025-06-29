@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Save, Edit, Eye, AlertTriangle, X } from "lucide-react";
 import { Motorcycle } from "@/types";
-import { calculateDataCompleteness } from "@/utils/dataCompleteness";
+import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
 import { useMotorcycleForm } from "@/hooks/useMotorcycleForm";
 import MotorcycleBasicInfoForm from "./forms/MotorcycleBasicInfoForm";
 import MotorcycleSpecsForm from "./forms/MotorcycleSpecsForm";
@@ -36,7 +36,7 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
     onUpdate();
   });
 
-  const completeness = calculateDataCompleteness(formData as Motorcycle);
+  const completeness = calculateDataCompletenessSync(formData as Motorcycle);
 
   const getCompletionColor = (percentage: number) => {
     if (percentage >= 90) return "text-green-400 bg-green-400/20";

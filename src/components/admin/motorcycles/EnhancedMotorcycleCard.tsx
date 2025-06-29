@@ -16,7 +16,7 @@ import {
   Settings
 } from "lucide-react";
 import { Motorcycle } from "@/types";
-import { calculateMotorcycleCompleteness } from "@/utils/motorcycleCompleteness";
+import { calculateMotorcycleCompletenessSync } from "@/utils/motorcycleCompleteness";
 import MotorcycleCompletenessIndicator from "./MotorcycleCompletenessIndicator";
 
 interface EnhancedMotorcycleCardProps {
@@ -44,8 +44,8 @@ const EnhancedMotorcycleCard = ({
   // Generate a readable display name instead of showing ID
   const displayReference = `${motorcycle.type}-${motorcycle.production_start_year || 'Unknown'}-${motorcycle.name.substring(0, 8)}`;
   
-  // Calculate completion data
-  const completeness = calculateMotorcycleCompleteness(motorcycle);
+  // Calculate completion data using sync version
+  const completeness = calculateMotorcycleCompletenessSync(motorcycle);
   
   return (
     <Card className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-accent-teal' : ''}`}>

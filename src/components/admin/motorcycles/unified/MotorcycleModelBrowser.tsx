@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader, RefreshCw } from "lucide-react";
 import { Motorcycle } from "@/types";
-import { calculateDataCompleteness } from "@/utils/dataCompleteness";
+import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
 import { DataCompletenessIndicator } from "@/components/motorcycles/DataCompletenessIndicator";
 
 interface MotorcycleModelBrowserProps {
@@ -74,7 +74,7 @@ const MotorcycleModelBrowser = ({
             </div>
           ) : (
             filteredMotorcycles.map((motorcycle) => {
-              const completeness = calculateDataCompleteness(motorcycle);
+              const completeness = calculateDataCompletenessSync(motorcycle);
               const isSelected = selectedMotorcycle?.id === motorcycle.id;
               
               return (

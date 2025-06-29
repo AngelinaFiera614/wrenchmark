@@ -1,146 +1,111 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Motorcycle } from '@/types';
-import { useMeasurement } from '@/context/MeasurementContext';
-import { formatEngineType, formatHorsepower, formatBrakeSystem } from '@/utils/performanceFormatters';
-import { Plus, Gauge, Zap, Shield } from 'lucide-react';
-import { useComparison } from '@/context/ComparisonContext';
-import { DataCompletenessIndicator } from './DataCompletenessIndicator';
-import { calculateDataCompleteness } from '@/utils/dataCompleteness';
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Eye, Calendar, Zap, Gauge, Weight } from "lucide-react";
+import { Motorcycle } from "@/types";
+import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
+import { DataCompletenessIndicator } from "./DataCompletenessIndicator";
 
 interface MotorcycleCardProps {
   motorcycle: Motorcycle;
+  onViewDetails?: (motorcycle: Motorcycle) => void;
+  showCompleteness?: boolean;
 }
 
-const MotorcycleCard: React.FC<MotorcycleCardProps> = ({ motorcycle }) => {
-  const { unit } = useMeasurement();
-  const { addToComparison, removeFromComparison, isInComparison } = useComparison();
-
-  const inComparison = isInComparison(motorcycle.id);
-  const dataCompleteness = calculateDataCompleteness(motorcycle);
-
-  const handleComparisonToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (inComparison) {
-      removeFromComparison(motorcycle.id);
-    } else {
-      addToComparison(motorcycle);
-    }
-  };
-
-  const engineDisplay = formatEngineType(
-    motorcycle.engine_cc || motorcycle.displacement_cc, 
-    motorcycle.engine_type, 
-    motorcycle.cylinder_count
-  );
+const MotorcycleCard = ({ 
+  motorcycle, 
+  onViewDetails,
+  showCompleteness = false 
+}: MotorcycleCardProps) => {
+  // Get brand name from the relationship
+  const brandName = motorcycle.brand?.name || motorcycle.brands?.name || 'Unknown Brand';
   
-  const powerDisplay = formatHorsepower(
-    motorcycle.horsepower_hp || motorcycle.horsepower, 
-    motorcycle.power_rpm
-  );
-  
-  const brakeDisplay = formatBrakeSystem(
-    motorcycle.brake_type, 
-    motorcycle.has_abs || motorcycle.abs
-  );
-
-  const weightDisplay =
-    unit === "metric"
-      ? `${motorcycle.weight_kg || 'N/A'} kg`
-      : `${motorcycle.weight_lbs || (motorcycle.weight_kg ? Math.round(motorcycle.weight_kg * 2.205) : 'N/A')} lbs`;
-
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group">
-      <Link to={`/motorcycles/${motorcycle.slug || motorcycle.id}`}>
-        <div className="aspect-video relative overflow-hidden bg-muted">
-          <img
-            src={motorcycle.image_url}
-            alt={`${motorcycle.make} ${motorcycle.model}`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/placeholder.svg';
-            }}
-          />
-          <div className="absolute top-2 right-2">
-            <Button
-              variant={inComparison ? "default" : "outline"}
-              size="sm"
-              className="bg-background/80 backdrop-blur-sm"
-              onClick={handleComparisonToggle}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          {dataCompleteness.completionPercentage < 100 && (
-            <div className="absolute top-2 left-2">
-              <DataCompletenessIndicator status={dataCompleteness} variant="card" />
-            </div>
-          )}
-        </div>
-      </Link>
-      
+    <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="space-y-3">
-          <div>
-            <h3 className="font-bold text-lg line-clamp-1">
-              {motorcycle.make} {motorcycle.model}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {motorcycle.year} • {motorcycle.category}
+          {/* Header Section */}
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h4 className="font-semibold text-lg">
+                {brandName} {motorcycle.name}
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                {motorcycle.type} • {motorcycle.production_start_year || 'Unknown Year'}
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant={motorcycle.is_draft ? "secondary" : "default"}
+                className={motorcycle.is_draft ? "bg-orange-100 text-orange-800" : "bg-green-100 text-green-800"}
+              >
+                {motorcycle.is_draft ? 'Draft' : 'Published'}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Data Completeness Section */}
+          {showCompleteness && (
+            <div className="bg-muted/30 p-3 rounded-lg">
+              <h5 className="text-sm font-medium mb-2">Data Completeness</h5>
+              <DataCompletenessIndicator 
+                status={calculateDataCompletenessSync(motorcycle)} 
+                variant="card" 
+              />
+            </div>
+          )}
+
+          {/* Specifications Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            {motorcycle.production_start_year && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span>{motorcycle.production_start_year}+</span>
+              </div>
+            )}
+            
+            {motorcycle.engine_size && (
+              <div className="flex items-center gap-1">
+                <Zap className="h-4 w-4 text-muted-foreground" />
+                <span>{motorcycle.engine_size}cc</span>
+              </div>
+            )}
+            
+            {motorcycle.horsepower && (
+              <div className="flex items-center gap-1">
+                <Gauge className="h-4 w-4 text-muted-foreground" />
+                <span>{motorcycle.horsepower}hp</span>
+              </div>
+            )}
+            
+            {motorcycle.weight_kg && (
+              <div className="flex items-center gap-1">
+                <Weight className="h-4 w-4 text-muted-foreground" />
+                <span>{motorcycle.weight_kg}kg</span>
+              </div>
+            )}
+          </div>
+
+          {/* Additional Details */}
+          {motorcycle.summary && (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {motorcycle.summary}
             </p>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1">
-                <Gauge className="h-3 w-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Engine:</span>
-              </div>
-              <span className="font-medium">
-                {engineDisplay || 'N/A'}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1">
-                <Zap className="h-3 w-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Power:</span>
-              </div>
-              <span className="font-medium">
-                {powerDisplay || 'N/A'}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1">
-                <Shield className="h-3 w-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Brakes:</span>
-              </div>
-              <span className="font-medium">
-                {brakeDisplay || 'N/A'}
-              </span>
-            </div>
-          </div>
-
-          {motorcycle.style_tags && motorcycle.style_tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {motorcycle.style_tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {motorcycle.style_tags.length > 2 && (
-                <Badge variant="outline" className="text-xs">
-                  +{motorcycle.style_tags.length - 2}
-                </Badge>
-              )}
+          {/* Action Buttons */}
+          {onViewDetails && (
+            <div className="flex justify-end pt-2 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onViewDetails(motorcycle)}
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                View Details
+              </Button>
             </div>
           )}
         </div>

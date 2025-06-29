@@ -14,7 +14,7 @@ import {
   AlertTriangle 
 } from "lucide-react";
 import { Motorcycle } from "@/types";
-import { calculateDataCompleteness } from "@/utils/dataCompleteness";
+import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
 
 interface CompactModelBrowserProps {
   motorcycles: Motorcycle[];
@@ -43,7 +43,7 @@ const CompactModelBrowser = ({
       return <Clock className="h-4 w-4 text-orange-400" />;
     }
     
-    const completion = calculateDataCompleteness(motorcycle);
+    const completion = calculateDataCompletenessSync(motorcycle);
     if (completion.completionPercentage === 100) {
       return <CheckCircle className="h-4 w-4 text-green-400" />;
     }
@@ -54,7 +54,7 @@ const CompactModelBrowser = ({
   const getStatusColor = (motorcycle: Motorcycle) => {
     if (motorcycle.is_draft) return "bg-orange-500/20 text-orange-400";
     
-    const completion = calculateDataCompleteness(motorcycle);
+    const completion = calculateDataCompletenessSync(motorcycle);
     if (completion.completionPercentage === 100) return "bg-green-500/20 text-green-400";
     
     return "bg-yellow-500/20 text-yellow-400";
@@ -133,7 +133,7 @@ const CompactModelBrowser = ({
             {motorcycles.map((motorcycle) => {
               const isSelected = selectedMotorcycle?.id === motorcycle.id;
               const isChecked = selectedMotorcycles.includes(motorcycle.id);
-              const completion = calculateDataCompleteness(motorcycle);
+              const completion = calculateDataCompletenessSync(motorcycle);
               const brandName = getBrandName(motorcycle);
               
               return (

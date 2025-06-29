@@ -12,7 +12,7 @@ import {
   ArrowUpDown
 } from "lucide-react";
 import { Motorcycle } from "@/types";
-import { calculateDataCompleteness } from "@/utils/dataCompleteness";
+import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
 import { DataCompletenessIndicator } from "@/components/motorcycles/DataCompletenessIndicator";
 
 interface EnhancedModelBrowserProps {
@@ -58,8 +58,8 @@ const EnhancedModelBrowser = ({
         comparison = (a.year || 0) - (b.year || 0);
         break;
       case 'completion':
-        const aCompletion = calculateDataCompleteness(a).completionPercentage;
-        const bCompletion = calculateDataCompleteness(b).completionPercentage;
+        const aCompletion = calculateDataCompletenessSync(a).completionPercentage;
+        const bCompletion = calculateDataCompletenessSync(b).completionPercentage;
         comparison = aCompletion - bCompletion;
         break;
       case 'updated':
@@ -83,7 +83,7 @@ const EnhancedModelBrowser = ({
   };
 
   const MotorcycleCard = ({ motorcycle, isSelected }: { motorcycle: Motorcycle; isSelected: boolean }) => {
-    const completeness = calculateDataCompleteness(motorcycle);
+    const completeness = calculateDataCompletenessSync(motorcycle);
     const isInSelection = selectedMotorcycles.includes(motorcycle.id);
     
     return (
@@ -149,7 +149,10 @@ const EnhancedModelBrowser = ({
                 Draft
               </Badge>
             )}
-            <DataCompletenessIndicator status={completeness} variant="admin" />
+            <DataCompletenessIndicator 
+              status={completeness} 
+              variant="admin" 
+            />
           </div>
 
           {/* Quick Stats */}
