@@ -3,11 +3,14 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { assignComponentToModel, removeComponentFromModel } from "@/services/modelComponent/assignmentService";
+import { useComponentAssignmentRefresh } from "@/hooks/useComponentAssignmentRefresh";
 
 export const useAssignmentActions = (model: any) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const { refreshAfterAssignment } = useComponentAssignmentRefresh();
 
   // Fetch current assignments for this model
   const { data: assignments = [], refetch } = useQuery({
@@ -26,44 +29,37 @@ export const useAssignmentActions = (model: any) => {
   });
 
   const handleAssignComponent = async (componentType: string, componentId: string) => {
+    if (!model?.id) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No model selected"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const existingAssignment = assignments.find(a => a.component_type === componentType);
+      console.log(`Assigning ${componentType} to model ${model.id}`);
       
-      if (existingAssignment) {
-        // Update existing assignment
-        const { error } = await supabase
-          .from('model_component_assignments')
-          .update({ 
-            component_id: componentId, 
-            updated_at: new Date().toISOString() 
-          })
-          .eq('id', existingAssignment.id);
+      const result = await assignComponentToModel(model.id, componentType as any, componentId);
+      
+      if (result) {
+        await Promise.all([
+          refetch(),
+          refreshAfterAssignment(model.id),
+          queryClient.invalidateQueries({ queryKey: ['model-assignments-status'] })
+        ]);
         
-        if (error) throw error;
+        toast({
+          title: "Component Assigned",
+          description: `${componentType.replace('_', ' ')} has been assigned to ${model.name}.`
+        });
       } else {
-        // Create new assignment
-        const { error } = await supabase
-          .from('model_component_assignments')
-          .insert({
-            model_id: model.id,
-            component_type: componentType,
-            component_id: componentId,
-            assignment_type: 'standard',
-            is_default: true
-          });
-        
-        if (error) throw error;
+        throw new Error('Assignment failed - no result returned');
       }
-      
-      await refetch();
-      queryClient.invalidateQueries({ queryKey: ['model-assignments-status'] });
-      
-      toast({
-        title: "Component Assigned",
-        description: `${componentType.replace('_', ' ')} has been assigned to ${model.name}.`
-      });
     } catch (error: any) {
+      console.error('Assignment error:', error);
       toast({
         variant: "destructive",
         title: "Assignment Failed",
@@ -75,24 +71,33 @@ export const useAssignmentActions = (model: any) => {
   };
 
   const handleRemoveComponent = async (componentType: string) => {
+    if (!model?.id) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No model selected"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('model_component_assignments')
-        .delete()
-        .eq('model_id', model.id)
-        .eq('component_type', componentType);
+      console.log(`Removing ${componentType} from model ${model.id}`);
       
-      if (error) throw error;
+      await removeComponentFromModel(model.id, componentType as any);
       
-      await refetch();
-      queryClient.invalidateQueries({ queryKey: ['model-assignments-status'] });
+      await Promise.all([
+        refetch(),
+        refreshAfterAssignment(model.id),
+        queryClient.invalidateQueries({ queryKey: ['model-assignments-status'] })
+      ]);
       
       toast({
         title: "Component Removed",
         description: `${componentType.replace('_', ' ')} has been removed from ${model.name}.`
       });
     } catch (error: any) {
+      console.error('Removal error:', error);
       toast({
         variant: "destructive",
         title: "Removal Failed",

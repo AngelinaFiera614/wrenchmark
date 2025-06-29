@@ -5,52 +5,64 @@ import { useQueryClient } from '@tanstack/react-query';
 export function useComponentAssignmentRefresh() {
   const queryClient = useQueryClient();
 
-  const refreshAfterAssignment = useCallback((modelId: string) => {
-    // Invalidate queries related to the specific model
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const queryKey = query.queryKey;
-        return (
-          // Invalidate motorcycle queries
-          (Array.isArray(queryKey) && queryKey.includes('motorcycles')) ||
-          // Invalidate specific model queries
-          (Array.isArray(queryKey) && queryKey.includes(modelId)) ||
-          // Invalidate completeness queries
-          (Array.isArray(queryKey) && queryKey.some(key => 
-            typeof key === 'string' && key.includes('completeness')
-          )) ||
-          // Invalidate model assignments
-          (Array.isArray(queryKey) && queryKey.includes('model-assignments'))
-        );
-      }
-    });
+  const refreshAfterAssignment = useCallback(async (modelId: string) => {
+    console.log(`Refreshing data after assignment for model: ${modelId}`);
+    
+    // Invalidate specific queries that depend on component assignments
+    await Promise.all([
+      // Model component assignments
+      queryClient.invalidateQueries({
+        queryKey: ['model-component-assignments', modelId]
+      }),
+      
+      // General model assignments status
+      queryClient.invalidateQueries({
+        queryKey: ['model-assignments-status']
+      }),
+      
+      // Admin motorcycle queries that include completeness data
+      queryClient.invalidateQueries({
+        queryKey: ['admin-motorcycle-models']
+      }),
+      
+      // Any motorcycles queries
+      queryClient.invalidateQueries({
+        queryKey: ['motorcycles']
+      }),
+      
+      // Models with assignments
+      queryClient.invalidateQueries({
+        queryKey: ['models-with-assignments']
+      })
+    ]);
 
-    // Also refetch any cached data for this specific model
-    queryClient.refetchQueries({
-      predicate: (query) => {
-        const queryKey = query.queryKey;
-        return Array.isArray(queryKey) && queryKey.includes(modelId);
-      }
-    });
+    console.log('Query invalidation complete');
   }, [queryClient]);
 
-  const refreshAllAssignments = useCallback(() => {
+  const refreshAllAssignments = useCallback(async () => {
+    console.log('Refreshing all assignment data');
+    
     // Invalidate all related queries
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const queryKey = query.queryKey;
-        return (
-          Array.isArray(queryKey) && (
+    await Promise.all([
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && (
             queryKey.includes('motorcycles') ||
             queryKey.includes('models-with-assignments') ||
             queryKey.includes('model-assignments') ||
             queryKey.some(key => 
-              typeof key === 'string' && key.includes('completeness')
+              typeof key === 'string' && (
+                key.includes('completeness') ||
+                key.includes('assignment')
+              )
             )
-          )
-        );
-      }
-    });
+          );
+        }
+      })
+    ]);
+
+    console.log('All queries invalidated');
   }, [queryClient]);
 
   return {

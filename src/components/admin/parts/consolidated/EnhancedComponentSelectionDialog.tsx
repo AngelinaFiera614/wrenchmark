@@ -1,196 +1,262 @@
 
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, 
-  Library, 
-  Plus,
-  Check,
-  X
-} from "lucide-react";
-import ComponentLibraryIntegration from "./ComponentLibraryIntegration";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { assignComponentToModel, removeComponentFromModel } from "@/services/modelComponentService";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle, Settings, AlertCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { assignComponentToModel, removeComponentFromModel } from "@/services/modelComponent/assignmentService";
+import { useComponentAssignmentRefresh } from "@/hooks/useComponentAssignmentRefresh";
 
 interface EnhancedComponentSelectionDialogProps {
   open: boolean;
   onClose: () => void;
   componentType: string | null;
-  modelId?: string;
   currentComponentId?: string;
   onComponentAssigned: () => void;
+  modelId?: string;
 }
 
-const EnhancedComponentSelectionDialog: React.FC<EnhancedComponentSelectionDialogProps> = ({
+const EnhancedComponentSelectionDialog = ({
   open,
   onClose,
   componentType,
-  modelId,
   currentComponentId,
-  onComponentAssigned
-}) => {
-  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(currentComponentId || null);
-  const [activeTab, setActiveTab] = useState("library");
+  onComponentAssigned,
+  modelId
+}: EnhancedComponentSelectionDialogProps) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [assigning, setAssigning] = useState(false);
+  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(currentComponentId || null);
+  const { refreshAfterAssignment } = useComponentAssignmentRefresh();
 
-  const getComponentTypeLabel = (type: string | null) => {
-    const labels: Record<string, string> = {
-      engine: "Engine",
-      brake_system: "Brake System",
-      frame: "Frame",
-      suspension: "Suspension",
-      wheel: "Wheels"
-    };
-    return type ? labels[type] || type : "Component";
+  // Get the table name for the component type
+  const getTableName = (type: string) => {
+    switch (type) {
+      case 'engine': return 'engines';
+      case 'brake_system': return 'brake_systems';
+      case 'frame': return 'frames';
+      case 'suspension': return 'suspensions';
+      case 'wheel': return 'wheels';
+      default: return 'engines';
+    }
   };
 
-  // Assign component mutation
-  const assignComponentMutation = useMutation({
-    mutationFn: async (componentId: string | null) => {
-      if (!modelId || !componentType) throw new Error("Missing model ID or component type");
+  // Fetch available components
+  const { data: components = [], isLoading } = useQuery({
+    queryKey: ['components', componentType],
+    queryFn: async () => {
+      if (!componentType) return [];
       
-      if (componentId) {
-        return await assignComponentToModel(modelId, componentType as any, componentId);
-      } else {
-        return await removeComponentFromModel(modelId, componentType as any);
+      const tableName = getTableName(componentType);
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('is_draft', false)
+        .order('name');
+
+      if (error) {
+        console.error(`Error fetching ${componentType} components:`, error);
+        throw error;
       }
+      
+      return data || [];
     },
-    onSuccess: () => {
+    enabled: !!componentType && open
+  });
+
+  const handleAssignComponent = async (componentId: string) => {
+    if (!componentType || !modelId) {
       toast({
-        title: "Component Assignment Updated",
-        description: `${getComponentTypeLabel(componentType)} has been ${selectedComponentId ? 'assigned' : 'removed'} successfully.`
+        variant: "destructive",
+        title: "Error",
+        description: "Missing component type or model ID"
       });
-      queryClient.invalidateQueries({ queryKey: ["model-component-assignments"] });
-      onComponentAssigned();
-      onClose();
-    },
-    onError: (error) => {
-      console.error("Component assignment error:", error);
+      return;
+    }
+
+    setAssigning(true);
+    try {
+      console.log(`Assigning ${componentType} component ${componentId} to model ${modelId}`);
+      
+      const result = await assignComponentToModel(modelId, componentType as any, componentId);
+      
+      if (result) {
+        toast({
+          title: "Component Assigned",
+          description: `${componentType.replace('_', ' ')} has been successfully assigned.`
+        });
+
+        // Refresh cache
+        await refreshAfterAssignment(modelId);
+        
+        // Call the callback to refresh parent components
+        onComponentAssigned();
+        
+        // Close dialog
+        onClose();
+      } else {
+        throw new Error('Assignment returned null');
+      }
+    } catch (error: any) {
+      console.error('Assignment error:', error);
       toast({
         variant: "destructive",
         title: "Assignment Failed",
-        description: "Failed to update component assignment. Please try again."
+        description: error.message || `Failed to assign ${componentType.replace('_', ' ')}`
       });
-    }
-  });
-
-  const handleAssign = () => {
-    if (selectedComponentId) {
-      assignComponentMutation.mutate(selectedComponentId);
+    } finally {
+      setAssigning(false);
     }
   };
 
-  const handleRemove = () => {
-    assignComponentMutation.mutate(null);
-  };
+  const handleRemoveComponent = async () => {
+    if (!componentType || !modelId) return;
 
-  const handleCreateNew = () => {
-    // This would open the component creation dialog
-    toast({
-      title: "Create New Component",
-      description: "Component creation dialog would open here."
-    });
+    setAssigning(true);
+    try {
+      console.log(`Removing ${componentType} component from model ${modelId}`);
+      
+      await removeComponentFromModel(modelId, componentType as any);
+      
+      toast({
+        title: "Component Removed",
+        description: `${componentType.replace('_', ' ')} has been removed.`
+      });
+
+      // Refresh cache
+      await refreshAfterAssignment(modelId);
+      
+      // Call the callback to refresh parent components
+      onComponentAssigned();
+      
+      // Close dialog
+      onClose();
+    } catch (error: any) {
+      console.error('Removal error:', error);
+      toast({
+        variant: "destructive",
+        title: "Removal Failed",
+        description: error.message || `Failed to remove ${componentType.replace('_', ' ')}`
+      });
+    } finally {
+      setAssigning(false);
+    }
   };
 
   if (!componentType) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-explorer-card border-explorer-chrome/30">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-explorer-text flex items-center gap-2">
-            <Library className="h-5 w-5 text-accent-teal" />
-            Select {getComponentTypeLabel(componentType)}
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Select {componentType.replace('_', ' ')} Component
           </DialogTitle>
         </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="library" className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              Component Library
-            </TabsTrigger>
-            <TabsTrigger value="create" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Create New
-            </TabsTrigger>
-          </TabsList>
 
-          <div className="mt-4 overflow-y-auto max-h-[60vh]">
-            <TabsContent value="library" className="mt-0">
-              <ComponentLibraryIntegration
-                componentType={componentType}
-                onComponentSelect={setSelectedComponentId}
-                onCreateNew={() => setActiveTab("create")}
-                selectedComponentId={selectedComponentId || undefined}
-              />
-            </TabsContent>
-
-            <TabsContent value="create" className="mt-0">
-              <div className="text-center py-8">
-                <Plus className="h-12 w-12 text-explorer-text-muted mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-explorer-text mb-2">
-                  Create New {getComponentTypeLabel(componentType)}
-                </h3>
-                <p className="text-explorer-text-muted mb-4">
-                  Component creation form would be integrated here
-                </p>
-                <Button onClick={handleCreateNew} className="bg-accent-teal text-black hover:bg-accent-teal/80">
-                  Open Creation Form
+        <div className="space-y-4">
+          {currentComponentId && (
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800">
+                    Current Assignment
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveComponent}
+                  disabled={assigning}
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  {assigning ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Remove"
+                  )}
                 </Button>
               </div>
-            </TabsContent>
-          </div>
-        </Tabs>
+            </div>
+          )}
 
-        {/* Actions */}
-        <div className="flex justify-between pt-4 border-t border-explorer-chrome/30">
-          <div>
-            {currentComponentId && (
-              <Button
-                variant="outline"
-                onClick={handleRemove}
-                disabled={assignComponentMutation.isPending}
-                className="border-red-400/30 text-red-400 hover:bg-red-400/10"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Remove Current
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex gap-2">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-accent-teal" />
+              <span className="ml-2 text-muted-foreground">Loading components...</span>
+            </div>
+          ) : components.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No {componentType.replace('_', ' ')} components available</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {components.map((component: any) => (
+                <Card
+                  key={component.id}
+                  className={`cursor-pointer transition-colors ${
+                    selectedComponentId === component.id
+                      ? 'ring-2 ring-accent-teal bg-accent-teal/5'
+                      : 'hover:bg-muted/50'
+                  }`}
+                  onClick={() => setSelectedComponentId(component.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium">{component.name || 'Unnamed Component'}</h4>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {componentType === 'engine' && component.displacement_cc && (
+                            <span>{component.displacement_cc}cc</span>
+                          )}
+                          {componentType === 'brake_system' && component.type && (
+                            <span>{component.type}</span>
+                          )}
+                          {componentType === 'frame' && component.material && (
+                            <span>{component.material}</span>
+                          )}
+                        </div>
+                      </div>
+                      {currentComponentId === component.id && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          Current
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={onClose} disabled={assigning}>
+            Cancel
+          </Button>
+          {selectedComponentId && selectedComponentId !== currentComponentId && (
             <Button
-              variant="outline"
-              onClick={onClose}
-              className="border-explorer-chrome/30 text-explorer-text"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAssign}
-              disabled={!selectedComponentId || assignComponentMutation.isPending}
+              onClick={() => handleAssignComponent(selectedComponentId)}
+              disabled={assigning}
               className="bg-accent-teal text-black hover:bg-accent-teal/80"
             >
-              {assignComponentMutation.isPending ? (
-                "Assigning..."
-              ) : (
+              {assigning ? (
                 <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Assign Component
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Assigning...
                 </>
+              ) : (
+                "Assign Component"
               )}
             </Button>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

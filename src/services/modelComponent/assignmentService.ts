@@ -7,52 +7,36 @@ export const assignComponentToModel = async (
   componentType: ComponentType,
   componentId: string
 ): Promise<ModelComponentAssignment | null> => {
-  // First check if assignment already exists
-  const { data: existing } = await supabase
-    .from('model_component_assignments')
-    .select('*')
-    .eq('model_id', modelId)
-    .eq('component_type', componentType)
-    .single();
-
-  if (existing) {
-    // Update existing assignment
-    const { data, error } = await supabase
-      .from('model_component_assignments')
-      .update({ 
-        component_id: componentId, 
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', existing.id)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('Error updating model component assignment:', error);
-      throw error;
-    }
+  try {
+    console.log(`Assigning ${componentType} component ${componentId} to model ${modelId}`);
     
-    return data;
-  } else {
-    // Create new assignment
+    // Use upsert with proper conflict resolution
     const { data, error } = await supabase
       .from('model_component_assignments')
-      .insert({
+      .upsert({
         model_id: modelId,
         component_type: componentType,
         component_id: componentId,
         assignment_type: 'standard',
-        is_default: true
+        is_default: true,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'model_id,component_type',
+        ignoreDuplicates: false
       })
       .select()
       .single();
       
     if (error) {
       console.error('Error assigning component to model:', error);
-      throw error;
+      throw new Error(`Failed to assign ${componentType}: ${error.message}`);
     }
     
+    console.log('Component assignment successful:', data);
     return data;
+  } catch (error) {
+    console.error('Assignment service error:', error);
+    throw error;
   }
 };
 
@@ -60,18 +44,26 @@ export const removeComponentFromModel = async (
   modelId: string,
   componentType: ComponentType
 ): Promise<boolean> => {
-  const { error } = await supabase
-    .from('model_component_assignments')
-    .delete()
-    .eq('model_id', modelId)
-    .eq('component_type', componentType);
+  try {
+    console.log(`Removing ${componentType} component from model ${modelId}`);
     
-  if (error) {
-    console.error('Error removing component from model:', error);
+    const { error } = await supabase
+      .from('model_component_assignments')
+      .delete()
+      .eq('model_id', modelId)
+      .eq('component_type', componentType);
+      
+    if (error) {
+      console.error('Error removing component from model:', error);
+      throw new Error(`Failed to remove ${componentType}: ${error.message}`);
+    }
+    
+    console.log('Component removal successful');
+    return true;
+  } catch (error) {
+    console.error('Removal service error:', error);
     throw error;
   }
-  
-  return true;
 };
 
 export const bulkAssignComponents = async (
@@ -81,24 +73,34 @@ export const bulkAssignComponents = async (
     componentId: string;
   }>
 ): Promise<boolean> => {
-  const insertData = assignments.map(assignment => ({
-    model_id: assignment.modelId,
-    component_type: assignment.componentType,
-    component_id: assignment.componentId,
-    assignment_type: 'standard',
-    is_default: true
-  }));
-
-  const { error } = await supabase
-    .from('model_component_assignments')
-    .upsert(insertData, {
-      onConflict: 'model_id,component_type'
-    });
+  try {
+    console.log('Bulk assigning components:', assignments);
     
-  if (error) {
-    console.error('Error bulk assigning components:', error);
+    const insertData = assignments.map(assignment => ({
+      model_id: assignment.modelId,
+      component_type: assignment.componentType,
+      component_id: assignment.componentId,
+      assignment_type: 'standard',
+      is_default: true,
+      updated_at: new Date().toISOString()
+    }));
+
+    const { error } = await supabase
+      .from('model_component_assignments')
+      .upsert(insertData, {
+        onConflict: 'model_id,component_type',
+        ignoreDuplicates: false
+      });
+      
+    if (error) {
+      console.error('Error bulk assigning components:', error);
+      throw new Error(`Bulk assignment failed: ${error.message}`);
+    }
+    
+    console.log('Bulk assignment successful');
+    return true;
+  } catch (error) {
+    console.error('Bulk assignment service error:', error);
     throw error;
   }
-  
-  return true;
 };
