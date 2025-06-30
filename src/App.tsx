@@ -37,6 +37,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import NewPartsManagementLayout from "./components/admin/parts/NewPartsManagementLayout";
 import ColorOptionsManager from "./components/admin/colors/ColorOptionsManager";
 import AdminSecurity from "./pages/admin/AdminSecurity";
+import AdminErrorBoundary from "./components/admin/shared/AdminErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -73,13 +74,19 @@ const App = () => (
           {/* Protected Admin Routes */}
           <Route path="/admin" element={
             <AdminAuthGuard>
-              <AdminLayout />
+              <AdminErrorBoundary>
+                <AdminLayout />
+              </AdminErrorBoundary>
             </AdminAuthGuard>
           }>
             <Route index element={<AdminDashboard />} />
             <Route path="brands" element={<AdminBrands />} />
             <Route path="system" element={<AdminSystemSettings />} />
-            <Route path="motorcycle-management" element={<AdminMotorcycleManagement />} />
+            <Route path="motorcycle-management" element={
+              <AdminErrorBoundary>
+                <AdminMotorcycleManagement />
+              </AdminErrorBoundary>
+            } />
             <Route path="parts-hub" element={<AdminPartsHub />} />
             <Route path="parts/*" element={<NewPartsManagementLayout />} />
             <Route path="glossary" element={<AdminGlossary />} />
