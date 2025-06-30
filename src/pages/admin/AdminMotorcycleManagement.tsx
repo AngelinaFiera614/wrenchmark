@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
@@ -10,14 +11,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
 
-// Import new components
+// Import components
 import AdminMotorcycleHeader from "@/components/admin/motorcycles/AdminMotorcycleHeader";
 import AdminMotorcycleStats from "@/components/admin/motorcycles/AdminMotorcycleStats";
 import AdminMotorcycleList from "@/components/admin/motorcycles/AdminMotorcycleList";
 import AdminMotorcycleDebug from "@/components/admin/motorcycles/AdminMotorcycleDebug";
 import AdminMotorcycleDialogs from "@/components/admin/motorcycles/AdminMotorcycleDialogs";
-import MotorcycleFilters from "@/components/admin/motorcycles/MotorcycleFilters";
 import BulkSelectionToolbar from "@/components/admin/motorcycles/BulkSelectionToolbar";
+import EnhancedMotorcycleFilters from "@/components/admin/motorcycles/EnhancedMotorcycleFilters";
+import MotorcyclePagination from "@/components/admin/motorcycles/MotorcyclePagination";
+
+interface EnhancedFilters {
+  search: string;
+  brands: string[];
+  categories: string[];
+  statuses: string[];
+  yearRange: [number, number];
+  engineSizeRange: [number, number];
+  hasAbs: 'all' | 'yes' | 'no';
+}
 
 const AdminMotorcycleManagement = () => {
   const [activeTab, setActiveTab] = useState("browse");
@@ -28,19 +40,35 @@ const AdminMotorcycleManagement = () => {
   const [selectedMotorcycleForEdit, setSelectedMotorcycleForEdit] = useState<Motorcycle | null>(null);
   const [selectedMotorcycleForComponents, setSelectedMotorcycleForComponents] = useState<any | null>(null);
   const [isComponentOperationInProgress, setIsComponentOperationInProgress] = useState(false);
+  
+  // Enhanced filtering state
+  const [enhancedFilters, setEnhancedFilters] = useState<EnhancedFilters>({
+    search: '',
+    brands: [],
+    categories: [],
+    statuses: [],
+    yearRange: [1900, 2030],
+    engineSizeRange: [0, 3000],
+    hasAbs: 'all'
+  });
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  
   const { toast } = useToast();
   
   const {
-    motorcycles,
+    motorcycles: allMotorcycles,
     brands,
     stats,
     componentStats,
-    filters,
+    filters: oldFilters,
     isLoading,
     error,
     isEnabled,
-    handleFilterChange,
-    clearFilters,
+    handleFilterChange: oldHandleFilterChange,
+    clearFilters: oldClearFilters,
     refetch,
     isDraftMode
   } = useSimpleMotorcycleData();
@@ -55,6 +83,61 @@ const AdminMotorcycleManagement = () => {
     handleBulkExport,
     handleBulkDelete
   } = useBulkMotorcycleActions();
+
+  // Apply enhanced filters to motorcycles
+  const filteredMotorcycles = useMemo(() => {
+    return allMotorcycles.filter(motorcycle => {
+      // Search filter
+      if (enhancedFilters.search) {
+        const searchTerm = enhancedFilters.search.toLowerCase();
+        const searchMatch = 
+          motorcycle.name?.toLowerCase().includes(searchTerm) ||
+          motorcycle.brand?.name?.toLowerCase().includes(searchTerm) ||
+          motorcycle.brands?.name?.toLowerCase().includes(searchTerm) ||
+          motorcycle.type?.toLowerCase().includes(searchTerm);
+        if (!searchMatch) return false;
+      }
+      
+      // Brand filter
+      if (enhancedFilters.brands.length > 0) {
+        const brandName = motorcycle.brand?.name || motorcycle.brands?.name;
+        if (!brandName || !enhancedFilters.brands.includes(brandName)) return false;
+      }
+      
+      // Category filter
+      if (enhancedFilters.categories.length > 0) {
+        if (!motorcycle.type || !enhancedFilters.categories.includes(motorcycle.type)) return false;
+      }
+      
+      // Status filter
+      if (enhancedFilters.statuses.length > 0) {
+        const status = motorcycle.is_draft ? 'draft' : 'published';
+        if (!enhancedFilters.statuses.includes(status)) return false;
+      }
+      
+      // ABS filter
+      if (enhancedFilters.hasAbs !== 'all') {
+        const hasAbs = motorcycle.has_abs === true;
+        if (enhancedFilters.hasAbs === 'yes' && !hasAbs) return false;
+        if (enhancedFilters.hasAbs === 'no' && hasAbs) return false;
+      }
+      
+      return true;
+    });
+  }, [allMotorcycles, enhancedFilters]);
+
+  // Paginated motorcycles
+  const paginatedMotorcycles = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredMotorcycles.slice(startIndex, startIndex + pageSize);
+  }, [filteredMotorcycles, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredMotorcycles.length / pageSize);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [enhancedFilters]);
 
   // Create debounced refresh function
   const debouncedRefresh = useDebounceRefresh(() => {
@@ -71,6 +154,18 @@ const AdminMotorcycleManagement = () => {
       debouncedRefresh();
     }
   }, [componentDialogOpen, selectedMotorcycleForComponents, isComponentOperationInProgress, debouncedRefresh]);
+
+  const handleClearEnhancedFilters = () => {
+    setEnhancedFilters({
+      search: '',
+      brands: [],
+      categories: [],
+      statuses: [],
+      yearRange: [1900, 2030],
+      engineSizeRange: [0, 3000],
+      hasAbs: 'all'
+    });
+  };
 
   const handleEditMotorcycle = (motorcycle: Motorcycle) => {
     setSelectedMotorcycleForEdit(motorcycle);
@@ -111,7 +206,7 @@ const AdminMotorcycleManagement = () => {
   };
 
   const handleToggleStatus = async (id: string) => {
-    const motorcycle = motorcycles.find(m => m.id === id);
+    const motorcycle = allMotorcycles.find(m => m.id === id);
     if (!motorcycle) return;
 
     try {
@@ -139,7 +234,7 @@ const AdminMotorcycleManagement = () => {
   };
 
   const handleExportAll = () => {
-    const exportData = motorcycles.map(motorcycle => ({
+    const exportData = filteredMotorcycles.map(motorcycle => ({
       id: motorcycle.id,
       name: motorcycle.name,
       brand: motorcycle.brand?.name || motorcycle.brands?.name || 'Unknown',
@@ -154,7 +249,7 @@ const AdminMotorcycleManagement = () => {
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const exportFileDefaultName = `all_motorcycles_${new Date().toISOString().split('T')[0]}.json`;
+    const exportFileDefaultName = `filtered_motorcycles_${new Date().toISOString().split('T')[0]}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -163,7 +258,7 @@ const AdminMotorcycleManagement = () => {
 
     toast({
       title: "Export Complete",
-      description: `${motorcycles.length} motorcycles exported successfully.`
+      description: `${filteredMotorcycles.length} motorcycles exported successfully.`
     });
   };
 
@@ -194,7 +289,7 @@ const AdminMotorcycleManagement = () => {
     );
   }
 
-  const allSelected = selectedIds.length === motorcycles.length && motorcycles.length > 0;
+  const allSelected = selectedIds.length === paginatedMotorcycles.length && paginatedMotorcycles.length > 0;
 
   return (
     <div className="h-full flex flex-col space-y-4">
@@ -220,28 +315,28 @@ const AdminMotorcycleManagement = () => {
         </TabsList>
 
         <TabsContent value="browse" className="flex-1 flex flex-col mt-4 space-y-3">
-          <MotorcycleFilters
-            filters={filters}
-            brands={brands}
-            onFilterChange={handleFilterChange}
-            onClearFilters={clearFilters}
-            resultCount={motorcycles.length}
+          <EnhancedMotorcycleFilters
+            filters={enhancedFilters}
+            motorcycles={allMotorcycles}
+            onFilterChange={setEnhancedFilters}
+            onClearFilters={handleClearEnhancedFilters}
+            isLoading={isLoading}
           />
 
           <BulkSelectionToolbar
             selectedCount={selectedIds.length}
-            totalCount={motorcycles.length}
+            totalCount={paginatedMotorcycles.length}
             allSelected={allSelected}
-            onSelectAll={() => handleSelectAll(motorcycles)}
+            onSelectAll={() => handleSelectAll(paginatedMotorcycles)}
             onClearSelection={handleClearSelection}
             onBulkPublish={() => handleBulkPublish(refetch)}
             onBulkDraft={() => handleBulkDraft(refetch)}
-            onBulkExport={() => handleBulkExport(motorcycles)}
+            onBulkExport={() => handleBulkExport(paginatedMotorcycles)}
             onBulkDelete={() => handleBulkDelete(refetch)}
           />
 
           <AdminMotorcycleList
-            motorcycles={motorcycles}
+            motorcycles={paginatedMotorcycles}
             selectedIds={selectedIds}
             isLoading={isLoading || isComponentOperationInProgress}
             error={error}
@@ -254,17 +349,27 @@ const AdminMotorcycleManagement = () => {
             onRefresh={refetch}
             onAddMotorcycle={() => setAddDialogOpen(true)}
           />
+
+          <MotorcyclePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={filteredMotorcycles.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            isLoading={isLoading}
+          />
         </TabsContent>
 
         <TabsContent value="debug" className="flex-1 mt-4">
           <AdminMotorcycleDebug
             isEnabled={isEnabled}
-            motorcyclesCount={motorcycles.length}
+            motorcyclesCount={allMotorcycles.length}
             brandsCount={brands.length}
             isLoading={isLoading}
             error={error}
             isDraftMode={isDraftMode}
-            filters={filters}
+            filters={oldFilters}
             componentStats={componentStats}
           />
         </TabsContent>
