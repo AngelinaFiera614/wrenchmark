@@ -9,7 +9,7 @@ import { Motorcycle } from "@/types";
 import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
 import { useMotorcycleForm } from "@/hooks/useMotorcycleForm";
 import MotorcycleBasicInfoForm from "./forms/MotorcycleBasicInfoForm";
-import EnhancedMotorcycleSpecsForm from "./forms/EnhancedMotorcycleSpecsForm";
+import SmartMotorcycleSpecsForm from "./forms/SmartMotorcycleSpecsForm";
 import MotorcycleComponentsForm from "./forms/MotorcycleComponentsForm";
 import MotorcycleYearsForm from "./forms/MotorcycleYearsForm";
 import MotorcycleAdminNotes from "./MotorcycleAdminNotes";
@@ -21,7 +21,7 @@ interface MotorcycleDetailsPanelProps {
 }
 
 const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanelProps) => {
-  const [isEditing, setIsEditing] = useState(true); // Start in edit mode for comprehensive editing
+  const [isEditing, setIsEditing] = useState(true);
   const [activeTab, setActiveTab] = useState("basic");
   
   const {
@@ -56,6 +56,11 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
 
   const handlePreview = () => {
     window.open(`/motorcycles/${motorcycle.slug}`, '_blank');
+  };
+
+  const handleEditComponent = (componentType: string, componentId: string) => {
+    console.log(`Edit ${componentType} component:`, componentId);
+    // This could open a component editing dialog or navigate to component management
   };
 
   return (
@@ -144,10 +149,11 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
                 </TabsContent>
 
                 <TabsContent value="specs" className="mt-0">
-                  <EnhancedMotorcycleSpecsForm
+                  <SmartMotorcycleSpecsForm
                     motorcycle={formData as Motorcycle}
                     isEditing={isEditing}
                     onUpdate={updateField}
+                    onEditComponent={handleEditComponent}
                   />
                 </TabsContent>
 
@@ -184,7 +190,6 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
         <ComponentCompletionPanel
           motorcycle={formData as Motorcycle}
           onManageComponents={() => {
-            // This could trigger component management dialog
             console.log('Manage components for:', formData.id);
           }}
         />
@@ -192,21 +197,29 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
         {/* Quick completion tips */}
         <Card className="bg-explorer-card border-explorer-chrome/30">
           <CardHeader>
-            <CardTitle className="text-explorer-text text-sm">Quick Tips for 100%</CardTitle>
+            <CardTitle className="text-explorer-text text-sm">Smart Data Integration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-xs text-explorer-text-muted space-y-1">
-              {completeness.missingFields.slice(0, 5).map((field, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div className="w-1 h-1 bg-red-400 rounded-full"></div>
-                  <span>Add {field.toLowerCase()}</span>
-                </div>
-              ))}
-              {completeness.missingFields.length > 5 && (
-                <div className="text-explorer-text-muted">
-                  +{completeness.missingFields.length - 5} more fields...
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                <span>Green badges = Data from linked components</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                <span>Blue badges = Model-level overrides</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-1 bg-yellow-400 rounded-full"></div>
+                <span>Yellow badges = Data conflicts need attention</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                <span>Red badges = Missing data</span>
+              </div>
+            </div>
+            <div className="text-xs text-explorer-text-muted mt-2 pt-2 border-t border-explorer-chrome/30">
+              Use "Sync from Component" buttons to eliminate duplicate data entry.
             </div>
           </CardContent>
         </Card>

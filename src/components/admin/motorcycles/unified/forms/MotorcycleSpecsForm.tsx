@@ -1,6 +1,6 @@
 
 import React from "react";
-import EnhancedMotorcycleSpecsForm from "./EnhancedMotorcycleSpecsForm";
+import SmartMotorcycleSpecsForm from "./SmartMotorcycleSpecsForm";
 import { Motorcycle } from "@/types";
 
 interface MotorcycleSpecsFormProps {
@@ -9,9 +9,9 @@ interface MotorcycleSpecsFormProps {
   onUpdate: (field: string, value: any) => void;
 }
 
-// This component now delegates to the enhanced version
+// This component now delegates to the smart version
 const MotorcycleSpecsForm = (props: MotorcycleSpecsFormProps) => {
-  return <EnhancedMotorcycleSpecsForm {...props} />;
+  return <SmartMotorcycleSpecsForm {...props} />;
 };
 
 export default MotorcycleSpecsForm;
