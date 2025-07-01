@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -86,20 +87,22 @@ const AdminMotorcycleManagement = () => {
   useEffect(() => {
     const fetchCompleteData = async () => {
       try {
-        // Fetch all brands with counts
+        // Fetch all brands with counts - Fixed to include id field
         const { data: brandsData } = await supabase
           .from('brands')
           .select(`
             id,
-            name,
-            motorcycle_models!inner(id)
+            name
           `);
 
         if (brandsData) {
+          // Calculate counts for each brand
           const brandOptions = brandsData.map(brand => ({
             id: brand.id,
             name: brand.name,
-            count: brand.motorcycle_models?.length || 0
+            count: allMotorcycles.filter(m => 
+              m.brand?.id === brand.id || m.brands?.id === brand.id
+            ).length
           })).sort((a, b) => a.name.localeCompare(b.name));
           setAllBrands(brandOptions);
         }
