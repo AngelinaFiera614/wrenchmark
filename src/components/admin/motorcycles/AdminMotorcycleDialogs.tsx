@@ -2,7 +2,7 @@
 import React from "react";
 import { Brand, Motorcycle } from "@/types";
 import AddMotorcycleDialog from "./AddMotorcycleDialog";
-import EditMotorcycleDialog from "./EditMotorcycleDialog";
+import ComprehensiveEditDialog from "./ComprehensiveEditDialog";
 import ImportMotorcycleDialog from "./ImportMotorcycleDialog";
 import ComponentManagementDialog from "./ComponentManagementDialog";
 
@@ -44,11 +44,10 @@ const AdminMotorcycleDialogs = ({
         onSuccess={onSuccess}
       />
 
-      <EditMotorcycleDialog
+      <ComprehensiveEditDialog
         open={editDialogOpen}
         onOpenChange={onEditDialogChange}
         motorcycle={selectedMotorcycleForEdit}
-        brands={brands}
         onSuccess={onSuccess}
       />
 
