@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -96,13 +95,15 @@ const AdminMotorcycleManagement = () => {
           `);
 
         if (brandsData) {
-          // Calculate counts for each brand
+          // Calculate counts for each brand - Fixed to use proper brand property access
           const brandOptions = brandsData.map(brand => ({
             id: brand.id,
             name: brand.name,
-            count: allMotorcycles.filter(m => 
-              m.brand?.id === brand.id || m.brands?.id === brand.id
-            ).length
+            count: allMotorcycles.filter(m => {
+              // Handle both brand and brands properties consistently
+              const brandId = m.brand?.id || m.brands?.id;
+              return brandId === brand.id;
+            }).length
           })).sort((a, b) => a.name.localeCompare(b.name));
           setAllBrands(brandOptions);
         }
@@ -144,7 +145,7 @@ const AdminMotorcycleManagement = () => {
         if (!searchMatch) return false;
       }
       
-      // Brand filter
+      // Brand filter - Fixed to use proper brand property access
       if (consolidatedFilters.brands.length > 0) {
         const brandId = motorcycle.brand?.id || motorcycle.brands?.id;
         if (!brandId || !consolidatedFilters.brands.includes(brandId)) return false;

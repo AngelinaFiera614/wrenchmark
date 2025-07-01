@@ -67,8 +67,8 @@ export interface MotorcycleModel {
   ignore_autofill?: boolean;
   created_at?: string;
   updated_at?: string;
-  brands?: { name: string };
-  brand?: { name: string }; // For backward compatibility
+  brand?: Brand; // Fixed: Use proper Brand interface
+  brands?: Brand; // Fixed: Use proper Brand interface
   years?: ModelYear[];
   default_image_url?: string;
   base_description?: string;
@@ -107,8 +107,8 @@ export interface Motorcycle {
   is_draft: boolean;
   created_at?: string;
   updated_at?: string;
-  brands?: { name: string };
-  brand?: { name: string };
+  brand?: Brand; // Fixed: Use proper Brand interface
+  brands?: Brand; // Fixed: Use proper Brand interface
   years?: ModelYear[];
   default_image_url?: string;
   base_description?: string;
