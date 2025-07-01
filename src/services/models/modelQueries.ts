@@ -35,14 +35,9 @@ export const fetchMotorcycleModels = async (): Promise<MotorcycleModel[]> => {
       ignore_autofill: model.ignore_autofill || false,
       created_at: model.created_at,
       updated_at: model.updated_at,
-      // Properly handle brand relationship
-      brands: Array.isArray(model.brands) && model.brands.length > 0 
-        ? { name: model.brands[0].name }
-        : { name: "Unknown Brand" },
-      brand: Array.isArray(model.brands) && model.brands.length > 0
-        ? { name: model.brands[0].name }
-        : { name: "Unknown Brand" },
-      // Other optional fields
+      // Fix brand column references - use proper relationship data
+      brands: model.brands ? { name: model.brands.name } : { name: "Unknown Brand" },
+      brand: model.brands ? { name: model.brands.name } : { name: "Unknown Brand" },
       summary: model.summary,
       category: model.category,
       status: model.status,
@@ -103,15 +98,10 @@ export const fetchMotorcycleModelById = async (id: string): Promise<MotorcycleMo
       ignore_autofill: data.ignore_autofill || false,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      // Properly handle brand relationship
-      brands: Array.isArray(data.brands) && data.brands.length > 0 
-        ? { name: data.brands[0].name }
-        : { name: "Unknown Brand" },
-      brand: Array.isArray(data.brands) && data.brands.length > 0
-        ? { name: data.brands[0].name }
-        : { name: "Unknown Brand" },
+      // Fix brand column references - use proper relationship data
+      brands: data.brands ? { name: data.brands.name } : { name: "Unknown Brand" },
+      brand: data.brands ? { name: data.brands.name } : { name: "Unknown Brand" },
       years: data.model_years || [],
-      // Other optional fields
       summary: data.summary,
       category: data.category,
       status: data.status,
@@ -169,12 +159,9 @@ export const fetchMotorcycleModelBySlug = async (slug: string): Promise<Motorcyc
       ignore_autofill: data.ignore_autofill || false,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      brands: Array.isArray(data.brands) && data.brands.length > 0 
-        ? { name: data.brands[0].name }
-        : { name: "Unknown Brand" },
-      brand: Array.isArray(data.brands) && data.brands.length > 0
-        ? { name: data.brands[0].name }
-        : { name: "Unknown Brand" },
+      // Fix brand column references - use proper relationship data
+      brands: data.brands ? { name: data.brands.name } : { name: "Unknown Brand" },
+      brand: data.brands ? { name: data.brands.name } : { name: "Unknown Brand" },
       years: data.model_years || [],
       summary: data.summary,
       category: data.category,
@@ -232,12 +219,9 @@ export const searchMotorcycleModels = async (query: string): Promise<MotorcycleM
       ignore_autofill: model.ignore_autofill || false,
       created_at: model.created_at,
       updated_at: model.updated_at,
-      brands: Array.isArray(model.brands) && model.brands.length > 0 
-        ? { name: model.brands[0].name }
-        : { name: "Unknown Brand" },
-      brand: Array.isArray(model.brands) && model.brands.length > 0
-        ? { name: model.brands[0].name }
-        : { name: "Unknown Brand" },
+      // Fix brand column references - use proper relationship data
+      brands: model.brands ? { name: model.brands.name } : { name: "Unknown Brand" },
+      brand: model.brands ? { name: model.brands.name } : { name: "Unknown Brand" },
       summary: model.summary,
       category: model.category,
       status: model.status,

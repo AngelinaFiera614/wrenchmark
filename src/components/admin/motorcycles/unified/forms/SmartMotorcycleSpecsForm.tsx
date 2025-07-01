@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FileText, Wrench, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Motorcycle } from "@/types";
-import { SmartFieldRenderer } from "./SmartFieldRenderer";
+import { MeasurementAwareFieldRenderer } from "./MeasurementAwareFieldRenderer";
 import { useUnifiedMotorcycleData } from "@/hooks/useUnifiedMotorcycleData";
 
 interface SmartMotorcycleSpecsFormProps {
@@ -136,7 +136,7 @@ const SmartMotorcycleSpecsForm = ({
           <CardTitle className="text-explorer-text">Engine & Performance</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Engine Size"
             value={motorcycle.engine_size}
             componentValue={components.engine?.displacement_cc}
@@ -151,7 +151,7 @@ const SmartMotorcycleSpecsForm = ({
             componentName={components.engine?.name}
           />
           
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Horsepower"
             value={motorcycle.horsepower}
             componentValue={components.engine?.power_hp}
@@ -166,7 +166,7 @@ const SmartMotorcycleSpecsForm = ({
             componentName={components.engine?.name}
           />
           
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Torque"
             value={motorcycle.torque_nm}
             componentValue={components.engine?.torque_nm}
@@ -181,7 +181,7 @@ const SmartMotorcycleSpecsForm = ({
             componentName={components.engine?.name}
           />
           
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Top Speed"
             value={motorcycle.top_speed_kph}
             configValue={primaryStats?.top_speed_kph}
@@ -190,6 +190,7 @@ const SmartMotorcycleSpecsForm = ({
             onUpdate={onUpdate}
             type="number"
             unit="km/h"
+            measurementType="speed"
           />
         </CardContent>
       </Card>
@@ -200,7 +201,7 @@ const SmartMotorcycleSpecsForm = ({
           <CardTitle className="text-explorer-text">Physical Dimensions</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Weight"
             value={motorcycle.weight_kg}
             configValue={primaryConfig?.weight_kg}
@@ -210,9 +211,10 @@ const SmartMotorcycleSpecsForm = ({
             onSyncFromComponent={() => handleSyncFromComponent('weight_kg', primaryConfig?.weight_kg)}
             type="number"
             unit="kg"
+            measurementType="weight"
           />
           
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Seat Height"
             value={motorcycle.seat_height_mm}
             configValue={primaryConfig?.seat_height_mm}
@@ -222,9 +224,10 @@ const SmartMotorcycleSpecsForm = ({
             onSyncFromComponent={() => handleSyncFromComponent('seat_height_mm', primaryConfig?.seat_height_mm)}
             type="number"
             unit="mm"
+            measurementType="length"
           />
           
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Wheelbase"
             value={motorcycle.wheelbase_mm}
             configValue={primaryConfig?.wheelbase_mm}
@@ -234,9 +237,10 @@ const SmartMotorcycleSpecsForm = ({
             onSyncFromComponent={() => handleSyncFromComponent('wheelbase_mm', primaryConfig?.wheelbase_mm)}
             type="number"
             unit="mm"
+            measurementType="length"
           />
           
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Ground Clearance"
             value={motorcycle.ground_clearance_mm}
             configValue={primaryConfig?.ground_clearance_mm}
@@ -246,9 +250,10 @@ const SmartMotorcycleSpecsForm = ({
             onSyncFromComponent={() => handleSyncFromComponent('ground_clearance_mm', primaryConfig?.ground_clearance_mm)}
             type="number"
             unit="mm"
+            measurementType="length"
           />
           
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Fuel Capacity"
             value={motorcycle.fuel_capacity_l}
             configValue={primaryConfig?.fuel_capacity_l}
@@ -258,6 +263,7 @@ const SmartMotorcycleSpecsForm = ({
             onSyncFromComponent={() => handleSyncFromComponent('fuel_capacity_l', primaryConfig?.fuel_capacity_l)}
             type="number"
             unit="L"
+            measurementType="volume"
           />
         </CardContent>
       </Card>
@@ -268,7 +274,7 @@ const SmartMotorcycleSpecsForm = ({
           <CardTitle className="text-explorer-text">Additional Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Description"
             value={motorcycle.base_description}
             fieldKey="base_description"
@@ -277,7 +283,7 @@ const SmartMotorcycleSpecsForm = ({
             type="textarea"
           />
           
-          <SmartFieldRenderer
+          <MeasurementAwareFieldRenderer
             label="Summary"
             value={motorcycle.summary}
             fieldKey="summary"
@@ -289,7 +295,7 @@ const SmartMotorcycleSpecsForm = ({
           <Separator className="bg-explorer-chrome/30" />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SmartFieldRenderer
+            <MeasurementAwareFieldRenderer
               label="Production Start"
               value={motorcycle.production_start_year}
               fieldKey="production_start_year"
@@ -298,7 +304,7 @@ const SmartMotorcycleSpecsForm = ({
               type="number"
             />
             
-            <SmartFieldRenderer
+            <MeasurementAwareFieldRenderer
               label="Production End"
               value={motorcycle.production_end_year}
               fieldKey="production_end_year"
@@ -307,7 +313,7 @@ const SmartMotorcycleSpecsForm = ({
               type="number"
             />
             
-            <SmartFieldRenderer
+            <MeasurementAwareFieldRenderer
               label="Difficulty Level"
               value={motorcycle.difficulty_level}
               fieldKey="difficulty_level"

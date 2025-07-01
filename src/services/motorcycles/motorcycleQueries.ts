@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
-// Simplified query that gets basic motorcycle data with brands
+// Simplified query that gets basic motorcycle data with brands - fixed brand column reference
 export const MOTORCYCLE_SELECT_QUERY = `
   *,
   brands!motorcycle_models_brand_id_fkey(
@@ -11,7 +10,7 @@ export const MOTORCYCLE_SELECT_QUERY = `
   )
 `;
 
-// Enhanced query for detailed motorcycle data with all relationships
+// Enhanced query for detailed motorcycle data with all relationships - fixed brand column reference
 export const MOTORCYCLE_DETAIL_SELECT_QUERY = `
   *,
   brands!motorcycle_models_brand_id_fkey(
@@ -105,7 +104,7 @@ export const queryAllMotorcycles = async () => {
   console.log("=== queryAllMotorcycles ===");
   
   try {
-    // First, get basic motorcycle data
+    // First, get basic motorcycle data - use proper brand relationship
     const { data: basicData, error: basicError } = await supabase
       .from('motorcycle_models')
       .select(MOTORCYCLE_SELECT_QUERY)

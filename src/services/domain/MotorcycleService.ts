@@ -1,4 +1,3 @@
-
 import { BaseDataService, ServiceResponse, PaginatedResponse } from "../base/BaseDataService";
 import { supabase } from "@/integrations/supabase/client";
 import { Motorcycle } from "@/types";
@@ -20,7 +19,7 @@ export class MotorcycleService extends BaseDataService {
         .from('motorcycle_models')
         .select(`
           *,
-          brand:brands(
+          brands!motorcycle_models_brand_id_fkey(
             id,
             name,
             slug,
@@ -50,12 +49,12 @@ export class MotorcycleService extends BaseDataService {
       console.log('MotorcycleService.getAll query result:', result.data?.length || 0, 'items');
       
       if (result.data) {
-        // Transform the data to ensure consistent brand access
+        // Transform the data to ensure consistent brand access - fix the brand column issue
         const transformedData = result.data.map(item => ({
           ...item,
-          brand: item.brand || undefined,
-          brands: item.brand || undefined,
-          make: item.brand?.name || item.make || ''
+          // Create consistent brand access patterns
+          brand: item.brands || undefined,
+          make: item.brands?.name || ''
         }));
         
         return {
@@ -74,7 +73,7 @@ export class MotorcycleService extends BaseDataService {
         .from('motorcycle_models')
         .select(`
           *,
-          brand:brands(
+          brands!motorcycle_models_brand_id_fkey(
             id,
             name,
             slug,
@@ -102,7 +101,7 @@ export class MotorcycleService extends BaseDataService {
         .insert([data])
         .select(`
           *,
-          brand:brands(
+          brands!motorcycle_models_brand_id_fkey(
             id,
             name,
             slug,
