@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,15 +70,28 @@ const AdminMotorcycleList = ({
       <Card>
         <CardContent className="p-6 text-center">
           <p className="text-muted-foreground mb-4">
-            No {isDraftMode ? 'draft' : 'published'} motorcycles found
+            No motorcycles found with current filters
           </p>
-          <Button 
-            className="bg-accent-teal text-black hover:bg-accent-teal/80"
-            onClick={onAddMotorcycle}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Your First Motorcycle
-          </Button>
+          <p className="text-sm text-muted-foreground mb-4">
+            Try adjusting your search or filter settings to see more results.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button 
+              variant="outline"
+              onClick={onRefresh}
+              className="bg-explorer-dark border-explorer-chrome/30"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button 
+              className="bg-accent-teal text-black hover:bg-accent-teal/80"
+              onClick={onAddMotorcycle}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Motorcycle
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

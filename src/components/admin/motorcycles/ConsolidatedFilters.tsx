@@ -75,16 +75,62 @@ const ConsolidatedFilters = ({
 
   return (
     <div className="space-y-4">
-      {/* Filter Summary */}
+      {/* Filter Summary with Quick Status Toggles */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-explorer-text">Filters</span>
-          {activeFiltersCount > 0 && (
-            <Badge variant="secondary" className="bg-accent-teal text-black">
-              {activeFiltersCount} active
-            </Badge>
-          )}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-explorer-text">Filters</span>
+            {activeFiltersCount > 0 && (
+              <Badge variant="secondary" className="bg-accent-teal text-black">
+                {activeFiltersCount} active
+              </Badge>
+            )}
+          </div>
+          
+          {/* Quick Status Toggles */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-explorer-text-muted">Show:</span>
+            <div className="flex gap-1">
+              <Button
+                variant={filters.statuses.length === 0 ? "default" : "outline"}
+                size="sm"
+                onClick={() => onFilterChange('statuses', [])}
+                className={
+                  filters.statuses.length === 0
+                    ? "bg-accent-teal text-black text-xs px-2 py-1"
+                    : "bg-explorer-dark border-explorer-chrome/30 text-xs px-2 py-1"
+                }
+              >
+                All ({motorcycles.length})
+              </Button>
+              <Button
+                variant={filters.statuses.includes('published') && filters.statuses.length === 1 ? "default" : "outline"}
+                size="sm"
+                onClick={() => onFilterChange('statuses', ['published'])}
+                className={
+                  filters.statuses.includes('published') && filters.statuses.length === 1
+                    ? "bg-green-600 text-white text-xs px-2 py-1"
+                    : "bg-explorer-dark border-explorer-chrome/30 text-xs px-2 py-1"
+                }
+              >
+                Published ({statusOptions.find(s => s.value === 'published')?.count || 0})
+              </Button>
+              <Button
+                variant={filters.statuses.includes('draft') && filters.statuses.length === 1 ? "default" : "outline"}
+                size="sm"
+                onClick={() => onFilterChange('statuses', ['draft'])}
+                className={
+                  filters.statuses.includes('draft') && filters.statuses.length === 1
+                    ? "bg-orange-600 text-white text-xs px-2 py-1"
+                    : "bg-explorer-dark border-explorer-chrome/30 text-xs px-2 py-1"
+                }
+              >
+                Drafts ({statusOptions.find(s => s.value === 'draft')?.count || 0})
+              </Button>
+            </div>
+          </div>
         </div>
+        
         <Button
           variant="outline"
           size="sm"

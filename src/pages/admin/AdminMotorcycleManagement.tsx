@@ -37,12 +37,12 @@ const AdminMotorcycleManagement = () => {
   const [selectedMotorcycleForComponents, setSelectedMotorcycleForComponents] = useState<any | null>(null);
   const [isComponentOperationInProgress, setIsComponentOperationInProgress] = useState(false);
   
-  // Consolidated filtering state
+  // Consolidated filtering state - Updated to show all content by default for admins
   const [consolidatedFilters, setConsolidatedFilters] = useState<ConsolidatedFilters>({
     search: '',
     brands: [],
     categories: [],
-    statuses: [],
+    statuses: [], // Empty = show all (both draft and published)
     hasAbs: 'all'
   });
   
@@ -156,7 +156,7 @@ const AdminMotorcycleManagement = () => {
         if (!motorcycle.type || !consolidatedFilters.categories.includes(motorcycle.type)) return false;
       }
       
-      // Status filter - Fixed to show both when no status selected
+      // Status filter - Show all by default when no status filter is applied
       if (consolidatedFilters.statuses.length > 0) {
         const status = motorcycle.is_draft ? 'draft' : 'published';
         if (!consolidatedFilters.statuses.includes(status)) return false;
@@ -207,7 +207,7 @@ const AdminMotorcycleManagement = () => {
       search: '',
       brands: [],
       categories: [],
-      statuses: [],
+      statuses: [], // Reset to show all
       hasAbs: 'all'
     });
   };
@@ -375,6 +375,8 @@ const AdminMotorcycleManagement = () => {
         onAddMotorcycle={() => setAddDialogOpen(true)}
         isLoading={isLoading || isComponentOperationInProgress}
         searchSuggestions={searchSuggestions}
+        draftCount={allMotorcycles.filter(m => m.is_draft).length}
+        publishedCount={allMotorcycles.filter(m => !m.is_draft).length}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">

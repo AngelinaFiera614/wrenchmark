@@ -18,6 +18,8 @@ interface ConsolidatedMotorcycleHeaderProps {
   onAddMotorcycle: () => void;
   isLoading: boolean;
   searchSuggestions?: string[];
+  draftCount?: number;
+  publishedCount?: number;
 }
 
 const ConsolidatedMotorcycleHeader = ({
@@ -31,7 +33,9 @@ const ConsolidatedMotorcycleHeader = ({
   onImport,
   onAddMotorcycle,
   isLoading,
-  searchSuggestions = []
+  searchSuggestions = [],
+  draftCount = 0,
+  publishedCount = 0
 }: ConsolidatedMotorcycleHeaderProps) => {
   return (
     <div className="bg-explorer-card border border-explorer-chrome/30 rounded-lg p-4 space-y-4">
@@ -48,6 +52,15 @@ const ConsolidatedMotorcycleHeader = ({
                 Filtered
               </Badge>
             )}
+            {/* Status breakdown */}
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-green-400/30 text-green-400">
+                {publishedCount} Published
+              </Badge>
+              <Badge variant="outline" className="border-orange-400/30 text-orange-400">
+                {draftCount} Drafts
+              </Badge>
+            </div>
           </div>
         </div>
         

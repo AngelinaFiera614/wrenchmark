@@ -40,12 +40,12 @@ export async function fetchMotorcyclesSimple(filters: SimpleMotorcycleFilters = 
       query = query.eq('type', filters.category);
     }
     
-    // Default to published content only unless explicitly requesting drafts
+    // For admin interface, show all content by default (both draft and published)
+    // Only filter by draft status if explicitly specified
     if (filters.isDraft !== undefined) {
       query = query.eq('is_draft', filters.isDraft);
-    } else {
-      query = query.eq('is_draft', false);
     }
+    // Removed the default published-only filter for admin interface
 
     const { data, error } = await query;
 
