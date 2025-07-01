@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ModelComponentAssignment {
@@ -174,7 +173,7 @@ export async function removeComponentFromModel(
 export async function canDeleteComponent(
   componentId: string,
   componentType: ComponentType
-): Promise<{ canDelete: boolean; usage?: ComponentUsage }> => {
+): Promise<{ canDelete: boolean; usage?: ComponentUsage }> {
   try {
     // Check model assignments
     const { data: modelAssignments } = await supabase
