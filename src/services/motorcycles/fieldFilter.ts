@@ -15,7 +15,6 @@ export const MOTORCYCLE_MODEL_DB_COLUMNS = [
   'default_image_url',
   'slug',
   'is_draft',
-  'ignore_autofill',
   'created_at',
   'updated_at',
   'successor_model_id',
@@ -58,7 +57,8 @@ export const COMPUTED_FIELDS = [
   'model_years'
 ] as const;
 
-export type DatabaseMotorcycleUpdate = Partial<Pick<Motorcycle, typeof MOTORCYCLE_MODEL_DB_COLUMNS[number]>>;
+// Create a more flexible type for database updates
+export type DatabaseMotorcycleUpdate = Partial<Record<string, any>>;
 
 /**
  * Filters update data to only include actual database columns
@@ -73,7 +73,7 @@ export function filterMotorcycleUpdateData(updates: Partial<Motorcycle>): Databa
   
   for (const [key, value] of Object.entries(updates)) {
     if (MOTORCYCLE_MODEL_DB_COLUMNS.includes(key as any)) {
-      (filteredUpdates as any)[key] = value;
+      filteredUpdates[key] = value;
     } else {
       excludedFields.push(key);
     }
