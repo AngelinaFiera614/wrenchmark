@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Brand, BrandMilestone } from "@/types";
 import { CalendarDays } from "lucide-react";
+import { SecureContentRenderer } from "@/components/security/SecureContentRenderer";
 
 interface BrandHistoryProps {
   brand: Brand;
@@ -11,14 +12,18 @@ interface BrandHistoryProps {
 export default function BrandHistory({ brand }: BrandHistoryProps) {
   return (
     <div className="space-y-6">
-      {/* Brand History (Markdown content) */}
+      {/* Brand History (Markdown content) - Now securely rendered */}
       {brand.brand_history && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Brand History</CardTitle>
           </CardHeader>
           <CardContent className="prose prose-invert max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: brand.brand_history }} />
+            <SecureContentRenderer 
+              content={brand.brand_history}
+              type="html"
+              className="brand-history-content"
+            />
           </CardContent>
         </Card>
       )}

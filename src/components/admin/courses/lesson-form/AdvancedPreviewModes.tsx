@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ContentBlock } from '@/types/course';
 import { Monitor, Tablet, Smartphone, Eye, EyeOff } from 'lucide-react';
+import { SecureContentRenderer } from '@/components/security/SecureContentRenderer';
 
 interface AdvancedPreviewModesProps {
   contentBlocks: ContentBlock[];
@@ -113,18 +114,29 @@ function PreviewBlock({ block }: { block: ContentBlock }) {
         {block.type === 'text' && (
           <div className="prose prose-sm max-w-none">
             {block.data.format === 'markdown' ? (
-              <div className="whitespace-pre-wrap">{block.data.content}</div>
+              <SecureContentRenderer 
+                content={block.data.content}
+                type="markdown"
+                className="text-content"
+              />
             ) : (
-              <div dangerouslySetInnerHTML={{ __html: block.data.content }} />
+              <SecureContentRenderer 
+                content={block.data.content}
+                type="html"
+                className="text-content"
+              />
             )}
           </div>
         )}
         
         {block.type === 'rich_text' && (
-          <div 
-            className="prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: block.data.content }} 
-          />
+          <div className="prose prose-sm max-w-none">
+            <SecureContentRenderer 
+              content={block.data.content}
+              type="html"
+              className="rich-text-content"
+            />
+          </div>
         )}
         
         {block.type === 'video' && (

@@ -15,6 +15,7 @@ import {
   Type
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { sanitizeHtml } from '@/services/security/inputSanitizer';
 
 interface RichTextEditorProps {
   value: string;
@@ -75,9 +76,10 @@ export function RichTextEditor({
     }
   }, [value, selectionStart, selectionEnd, insertFormatting]);
 
-  // Convert markdown-like syntax to HTML for preview
-  const renderPreview = (text: string) => {
-    return text
+  // SECURITY FIX: Secure content rendering with proper DOMPurify sanitization
+  const renderSecurePreview = (text: string) => {
+    // Convert markdown-like syntax to HTML first
+    const htmlContent = text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/__(.*?)__/g, '<u>$1</u>')
@@ -85,6 +87,9 @@ export function RichTextEditor({
       .replace(/^\* (.+)$/gm, '<li>$1</li>')
       .replace(/^(\d+)\. (.+)$/gm, '<li>$1. $2</li>')
       .replace(/\n/g, '<br>');
+    
+    // Sanitize the HTML content before rendering
+    return sanitizeHtml(htmlContent);
   };
 
   const wordCount = value.trim().split(/\s+/).filter(word => word.length > 0).length;
@@ -176,12 +181,12 @@ export function RichTextEditor({
         </Button>
       </div>
 
-      {/* Editor/Preview Area */}
+      {/* Editor/Preview Area - SECURITY FIX: Now uses secure rendering */}
       {isPreviewMode ? (
         <div 
           className="p-3 border rounded-md bg-background min-h-[120px] prose prose-sm max-w-none"
           style={{ minHeight }}
-          dangerouslySetInnerHTML={{ __html: renderPreview(value) }}
+          dangerouslySetInnerHTML={{ __html: renderSecurePreview(value) }}
         />
       ) : (
         <Textarea
