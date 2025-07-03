@@ -1,21 +1,17 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Loader2, FileText, Eye, AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { publishMotorcycle, unpublishMotorcycle, fetchAllMotorcyclesForAdmin } from "@/services/motorcycles/adminQueries";
 import AdminMotorcycleDialog from "@/components/admin/motorcycles/AdminMotorcycleDialog";
 import DeleteConfirmationDialog from "@/components/admin/models/DeleteConfirmationDialog";
-import BulkPublishingControls from "@/components/admin/models/BulkPublishingControls";
-import { DataCompletenessIndicator } from "@/components/motorcycles/DataCompletenessIndicator";
-import { calculateDataCompletenessSync } from "@/utils/dataCompleteness";
+import EnhancedMotorcycleManagement from "@/components/admin/motorcycles/EnhancedMotorcycleManagement";
 import { Motorcycle } from "@/types";
 import { deleteMotorcycleModelCascade } from "@/services/models/modelQueries";
 import { logAdminAction, auditActions } from "@/services/security/adminAuditLogger";
-import EnhancedMotorcycleManagement from "@/components/admin/motorcycles/EnhancedMotorcycleManagement";
 
 const AdminMotorcycleModels = () => {
   const { toast } = useToast();
