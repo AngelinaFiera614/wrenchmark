@@ -76,13 +76,15 @@ type MotorcycleFormValues = z.infer<typeof motorcycleFormSchema>;
 interface AdminMotorcycleDialogProps {
   open: boolean;
   motorcycle: Motorcycle | null;
-  onClose: (refreshData?: boolean) => void;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
 }
 
 const AdminMotorcycleDialog = ({
   open,
   motorcycle,
-  onClose,
+  onOpenChange,
+  onSuccess,
 }: AdminMotorcycleDialogProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -319,7 +321,8 @@ const AdminMotorcycleDialog = ({
       }
       
       setLoading(false);
-      onClose(true);
+      onSuccess();
+      onOpenChange(false);
     } catch (error: any) {
       console.error("Submit error:", error);
       setLoading(false);
@@ -334,7 +337,7 @@ const AdminMotorcycleDialog = ({
   const isEditing = !!motorcycle;
 
   return (
-    <Dialog open={open} onOpenChange={() => onClose(false)}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -357,7 +360,7 @@ const AdminMotorcycleDialog = ({
 
             <FormActions
               loading={loading}
-              onCancel={() => onClose(false)}
+              onCancel={() => onOpenChange(false)}
               isEditing={isEditing}
             />
           </form>
