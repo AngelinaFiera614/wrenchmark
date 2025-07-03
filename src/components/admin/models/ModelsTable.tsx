@@ -244,9 +244,10 @@ const ModelsTable = () => {
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         open={!!deleteModel}
-        onClose={() => setDeleteModel(null)}
+        onOpenChange={() => setDeleteModel(null)}
         onConfirm={handleDeleteConfirm}
-        motorcycle={deleteModel}
+        title="Delete Motorcycle Model"
+        description={`Are you sure you want to delete ${deleteModel ? `${getBrandName(deleteModel)} ${deleteModel.name}` : 'this model'}? This will permanently remove the model and all associated data including years, configurations, images, and manuals.`}
         isDeleting={isDeleting}
       />
     </div>
