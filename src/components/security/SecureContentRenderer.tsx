@@ -56,16 +56,6 @@ export const SecureContentRenderer: React.FC<SecureContentRendererProps> = ({
               }
               return '';
             }}
-            transformLinkUri={(uri) => {
-              // Additional link security - ensure all external links open safely
-              if (uri.startsWith('http://') || uri.startsWith('https://')) {
-                return uri;
-              }
-              if (uri.startsWith('/')) {
-                return uri;
-              }
-              return '';
-            }}
           >
             {sanitizedMarkdown}
           </ReactMarkdown>
