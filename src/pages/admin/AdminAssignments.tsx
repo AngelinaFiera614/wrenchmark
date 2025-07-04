@@ -1,13 +1,10 @@
 
 import React from "react";
-import ModelAssignmentsPage from "@/components/admin/parts/ModelAssignmentsPage";
+import { Navigate } from "react-router-dom";
 
 const AdminAssignments = () => {
-  return (
-    <div className="w-full">
-      <ModelAssignmentsPage />
-    </div>
-  );
+  // Component assignments are now handled in Motorcycle Management
+  return <Navigate to="/admin/motorcycle-management" replace />;
 };
 
 export default AdminAssignments;

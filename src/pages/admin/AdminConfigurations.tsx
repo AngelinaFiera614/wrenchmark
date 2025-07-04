@@ -1,13 +1,10 @@
 
 import React from "react";
-import ConfigurationManagerPage from "@/components/admin/parts/ConfigurationManagerPage";
+import { Navigate } from "react-router-dom";
 
 const AdminConfigurations = () => {
-  return (
-    <div className="w-full">
-      <ConfigurationManagerPage />
-    </div>
-  );
+  // Configuration management is now handled in Motorcycle Management
+  return <Navigate to="/admin/motorcycle-management" replace />;
 };
 
 export default AdminConfigurations;
