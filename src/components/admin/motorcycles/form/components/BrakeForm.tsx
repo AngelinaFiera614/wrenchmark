@@ -22,12 +22,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 const brakeSchema = z.object({
   type: z.string().min(2, "Type is required"),
-  brake_type_front: z.string().optional(),
-  brake_type_rear: z.string().optional(),
+  brake_brand: z.string().optional(),
+  front_type: z.string().optional(),
+  rear_type: z.string().optional(),
+  front_disc_size_mm: z.coerce.number().min(0).optional().or(z.literal("")),
+  rear_disc_size_mm: z.coerce.number().min(0).optional().or(z.literal("")),
+  caliper_type: z.string().optional(),
   has_traction_control: z.boolean().default(false),
+  has_abs: z.boolean().default(false),
   notes: z.string().optional(),
 });
 
@@ -44,21 +50,27 @@ export function BrakeForm({ open, onClose, onSubmit }: BrakeFormProps) {
     resolver: zodResolver(brakeSchema),
     defaultValues: {
       type: "",
-      brake_type_front: "",
-      brake_type_rear: "",
+      brake_brand: "",
+      front_type: "",
+      rear_type: "",
+      front_disc_size_mm: "",
+      rear_disc_size_mm: "",
+      caliper_type: "",
       has_traction_control: false,
+      has_abs: false,
       notes: "",
     },
   });
 
   const handleSubmit = async (values: BrakeFormValues) => {
+    console.log("BrakeForm submitting values:", values);
     await onSubmit(values);
     form.reset();
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Brake System</DialogTitle>
         </DialogHeader>
@@ -70,9 +82,9 @@ export function BrakeForm({ open, onClose, onSubmit }: BrakeFormProps) {
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>System Type</FormLabel>
+                  <FormLabel>System Type *</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Dual-channel ABS" {...field} />
+                    <Input placeholder="e.g. Dual-channel ABS, Standard Disc Brakes" {...field} />
                   </FormControl>
                   <FormDescription>
                     Main categorization of this brake system
@@ -81,11 +93,25 @@ export function BrakeForm({ open, onClose, onSubmit }: BrakeFormProps) {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="brake_brand"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Brand</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Brembo, Nissin, Tokico" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="brake_type_front"
+                name="front_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Front Brake Type</FormLabel>
@@ -99,7 +125,7 @@ export function BrakeForm({ open, onClose, onSubmit }: BrakeFormProps) {
               
               <FormField
                 control={form.control}
-                name="brake_type_rear"
+                name="rear_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Rear Brake Type</FormLabel>
@@ -111,27 +137,102 @@ export function BrakeForm({ open, onClose, onSubmit }: BrakeFormProps) {
                 )}
               />
             </div>
-            
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="front_disc_size_mm"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Front Disc Size (mm)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="320" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="rear_disc_size_mm"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rear Disc Size (mm)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="245" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="has_traction_control"
+              name="caliper_type"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Traction Control</FormLabel>
-                    <FormDescription>
-                      Does this brake system include traction control?
-                    </FormDescription>
-                  </div>
+                <FormItem>
+                  <FormLabel>Caliper Type</FormLabel>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Input placeholder="e.g. 4-piston radial, 2-piston floating" {...field} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="has_abs"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>ABS</FormLabel>
+                      <FormDescription>
+                        Anti-lock Braking System
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="has_traction_control"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Traction Control</FormLabel>
+                      <FormDescription>
+                        Traction control system
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <FormField
               control={form.control}
@@ -140,7 +241,11 @@ export function BrakeForm({ open, onClose, onSubmit }: BrakeFormProps) {
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Input placeholder="Additional information" {...field} />
+                    <Textarea 
+                      placeholder="Additional information about this brake system..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

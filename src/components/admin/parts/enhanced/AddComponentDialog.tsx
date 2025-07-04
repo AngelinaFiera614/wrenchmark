@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { createEngine } from "@/services/engineService";
@@ -40,6 +41,8 @@ const AddComponentDialog: React.FC<AddComponentDialogProps> = ({
     setSaving(true);
     
     try {
+      console.log("AddComponentDialog saving:", { componentType, formData });
+      
       switch (componentType) {
         case 'engines':
           await createEngine({
@@ -52,14 +55,21 @@ const AddComponentDialog: React.FC<AddComponentDialogProps> = ({
           break;
           
         case 'brakes':
-          await createBrake({
+          // Ensure all required fields are present for brake system
+          const brakeData = {
             type: formData.type || '',
-            brake_brand: formData.brake_brand,
-            front_type: formData.front_type,
-            rear_type: formData.rear_type,
+            brake_brand: formData.brake_brand || null,
+            front_type: formData.front_type || null,
+            rear_type: formData.rear_type || null,
+            front_disc_size_mm: formData.front_disc_size_mm ? formData.front_disc_size_mm.toString() : null,
+            rear_disc_size_mm: formData.rear_disc_size_mm ? formData.rear_disc_size_mm.toString() : null,
+            caliper_type: formData.caliper_type || null,
             has_abs: formData.has_abs || false,
-            notes: formData.notes
-          });
+            has_traction_control: formData.has_traction_control || false,
+            notes: formData.notes || null
+          };
+          console.log("Creating brake with data:", brakeData);
+          await createBrake(brakeData);
           break;
           
         case 'frames':
@@ -101,6 +111,7 @@ const AddComponentDialog: React.FC<AddComponentDialogProps> = ({
       onClose();
       setFormData({});
     } catch (error: any) {
+      console.error("Error creating component:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -111,72 +122,181 @@ const AddComponentDialog: React.FC<AddComponentDialogProps> = ({
     }
   };
 
+  const renderBrakeForm = () => (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="type">System Type *</Label>
+        <Input
+          id="type"
+          value={formData.type || ''}
+          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          placeholder="e.g. Dual-channel ABS, Standard Disc Brakes"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="brake_brand">Brand</Label>
+        <Input
+          id="brake_brand"
+          value={formData.brake_brand || ''}
+          onChange={(e) => setFormData({ ...formData, brake_brand: e.target.value })}
+          placeholder="e.g. Brembo, Nissin, Tokico"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="front_type">Front Brake Type</Label>
+          <Input
+            id="front_type"
+            value={formData.front_type || ''}
+            onChange={(e) => setFormData({ ...formData, front_type: e.target.value })}
+            placeholder="e.g. Dual 320mm Discs"
+          />
+        </div>
+        <div>
+          <Label htmlFor="rear_type">Rear Brake Type</Label>
+          <Input
+            id="rear_type"
+            value={formData.rear_type || ''}
+            onChange={(e) => setFormData({ ...formData, rear_type: e.target.value })}
+            placeholder="e.g. Single 245mm Disc"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="front_disc_size_mm">Front Disc Size (mm)</Label>
+          <Input
+            id="front_disc_size_mm"
+            type="number"
+            value={formData.front_disc_size_mm || ''}
+            onChange={(e) => setFormData({ ...formData, front_disc_size_mm: e.target.value })}
+            placeholder="320"
+          />
+        </div>
+        <div>
+          <Label htmlFor="rear_disc_size_mm">Rear Disc Size (mm)</Label>
+          <Input
+            id="rear_disc_size_mm"
+            type="number"
+            value={formData.rear_disc_size_mm || ''}
+            onChange={(e) => setFormData({ ...formData, rear_disc_size_mm: e.target.value })}
+            placeholder="245"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="caliper_type">Caliper Type</Label>
+        <Input
+          id="caliper_type"
+          value={formData.caliper_type || ''}
+          onChange={(e) => setFormData({ ...formData, caliper_type: e.target.value })}
+          placeholder="e.g. 4-piston radial, 2-piston floating"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex items-center justify-between p-3 border rounded-lg">
+          <div>
+            <Label htmlFor="has_abs">ABS</Label>
+            <p className="text-sm text-muted-foreground">Anti-lock Braking System</p>
+          </div>
+          <Switch
+            id="has_abs"
+            checked={formData.has_abs || false}
+            onCheckedChange={(checked) => setFormData({ ...formData, has_abs: checked })}
+          />
+        </div>
+        
+        <div className="flex items-center justify-between p-3 border rounded-lg">
+          <div>
+            <Label htmlFor="has_traction_control">Traction Control</Label>
+            <p className="text-sm text-muted-foreground">Traction control system</p>
+          </div>
+          <Switch
+            id="has_traction_control"
+            checked={formData.has_traction_control || false}
+            onCheckedChange={(checked) => setFormData({ ...formData, has_traction_control: checked })}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderEngineForm = () => (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="name">Name *</Label>
+        <Input
+          id="name"
+          value={formData.name || ''}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Engine name"
+        />
+      </div>
+      <div>
+        <Label htmlFor="displacement_cc">Displacement (CC) *</Label>
+        <Input
+          id="displacement_cc"
+          type="number"
+          value={formData.displacement_cc || ''}
+          onChange={(e) => setFormData({ ...formData, displacement_cc: e.target.value })}
+          placeholder="650"
+        />
+      </div>
+      <div>
+        <Label htmlFor="power_hp">Power (HP)</Label>
+        <Input
+          id="power_hp"
+          type="number"
+          value={formData.power_hp || ''}
+          onChange={(e) => setFormData({ ...formData, power_hp: e.target.value })}
+          placeholder="75"
+        />
+      </div>
+      <div>
+        <Label htmlFor="engine_type">Engine Type</Label>
+        <Input
+          id="engine_type"
+          value={formData.engine_type || ''}
+          onChange={(e) => setFormData({ ...formData, engine_type: e.target.value })}
+          placeholder="Parallel Twin"
+        />
+      </div>
+    </div>
+  );
+
+  const renderGenericForm = () => (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="type">Type *</Label>
+        <Input
+          id="type"
+          value={formData.type || ''}
+          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          placeholder="Component type"
+        />
+      </div>
+    </div>
+  );
+
   const renderForm = () => {
     switch (componentType) {
       case 'engines':
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Engine name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="displacement_cc">Displacement (CC)</Label>
-              <Input
-                id="displacement_cc"
-                type="number"
-                value={formData.displacement_cc || ''}
-                onChange={(e) => setFormData({ ...formData, displacement_cc: e.target.value })}
-                placeholder="650"
-              />
-            </div>
-            <div>
-              <Label htmlFor="power_hp">Power (HP)</Label>
-              <Input
-                id="power_hp"
-                type="number"
-                value={formData.power_hp || ''}
-                onChange={(e) => setFormData({ ...formData, power_hp: e.target.value })}
-                placeholder="75"
-              />
-            </div>
-            <div>
-              <Label htmlFor="engine_type">Engine Type</Label>
-              <Input
-                id="engine_type"
-                value={formData.engine_type || ''}
-                onChange={(e) => setFormData({ ...formData, engine_type: e.target.value })}
-                placeholder="Parallel Twin"
-              />
-            </div>
-          </div>
-        );
-        
+        return renderEngineForm();
+      case 'brakes':
+        return renderBrakeForm();
       default:
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="type">Type</Label>
-              <Input
-                id="type"
-                value={formData.type || ''}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                placeholder="Component type"
-              />
-            </div>
-          </div>
-        );
+        return renderGenericForm();
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-explorer-card border-explorer-chrome/30">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-explorer-card border-explorer-chrome/30">
         <DialogHeader>
           <DialogTitle className="text-explorer-text">Add Component</DialogTitle>
         </DialogHeader>
@@ -207,6 +327,7 @@ const AddComponentDialog: React.FC<AddComponentDialogProps> = ({
               value={formData.notes || ''}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Additional notes..."
+              className="min-h-[80px]"
             />
           </div>
           

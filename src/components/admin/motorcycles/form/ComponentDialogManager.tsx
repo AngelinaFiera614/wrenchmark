@@ -28,6 +28,7 @@ export function ComponentDialogManager({
   
   const handleEngineSubmit = async (data: any) => {
     try {
+      console.log("ComponentDialogManager: Creating engine with data:", data);
       const result = await createEngine(data);
       if (result) {
         toast({
@@ -57,6 +58,13 @@ export function ComponentDialogManager({
 
   const handleBrakeSubmit = async (data: any) => {
     try {
+      console.log("ComponentDialogManager: Creating brake with data:", data);
+      
+      // Ensure we have the required type field
+      if (!data.type || data.type.trim() === '') {
+        throw new Error("Brake system type is required");
+      }
+
       const result = await createBrakeSystem(data);
       if (result) {
         toast({
@@ -65,6 +73,7 @@ export function ComponentDialogManager({
         });
         
         queryClient.invalidateQueries({ queryKey: ["brake-systems"] });
+        queryClient.invalidateQueries({ queryKey: ["brakes"] });
         
         if (onComponentCreated) {
           onComponentCreated("brake", result.id);
@@ -72,12 +81,12 @@ export function ComponentDialogManager({
         
         onClose();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating brake system:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create brake system. Please try again.",
+        description: error.message || "Failed to create brake system. Please try again.",
       });
     }
   };
