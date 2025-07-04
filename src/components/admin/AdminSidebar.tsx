@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,10 +9,8 @@ import {
   Wrench,
   Tag,
   Component,
-  Image,
   ListChecks,
   Database,
-  GitBranch,
   LucideIcon,
   Bike,
   Shield
@@ -22,20 +21,26 @@ interface SidebarItemProps {
   label: string;
   href: string;
   isActive: boolean;
+  description?: string;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, href, isActive }) => {
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, href, isActive, description }) => {
   return (
     <Link to={href} className="w-full">
       <Card
-        className={`group flex items-center space-x-3 rounded-md border-0 p-2 transition-colors hover:bg-accent hover:text-accent-foreground ${
+        className={`group flex items-center space-x-3 rounded-md border-0 p-3 transition-colors hover:bg-accent hover:text-accent-foreground ${
           isActive
             ? "bg-muted text-muted-foreground"
             : "bg-transparent text-secondary-foreground"
         }`}
       >
-        <Icon className="h-4 w-4" />
-        <p className="text-sm font-medium">{label}</p>
+        <Icon className="h-4 w-4 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{label}</p>
+          {description && (
+            <p className="text-xs text-muted-foreground truncate">{description}</p>
+          )}
+        </div>
       </Card>
     </Link>
   );
@@ -55,31 +60,22 @@ const AdminSidebar = () => {
       title: "Motorcycle Management",
       icon: Bike,
       href: "/admin/motorcycle-management",
-      isActive: location.pathname.startsWith('/admin/motorcycle-management')
+      isActive: location.pathname.startsWith('/admin/motorcycle-management'),
+      description: "Models, years, trims & assignments"
     },
     {
-      title: "Models",
-      icon: FileText,
-      href: "/admin/models",
-      isActive: location.pathname.startsWith('/admin/models')
-    },
-    {
-      title: "Components Library",
+      title: "Component Library",
       icon: Component,
       href: "/admin/components",
-      isActive: location.pathname.startsWith('/admin/components')
+      isActive: location.pathname.startsWith('/admin/components'),
+      description: "Create & manage component definitions"
     },
     {
-      title: "Component Assignments",
-      icon: GitBranch,
-      href: "/admin/assignments",
-      isActive: location.pathname === '/admin/assignments'
-    },
-    {
-      title: "Configurations",
-      icon: Wrench,
-      href: "/admin/configurations",
-      isActive: location.pathname === '/admin/configurations'
+      title: "Models Directory",
+      icon: FileText,
+      href: "/admin/models",
+      isActive: location.pathname.startsWith('/admin/models'),
+      description: "Browse & edit individual models"
     },
     {
       title: "Bulk Operations",
@@ -88,16 +84,16 @@ const AdminSidebar = () => {
       isActive: location.pathname === '/admin/bulk-operations'
     },
     {
-      title: "Categories",
-      icon: Settings,
+      title: "Categories & Tags",
+      icon: Tag,
       href: "/admin/categories",
       isActive: location.pathname === '/admin/categories'
     },
     {
-      title: "Tags",
-      icon: Tag,
-      href: "/admin/tags",
-      isActive: location.pathname === '/admin/tags'
+      title: "Settings",
+      icon: Settings,
+      href: "/admin/settings",
+      isActive: location.pathname === '/admin/settings'
     },
     {
       title: "Audit Log",
@@ -109,13 +105,13 @@ const AdminSidebar = () => {
       title: "Security",
       icon: Shield,
       href: "/admin/security",
-      description: "Audit logs and security monitoring"
+      isActive: location.pathname === '/admin/security'
     }
   ];
 
   return (
     <Card className="col-span-3 lg:col-span-1 bg-explorer-card border-explorer-chrome/30">
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-2 p-4">
         {menuItems.map((item, index) => (
           <SidebarItem
             key={index}
@@ -123,6 +119,7 @@ const AdminSidebar = () => {
             label={item.title}
             href={item.href}
             isActive={item.isActive}
+            description={item.description}
           />
         ))}
       </CardContent>

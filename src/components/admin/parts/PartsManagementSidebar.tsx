@@ -4,13 +4,11 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   Component, 
-  Settings, 
-  Layers, 
   Zap, 
   Image, 
   Palette,
-  Wrench,
-  ChevronRight
+  ChevronRight,
+  Info
 } from "lucide-react";
 
 const PartsManagementSidebar = () => {
@@ -21,25 +19,7 @@ const PartsManagementSidebar = () => {
       title: "Component Library",
       href: "/admin/parts/components",
       icon: Component,
-      description: "Browse all components"
-    },
-    {
-      title: "Component Management", 
-      href: "/admin/parts/component-management",
-      icon: Wrench,
-      description: "Full CRUD for components"
-    },
-    {
-      title: "Model Assignments",
-      href: "/admin/parts/assignments", 
-      icon: Settings,
-      description: "Assign components to models"
-    },
-    {
-      title: "Configurations",
-      href: "/admin/parts/configurations",
-      icon: Layers,
-      description: "Manage model configurations"
+      description: "Create & manage components"
     },
     {
       title: "Bulk Operations",
@@ -54,19 +34,31 @@ const PartsManagementSidebar = () => {
       description: "Manage uploaded content"
     },
     {
-      title: "Color Options",
+      title: "Color Management",
       href: "/admin/parts/colors",
       icon: Palette,
-      description: "Manage motorcycle colors"
+      description: "Manage color variants"
     }
   ];
 
   return (
     <div className="w-64 bg-explorer-card border-r border-explorer-chrome/30 flex-shrink-0">
       <div className="p-6">
-        <h2 className="text-lg font-semibold text-explorer-text mb-6">
-          Parts Management
+        <h2 className="text-lg font-semibold text-explorer-text mb-4">
+          Component Library
         </h2>
+        
+        {/* Info box about component assignment */}
+        <div className="mb-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-blue-400">
+              <div className="font-medium mb-1">Component Assignment</div>
+              <div>Components are assigned to motorcycles in the Motorcycle Management section.</div>
+            </div>
+          </div>
+        </div>
+
         <nav className="space-y-2">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.href;

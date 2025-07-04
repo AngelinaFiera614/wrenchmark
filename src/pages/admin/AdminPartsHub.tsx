@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Component,
-  Settings,
-  Wrench,
   Database,
-  Plus,
-  BarChart3
+  BarChart3,
+  Palette,
+  Image,
+  Info
 } from "lucide-react";
 import { useOptimizedAdminData } from "@/hooks/admin/useOptimizedAdminData";
 import ComponentsLibraryPage from "@/components/admin/parts/ComponentsLibraryPage";
+import BulkOperationsPage from "@/components/admin/parts/BulkOperationsPage";
+import MediaLibraryManager from "@/components/admin/media/MediaLibraryManager";
+import ColorOptionsManager from "@/components/admin/colors/ColorOptionsManager";
 
 const AdminPartsHub = () => {
   const [activeTab, setActiveTab] = useState("components");
@@ -29,18 +32,28 @@ const AdminPartsHub = () => {
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      {/* Header */}
+      {/* Header with clarified purpose */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-explorer-text">Parts & Components Hub</h1>
+          <h1 className="text-3xl font-bold text-explorer-text">Component Library Hub</h1>
           <p className="text-explorer-text-muted mt-1">
-            Manage motorcycle components, assignments, and configurations
+            Manage component definitions and media resources
           </p>
+          <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Info className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-blue-400">
+                <strong>Component Assignment:</strong> Components are assigned to motorcycles in the 
+                <strong> Motorcycle Management</strong> section. This hub is for creating and managing 
+                component definitions.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Simplified Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-explorer-card border-explorer-chrome/30">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -59,11 +72,11 @@ const AdminPartsHub = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-explorer-text-muted">Assignments</p>
-                <p className="text-2xl font-bold text-accent-teal">89</p>
+                <p className="text-sm text-explorer-text-muted">Media Files</p>
+                <p className="text-2xl font-bold text-accent-teal">156</p>
               </div>
               <div className="h-8 w-8 bg-accent-teal/20 rounded-full flex items-center justify-center">
-                <Settings className="h-4 w-4 text-accent-teal" />
+                <Image className="h-4 w-4 text-accent-teal" />
               </div>
             </div>
           </CardContent>
@@ -73,120 +86,40 @@ const AdminPartsHub = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-explorer-text-muted">Configurations</p>
-                <p className="text-2xl font-bold text-orange-400">156</p>
+                <p className="text-sm text-explorer-text-muted">Color Variants</p>
+                <p className="text-2xl font-bold text-purple-400">89</p>
               </div>
-              <div className="h-8 w-8 bg-orange-500/20 rounded-full flex items-center justify-center">
-                <Wrench className="h-4 w-4 text-orange-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-explorer-card border-explorer-chrome/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-explorer-text-muted">Coverage</p>
-                <p className="text-2xl font-bold text-green-400">94%</p>
-              </div>
-              <div className="h-8 w-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                <BarChart3 className="h-4 w-4 text-green-400" />
+              <div className="h-8 w-8 bg-purple-500/20 rounded-full flex items-center justify-center">
+                <Palette className="h-4 w-4 text-purple-400" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content */}
+      {/* Streamlined Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="components">Components Library</TabsTrigger>
-          <TabsTrigger value="assignments">Model Assignments</TabsTrigger>
-          <TabsTrigger value="configurations">Configurations</TabsTrigger>
+          <TabsTrigger value="components">Component Library</TabsTrigger>
           <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
+          <TabsTrigger value="media">Media Library</TabsTrigger>
+          <TabsTrigger value="colors">Color Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="components" className="mt-6">
           <ComponentsLibraryPage />
         </TabsContent>
 
-        <TabsContent value="assignments" className="mt-6">
-          <Card className="bg-explorer-card border-explorer-chrome/30">
-            <CardHeader>
-              <CardTitle className="text-explorer-text flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Model Component Assignments
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Settings className="h-12 w-12 mx-auto mb-4 text-explorer-text-muted" />
-                <p className="text-explorer-text-muted">Model assignments interface will be integrated here</p>
-                <p className="text-sm text-explorer-text-muted mt-2">
-                  Set default components for motorcycle models
-                </p>
-                <Button className="mt-4 bg-accent-teal hover:bg-accent-teal/80">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Assign Components to Model
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="configurations" className="mt-6">
-          <Card className="bg-explorer-card border-explorer-chrome/30">
-            <CardHeader>
-              <CardTitle className="text-explorer-text flex items-center gap-2">
-                <Wrench className="h-5 w-5" />
-                Configuration Manager
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Wrench className="h-12 w-12 mx-auto mb-4 text-explorer-text-muted" />
-                <p className="text-explorer-text-muted">Configuration management interface will be integrated here</p>
-                <p className="text-sm text-explorer-text-muted mt-2">
-                  Manage trim configurations and component overrides
-                </p>
-                <Button className="mt-4 bg-accent-teal hover:bg-accent-teal/80">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Configuration
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="bulk" className="mt-6">
-          <Card className="bg-explorer-card border-explorer-chrome/30">
-            <CardHeader>
-              <CardTitle className="text-explorer-text flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Bulk Operations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Database className="h-12 w-12 mx-auto mb-4 text-explorer-text-muted" />
-                <p className="text-explorer-text-muted">Bulk operations interface will be integrated here</p>
-                <p className="text-sm text-explorer-text-muted mt-2">
-                  Mass assignment and data management tools
-                </p>
-                <div className="flex gap-2 justify-center mt-4">
-                  <Button variant="outline">
-                    <Database className="h-4 w-4 mr-2" />
-                    Bulk Import
-                  </Button>
-                  <Button variant="outline">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Mass Assign
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <BulkOperationsPage />
+        </TabsContent>
+
+        <TabsContent value="media" className="mt-6">
+          <MediaLibraryManager />
+        </TabsContent>
+
+        <TabsContent value="colors" className="mt-6">
+          <ColorOptionsManager />
         </TabsContent>
       </Tabs>
     </div>

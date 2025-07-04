@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Grid, List, Download } from 'lucide-react';
+import { PlusCircle, Grid, List, Download, Settings, Wrench } from 'lucide-react';
 import { Motorcycle } from '@/types';
 import EnhancedFiltersContainer from './filters/EnhancedFiltersContainer';
 
@@ -54,12 +54,12 @@ const EnhancedMotorcycleManagement = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with clear action buttons */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-explorer-text">Motorcycle Management</h1>
           <p className="text-explorer-text-muted">
-            Manage your motorcycle database with enhanced filtering and organization
+            Manage motorcycles, assign components, and configure trim levels
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -102,7 +102,6 @@ const EnhancedMotorcycleManagement = ({
         </div>
       </div>
 
-      {/* Enhanced Filters */}
       <EnhancedFiltersContainer
         motorcycles={motorcycles}
         onFilteredMotorcycles={setFilteredMotorcycles}
@@ -164,8 +163,10 @@ const EnhancedMotorcycleManagement = ({
                         size="sm"
                         onClick={() => onEditMotorcycle(motorcycle)}
                         className="text-xs"
+                        title="Edit motorcycle details, assign components, and manage trim levels"
                       >
-                        Edit
+                        <Settings className="h-3 w-3 mr-1" />
+                        Manage
                       </Button>
                       <Button
                         variant="outline"
@@ -212,8 +213,10 @@ const EnhancedMotorcycleManagement = ({
                       variant="outline"
                       size="sm"
                       onClick={() => onEditMotorcycle(motorcycle)}
+                      title="Edit motorcycle details, assign components, and manage trim levels"
                     >
-                      Edit
+                      <Settings className="h-4 w-4 mr-1" />
+                      Manage
                     </Button>
                     <Button
                       variant="outline"
