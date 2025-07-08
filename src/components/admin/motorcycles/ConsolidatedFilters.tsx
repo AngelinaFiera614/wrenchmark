@@ -73,6 +73,24 @@ const ConsolidatedFilters = ({
     filters.hasAbs !== 'all'
   ].filter(Boolean).length;
 
+  // Quick filter preset options
+  const quickFilters = [
+    { label: 'Entry Level', action: () => onFilterChange('categories', ['Standard', 'Cruiser']) },
+    { label: 'Sport Bikes', action: () => onFilterChange('categories', ['Sport']) },
+    { label: 'Adventure', action: () => onFilterChange('categories', ['Adventure', 'Dual-sport']) },
+    { label: 'High Performance', action: () => onFilterChange('categories', ['Sport', 'Naked']) },
+    { label: 'With ABS', action: () => onFilterChange('hasAbs', 'yes') },
+    { label: 'Recent Models', action: () => {
+      const currentYear = new Date().getFullYear();
+      // Filter by recent production years in the motorcycle data
+      const recentIds = motorcycles
+        .filter(m => (m.production_start_year || 0) >= currentYear - 5)
+        .map(m => m.brand?.id || m.brands?.id)
+        .filter(Boolean);
+      onFilterChange('brands', Array.from(new Set(recentIds)));
+    }}
+  ];
+
   return (
     <div className="space-y-4">
       {/* Filter Summary with Quick Status Toggles */}
@@ -174,8 +192,35 @@ const ConsolidatedFilters = ({
         />
 
         <div className="bg-explorer-card border border-explorer-chrome/30 rounded-lg p-4">
-          <h3 className="font-medium text-explorer-text mb-3">Quick Filters</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-medium text-explorer-text">Quick Filters</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOpenSections(prev => ({ ...prev, brands: false, categories: false, status: false, advanced: false }))}
+              className="bg-explorer-dark border-explorer-chrome/30 text-xs"
+              title="Minimize All Sections"
+            >
+              Minimize All
+            </Button>
+          </div>
           <div className="space-y-2">
+            {/* Quick Filter Presets */}
+            <div className="grid grid-cols-2 gap-1 mb-3">
+              {quickFilters.map((filter, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={filter.action}
+                  className="bg-explorer-dark border-explorer-chrome/30 text-xs px-2 py-1"
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
+            
+            {/* ABS Filter */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-explorer-text">ABS Brakes:</span>
               <div className="flex gap-1">
