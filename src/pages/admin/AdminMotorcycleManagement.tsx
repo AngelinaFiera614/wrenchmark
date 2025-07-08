@@ -331,9 +331,6 @@ const AdminMotorcycleManagement = () => {
     return (
       <div className="h-full flex flex-col space-y-4">
         <ConsolidatedMotorcycleHeader
-          searchValue={consolidatedFilters.search}
-          onSearchChange={(value) => handleConsolidatedFilterChange('search', value)}
-          onSearchClear={() => handleConsolidatedFilterChange('search', '')}
           totalCount={0}
           filteredCount={0}
           onRefresh={refetch}
@@ -341,7 +338,6 @@ const AdminMotorcycleManagement = () => {
           onImport={() => setImportDialogOpen(true)}
           onAddMotorcycle={() => setAddDialogOpen(true)}
           isLoading={isLoading}
-          searchSuggestions={[]}
         />
         
         <Card className="border-orange-200 bg-orange-50">
@@ -364,9 +360,6 @@ const AdminMotorcycleManagement = () => {
   return (
     <div className="h-full flex flex-col space-y-4">
       <ConsolidatedMotorcycleHeader
-        searchValue={consolidatedFilters.search}
-        onSearchChange={(value) => handleConsolidatedFilterChange('search', value)}
-        onSearchClear={() => handleConsolidatedFilterChange('search', '')}
         totalCount={allMotorcycles.length}
         filteredCount={filteredMotorcycles.length}
         onRefresh={refetch}
@@ -374,7 +367,6 @@ const AdminMotorcycleManagement = () => {
         onImport={() => setImportDialogOpen(true)}
         onAddMotorcycle={() => setAddDialogOpen(true)}
         isLoading={isLoading || isComponentOperationInProgress}
-        searchSuggestions={searchSuggestions}
         draftCount={allMotorcycles.filter(m => m.is_draft).length}
         publishedCount={allMotorcycles.filter(m => !m.is_draft).length}
       />

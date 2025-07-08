@@ -89,25 +89,33 @@ const CheckboxFilterSection = ({
 
           <div className="space-y-2" style={{ maxHeight, overflowY: 'auto' }}>
             {options.map((option) => (
-              <div
+              <label
                 key={option.value}
                 className="flex items-center space-x-2 p-2 rounded hover:bg-explorer-chrome/10 cursor-pointer"
-                onClick={() => handleToggle(option.value)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleToggle(option.value);
+                  }
+                }}
               >
                 <Checkbox
                   checked={selectedValues.includes(option.value)}
                   onChange={() => handleToggle(option.value)}
                   className="border-explorer-chrome/50"
+                  aria-label={`Filter by ${option.label}`}
                 />
-                <span className="flex-1 text-sm text-explorer-text">
+                <span className="flex-1 text-sm text-explorer-text select-none">
                   {option.label}
                 </span>
                 {option.count !== undefined && (
-                  <span className="text-xs text-explorer-text-muted">
+                  <span className="text-xs text-explorer-text-muted select-none">
                     ({option.count})
                   </span>
                 )}
-              </div>
+              </label>
             ))}
           </div>
         </CollapsibleContent>

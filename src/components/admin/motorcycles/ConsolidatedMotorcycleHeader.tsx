@@ -4,12 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Download, Upload, Plus, MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import EnhancedSearchBar from './EnhancedSearchBar';
-
 interface ConsolidatedMotorcycleHeaderProps {
-  searchValue: string;
-  onSearchChange: (value: string) => void;
-  onSearchClear: () => void;
   totalCount: number;
   filteredCount: number;
   onRefresh: () => void;
@@ -17,15 +12,11 @@ interface ConsolidatedMotorcycleHeaderProps {
   onImport: () => void;
   onAddMotorcycle: () => void;
   isLoading: boolean;
-  searchSuggestions?: string[];
   draftCount?: number;
   publishedCount?: number;
 }
 
 const ConsolidatedMotorcycleHeader = ({
-  searchValue,
-  onSearchChange,
-  onSearchClear,
   totalCount,
   filteredCount,
   onRefresh,
@@ -33,7 +24,6 @@ const ConsolidatedMotorcycleHeader = ({
   onImport,
   onAddMotorcycle,
   isLoading,
-  searchSuggestions = [],
   draftCount = 0,
   publishedCount = 0
 }: ConsolidatedMotorcycleHeaderProps) => {
@@ -106,17 +96,6 @@ const ConsolidatedMotorcycleHeader = ({
         </div>
       </div>
 
-      {/* Enhanced Search */}
-      <div className="w-full max-w-2xl">
-        <EnhancedSearchBar
-          value={searchValue}
-          onChange={onSearchChange}
-          onClear={onSearchClear}
-          placeholder="Search motorcycles by name, brand, type, or year..."
-          suggestions={searchSuggestions}
-          isLoading={isLoading}
-        />
-      </div>
     </div>
   );
 };
