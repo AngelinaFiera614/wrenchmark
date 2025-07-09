@@ -103,7 +103,7 @@ const CheckboxFilterSection = ({
               >
                 <Checkbox
                   checked={selectedValues.includes(option.value)}
-                  onChange={() => handleToggle(option.value)}
+                  onCheckedChange={() => handleToggle(option.value)}
                   className="border-explorer-chrome/50"
                   aria-label={`Filter by ${option.label}`}
                 />
