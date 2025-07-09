@@ -110,14 +110,31 @@ const ConsolidatedFilters = ({
     { label: 'Adventure', action: () => onFilterChange('categories', ['Adventure', 'Dual-sport']) },
     { label: 'High Performance', action: () => onFilterChange('categories', ['Sport', 'Naked']) },
     { label: 'With ABS', action: () => onFilterChange('hasAbs', 'yes') },
-    { label: 'Recent Models', action: () => {
+    { label: 'Current Models', action: () => {
       const currentYear = new Date().getFullYear();
-      // Filter by recent production years in the motorcycle data
-      const recentIds = motorcycles
-        .filter(m => (m.production_start_year || 0) >= currentYear - 5)
-        .map(m => m.brand?.id || m.brands?.id)
+      const currentIds = motorcycles
+        .filter(m => m.production_status === 'active' || 
+                    (!m.production_end_year || m.production_end_year >= currentYear - 2))
+        .map(m => m.id)
         .filter(Boolean);
-      onFilterChange('brands', Array.from(new Set(recentIds)));
+      onFilterChange('search', 'status:current');
+    }},
+    { label: 'Discontinued', action: () => {
+      const currentYear = new Date().getFullYear();
+      const discontinuedIds = motorcycles
+        .filter(m => m.production_status === 'discontinued' || 
+                    (m.production_end_year && m.production_end_year < currentYear - 2))
+        .map(m => m.id)
+        .filter(Boolean);
+      onFilterChange('search', 'status:discontinued');
+    }},
+    { label: 'Vintage', action: () => {
+      const vintageIds = motorcycles
+        .filter(m => (m.production_start_year && m.production_start_year <= 2000) ||
+                    (m.production_end_year && m.production_end_year <= 2005))
+        .map(m => m.id)
+        .filter(Boolean);
+      onFilterChange('search', 'status:vintage');
     }}
   ];
 
