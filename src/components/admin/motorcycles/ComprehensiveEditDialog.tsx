@@ -1,7 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 import { Motorcycle } from "@/types";
 import MotorcycleDetailsPanel from "./unified/MotorcycleDetailsPanel";
 
@@ -18,10 +16,6 @@ const ComprehensiveEditDialog = ({
   motorcycle,
   onSuccess
 }: ComprehensiveEditDialogProps) => {
-  const handleClose = () => {
-    onOpenChange(false);
-  };
-
   const handleUpdateSuccess = () => {
     onSuccess();
     // Keep dialog open so user can continue editing
@@ -33,19 +27,9 @@ const ComprehensiveEditDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl max-h-[95vh] bg-explorer-card border-explorer-chrome/30 overflow-hidden">
         <DialogHeader className="flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-explorer-text text-xl">
-              Edit Motorcycle: {motorcycle.name}
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="text-explorer-text-muted hover:text-explorer-text"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-explorer-text text-xl">
+            Edit Motorcycle: {motorcycle.name}
+          </DialogTitle>
         </DialogHeader>
         
         <div className="flex-1 overflow-hidden">
