@@ -26,12 +26,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 const brakeSystemSchema = z.object({
   type: z.string().min(1, "Type is required"),
-  brake_type_front: z.string().optional(),
-  brake_type_rear: z.string().optional(),
+  front_type: z.string().optional(),
+  rear_type: z.string().optional(),
   front_disc_size_mm: z.coerce.number().min(0).optional().or(z.literal("")),
   rear_disc_size_mm: z.coerce.number().min(0).optional().or(z.literal("")),
   brake_brand: z.string().optional(),
   caliper_type: z.string().optional(),
+  has_abs: z.boolean().default(false),
   has_traction_control: z.boolean().default(false),
   notes: z.string().optional(),
 });
@@ -52,12 +53,13 @@ const AdminBrakeSystemDialog = ({ open, brakeSystem, onClose }: AdminBrakeSystem
     resolver: zodResolver(brakeSystemSchema),
     defaultValues: {
       type: brakeSystem?.type || "",
-      brake_type_front: brakeSystem?.brake_type_front || "",
-      brake_type_rear: brakeSystem?.brake_type_rear || "",
+      front_type: brakeSystem?.front_type || "",
+      rear_type: brakeSystem?.rear_type || "",
       front_disc_size_mm: brakeSystem?.front_disc_size_mm || "",
       rear_disc_size_mm: brakeSystem?.rear_disc_size_mm || "",
       brake_brand: brakeSystem?.brake_brand || "",
       caliper_type: brakeSystem?.caliper_type || "",
+      has_abs: brakeSystem?.has_abs || false,
       has_traction_control: brakeSystem?.has_traction_control || false,
       notes: brakeSystem?.notes || "",
     }
@@ -67,24 +69,26 @@ const AdminBrakeSystemDialog = ({ open, brakeSystem, onClose }: AdminBrakeSystem
     if (open && brakeSystem) {
       form.reset({
         type: brakeSystem.type || "",
-        brake_type_front: brakeSystem.brake_type_front || "",
-        brake_type_rear: brakeSystem.brake_type_rear || "",
+        front_type: brakeSystem.front_type || "",
+        rear_type: brakeSystem.rear_type || "",
         front_disc_size_mm: brakeSystem.front_disc_size_mm || "",
         rear_disc_size_mm: brakeSystem.rear_disc_size_mm || "",
         brake_brand: brakeSystem.brake_brand || "",
         caliper_type: brakeSystem.caliper_type || "",
+        has_abs: brakeSystem.has_abs || false,
         has_traction_control: brakeSystem.has_traction_control || false,
         notes: brakeSystem.notes || "",
       });
     } else if (open) {
       form.reset({
         type: "",
-        brake_type_front: "",
-        brake_type_rear: "",
+        front_type: "",
+        rear_type: "",
         front_disc_size_mm: "",
         rear_disc_size_mm: "",
         brake_brand: "",
         caliper_type: "",
+        has_abs: false,
         has_traction_control: false,
         notes: "",
       });
@@ -188,7 +192,7 @@ const AdminBrakeSystemDialog = ({ open, brakeSystem, onClose }: AdminBrakeSystem
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="brake_type_front"
+                name="front_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Front Brake Type</FormLabel>
@@ -227,7 +231,7 @@ const AdminBrakeSystemDialog = ({ open, brakeSystem, onClose }: AdminBrakeSystem
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="brake_type_rear"
+                name="rear_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Rear Brake Type</FormLabel>
@@ -263,21 +267,42 @@ const AdminBrakeSystemDialog = ({ open, brakeSystem, onClose }: AdminBrakeSystem
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="caliper_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Caliper Type</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="4-piston radial" 
+                      className="bg-explorer-dark border-explorer-chrome/30"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="caliper_type"
+                name="has_abs"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Caliper Type</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-explorer-chrome/30 p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>ABS</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        Anti-lock Braking System
+                      </div>
+                    </div>
                     <FormControl>
-                      <Input 
-                        placeholder="4-piston radial" 
-                        className="bg-explorer-dark border-explorer-chrome/30"
-                        {...field} 
+                      <Switch 
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -286,8 +311,13 @@ const AdminBrakeSystemDialog = ({ open, brakeSystem, onClose }: AdminBrakeSystem
                 control={form.control}
                 name="has_traction_control"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between mt-6 space-y-0">
-                    <FormLabel>Has Traction Control</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-explorer-chrome/30 p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Traction Control</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        Traction control system
+                      </div>
+                    </div>
                     <FormControl>
                       <Switch 
                         checked={field.value}
