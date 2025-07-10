@@ -3,12 +3,11 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Settings, Check, X, Wrench, AlertCircle } from "lucide-react";
+import { Settings, Check, Wrench, AlertCircle } from "lucide-react";
 import { Motorcycle } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { getModelComponentAssignments } from "@/services/modelComponentService";
-import EnhancedComponentSelectionDialog from "@/components/admin/parts/consolidated/EnhancedComponentSelectionDialog";
-import { useComponentAssignmentRefresh } from "@/hooks/useComponentAssignmentRefresh";
+import ComponentAssignmentDialog from "../../ComponentAssignmentDialog";
 
 interface MotorcycleComponentsFormProps {
   motorcycle: Motorcycle;
@@ -17,9 +16,7 @@ interface MotorcycleComponentsFormProps {
 }
 
 const MotorcycleComponentsForm = ({ motorcycle, isEditing, onUpdate }: MotorcycleComponentsFormProps) => {
-  const [selectedComponentType, setSelectedComponentType] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { refreshAfterAssignment } = useComponentAssignmentRefresh();
 
   const { data: assignments = [], refetch, isLoading, error } = useQuery({
     queryKey: ["model-component-assignments", motorcycle.id],
@@ -39,29 +36,10 @@ const MotorcycleComponentsForm = ({ motorcycle, isEditing, onUpdate }: Motorcycl
     return assignments.find(a => a.component_type === componentType);
   };
 
-  const handleComponentAssign = (componentType: string) => {
-    console.log(`Opening component dialog for ${componentType}`);
-    setSelectedComponentType(componentType);
-    setDialogOpen(true);
-  };
-
   const handleAssignmentComplete = async () => {
-    console.log('Assignment complete, refreshing data');
-    try {
-      // Refresh the assignments query
-      await refetch();
-      
-      // Refresh cached data
-      await refreshAfterAssignment(motorcycle.id);
-      
-      // Close dialog
-      setDialogOpen(false);
-      setSelectedComponentType(null);
-      
-      console.log('Data refresh complete');
-    } catch (error) {
-      console.error('Error refreshing after assignment:', error);
-    }
+    // Refresh the assignments query
+    await refetch();
+    setDialogOpen(false);
   };
 
   const getStatusBadge = (assignment: any) => {
@@ -111,9 +89,13 @@ const MotorcycleComponentsForm = ({ motorcycle, isEditing, onUpdate }: Motorcycl
           <CardTitle className="text-explorer-text flex items-center justify-between">
             Component Assignments
             {isEditing && (
-              <Button size="sm" variant="outline" disabled>
-                <Plus className="h-4 w-4 mr-2" />
-                Bulk Assign
+              <Button 
+                size="sm" 
+                onClick={() => setDialogOpen(true)}
+                className="bg-accent-teal hover:bg-accent-teal/90 text-black"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Manage Components
               </Button>
             )}
           </CardTitle>
@@ -152,15 +134,6 @@ const MotorcycleComponentsForm = ({ motorcycle, isEditing, onUpdate }: Motorcycl
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(assignment)}
-                      {isEditing && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleComponentAssign(componentType.key)}
-                        >
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      )}
                     </div>
                   </div>
                 );
@@ -213,13 +186,11 @@ const MotorcycleComponentsForm = ({ motorcycle, isEditing, onUpdate }: Motorcycl
         </CardContent>
       </Card>
 
-      <EnhancedComponentSelectionDialog
+      <ComponentAssignmentDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        componentType={selectedComponentType}
-        currentComponentId={selectedComponentType ? getAssignmentForType(selectedComponentType)?.component_id : undefined}
-        onComponentAssigned={handleAssignmentComplete}
-        modelId={motorcycle.id}
+        onOpenChange={setDialogOpen}
+        selectedModel={motorcycle}
+        onSuccess={handleAssignmentComplete}
       />
     </div>
   );
