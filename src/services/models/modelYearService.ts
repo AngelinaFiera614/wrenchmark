@@ -185,3 +185,35 @@ export const createModelYear = async (modelId: string, yearData: {
     return false;
   }
 };
+
+// Function to update an existing model year
+export const updateModelYear = async (yearId: string, yearData: {
+  year?: number;
+  changes?: string;
+  msrp_usd?: number;
+  marketing_tagline?: string;
+  is_available?: boolean;
+  image_url?: string;
+}): Promise<boolean> => {
+  try {
+    console.log("Updating model year:", yearId, "with data:", yearData);
+    
+    const { data, error } = await supabase
+      .from('model_years')
+      .update(yearData)
+      .eq('id', yearId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating model year:", error);
+      return false;
+    }
+
+    console.log("Successfully updated model year:", data);
+    return true;
+  } catch (error) {
+    console.error("Error in updateModelYear:", error);
+    return false;
+  }
+};

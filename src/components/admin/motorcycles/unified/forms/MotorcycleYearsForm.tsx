@@ -4,13 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Calendar, Settings, AlertTriangle } from "lucide-react";
+import { Plus, Calendar, Settings, AlertTriangle, Edit, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Motorcycle } from "@/types";
 import { Configuration } from "@/types/motorcycle";
-import { fetchModelYears, generateModelYears, createModelYear } from "@/services/models/modelYearService";
+import { fetchModelYears, generateModelYears, createModelYear, deleteModelYear } from "@/services/models/modelYearService";
 import { fetchConfigurations } from "@/services/models/configurationService";
 import TrimLevelManagerEnhanced from "@/components/admin/parts/TrimLevelManagerEnhanced";
+import ModelYearEditDialog from "../dialogs/ModelYearEditDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 interface MotorcycleYearsFormProps {
@@ -38,6 +45,8 @@ const MotorcycleYearsForm = ({ motorcycle, isEditing, onUpdate }: MotorcycleYear
   const [selectedConfig, setSelectedConfig] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("years");
+  const [editingYear, setEditingYear] = useState<ModelYear | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   // Load model years when component mounts or motorcycle changes
   useEffect(() => {
@@ -169,6 +178,44 @@ const MotorcycleYearsForm = ({ motorcycle, isEditing, onUpdate }: MotorcycleYear
     }
   };
 
+  const handleEditYear = (year: ModelYear) => {
+    setEditingYear(year);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteYear = async (year: ModelYear) => {
+    if (!confirm(`Are you sure you want to delete the ${year.year} model year? This will also delete all trim configurations for this year.`)) {
+      return;
+    }
+
+    try {
+      const success = await deleteModelYear(year.id);
+      if (success) {
+        toast({
+          title: "Success!",
+          description: `${year.year} model year has been deleted.`
+        });
+        
+        // If we deleted the selected year, clear selection
+        if (selectedYear === year.id) {
+          setSelectedYear(null);
+        }
+        
+        await loadModelYears();
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete model year."
+      });
+    }
+  };
+
+  const handleYearUpdated = () => {
+    loadModelYears();
+  };
+
   const selectedYearData = modelYears.find(y => y.id === selectedYear);
 
   if (loading) {
@@ -261,30 +308,73 @@ const MotorcycleYearsForm = ({ motorcycle, isEditing, onUpdate }: MotorcycleYear
                   {modelYears.map((year) => (
                     <div
                       key={year.id}
-                      className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                      className={`p-4 rounded-lg border transition-colors relative group ${
                         selectedYear === year.id
                           ? 'bg-accent-teal/20 border-accent-teal'
                           : 'bg-explorer-dark border-explorer-chrome/30 hover:border-explorer-chrome/50'
                       }`}
-                      onClick={() => setSelectedYear(year.id)}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-explorer-text">{year.year}</h3>
-                        <Badge 
-                          variant={year.is_available ? "default" : "secondary"}
-                          className={year.is_available ? "bg-green-600/20 text-green-400" : "bg-gray-600/20 text-gray-400"}
-                        >
-                          {year.is_available ? "Available" : "Discontinued"}
-                        </Badge>
-                      </div>
-                      {year.changes && (
-                        <p className="text-sm text-explorer-text-muted mb-2">{year.changes}</p>
-                      )}
-                      {year.msrp_usd && (
-                        <p className="text-sm text-accent-teal">MSRP: ${year.msrp_usd.toLocaleString()}</p>
-                      )}
-                      <div className="mt-2 text-xs text-explorer-text-muted">
-                        {configurations.filter(c => c.model_year_id === year.id).length} trim levels
+                      <div 
+                        className="cursor-pointer"
+                        onClick={() => setSelectedYear(year.id)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-explorer-text">{year.year}</h3>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant={year.is_available ? "default" : "secondary"}
+                              className={year.is_available ? "bg-green-600/20 text-green-400" : "bg-gray-600/20 text-gray-400"}
+                            >
+                              {year.is_available ? "Available" : "Discontinued"}
+                            </Badge>
+                            
+                            {isEditing && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-explorer-card border-explorer-chrome/30">
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditYear(year);
+                                    }}
+                                    className="text-explorer-text hover:bg-explorer-dark"
+                                  >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit Year
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteYear(year);
+                                    }}
+                                    className="text-red-400 hover:bg-red-900/20"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Year
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
+                        </div>
+                        {year.changes && (
+                          <p className="text-sm text-explorer-text-muted mb-2">{year.changes}</p>
+                        )}
+                        {year.msrp_usd && (
+                          <p className="text-sm text-accent-teal">MSRP: ${year.msrp_usd.toLocaleString()}</p>
+                        )}
+                        <div className="mt-2 text-xs text-explorer-text-muted">
+                          {configurations.filter(c => c.model_year_id === year.id).length} trim levels
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -371,6 +461,17 @@ const MotorcycleYearsForm = ({ motorcycle, isEditing, onUpdate }: MotorcycleYear
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Edit Year Dialog */}
+      <ModelYearEditDialog
+        isOpen={showEditDialog}
+        onClose={() => {
+          setShowEditDialog(false);
+          setEditingYear(null);
+        }}
+        modelYear={editingYear}
+        onSuccess={handleYearUpdated}
+      />
     </div>
   );
 };
