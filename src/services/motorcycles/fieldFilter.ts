@@ -51,11 +51,14 @@ export const MOTORCYCLE_MODEL_DB_COLUMNS = [
 // Computed/relationship fields that should NOT be saved to database
 export const COMPUTED_FIELDS = [
   'brand',
-  'brands',
+  'brands', 
   'make',
   'years',
   'model_years'
 ] as const;
+
+// Fields that need auto-calculation before save
+export const AUTO_CALCULATED_FIELDS = ['power_to_weight_ratio'] as const;
 
 // Create a more flexible type for database updates
 export type DatabaseMotorcycleUpdate = Partial<Record<string, any>>;
@@ -76,6 +79,16 @@ export function filterMotorcycleUpdateData(updates: Partial<Motorcycle>): Databa
       filteredUpdates[key] = value;
     } else {
       excludedFields.push(key);
+    }
+  }
+  
+  // Auto-calculate power-to-weight ratio if horsepower and weight are present
+  if ('horsepower' in filteredUpdates && 'weight_kg' in filteredUpdates) {
+    const hp = parseFloat(filteredUpdates.horsepower as string) || 0;
+    const weight = parseFloat(filteredUpdates.weight_kg as string) || 0;
+    if (hp > 0 && weight > 0) {
+      filteredUpdates.power_to_weight_ratio = Math.round((hp / weight) * 100) / 100;
+      console.log('Auto-calculated power_to_weight_ratio:', filteredUpdates.power_to_weight_ratio);
     }
   }
   

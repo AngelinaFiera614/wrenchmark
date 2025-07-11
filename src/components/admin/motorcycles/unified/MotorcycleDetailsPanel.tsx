@@ -185,41 +185,43 @@ const MotorcycleDetailsPanel = ({ motorcycle, onUpdate }: MotorcycleDetailsPanel
         </Card>
       </div>
 
-      {/* Sidebar - Completion Guide */}
-      <div className="w-80 space-y-4">
-        <ComponentCompletionPanel
-          motorcycle={formData as Motorcycle}
-          onManageComponents={() => {
-            console.log('Manage components for:', formData.id);
-          }}
-        />
-        
-        {/* Quick completion tips */}
+      {/* Sidebar - Data Quality Guide */}
+      <div className="w-80">
         <Card className="bg-explorer-card border-explorer-chrome/30">
           <CardHeader>
-            <CardTitle className="text-explorer-text text-sm">Smart Data Integration</CardTitle>
+            <CardTitle className="text-explorer-text text-sm">Data Quality Guide</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-xs text-explorer-text-muted space-y-1">
+          <CardContent className="space-y-3">
+            <div className="text-xs text-explorer-text-muted space-y-2">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                <span>Green badges = Data from linked components</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                <span>Blue badges = Model-level overrides</span>
+                <span>Complete sections show green progress</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-1 h-1 bg-yellow-400 rounded-full"></div>
-                <span>Yellow badges = Data conflicts need attention</span>
+                <span>Partial data shows yellow warnings</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-1 h-1 bg-red-400 rounded-full"></div>
-                <span>Red badges = Missing data</span>
+                <span>Missing critical data shows red alerts</span>
               </div>
             </div>
+            
+            {completeness.missingCriticalFields.length > 0 && (
+              <div className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-red-400" />
+                  <span className="text-red-400 font-medium text-sm">Critical Fields Missing</span>
+                </div>
+                <div className="text-xs text-red-300">
+                  {completeness.missingCriticalFields.slice(0, 3).join(', ')}
+                  {completeness.missingCriticalFields.length > 3 && ` +${completeness.missingCriticalFields.length - 3} more`}
+                </div>
+              </div>
+            )}
+            
             <div className="text-xs text-explorer-text-muted mt-2 pt-2 border-t border-explorer-chrome/30">
-              Use "Sync from Component" buttons to eliminate duplicate data entry.
+              Focus on completing critical fields first for better data quality.
             </div>
           </CardContent>
         </Card>

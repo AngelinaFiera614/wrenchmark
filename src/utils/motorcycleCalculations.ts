@@ -1,10 +1,10 @@
 
 import { Configuration } from "@/types/motorcycle";
 
-// Calculate power-to-weight ratio
+// Calculate power-to-weight ratio (hp/kg - standard metric)
 export const calculatePowerToWeightRatio = (powerHp: number, weightKg: number): number => {
   if (!powerHp || !weightKg) return 0;
-  return Math.round((powerHp / (weightKg * 2.20462)) * 100) / 100; // HP per pound
+  return Math.round((powerHp / weightKg) * 100) / 100; // HP per kg (metric standard)
 };
 
 // Calculate torque-to-weight ratio
