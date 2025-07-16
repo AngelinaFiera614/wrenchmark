@@ -2495,6 +2495,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_security_violation: {
+        Args: { violation_type: string; details?: Json }
+        Returns: undefined
+      }
       log_user_activity: {
         Args: {
           p_action: string
