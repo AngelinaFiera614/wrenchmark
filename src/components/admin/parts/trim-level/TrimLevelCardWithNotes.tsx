@@ -22,17 +22,17 @@ const TrimLevelCardWithNotes = ({
   const hasNotes = configuration.description || configuration.notes;
 
   return (
-    <Card className="bg-explorer-card border-explorer-chrome/30 hover:border-accent-teal/30 transition-colors">
+    <Card className="bg-explorer-card border-explorer-chrome/30 hover:border-accent-teal/30 transition-colors overflow-hidden">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-explorer-text">{configuration.name}</h3>
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-semibold text-explorer-text truncate">{configuration.name}</h3>
               {configuration.is_default && (
-                <Badge className="bg-accent-teal text-black">Default</Badge>
+                <Badge className="bg-accent-teal text-black shrink-0">Default</Badge>
               )}
               {hasNotes && (
-                <Badge variant="outline" className="text-accent-teal border-accent-teal/30">
+                <Badge variant="outline" className="text-accent-teal border-accent-teal/30 shrink-0">
                   <FileText className="h-3 w-3 mr-1" />
                   Notes
                 </Badge>
@@ -59,7 +59,7 @@ const TrimLevelCardWithNotes = ({
             </div>
           </div>
           
-          <div className="flex gap-1">
+          <div className="flex gap-1 shrink-0">
             <Button
               variant="ghost"
               size="sm"
