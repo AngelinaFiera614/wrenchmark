@@ -108,5 +108,5 @@ export interface ComponentData {
 
 // Main transform function for motorcycles (single export to avoid redeclaration)
 export const transformToMotorcycle = (model: any): Motorcycle => {
-  return transformMotorcycleData(model);
+  return transformMotorcycleWithBrand(model);
 };
