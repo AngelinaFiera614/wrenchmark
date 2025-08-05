@@ -2371,6 +2371,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_configuration_completeness: {
+        Args: { config_id: string }
+        Returns: Json
+      }
       cleanup_expired_suggestions: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -2473,6 +2477,16 @@ export type Database = {
           level: number
         }[]
       }
+      get_year_components_with_inheritance: {
+        Args: { year_id: string }
+        Returns: {
+          component_type: string
+          component_id: string
+          component_name: string
+          is_inherited: boolean
+          source: string
+        }[]
+      }
       increment_manual_downloads: {
         Args: { manual_id: string }
         Returns: undefined
@@ -2527,6 +2541,16 @@ export type Database = {
       populate_model_component_defaults: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      validate_component_compatibility: {
+        Args: {
+          engine_id_param?: string
+          brake_system_id_param?: string
+          frame_id_param?: string
+          suspension_id_param?: string
+          wheel_id_param?: string
+        }
+        Returns: Json
       }
       validate_password_strength: {
         Args: { password: string }
