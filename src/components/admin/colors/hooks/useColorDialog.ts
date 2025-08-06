@@ -4,16 +4,24 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ModelYearWithModel, ColorFormData } from "../types";
+import { ColorFormState } from "@/types/colors";
 
 export const useColorDialog = (color?: any, open?: boolean) => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<ColorFormData>({
+  const [formData, setFormData] = useState<ColorFormState>({
     name: "",
     hex_code: "",
     image_url: "",
     is_limited: false,
-    model_year_id: ""
+    model_year_id: "",
+    popularity_score: 0,
+    availability_status: "available",
+    color_family: "",
+    finish_type: "solid",
+    msrp_premium_usd: 0,
+    special_edition_name: "",
+    color_description: ""
   });
 
   const isEditing = !!color;
@@ -48,7 +56,14 @@ export const useColorDialog = (color?: any, open?: boolean) => {
         hex_code: color.hex_code || "",
         image_url: color.image_url || "",
         is_limited: color.is_limited || false,
-        model_year_id: color.model_year_id || ""
+        model_year_id: color.model_year_id || "",
+        popularity_score: color.popularity_score || 0,
+        availability_status: color.availability_status || "available",
+        color_family: color.color_family || "",
+        finish_type: color.finish_type || "solid",
+        msrp_premium_usd: color.msrp_premium_usd || 0,
+        special_edition_name: color.special_edition_name || "",
+        color_description: color.color_description || ""
       });
     } else if (open) {
       setFormData({
@@ -56,7 +71,14 @@ export const useColorDialog = (color?: any, open?: boolean) => {
         hex_code: "",
         image_url: "",
         is_limited: false,
-        model_year_id: ""
+        model_year_id: "",
+        popularity_score: 0,
+        availability_status: "available",
+        color_family: "",
+        finish_type: "solid",
+        msrp_premium_usd: 0,
+        special_edition_name: "",
+        color_description: ""
       });
     }
   }, [color, open]);
@@ -94,7 +116,14 @@ export const useColorDialog = (color?: any, open?: boolean) => {
         hex_code: formData.hex_code || null,
         image_url: formData.image_url || null,
         is_limited: formData.is_limited,
-        model_year_id: formData.model_year_id
+        model_year_id: formData.model_year_id,
+        popularity_score: formData.popularity_score || 0,
+        availability_status: formData.availability_status || 'available',
+        color_family: formData.color_family || null,
+        finish_type: formData.finish_type || 'solid',
+        msrp_premium_usd: formData.msrp_premium_usd || 0,
+        special_edition_name: formData.special_edition_name || null,
+        color_description: formData.color_description || null
       };
 
       if (isEditing) {

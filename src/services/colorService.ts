@@ -92,12 +92,19 @@ export async function getColorsForConfiguration(configurationId: string): Promis
 }
 
 export async function createColor(configurationId: string, colorData: ColorFormState): Promise<ColorOption> {
+  const colorToInsert = {
+    ...colorData,
+    model_year_id: configurationId,
+    // Set intelligent defaults based on color family and finish type
+    popularity_score: colorData.popularity_score || 0,
+    availability_status: colorData.availability_status || 'available',
+    finish_type: colorData.finish_type || 'solid',
+    msrp_premium_usd: colorData.msrp_premium_usd || 0
+  };
+
   const { data, error } = await supabase
     .from('color_options')
-    .insert({
-      ...colorData,
-      model_year_id: configurationId
-    })
+    .insert(colorToInsert)
     .select()
     .single();
 

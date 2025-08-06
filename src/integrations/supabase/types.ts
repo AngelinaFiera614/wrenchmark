@@ -175,36 +175,98 @@ export type Database = {
       }
       color_options: {
         Row: {
+          availability_status: string | null
+          color_description: string | null
+          color_family: string | null
           created_at: string
+          finish_type: string | null
           hex_code: string | null
           id: string
           image_url: string | null
           is_limited: boolean | null
           model_year_id: string
+          msrp_premium_usd: number | null
           name: string
+          popularity_score: number | null
+          production_years: unknown | null
+          special_edition_name: string | null
           updated_at: string
         }
         Insert: {
+          availability_status?: string | null
+          color_description?: string | null
+          color_family?: string | null
           created_at?: string
+          finish_type?: string | null
           hex_code?: string | null
           id?: string
           image_url?: string | null
           is_limited?: boolean | null
           model_year_id: string
+          msrp_premium_usd?: number | null
           name: string
+          popularity_score?: number | null
+          production_years?: unknown | null
+          special_edition_name?: string | null
           updated_at?: string
         }
         Update: {
+          availability_status?: string | null
+          color_description?: string | null
+          color_family?: string | null
           created_at?: string
+          finish_type?: string | null
           hex_code?: string | null
           id?: string
           image_url?: string | null
           is_limited?: boolean | null
           model_year_id?: string
+          msrp_premium_usd?: number | null
           name?: string
+          popularity_score?: number | null
+          production_years?: unknown | null
+          special_edition_name?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      color_popularity_tracking: {
+        Row: {
+          color_option_id: string
+          created_at: string | null
+          id: string
+          popularity_rank: number | null
+          selection_percentage: number | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          color_option_id: string
+          created_at?: string | null
+          id?: string
+          popularity_rank?: number | null
+          selection_percentage?: number | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          color_option_id?: string
+          created_at?: string | null
+          id?: string
+          popularity_rank?: number | null
+          selection_percentage?: number | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "color_popularity_tracking_color_option_id_fkey"
+            columns: ["color_option_id"]
+            isOneToOne: false
+            referencedRelation: "color_options"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       color_variants: {
         Row: {

@@ -9,6 +9,7 @@ import { useColorDialog } from "./hooks/useColorDialog";
 import { ColorOptionDialogProps } from "./types";
 import ModelYearSelector from "./ModelYearSelector";
 import ColorPreview from "./ColorPreview";
+import EnhancedColorForm from "./EnhancedColorForm";
 
 const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => {
   const {
@@ -27,56 +28,17 @@ const ColorOptionDialog = ({ open, color, onClose }: ColorOptionDialogProps) => 
           <DialogTitle>{isEditing ? "Edit" : "Add"} Color Option</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Color Name *</Label>
-            <Input
-              id="name"
-              placeholder="e.g., Midnight Black"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="bg-explorer-dark border-explorer-chrome/30"
-            />
-          </div>
-
+        <div className="space-y-6 max-h-[70vh] overflow-y-auto">
           <ModelYearSelector
             value={formData.model_year_id}
             onChange={(value) => setFormData(prev => ({ ...prev, model_year_id: value }))}
             modelYears={modelYears}
           />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="hex_code">Hex Color Code</Label>
-              <Input
-                id="hex_code"
-                placeholder="#000000"
-                value={formData.hex_code}
-                onChange={(e) => setFormData(prev => ({ ...prev, hex_code: e.target.value }))}
-                className="bg-explorer-dark border-explorer-chrome/30"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2 mt-6">
-              <Switch
-                id="is_limited"
-                checked={formData.is_limited}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_limited: checked }))}
-              />
-              <Label htmlFor="is_limited">Limited Edition</Label>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="image_url">Image URL</Label>
-            <Input
-              id="image_url"
-              placeholder="https://example.com/color-image.jpg"
-              value={formData.image_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-              className="bg-explorer-dark border-explorer-chrome/30"
-            />
-          </div>
+          <EnhancedColorForm
+            formData={formData}
+            setFormData={(data) => setFormData(data)}
+          />
 
           <ColorPreview 
             hexCode={formData.hex_code}

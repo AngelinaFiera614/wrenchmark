@@ -145,7 +145,8 @@ const ColorManagementTab = ({ modelYearId }: ColorManagementTabProps) => {
           name: editingColor.name,
           hex_code: editingColor.hex_code,
           image_url: editingColor.image_url,
-          is_limited: editingColor.is_limited
+          is_limited: editingColor.is_limited,
+          model_year_id: editingColor.model_year_id
         } : undefined}
         onSuccess={handleDialogSuccess}
       />

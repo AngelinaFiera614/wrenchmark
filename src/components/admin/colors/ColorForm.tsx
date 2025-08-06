@@ -18,7 +18,8 @@ export function ColorForm({
     name: "",
     hex_code: "",
     image_url: "",
-    is_limited: false
+    is_limited: false,
+    model_year_id: ""
   },
   onSubmit,
   onCancel,
