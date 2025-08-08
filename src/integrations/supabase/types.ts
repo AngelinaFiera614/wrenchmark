@@ -1830,6 +1830,71 @@ export type Database = {
           },
         ]
       }
+      production_sweep_results: {
+        Row: {
+          completeness_basic: number | null
+          completeness_components: number | null
+          completeness_dimensions: number | null
+          completeness_overall: number | null
+          config_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          model_id: string
+          model_year: number | null
+          raw: Json | null
+          updated_at: string
+          vpic_matched_name: string | null
+          vpic_status: string | null
+          vpic_total: number | null
+          vpic_url: string | null
+        }
+        Insert: {
+          completeness_basic?: number | null
+          completeness_components?: number | null
+          completeness_dimensions?: number | null
+          completeness_overall?: number | null
+          config_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model_id: string
+          model_year?: number | null
+          raw?: Json | null
+          updated_at?: string
+          vpic_matched_name?: string | null
+          vpic_status?: string | null
+          vpic_total?: number | null
+          vpic_url?: string | null
+        }
+        Update: {
+          completeness_basic?: number | null
+          completeness_components?: number | null
+          completeness_dimensions?: number | null
+          completeness_overall?: number | null
+          config_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model_id?: string
+          model_year?: number | null
+          raw?: Json | null
+          updated_at?: string
+          vpic_matched_name?: string | null
+          vpic_status?: string | null
+          vpic_total?: number | null
+          vpic_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_sweep_results_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "motorcycle_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
