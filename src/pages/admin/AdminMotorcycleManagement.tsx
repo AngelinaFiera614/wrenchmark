@@ -18,6 +18,7 @@ import BulkSelectionToolbar from "@/components/admin/motorcycles/BulkSelectionTo
 import MotorcyclePagination from "@/components/admin/motorcycles/MotorcyclePagination";
 import ConsolidatedMotorcycleHeader from "@/components/admin/motorcycles/ConsolidatedMotorcycleHeader";
 import ConsolidatedFilters from "@/components/admin/motorcycles/ConsolidatedFilters";
+import ProductionSweepPanel from "@/components/admin/motorcycles/ProductionSweepPanel";
 
 interface ConsolidatedFilters {
   search: string;
@@ -440,11 +441,7 @@ const AdminMotorcycleManagement = () => {
         </TabsContent>
 
         <TabsContent value="advanced" className="flex-1 mt-4">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground">Advanced features will be available here.</p>
-            </CardContent>
-          </Card>
+          <ProductionSweepPanel motorcycles={allMotorcycles} />
         </TabsContent>
       </Tabs>
 
