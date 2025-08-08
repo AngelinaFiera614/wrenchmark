@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { upsertSweepResults } from "@/services/productionSweepService";
+import { toast } from "sonner";
 
 interface MotorcycleLite {
   id: string;
@@ -58,6 +60,7 @@ export const ProductionSweepPanel: React.FC<{ motorcycles: MotorcycleLite[] }> =
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<SweepRowResult[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const activeModels = useMemo(() => {
     return motorcycles.filter((m) => {
@@ -178,6 +181,33 @@ export const ProductionSweepPanel: React.FC<{ motorcycles: MotorcycleLite[] }> =
     link.click();
   };
 
+  const saveToDatabase = async () => {
+    try {
+      setSaving(true);
+      const rows = results.map((r) => ({
+        model_id: r.modelId,
+        model_year: r.year ?? null,
+        config_id: null,
+        completeness_overall: r.completeness?.overall ?? null,
+        completeness_basic: r.completeness?.basicInfo ?? null,
+        completeness_components: r.completeness?.components ?? null,
+        completeness_dimensions: r.completeness?.dimensions ?? null,
+        vpic_status: r.vpic?.status ?? null,
+        vpic_matched_name: r.vpic?.matchedName ?? null,
+        vpic_total: r.vpic?.totalReturned ?? null,
+        vpic_url: r.vpic?.url ?? null,
+        raw: r
+      }));
+      const { inserted } = await upsertSweepResults(rows);
+      toast.success(`Saved ${inserted} sweep result${inserted === 1 ? '' : 's'}`);
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to save sweep results');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-col gap-2">
@@ -188,6 +218,9 @@ export const ProductionSweepPanel: React.FC<{ motorcycles: MotorcycleLite[] }> =
           </Button>
           <Button variant="outline" onClick={exportJson} disabled={results.length === 0}>
             Export JSON
+          </Button>
+          <Button variant="outline" onClick={saveToDatabase} disabled={results.length === 0 || saving}>
+            {saving ? 'Saving…' : 'Save to database'}
           </Button>
           <Badge variant="secondary">{activeModels.length} active models</Badge>
         </div>

@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Info, Cog, Disc, Box, Zap, Circle, User, FileText, Image, Wrench } from "lucide-react";
 import { calculateDataCompleteness, calculateDataCompletenessSync, DataCompletion } from "@/utils/dataCompleteness";
 import { Motorcycle } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MotorcycleCompletenessIndicatorProps {
   motorcycle?: Motorcycle;
@@ -35,6 +36,37 @@ const MotorcycleCompletenessIndicator = ({
         .finally(() => setLoading(false));
     }
   }, [motorcycle, propCompleteness]);
+
+  // Overlay persisted sweep result if present
+  useEffect(() => {
+    let cancelled = false;
+    const applyPersisted = async () => {
+      if (!motorcycle?.id) return;
+      const { data, error } = await supabase
+        .from('production_sweep_results')
+        .select('completeness_overall, completeness_basic, completeness_components, completeness_dimensions, created_at')
+        .eq('model_id', motorcycle.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error || !data) return;
+      setCompleteness(prev => {
+        if (!prev) return prev;
+        const updated = { ...prev } as DataCompletion;
+        if (typeof data.completeness_overall === 'number') {
+          updated.completionPercentage = data.completeness_overall as number;
+        }
+        if (updated.breakdown) {
+          if (typeof data.completeness_basic === 'number') updated.breakdown.basicInfo.percentage = data.completeness_basic as number;
+          if (typeof data.completeness_components === 'number') updated.breakdown.components.percentage = data.completeness_components as number;
+          if (typeof data.completeness_dimensions === 'number') updated.breakdown.specifications.percentage = data.completeness_dimensions as number;
+        }
+        return cancelled ? prev : updated;
+      });
+    };
+    applyPersisted();
+    return () => { cancelled = true; };
+  }, [motorcycle?.id]);
 
   if (!completeness && !loading) {
     return null;
