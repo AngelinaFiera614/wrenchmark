@@ -38,6 +38,7 @@ import NewPartsManagementLayout from "./components/admin/parts/NewPartsManagemen
 import ColorOptionsManager from "./components/admin/colors/ColorOptionsManager";
 import AdminSecurity from "./pages/admin/AdminSecurity";
 import AdminErrorBoundary from "./components/admin/shared/AdminErrorBoundary";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -65,8 +66,8 @@ const App = () => (
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           
           {/* Admin Authentication Route */}
           <Route path="/admin/auth" element={<AdminAuth />} />

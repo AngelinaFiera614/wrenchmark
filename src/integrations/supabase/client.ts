@@ -11,8 +11,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: localStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // Changed to false to prevent URL parsing issues
-    debug: true // Enable debug mode to see more logs
+    detectSessionInUrl: false,
+    debug: true,
+    storageKey: 'sb-auth-token', // Explicit storage key
+    flowType: 'pkce' // Use PKCE flow for better security
+  },
+  // Add global options for better session handling
+  global: {
+    headers: {
+      'X-Client-Info': 'wrenchmark-web-app'
+    }
   }
 });
 

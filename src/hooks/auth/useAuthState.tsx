@@ -57,11 +57,39 @@ export const useAuthState = () => {
   // Initialize the auth state from Supabase - securing the process
   const initializeAuth = useCallback(async () => {
     console.info("[useAuthState] Starting authentication initialization");
+    let cleanup: (() => void) | null = null;
+    
     try {
-      // First set up the auth state change listener
+      // First check for existing session
+      console.info("[useAuthState] Checking for existing session...");
+      const { data: { session: initialSession }, error: sessionError } = 
+        await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("[useAuthState] Session retrieval error:", sessionError);
+        throw sessionError;
+      }
+      
+      // Set initial session state before setting up listener
+      if (initialSession?.user) {
+        console.info(`[useAuthState] Found existing session for: ${initialSession.user.email}`);
+        setSession(initialSession);
+        setUser(initialSession.user);
+        
+        // Check admin status for existing session
+        await checkAdminStatus(initialSession.user.id);
+      } else {
+        console.info("[useAuthState] No existing session found");
+        setSession(null);
+        setUser(null);
+        setIsAdmin(false);
+        setAdminVerified("idle");
+      }
+
+      // Then set up the auth state change listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, currentSession) => {
-          console.info(`[useAuthState] Auth event: ${event}`);
+          console.info(`[useAuthState] Auth event: ${event}, Session: ${currentSession?.user?.email || 'none'}`);
           
           // Handle auth events securely
           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -70,15 +98,13 @@ export const useAuthState = () => {
               setSession(currentSession);
               setUser(currentSession.user);
               
-              // Use timeout to prevent potential deadlock and debounce multiple calls
-              setTimeout(() => {
-                if (!adminCheckInProgress.current) {
-                  checkAdminStatus(currentSession.user.id);
-                }
-              }, 100);
+              // Check admin status
+              if (!adminCheckInProgress.current) {
+                await checkAdminStatus(currentSession.user.id);
+              }
             }
           } else if (event === 'SIGNED_OUT') {
-            console.info("[useAuthState] User signed out");
+            console.info("[useAuthState] User signed out - clearing all state");
             setSession(null);
             setUser(null);
             setIsAdmin(false);
@@ -89,32 +115,16 @@ export const useAuthState = () => {
         }
       );
 
-      // Then check for existing session
-      const { data: { session: currentSession }, error: sessionError } = 
-        await supabase.auth.getSession();
-      
-      if (sessionError) {
-        throw sessionError;
-      }
-      
-      if (currentSession) {
-        console.info("[useAuthState] Initial session check: Session found");
-        setSession(currentSession);
-        setUser(currentSession.user);
-        await checkAdminStatus(currentSession.user.id);
-      } else {
-        console.info("[useAuthState] Initial session check: No session found");
-        setSession(null);
-        setUser(null);
-        setIsAdmin(false);
-        setAdminVerified("idle");
-      }
-      
-      setIsLoading(false);
-      
-      return () => {
+      cleanup = () => {
+        console.info("[useAuthState] Cleaning up auth subscription");
         subscription.unsubscribe();
       };
+      
+      // Set loading to false after everything is initialized
+      setIsLoading(false);
+      console.info("[useAuthState] Authentication initialization complete");
+      
+      return cleanup;
     } catch (error) {
       const authError = error as AuthError;
       console.error("[useAuthState] Auth initialization error:", authError);
@@ -124,6 +134,8 @@ export const useAuthState = () => {
       setUser(null);
       setIsAdmin(false);
       setAdminVerified("failed");
+      
+      return cleanup;
     }
   }, [checkAdminStatus, setProfile]);
 
