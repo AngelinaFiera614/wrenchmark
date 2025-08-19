@@ -20,6 +20,7 @@ import { Loader, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PasswordStrengthMeter } from "@/components/security/PasswordStrengthMeter";
+import { AccountDiagnostic } from "@/components/auth/AccountDiagnostic";
 import { validatePassword } from "@/services/security/inputSanitizer";
 
 const signInSchema = z.object({
@@ -156,6 +157,14 @@ const Auth = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-background px-4 py-12">
+      <div className="w-full max-w-4xl flex gap-6">
+        {/* Account Diagnostic Panel */}
+        <div className="flex-1">
+          <AccountDiagnostic />
+        </div>
+        
+        {/* Main Auth Form */}
+        <div className="flex-1">
       <Card className="w-full max-w-md shadow-lg border-border/60">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl font-bold text-accent-teal">
@@ -248,6 +257,8 @@ const Auth = () => {
           </Button>
         </CardFooter>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }
