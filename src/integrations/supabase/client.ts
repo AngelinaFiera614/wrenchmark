@@ -11,6 +11,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: localStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false // Changed to false to prevent URL parsing issues
+    detectSessionInUrl: false, // Changed to false to prevent URL parsing issues
+    debug: true // Enable debug mode to see more logs
   }
 });
+
+// Add connection test
+console.log("[supabase] Client initialized with URL:", supabaseUrl);

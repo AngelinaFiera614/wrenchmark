@@ -105,20 +105,23 @@ const Auth = () => {
   const onSubmit = async (values: SignInFormValues | SignUpFormValues) => {
     if (isSubmitting) return;
     
+    console.log("[Auth] Form submitted with email:", values.email);
     setIsSubmitting(true);
     setAuthError(null);
     
     try {
       if (isLogin) {
-        console.log("Auth: Attempting sign in");
-        await signIn(values.email, values.password);
+        console.log("[Auth] Attempting sign in");
+        const result = await signIn(values.email, values.password);
+        console.log("[Auth] Sign in result:", result);
       } else {
-        console.log("Auth: Attempting sign up");
-        await signUp(values.email, values.password);
+        console.log("[Auth] Attempting sign up");
+        const result = await signUp(values.email, values.password);
+        console.log("[Auth] Sign up result:", result);
         toast.success("Please check your email to verify your account!");
       }
     } catch (error: any) {
-      console.error("Authentication error:", error);
+      console.error("[Auth] Authentication error:", error);
       setAuthError(error.message || "Authentication failed. Please try again.");
       toast.error(error.message || "Authentication failed. Please try again.");
     } finally {

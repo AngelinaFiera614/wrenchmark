@@ -21,14 +21,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useAuthState();
 
   // Authentication methods with proper error handling
-  const handleSignIn = async (email: string, password: string) => {
+  const handleSignIn = async (email: string, password: string): Promise<void> => {
     try {
+      console.log("[AuthProvider] Starting sign in process");
       if (!email || !password) {
+        console.error("[AuthProvider] Missing credentials");
         toast.error("Email and password are required");
         throw new Error("Email and password are required");
       }
       
-      await signIn(email, password);
+      console.log("[AuthProvider] Calling signIn service");
+      const result = await signIn(email, password);
+      console.log("[AuthProvider] Sign in service completed:", result);
     } catch (error: any) {
       console.error("[AuthProvider] Sign in error:", error);
       throw error; // Allow calling code to handle the error

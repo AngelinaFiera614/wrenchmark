@@ -7,30 +7,46 @@ import { auditLogger } from "@/services/security/auditLogger";
 import type { Profile } from "@/services/profileService";
 
 export async function signIn(email: string, password: string) {
-  console.log("Signing in user:", email);
+  console.log("[authenticationService] Starting sign in for user:", email);
   try {
     // Sanitize inputs
     const sanitizedEmail = sanitizeUserInput(email, 254).toLowerCase().trim();
+    console.log("[authenticationService] Sanitized email:", sanitizedEmail);
     
     if (!sanitizedEmail || !password) {
+      console.error("[authenticationService] Missing credentials");
       throw new Error("Email and password are required");
     }
     
     // Log authentication attempt
-    await auditLogger.logAuthenticationAttempt(false, sanitizedEmail, { 
-      action: 'sign_in_attempt' 
-    });
+    try {
+      await auditLogger.logAuthenticationAttempt(false, sanitizedEmail, { 
+        action: 'sign_in_attempt' 
+      });
+      console.log("[authenticationService] Audit log recorded");
+    } catch (auditError) {
+      console.warn("[authenticationService] Audit logging failed:", auditError);
+      // Continue with authentication even if audit logging fails
+    }
     
+    console.log("[authenticationService] Calling Supabase signInWithPassword");
     const { error, data } = await supabase.auth.signInWithPassword({ 
       email: sanitizedEmail, 
       password 
     });
     
+    console.log("[authenticationService] Supabase response:", { error: error?.message, hasUser: !!data?.user });
+    
     if (error) {
-      await auditLogger.logAuthenticationAttempt(false, sanitizedEmail, { 
-        error: error.message,
-        action: 'sign_in_failed'
-      });
+      console.error("[authenticationService] Supabase sign in error:", error);
+      try {
+        await auditLogger.logAuthenticationAttempt(false, sanitizedEmail, { 
+          error: error.message,
+          action: 'sign_in_failed'
+        });
+      } catch (auditError) {
+        console.warn("[authenticationService] Failed audit logging for error:", auditError);
+      }
       throw error;
     }
     
